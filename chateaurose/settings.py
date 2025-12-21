@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-nj^ep_+l5dur=p3n7u!)1q65-a7k@!9pgzge$^lgggdh!ewjp="
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY", "django-insecure-nj^ep_+l5dur=p3n7u!)1q65-a7k@!9pgzge$^lgggdh!ewjp="
+)
+
+
+def _get_bool_env(var_name: str, default: bool = False) -> bool:
+    value = os.environ.get(var_name)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = _get_bool_env("DJANGO_DEBUG", True)
 
-ALLOWED_HOSTS = []
+allowed_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS")
+if allowed_hosts:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts.split(",") if host.strip()]
+else:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
+csrf_trusted_origins = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "")
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in csrf_trusted_origins.split(",") if origin.strip()
+]
 
 
 # Application definition
@@ -118,5 +138,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
