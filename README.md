@@ -28,3 +28,10 @@ Les variables `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS` et `PO
 ## Déploiement
 
 Consultez [DEPLOYMENT.md](DEPLOYMENT.md) pour des conseils supplémentaires (Railway, variables d'environnement, etc.).
+
+## Architecture
+
+Le projet suit une approche hexagonale (Ports & Adapters) pour séparer le
+cœur métier des détails techniques. Une présentation détaillée des couches,
+de leurs dépendances et de l'emplacement des tests est disponible dans
+[README_ARCHI.md](README_ARCHI.md).
