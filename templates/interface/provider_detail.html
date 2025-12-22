@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}{{ provider.name }}{% endblock %}
+
+{% block content %}
+<h1>{{ provider.name }}</h1>
+<p>{{ provider.description }}</p>
+
+{% if message %}<p style="color: green;">{{ message }}</p>{% endif %}
+{% if error %}<p style="color: red;">{{ error }}</p>{% endif %}
+
+<h2>Demander une prestation</h2>
+<form method="post">
+  {% csrf_token %}
+  <label>Service :
+    <select name="service_id" required>
+      {% for service in services %}
+        <option value="{{ service.id }}">{{ service.name }} ({{ service.base_price_cents }} cts)</option>
+      {% endfor %}
+    </select>
+  </label><br>
+  <label>Nom :
+    <input type="text" name="client_name" required>
+  </label><br>
+  <label>Téléphone :
+    <input type="text" name="client_phone" required>
+  </label><br>
+  <label>Lieu :
+    <select name="location" required>
+      {% for zone in zones %}
+        <option value="{{ zone.name }}">{{ zone.name }}</option>
+      {% endfor %}
+    </select>
+  </label><br>
+  <label>Date souhaitée :
+    <input type="text" name="desired_date" required>
+  </label><br>
+  <label>Longueur de cheveux :
+    <input type="text" name="hair_length" required>
+  </label><br>
+  <label>Mèche :
+    <input type="text" name="meche" required>
+  </label><br>
+  <label>Photo actuelle (référence ou URL) :
+    <input type="text" name="current_hair_picture" required>
+  </label><br>
+  <label>Infos complémentaires :
+    <textarea name="free_text"></textarea>
+  </label><br>
+  <button type="submit">Envoyer la demande</button>
+  <input type="hidden" name="provider_id" value="{{ provider.id }}">
+</form>
+{% endblock %}

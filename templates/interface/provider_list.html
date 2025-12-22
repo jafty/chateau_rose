@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Prestataires{% endblock %}
+
+{% block content %}
+<h1>Prestataires</h1>
+<ul>
+  {% for provider in providers %}
+    <li><a href="{% url 'interface:provider_detail' provider.id %}">{{ provider.name }}</a></li>
+  {% empty %}
+    <li>Aucun prestataire pour le moment.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
