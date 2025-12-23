@@ -1,1 +1,2 @@
 Django>=6.0,<7.0
+dj-database-url>=2.1.0
