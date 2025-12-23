@@ -15,6 +15,16 @@
   {% endfor %}
 </ul>
 
+<h2>Services</h2>
+<ul>
+  {% for service in services %}
+    <li>
+      <a href="{% url 'interface:service_page' service.slug %}">{{ service.name }}</a>
+      <small>(voir aussi <a href="{% url 'interface:service_city_page' service.slug 'toulouse' %}">à Toulouse</a>)</small>
+    </li>
+  {% endfor %}
+</ul>
+
 <h2>Zones couvertes</h2>
 <ul>
   {% for zone in zones %}

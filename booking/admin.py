@@ -10,13 +10,14 @@ class ProviderAdmin(admin.ModelAdmin):
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ("name", "provider", "base_price_cents")
+    list_display = ("name", "slug", "provider", "base_price_cents")
     list_filter = ("provider",)
+    search_fields = ("name", "slug")
 
 
 @admin.register(Zone)
 class ZoneAdmin(admin.ModelAdmin):
-    list_display = ("name",)
+    list_display = ("name", "slug")
 
 
 @admin.register(ProviderZone)

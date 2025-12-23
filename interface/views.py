@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -11,6 +11,7 @@ from chateaurose.infrastructure.booking_repository import DjangoBookingRepositor
 from chateaurose.infrastructure.notifier_stub import NotifierStub
 from chateaurose.infrastructure.payment_stub import PaymentGatewayStub
 from chateaurose.infrastructure.provider_catalog import DjangoProviderCatalog
+from interface import seo
 
 repo = DjangoBookingRepository()
 notifier = NotifierStub()
@@ -21,7 +22,16 @@ provider_catalog = DjangoProviderCatalog()
 def home(request):
     providers = Provider.objects.all()
     zones = Zone.objects.all()
-    return render(request, "interface/home.html", {"providers": providers, "zones": zones})
+    return render(
+        request,
+        "interface/home.html",
+        {
+            "providers": providers,
+            "zones": zones,
+            "services": seo.SERVICES,
+            "cities": seo.CITIES,
+        },
+    )
 
 
 def provider_list(request):
@@ -104,3 +114,52 @@ def client_action(request, booking_id):
         notifier=notifier,
     )
     return redirect("interface:home")
+
+
+def _get_service_or_404(service_slug: str):
+    for service in seo.SERVICES:
+        if service["slug"] == service_slug:
+            return service
+    raise Http404()
+
+
+def _get_city_or_404(city_slug: str):
+    for city in seo.CITIES:
+        if city["slug"] == city_slug:
+            return city
+    raise Http404()
+
+
+def service_page(request, service_slug: str):
+    service_meta = _get_service_or_404(service_slug)
+    providers = Provider.objects.filter(services__slug=service_slug).distinct()
+
+    return render(
+        request,
+        "interface/service_page.html",
+        {
+            "service": service_meta,
+            "city": None,
+            "providers": providers,
+        },
+    )
+
+
+def service_city_page(request, service_slug: str, city_slug: str):
+    service_meta = _get_service_or_404(service_slug)
+    city_meta = _get_city_or_404(city_slug)
+
+    providers = (
+        Provider.objects.filter(services__slug=service_slug, provider_zones__zone__slug=city_slug)
+        .distinct()
+    )
+
+    return render(
+        request,
+        "interface/service_page.html",
+        {
+            "service": service_meta,
+            "city": city_meta,
+            "providers": providers,
+        },
+    )

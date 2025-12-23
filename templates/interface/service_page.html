@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {{ service.name }}{% if city %} - {{ city.name }}{% endif %} | Chateau Rose
+{% endblock %}
+
+{% block content %}
+<h1>{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse et alentours{% endif %}</h1>
+
+{% if city %}
+  <p>Découvrez les prestataires qui proposent {{ service.name|lower }} à {{ city.name }}.</p>
+{% else %}
+  <p>Découvrez les prestataires qui proposent {{ service.name|lower }} sur Toulouse et sa métropole.</p>
+{% endif %}
+
+{% if providers %}
+  <ul>
+    {% for provider in providers %}
+      <li>{{ provider.name }}</li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>Aucun prestataire disponible pour le moment.</p>
+{% endif %}
+{% endblock %}

@@ -13,6 +13,7 @@ class Provider(models.Model):
 
 class Zone(models.Model):
     name = models.CharField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, default="")
 
     def __str__(self):
         return self.name
@@ -21,12 +22,13 @@ class Zone(models.Model):
 class Service(models.Model):
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="services")
     name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, default="", blank=True)
     base_price_cents = models.IntegerField()
     hair_length_adjustments = models.JSONField(default=dict, blank=True)
     meche_bonus_cents = models.IntegerField(default=0)
 
     class Meta:
-        unique_together = ("provider", "name")
+        unique_together = (("provider", "name"), ("provider", "slug"))
 
     def __str__(self):
         return f"{self.name} ({self.provider})"
