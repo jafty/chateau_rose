@@ -1,4 +1,5 @@
-from django.http import HttpResponseBadRequest
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -68,6 +69,10 @@ def provider_detail(request, provider_id):
 
 
 def provider_action(request, booking_id):
+    if not request.user.is_authenticated:
+        return HttpResponseForbidden("Authentification requise")
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Accès réservé au staff/prestataires")
     if request.method != "POST":
         return HttpResponseBadRequest("Méthode non autorisée")
     decision = request.POST.get("decision")
