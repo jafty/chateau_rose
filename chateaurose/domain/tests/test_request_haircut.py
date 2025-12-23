@@ -30,7 +30,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
                 "name": "Tresses africaines",
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 1500, "medium": 0, "short": -500},
-                "meche_adjustments": {"provided": 0, "not_provided": 2000},
+                "meche_bonus_cents": 2000,
             }
         }
     }
@@ -52,7 +52,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
         location=zone,
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
-        meche="not_provided",
+        meche=True,
         current_hair_picture="s3://bucket/hair.jpg",
         inspiration_pictures=["s3://bucket/inspo1.jpg"],
         free_text="Je suis dispo surtout les vendredis soir",
@@ -68,7 +68,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
     assert request.provider_id == provider_id
     assert request.service_id == service_id
     assert request.location == zone
-    assert request.estimated_price_cents == 5000 + 1500 + 2000  # base + hair length adj + meche adj
+    assert request.estimated_price_cents == 5000 + 1500 + 2000  # base + hair length adj + mèche bonus
     assert request.payment_auth_id == "auth_1"
     assert request.created_at == now
 
@@ -120,7 +120,7 @@ def test_request_haircut_rejects_service_not_offered():
             location=zone,
             desired_date="2026-01-10T17:00:00Z",
             hair_length="long",
-            meche="not_provided",
+            meche=True,
             current_hair_picture="s3://bucket/hair.jpg",
             inspiration_pictures=[],
             free_text="",
@@ -152,8 +152,8 @@ def test_request_haircut_estimated_price_defaults_to_base_when_no_adjustments():
                 "id": service_id,
                 "name": "Tresses africaines",
                 "base_price_cents": 5000,
-                "hair_length_adjustments": {"long": 1500},
-                "meche_adjustments": {"not_provided": 2000},
+                "hair_length_adjustments": {"long": 1500, "medium": 0},
+                "meche_bonus_cents": 2000,
             }
         }
     }
@@ -174,8 +174,8 @@ def test_request_haircut_estimated_price_defaults_to_base_when_no_adjustments():
         client_contact={"name": "Sarah", "phone": "+33600000000"},
         location=zone,
         desired_date="2026-01-10T17:00:00Z",
-        hair_length="medium",  # not in adjustments => 0
-        meche="provided",  # not in adjustments => 0
+        hair_length="medium",
+        meche=False,
         current_hair_picture="s3://bucket/hair.jpg",
         inspiration_pictures=[],
         free_text="",
@@ -203,6 +203,8 @@ def test_request_haircut_rejects_zone_not_covered():
                 "id": service_id,
                 "name": "Tresses africaines",
                 "base_price_cents": 5000,
+                "hair_length_adjustments": {"medium": 0},
+                "meche_bonus_cents": 0,
             }
         }
     }
@@ -225,7 +227,7 @@ def test_request_haircut_rejects_zone_not_covered():
             location="OutOfZone",
             desired_date="2026-01-10T17:00:00Z",
             hair_length="medium",
-            meche="provided",
+            meche=True,
             current_hair_picture="s3://bucket/hair.jpg",
             inspiration_pictures=[],
             free_text="",
@@ -251,7 +253,7 @@ def test_request_haircut_rejects_zone_not_covered():
         ("location", {"location": ""}),
         ("desired_date", {"desired_date": ""}),
         ("hair_length", {"hair_length": ""}),
-        ("meche", {"meche": ""}),
+        ("meche", {"meche": None}),
         ("current_hair_picture", {"current_hair_picture": ""}),
     ],
 )
@@ -290,7 +292,7 @@ def test_request_haircut_missing_mandatory_fields(missing_field, payload):
         location=zone,
         desired_date="2026-01-10T17:00:00Z",
         hair_length="medium",
-        meche="provided",
+        meche=False,
         current_hair_picture="s3://bucket/hair.jpg",
         inspiration_pictures=[],
         free_text="",

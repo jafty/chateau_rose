@@ -13,7 +13,7 @@ class DjangoProviderCatalog:
             "name": service.name,
             "base_price_cents": service.base_price_cents,
             "hair_length_adjustments": service.hair_length_adjustments or {},
-            "meche_adjustments": service.meche_adjustments or {},
+            "meche_bonus_cents": service.meche_bonus_cents,
         }
 
     def provider_covers_zone(self, provider_id: str, zone_name: str) -> bool:

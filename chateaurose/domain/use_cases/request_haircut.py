@@ -2,6 +2,7 @@ import uuid
 from datetime import timedelta
 
 from chateaurose.domain.entities.booking import BookingRequest
+from chateaurose.domain.exceptions import ValidationError
 
 SUBMITTED = "SUBMITTED"
 
@@ -18,7 +19,7 @@ def execute(
     location: str,
     desired_date: str,
     hair_length: str,
-    meche: str,
+    meche: bool,
     current_hair_picture: str,
     inspiration_pictures: list,
     free_text: str,
@@ -37,11 +38,12 @@ def execute(
         ("location", location),
         ("desired_date", desired_date),
         ("hair_length", hair_length),
-        ("meche", meche),
         ("current_hair_picture", current_hair_picture),
     ]:
         if not value:
             raise ValidationError(f"Missing required field: {field_name}")
+    if meche is None:
+        raise ValidationError("Missing required field: meche")
 
     try:
         service = provider_catalog.get_service(provider_id, service_id)
@@ -51,9 +53,12 @@ def execute(
         raise ValidationError("Provider does not cover this zone")
 
     base_price = service["base_price_cents"]
-    length_adj = service.get("hair_length_adjustments", {}).get(hair_length, 0)
-    meche_adj = service.get("meche_adjustments", {}).get(meche, 0)
-    estimated_price = base_price + length_adj + meche_adj
+    length_adjustments = service.get("hair_length_adjustments", {})
+    if hair_length not in length_adjustments:
+        raise ValidationError("Hair length is not supported for this service")
+    length_adj = length_adjustments[hair_length]
+    meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
+    estimated_price = base_price + length_adj + meche_bonus
 
     booking_id = _generate_id()
     payment_auth_id = payment_gateway.create_auth(
@@ -115,4 +120,3 @@ def execute(
         )
 
     return booking
-from chateaurose.domain.exceptions import ValidationError

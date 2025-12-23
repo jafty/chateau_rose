@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
                 ("name", models.CharField(max_length=255)),
                 ("base_price_cents", models.IntegerField()),
                 ("hair_length_adjustments", models.JSONField(blank=True, default=dict)),
-                ("meche_adjustments", models.JSONField(blank=True, default=dict)),
+                ("meche_bonus_cents", models.IntegerField(default=0)),
                 (
                     "provider",
                     models.ForeignKey(
@@ -91,7 +91,7 @@ class Migration(migrations.Migration):
                 ("location", models.CharField(max_length=255)),
                 ("desired_date", models.CharField(max_length=128)),
                 ("hair_length", models.CharField(max_length=64)),
-                ("meche", models.CharField(max_length=64)),
+                ("meche", models.BooleanField()),
                 ("current_hair_picture", models.CharField(max_length=255)),
                 ("inspiration_pictures", models.JSONField(default=list)),
                 ("free_text", models.TextField(blank=True)),

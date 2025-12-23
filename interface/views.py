@@ -38,6 +38,7 @@ def provider_detail(request, provider_id):
 
     if request.method == "POST":
         data = request.POST
+        meche_bool = data.get("meche") == "on"
         try:
             booking = request_haircut.execute(
                 provider_id=str(provider.id),
@@ -46,7 +47,7 @@ def provider_detail(request, provider_id):
                 location=data.get("location"),
                 desired_date=data.get("desired_date"),
                 hair_length=data.get("hair_length"),
-                meche=data.get("meche"),
+                meche=meche_bool,
                 current_hair_picture=data.get("current_hair_picture"),
                 inspiration_pictures=[],
                 free_text=data.get("free_text", ""),

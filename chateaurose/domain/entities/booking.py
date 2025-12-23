@@ -11,7 +11,7 @@ class BookingRequest:
     location: str
     desired_date: str
     hair_length: str
-    meche: str
+    meche: bool
     current_hair_picture: str
     inspiration_pictures: list
     free_text: str
