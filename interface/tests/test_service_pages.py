@@ -63,3 +63,12 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(self.client.get(service_url).status_code, 404)
         self.assertEqual(self.client.get(city_url).status_code, 404)
+
+    def test_service_page_lists_city_links(self):
+        url = reverse("interface:service_page", args=["tresses"])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        # Should list at least Toulouse link
+        self.assertIn("/services/tresses/toulouse", content)

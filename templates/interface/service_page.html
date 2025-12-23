@@ -13,6 +13,17 @@
   <p>Découvrez les prestataires qui proposent {{ service.name|lower }} sur Toulouse et sa métropole.</p>
 {% endif %}
 
+<p>Choisir une ville :</p>
+<ul>
+  {% for city_option in cities %}
+    <li>
+      <a href="{% url 'interface:service_city_page' service.slug city_option.slug %}">
+        {{ service.name }} à {{ city_option.name }}
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+
 {% if providers %}
   <ul>
     {% for provider in providers %}

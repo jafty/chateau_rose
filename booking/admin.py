@@ -1,6 +1,25 @@
+from django import forms
 from django.contrib import admin
 
 from .models import Booking, Provider, ProviderZone, Service, Zone
+from interface import seo
+
+
+class ZoneAdminForm(forms.ModelForm):
+    slug = forms.ChoiceField(choices=[(c["slug"], c["name"]) for c in seo.CITIES])
+    name = forms.CharField(disabled=True, required=False)
+
+    class Meta:
+        model = Zone
+        fields = ("slug", "name")
+
+    def clean(self):
+        cleaned = super().clean()
+        slug = cleaned.get("slug")
+        if slug:
+            city_map = {c["slug"]: c["name"] for c in seo.CITIES}
+            cleaned["name"] = city_map.get(slug, cleaned.get("name"))
+        return cleaned
 
 
 @admin.register(Provider)
@@ -18,6 +37,7 @@ class ServiceAdmin(admin.ModelAdmin):
 @admin.register(Zone)
 class ZoneAdmin(admin.ModelAdmin):
     list_display = ("name", "slug")
+    form = ZoneAdminForm
 
 
 @admin.register(ProviderZone)

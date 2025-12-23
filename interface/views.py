@@ -141,6 +141,7 @@ def service_page(request, service_slug: str):
             "service": service_meta,
             "city": None,
             "providers": providers,
+            "cities": seo.CITIES,
         },
     )
 
@@ -161,5 +162,6 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "service": service_meta,
             "city": city_meta,
             "providers": providers,
+            "cities": seo.CITIES,
         },
     )
