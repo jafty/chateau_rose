@@ -27,3 +27,14 @@ CITIES = [
     {"slug": "saint-jean", "name": "Saint-Jean"},
     {"slug": "aucamville", "name": "Aucamville"},
 ]
+
+# Districts per city (only filled for Toulouse for now)
+DISTRICTS_BY_CITY = {
+    "toulouse": [
+        {"slug": "capitole", "name": "Capitole"},
+        {"slug": "saint-cyprien", "name": "Saint-Cyprien"},
+        {"slug": "les-minimes", "name": "Les Minimes"},
+        {"slug": "rangueil", "name": "Rangueil"},
+        {"slug": "saint-michel", "name": "Saint-Michel"},
+    ]
+}

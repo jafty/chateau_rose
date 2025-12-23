@@ -130,6 +130,17 @@ def _get_city_or_404(city_slug: str):
     raise Http404()
 
 
+def _get_districts_for_city(city_slug: str):
+    return seo.DISTRICTS_BY_CITY.get(city_slug, [])
+
+
+def _get_district_or_404(city_slug: str, district_slug: str):
+    for district in _get_districts_for_city(city_slug):
+        if district["slug"] == district_slug:
+            return district
+    raise Http404()
+
+
 def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
     providers = Provider.objects.filter(services__slug=service_slug).distinct()
@@ -140,8 +151,10 @@ def service_page(request, service_slug: str):
         {
             "service": service_meta,
             "city": None,
+            "district": None,
             "providers": providers,
             "cities": seo.CITIES,
+            "districts": [],
         },
     )
 
@@ -149,9 +162,14 @@ def service_page(request, service_slug: str):
 def service_city_page(request, service_slug: str, city_slug: str):
     service_meta = _get_service_or_404(service_slug)
     city_meta = _get_city_or_404(city_slug)
+    district_list = _get_districts_for_city(city_slug)
+    district_slugs = [d["slug"] for d in district_list]
 
     providers = (
-        Provider.objects.filter(services__slug=service_slug, provider_zones__zone__slug=city_slug)
+        Provider.objects.filter(
+            services__slug=service_slug,
+            provider_zones__zone__slug__in=[city_slug, *district_slugs],
+        )
         .distinct()
     )
 
@@ -161,7 +179,36 @@ def service_city_page(request, service_slug: str, city_slug: str):
         {
             "service": service_meta,
             "city": city_meta,
+            "district": None,
             "providers": providers,
             "cities": seo.CITIES,
+            "districts": district_list,
+        },
+    )
+
+
+def service_city_district_page(request, service_slug: str, city_slug: str, district_slug: str):
+    service_meta = _get_service_or_404(service_slug)
+    city_meta = _get_city_or_404(city_slug)
+    district_meta = _get_district_or_404(city_slug, district_slug)
+
+    providers = (
+        Provider.objects.filter(
+            services__slug=service_slug,
+            provider_zones__zone__slug=district_slug,
+        )
+        .distinct()
+    )
+
+    return render(
+        request,
+        "interface/service_page.html",
+        {
+            "service": service_meta,
+            "city": city_meta,
+            "district": district_meta,
+            "providers": providers,
+            "cities": seo.CITIES,
+            "districts": _get_districts_for_city(city_slug),
         },
     )

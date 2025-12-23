@@ -12,4 +12,9 @@ urlpatterns = [
     path("bookings/<str:booking_id>/client-action/", views.client_action, name="client_action"),
     path("services/<slug:service_slug>/", views.service_page, name="service_page"),
     path("services/<slug:service_slug>/<slug:city_slug>/", views.service_city_page, name="service_city_page"),
+    path(
+        "services/<slug:service_slug>/<slug:city_slug>/<slug:district_slug>/",
+        views.service_city_district_page,
+        name="service_city_district_page",
+    ),
 ]

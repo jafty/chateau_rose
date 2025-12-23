@@ -24,6 +24,19 @@
   {% endfor %}
 </ul>
 
+{% if city and districts %}
+  <p>Quartiers / districts dans {{ city.name }} :</p>
+  <ul>
+    {% for district_option in districts %}
+      <li>
+        <a href="{% url 'interface:service_city_district_page' service.slug city.slug district_option.slug %}">
+          {{ service.name }} à {{ district_option.name }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
 {% if providers %}
   <ul>
     {% for provider in providers %}

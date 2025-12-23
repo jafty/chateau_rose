@@ -7,6 +7,7 @@ from booking.models import Provider, ProviderZone, Service, Zone
 class ServicePagesTests(TestCase):
     def setUp(self):
         self.toulouse = Zone.objects.create(name="Toulouse", slug="toulouse")
+        self.capitole = Zone.objects.create(name="Capitole", slug="capitole")
         self.colomiers = Zone.objects.create(name="Colomiers", slug="colomiers")
 
         self.provider_a = Provider.objects.create(name="Prestataire A")
@@ -27,7 +28,7 @@ class ServicePagesTests(TestCase):
             hair_length_adjustments={},
         )
 
-        ProviderZone.objects.create(provider=self.provider_a, zone=self.toulouse)
+        ProviderZone.objects.create(provider=self.provider_a, zone=self.capitole)
         ProviderZone.objects.create(provider=self.provider_b, zone=self.colomiers)
 
     def test_service_page_filters_providers_by_service(self):
@@ -72,3 +73,17 @@ class ServicePagesTests(TestCase):
         content = response.content.decode()
         # Should list at least Toulouse link
         self.assertIn("/services/tresses/toulouse", content)
+
+    def test_service_city_page_lists_district_links_and_filters_district(self):
+        url = reverse("interface:service_city_page", args=["tresses", "toulouse"])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("/services/tresses/toulouse/capitole", content)
+
+        district_url = reverse("interface:service_city_district_page", args=["tresses", "toulouse", "capitole"])
+        district_response = self.client.get(district_url)
+        self.assertEqual(district_response.status_code, 200)
+        district_content = district_response.content.decode()
+        self.assertIn(self.provider_a.name, district_content)
+        self.assertNotIn(self.provider_b.name, district_content)
