@@ -8,9 +8,8 @@
 <body>
     <header>
         <nav>
-            <a href="/">Accueil</a> |
-            <a href="/booking/">Réservations</a> |
-            <a href="/providers/">Prestataires</a>
+            <a href="{% url 'interface:home' %}">Accueil</a> |
+            <a href="{% url 'interface:provider_list' %}">Prestataires</a>
         </nav>
     </header>
 

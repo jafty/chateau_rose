@@ -4,5 +4,33 @@
 
 {% block content %}
 <h1>Bienvenue à Chateau Rose</h1>
-<p>Cette page d'accueil sera enrichie prochainement.</p>
+<p>Coiffure afro et tresses à Toulouse et alentours.</p>
+
+<h2>Prestataires</h2>
+<ul>
+  {% for provider in providers %}
+    <li><a href="{% url 'interface:provider_detail' provider.id %}">{{ provider.name }}</a></li>
+  {% empty %}
+    <li>Aucun prestataire pour le moment.</li>
+  {% endfor %}
+</ul>
+
+<h2>Services</h2>
+<ul>
+  {% for service in services %}
+    <li>
+      <a href="{% url 'interface:service_page' service.slug %}">{{ service.name }}</a>
+      <small>(voir aussi <a href="{% url 'interface:service_city_page' service.slug 'toulouse' %}">à Toulouse</a>)</small>
+    </li>
+  {% endfor %}
+</ul>
+
+<h2>Zones couvertes</h2>
+<ul>
+  {% for zone in zones %}
+    <li>{{ zone.name }}</li>
+  {% empty %}
+    <li>Zones à définir.</li>
+  {% endfor %}
+</ul>
 {% endblock %}

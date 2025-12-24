@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{{ provider.name }}{% endblock %}
+
+{% block content %}
+<h1>{{ provider.name }}</h1>
+{% if provider.profile_image %}
+<p><img src="{{ provider.profile_image.url }}" alt="Photo de {{ provider.name }}" style="max-width:200px;"></p>
+{% endif %}
+<p>{{ provider.description }}</p>
+
+{% if provider.photos.all %}
+  <h3>Réalisations</h3>
+  <div>
+    {% for photo in provider.photos.all %}
+      <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" style="max-width:150px; margin: 4px;">
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% if message %}<p style="color: green;">{{ message }}</p>{% endif %}
+{% if error %}<p style="color: red;">{{ error }}</p>{% endif %}
+
+<h2>Demander une prestation</h2>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <label>Service :
+    <select name="service_id" required>
+      {% for service in services %}
+        <option value="{{ service.id }}">{{ service.name }} ({{ service.base_price_cents }} cts)</option>
+      {% endfor %}
+    </select>
+  </label><br>
+  <label>Nom :
+    <input type="text" name="client_name" required>
+  </label><br>
+  <label>Téléphone :
+    <input type="text" name="client_phone" required>
+  </label><br>
+  <label>Lieu :
+    <select name="location" required>
+      {% for zone in zones %}
+        <option value="{{ zone.name }}">{{ zone.name }}</option>
+      {% endfor %}
+    </select>
+  </label><br>
+  <label>Date souhaitée :
+    <input type="text" name="desired_date" required>
+  </label><br>
+  <label>Longueur de cheveux :
+    <input type="text" name="hair_length" required>
+  </label><br>
+  <label>Mèche (oui) :
+    <input type="checkbox" name="meche">
+  </label><br>
+  <label>Photo actuelle (upload) :
+    <input type="file" name="current_hair_picture_file" accept="image/*">
+  </label><br>
+  <label>Photo actuelle (référence ou URL) :
+    <input type="text" name="current_hair_picture">
+  </label><br>
+  <label>Photos d'inspiration (plusieurs possibles) :
+    <input type="file" name="inspiration_pictures" accept="image/*" multiple>
+  </label><br>
+  <label>Infos complémentaires :
+    <textarea name="free_text"></textarea>
+  </label><br>
+  <button type="submit">Envoyer la demande</button>
+  <input type="hidden" name="provider_id" value="{{ provider.id }}">
+</form>
+{% endblock %}

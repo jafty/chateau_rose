@@ -1,0 +1,60 @@
+SERVICES = [
+    {"slug": "tresses", "name": "Tresses / Braids"},
+    {"slug": "locks", "name": "Locks / Locs"},
+    {"slug": "tissage", "name": "Tissage / Weave"},
+    {"slug": "vanilles", "name": "Vanilles"},
+    {"slug": "soins", "name": "Soins capillaires"},
+    {"slug": "perruques", "name": "Perruques (pose & dépose/retrait)"},
+    {"slug": "defrisage-assouplissement", "name": "Défrisage & Assouplissement"},
+    {"slug": "coloration-meches", "name": "Coloration & Mèches"},
+    {"slug": "coiffure-enfant-afro", "name": "Coiffure Enfant Afro"},
+]
+
+CITIES = [
+    {"slug": "toulouse", "name": "Toulouse"},
+    {"slug": "colomiers", "name": "Colomiers"},
+    {"slug": "tournefeuille", "name": "Tournefeuille"},
+    {"slug": "blagnac", "name": "Blagnac"},
+    {"slug": "muret", "name": "Muret"},
+    {"slug": "cugnaux", "name": "Cugnaux"},
+    {"slug": "plaisance-du-touch", "name": "Plaisance-du-Touch"},
+    {"slug": "balma", "name": "Balma"},
+    {"slug": "l-union", "name": "L'Union"},
+    {"slug": "ramonville-saint-agne", "name": "Ramonville-Saint-Agne"},
+    {"slug": "saint-orens-de-gameville", "name": "Saint-Orens-de-Gameville"},
+    {"slug": "castanet-tolosan", "name": "Castanet-Tolosan"},
+    {"slug": "portet-sur-garonne", "name": "Portet-sur-Garonne"},
+    {"slug": "saint-jean", "name": "Saint-Jean"},
+    {"slug": "aucamville", "name": "Aucamville"},
+]
+
+# Districts per city (only filled for Toulouse for now)
+DISTRICTS_BY_CITY = {
+    "toulouse": [
+        {"slug": "capitole", "name": "Capitole"},
+        {"slug": "arnaud-bernard", "name": "Arnaud-Bernard"},
+        {"slug": "jean-jaures", "name": "Jean-Jaurès"},
+        {"slug": "saint-cyprien", "name": "Saint-Cyprien"},
+        {"slug": "les-minimes", "name": "Les Minimes"},
+        {"slug": "compans-amidonniers", "name": "Compans / Amidonniers"},
+        {"slug": "chalet-bayard", "name": "Les Chalets / Bayard"},
+        {"slug": "carmes-ozenne", "name": "Carmes / Ozenne"},
+        {"slug": "saint-michel-empalot-saint-agne", "name": "Saint-Michel / Empalot / Saint-Agne"},
+        {"slug": "rangueil-saouzelong-pech-david", "name": "Rangueil / Saouzelong / Pech David"},
+        {"slug": "busca-terre-cabade", "name": "Busca / Terre Cabade"},
+        {"slug": "pont-des-demoiselles-ormeau", "name": "Pont des Demoiselles / Ormeau"},
+        {"slug": "cote-pavee-guilhemery", "name": "Côte Pavée / Guilheméry"},
+        {"slug": "roseraie-jolimont", "name": "Roseraie / Jolimont"},
+        {"slug": "bonnefoy", "name": "Bonnefoy"},
+        {"slug": "sept-deniers", "name": "Sept Deniers"},
+        {"slug": "patte-d-oie-casselardit", "name": "Patte-d'Oie / Casselardit"},
+        {"slug": "fontaine-lestang-mermoz", "name": "Fontaine-Lestang / Mermoz"},
+        {"slug": "reynerie-bagatelle-faourette", "name": "Reynerie / Bagatelle / Faourette"},
+        {"slug": "mirail-universite-basso-cambo", "name": "Mirail / Université / Basso Cambo"},
+        {"slug": "borderouge-croix-daurade", "name": "Borderouge / Croix-Daurade"},
+        {"slug": "lalande", "name": "Lalande"},
+        {"slug": "les-pradettes", "name": "Les Pradettes"},
+        {"slug": "lardenne-saint-simon", "name": "Lardenne / Saint-Simon"},
+        {"slug": "sesquieres", "name": "Sesquières"},
+    ]
+}
