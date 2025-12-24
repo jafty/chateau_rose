@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {{ service.name }}{% if city %} - {{ city.name }}{% endif %} | Chateau Rose
+{% endblock %}
+
+{% block content %}
+<h1>{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse et alentours{% endif %}</h1>
+
+{% if city %}
+  <p>Découvrez les prestataires qui proposent {{ service.name|lower }} à {{ city.name }}.</p>
+{% else %}
+  <p>Découvrez les prestataires qui proposent {{ service.name|lower }} sur Toulouse et sa métropole.</p>
+{% endif %}
+
+<p>Choisir une ville :</p>
+<ul>
+  {% for city_option in cities %}
+    <li>
+      <a href="{% url 'interface:service_city_page' service.slug city_option.slug %}">
+        {{ service.name }} à {{ city_option.name }}
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+
+{% if city and districts %}
+  <p>Quartiers / districts dans {{ city.name }} :</p>
+  <ul>
+    {% for district_option in districts %}
+      <li>
+        <a href="{% url 'interface:service_city_district_page' service.slug city.slug district_option.slug %}">
+          {{ service.name }} à {{ district_option.name }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+{% if providers %}
+  <ul>
+    {% for provider in providers %}
+      <li>{{ provider.name }}</li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>Aucun prestataire disponible pour le moment.</p>
+{% endif %}
+{% endblock %}
