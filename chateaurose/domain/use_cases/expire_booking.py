@@ -23,6 +23,7 @@ def execute(
 
     if booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION) and now - booking.created_at >= timedelta(hours=48):
         booking.status = CANCELLED
+        booking.updated_at = now
         payment_gateway.release_auth(booking.payment_auth_id)
         notifier.notify(
             booking.provider_id,

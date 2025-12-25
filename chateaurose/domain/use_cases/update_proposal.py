@@ -9,6 +9,7 @@ def execute(
     provider_id: str,
     new_price_cents: int,
     new_date: str,
+    now=None,
     booking_repository,
     notifier,
 ) -> BookingRequest:
@@ -21,6 +22,7 @@ def execute(
     booking.status = PENDING_CLIENT_VALIDATION
     booking.proposed_price_cents = new_price_cents
     booking.proposed_date = new_date
+    booking.updated_at = now or booking.created_at
 
     booking_repository.update(booking)
 

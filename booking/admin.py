@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
 
-from .models import Booking, Provider, ProviderZone, Service, Zone
+from .models import Booking, Provider, ProviderPhoto, ProviderZone, Service, Zone
 from interface import seo
 
 
@@ -40,6 +40,17 @@ class ZoneAdminForm(forms.ModelForm):
 @admin.register(Provider)
 class ProviderAdmin(admin.ModelAdmin):
     list_display = ("name", "contact_phone", "contact_email")
+    inlines = []
+
+
+class ProviderPhotoInline(admin.TabularInline):
+    model = ProviderPhoto
+    extra = 1
+    fields = ("image", "caption", "order")
+    ordering = ("order",)
+
+
+ProviderAdmin.inlines.append(ProviderPhotoInline)
 
 
 @admin.register(Service)

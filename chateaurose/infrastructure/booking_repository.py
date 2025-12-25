@@ -8,6 +8,8 @@ class DjangoBookingRepository:
         provider_obj = Provider.objects.get(id=booking.provider_id)
         service_obj = Service.objects.get(id=booking.service_id, provider=provider_obj)
 
+        updated_at = getattr(booking, "updated_at", None) or booking.created_at
+
         Booking.objects.create(
             booking_id=booking.id,
             provider=provider_obj,
@@ -27,7 +29,7 @@ class DjangoBookingRepository:
             proposed_price_cents=booking.proposed_price_cents,
             proposed_date=booking.proposed_date,
             created_at=booking.created_at,
-            updated_at=booking.updated_at,
+            updated_at=updated_at,
         )
         return booking
 
@@ -41,6 +43,8 @@ class DjangoBookingRepository:
     def update(self, booking: BookingRequest):
         provider_obj = Provider.objects.get(id=booking.provider_id)
         service_obj = Service.objects.get(id=booking.service_id, provider=provider_obj)
+
+        updated_at = getattr(booking, "updated_at", None) or booking.created_at
 
         count = Booking.objects.filter(booking_id=booking.id).update(
             provider=provider_obj,
@@ -60,7 +64,7 @@ class DjangoBookingRepository:
             proposed_price_cents=booking.proposed_price_cents,
             proposed_date=booking.proposed_date,
             created_at=booking.created_at,
-            updated_at=booking.updated_at,
+            updated_at=updated_at,
         )
         if not count:
             raise NotFound(f"Booking {booking.id} not found")

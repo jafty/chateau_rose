@@ -1,4 +1,7 @@
+import os
+
 from django.contrib.auth.decorators import login_required
+from django.core.files.storage import default_storage
 from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -17,6 +20,13 @@ repo = DjangoBookingRepository()
 notifier = NotifierStub()
 payment_gateway = PaymentGatewayStub()
 provider_catalog = DjangoProviderCatalog()
+
+
+def _save_upload(file_obj, prefix: str):
+    if not file_obj:
+        return None
+    filename = file_obj.name
+    return default_storage.save(os.path.join(prefix, filename), file_obj)
 
 
 def home(request):
@@ -49,6 +59,17 @@ def provider_detail(request, provider_id):
     if request.method == "POST":
         data = request.POST
         meche_bool = data.get("meche") == "on"
+        current_picture = data.get("current_hair_picture")
+        uploaded_current = request.FILES.get("current_hair_picture_file")
+        if uploaded_current:
+            current_picture = _save_upload(uploaded_current, "bookings/current/")
+
+        inspiration_paths = []
+        for upload in request.FILES.getlist("inspiration_pictures"):
+            saved = _save_upload(upload, "bookings/inspiration/")
+            if saved:
+                inspiration_paths.append(saved)
+
         try:
             booking = request_haircut.execute(
                 provider_id=str(provider.id),
@@ -58,8 +79,8 @@ def provider_detail(request, provider_id):
                 desired_date=data.get("desired_date"),
                 hair_length=data.get("hair_length"),
                 meche=meche_bool,
-                current_hair_picture=data.get("current_hair_picture"),
-                inspiration_pictures=[],
+                current_hair_picture=current_picture,
+                inspiration_pictures=inspiration_paths,
                 free_text=data.get("free_text", ""),
                 booking_repository=repo,
                 provider_catalog=provider_catalog,

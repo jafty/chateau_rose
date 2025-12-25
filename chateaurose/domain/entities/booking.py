@@ -21,3 +21,4 @@ class BookingRequest:
     created_at: datetime
     proposed_price_cents: int | None = None
     proposed_date: str | None = None
+    updated_at: datetime | None = None

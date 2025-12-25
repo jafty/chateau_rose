@@ -6,6 +6,7 @@ class Provider(models.Model):
     description = models.TextField(blank=True)
     contact_phone = models.CharField(max_length=64, blank=True)
     contact_email = models.EmailField(blank=True)
+    profile_image = models.ImageField(upload_to="providers/profile/", blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -32,6 +33,20 @@ class Service(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.provider})"
+
+
+class ProviderPhoto(models.Model):
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="photos")
+    image = models.ImageField(upload_to="providers/gallery/")
+    caption = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("order", "id")
+
+    def __str__(self):
+        return f"Photo de {self.provider}"
 
 
 class ProviderZone(models.Model):

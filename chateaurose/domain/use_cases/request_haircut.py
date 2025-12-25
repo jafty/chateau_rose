@@ -84,6 +84,7 @@ def execute(
         payment_auth_id=payment_auth_id,
         status=SUBMITTED,
         created_at=created_at,
+        updated_at=created_at,
     )
 
     booking_repository.add(booking)

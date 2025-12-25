@@ -21,6 +21,8 @@ def execute(
 ) -> BookingRequest:
     booking = booking_repository.get(booking_id)
 
+    effective_now = now or booking.created_at
+
     # Expired guard (48h)
     if now is not None and now - booking.created_at >= timedelta(hours=48):
         raise InvalidState("Booking has expired")
@@ -90,5 +92,6 @@ def execute(
     else:
         raise InvalidState("Unknown actor")
 
+    booking.updated_at = effective_now
     booking_repository.update(booking)
     return booking
