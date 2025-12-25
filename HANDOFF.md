@@ -2,6 +2,7 @@
 
 ## Current state (infra & env)
 - DB is selected via `DATABASE_URL` when set; otherwise falls back to SQLite `db.sqlite3` with a 600s pool. Hosts/CSRF are read from `DJANGO_ALLOWED_HOSTS` and `DJANGO_CSRF_TRUSTED_ORIGINS` (comma-separated), defaulting to localhost if unset. Media is served from `MEDIA_URL`/`MEDIA_ROOT` and will be ephemeral on container filesystems unless a persistent volume or remote storage is configured.
+- Branching/deploys: the active branch is `work`; keep Railway pointing at the same branch to avoid reconfiguring hosts/CSRF/DB vars. If you deploy another branch intentionally, set those env vars there too and run `python manage.py migrate` on that environment.
 
 ## Domain use cases & entities
 - **RequestHaircut** validates required fields, ensures service belongs to provider and zone is covered, checks hair length support, computes estimated price (base + hair-length adjustment + optional mèche bonus), creates a €10 auth, saves the booking, and notifies provider and client. Reminder scheduling is optional (can be `None`).
