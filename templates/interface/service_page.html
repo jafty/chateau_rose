@@ -1,49 +1,76 @@
 {% extends "base.html" %}
 
-{% block title %}
-  {{ service.name }}{% if city %} - {{ city.name }}{% endif %} | Chateau Rose
-{% endblock %}
+{% block title %}{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse{% endif %} | Château Rose{% endblock %}
 
 {% block content %}
-<h1>{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse et alentours{% endif %}</h1>
+<section class="container page-hero">
+    <div>
+        <span class="pill">Service</span>
+        <h1>{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse et alentours{% endif %}</h1>
+        {% if city %}
+            <p class="lead">Prestataires mobiles ou en salon pour {{ service.name|lower }} à {{ city.name }}{% if district %}, secteur {{ district.name }}{% endif %}.</p>
+        {% else %}
+            <p class="lead">Découvrez les prestataires qui proposent {{ service.name|lower }} sur Toulouse et sa métropole.</p>
+        {% endif %}
+    </div>
+</section>
 
-{% if city %}
-  <p>Découvrez les prestataires qui proposent {{ service.name|lower }} à {{ city.name }}.</p>
-{% else %}
-  <p>Découvrez les prestataires qui proposent {{ service.name|lower }} sur Toulouse et sa métropole.</p>
-{% endif %}
+<section class="container">
+    <div class="info-card">
+        <div class="breadcrumb">
+            <span><a href="{% url 'interface:home' %}">Accueil</a> › {{ service.name }}{% if city %} › {{ city.name }}{% endif %}{% if district %} › {{ district.name }}{% endif %}</span>
+        </div>
+        <h3 style="margin-bottom:12px;">Choisir une ville</h3>
+        <div class="chips">
+            {% for city_option in cities %}
+                <a class="chip {% if city and city_option.slug == city.slug %}active{% endif %}" href="{% url 'interface:service_city_page' service.slug city_option.slug %}">
+                    {{ city_option.name }}
+                </a>
+            {% endfor %}
+        </div>
+        {% if city and districts %}
+            <h4 style="margin-bottom:10px;">Quartiers à {{ city.name }}</h4>
+            <div class="chips">
+                {% for district_option in districts %}
+                    <a class="chip {% if district and district_option.slug == district.slug %}active{% endif %}" href="{% url 'interface:service_city_district_page' service.slug city.slug district_option.slug %}">
+                        {{ district_option.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</section>
 
-<p>Choisir une ville :</p>
-<ul>
-  {% for city_option in cities %}
-    <li>
-      <a href="{% url 'interface:service_city_page' service.slug city_option.slug %}">
-        {{ service.name }} à {{ city_option.name }}
-      </a>
-    </li>
-  {% endfor %}
-</ul>
-
-{% if city and districts %}
-  <p>Quartiers / districts dans {{ city.name }} :</p>
-  <ul>
-    {% for district_option in districts %}
-      <li>
-        <a href="{% url 'interface:service_city_district_page' service.slug city.slug district_option.slug %}">
-          {{ service.name }} à {{ district_option.name }}
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
-{% endif %}
-
-{% if providers %}
-  <ul>
-    {% for provider in providers %}
-      <li>{{ provider.name }}</li>
-    {% endfor %}
-  </ul>
-{% else %}
-  <p>Aucun prestataire disponible pour le moment.</p>
-{% endif %}
+<section class="container providers-section" style="padding-top:50px;">
+    {% if providers %}
+        <div class="providers-grid">
+            {% for provider in providers %}
+                <article class="provider-card">
+                    <div class="provider-header">
+                        {% if provider.profile_image %}
+                            <img src="{{ provider.profile_image.url }}" alt="{{ provider.name }}">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?q=80&w=600&auto=format" alt="Coiffeuse afro à Toulouse">
+                        {% endif %}
+                        <span class="provider-rating">Spécialiste {{ service.name|lower }}</span>
+                    </div>
+                    <div class="provider-body">
+                        <h3 class="provider-name">{{ provider.name }}</h3>
+                        <p class="provider-loc">Zones : {% for zone in provider.provider_zones.all %}{{ zone.zone.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}</p>
+                        <div class="tags">
+                            {% for srv in provider.services.all|slice:":3" %}
+                                <span class="tag">{{ srv.name }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="card-actions">
+                            <a class="btn" style="width:100%; text-align:center;" href="{% url 'interface:provider_detail' provider.id %}">Prendre contact</a>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="lead">Aucun prestataire disponible pour le moment.</p>
+    {% endif %}
+</section>
 {% endblock %}
