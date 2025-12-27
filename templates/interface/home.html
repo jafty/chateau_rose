@@ -15,10 +15,13 @@
         </div>
 
         <div class="hero-services">
-            {% for service in services|slice:":4" %}
-                {% cycle 'https://images.unsplash.com/photo-1624896790977-8d76550b0688?q=80&w=400&auto=format&fit=crop' 'https://images.unsplash.com/photo-1595189873499-15d2a90050d2?q=80&w=400&auto=format&fit=crop' 'https://images.unsplash.com/photo-1521115857999-0740a3d4d425?q=80&w=400&auto=format&fit=crop' 'https://images.unsplash.com/photo-1623886735313-17684807490f?q=80&w=400&auto=format&fit=crop' as hero_image silent %}
+            {% for service in featured_services %}
                 <a class="service-mini" href="{% url 'interface:service_page' service.slug %}">
-                    <img src="{% cycle hero_image %}" alt="{{ service.name }}">
+                    {% if service.main_image %}
+                        <img src="{{ service.main_image.url }}" alt="{{ service.name }}">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1624896790977-8d76550b0688?q=80&w=400&auto=format&fit=crop" alt="{{ service.name }}">
+                    {% endif %}
                     <span>{{ service.name }}</span>
                 </a>
             {% empty %}
@@ -82,10 +85,13 @@
         <h2 class="section-title">Parcourir nos catégories</h2>
         <div class="services-grid">
             {% for service in services %}
-                {% cycle 'https://images.unsplash.com/photo-1604654894610-df63bc536371?q=80&w=500&auto=format' 'https://images.unsplash.com/photo-1595189873499-15d2a90050d2?q=80&w=500&auto=format' 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?q=80&w=500&auto=format' 'https://images.unsplash.com/photo-1623886735313-17684807490f?q=80&w=500&auto=format' as service_img silent %}
                 <article class="service-card-full">
                     <div class="service-card-img">
-                        <img src="{% cycle service_img %}" alt="{{ service.name }} à Toulouse">
+                        {% if service.main_image %}
+                            <img src="{{ service.main_image.url }}" alt="{{ service.name }} à Toulouse">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?q=80&w=500&auto=format" alt="{{ service.name }} à Toulouse">
+                        {% endif %}
                     </div>
                     <div class="service-card-body">
                         <h3>{{ service.name }}</h3>

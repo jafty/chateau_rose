@@ -391,6 +391,27 @@ p.lead {
     align-items: center;
 }
 
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: center;
+}
+
+.hero-media img {
+    width: 100%;
+    border-radius: 16px;
+    object-fit: cover;
+    min-height: 260px;
+    box-shadow: var(--shadow-soft);
+}
+
+@media (min-width: 900px) {
+    .hero-grid {
+        grid-template-columns: 1.1fr 0.9fr;
+    }
+}
+
 .page-hero h1 { font-size: clamp(2.2rem, 3vw, 3rem); }
 
 .page-hero .pill {

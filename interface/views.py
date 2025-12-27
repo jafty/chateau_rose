@@ -14,12 +14,27 @@ from chateaurose.infrastructure.booking_repository import DjangoBookingRepositor
 from chateaurose.infrastructure.notifier_stub import NotifierStub
 from chateaurose.infrastructure.payment_stub import PaymentGatewayStub
 from chateaurose.infrastructure.provider_catalog import DjangoProviderCatalog
-from interface import seo
+from interface.models import (
+    MarketingCity,
+    MarketingDistrict,
+    MarketingService,
+    MarketingServiceCity,
+)
 
 repo = DjangoBookingRepository()
 notifier = NotifierStub()
 payment_gateway = PaymentGatewayStub()
 provider_catalog = DjangoProviderCatalog()
+
+FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
+
+
+def _default_highlights(service_name: str):
+    return [
+        "Temps de réponse rapide : on vous propose un créneau en quelques minutes.",
+        "Brief clair : longueur, mèches fournies ou non, inspirations via photos ou liens.",
+        f"Artistes spécialisés pour {service_name.lower()} à domicile ou en salon partenaire.",
+    ]
 
 
 def _save_upload(file_obj, prefix: str):
@@ -32,14 +47,26 @@ def _save_upload(file_obj, prefix: str):
 def home(request):
     providers = Provider.objects.all()
     zones = Zone.objects.all()
+    services = list(MarketingService.objects.all())
+    services_by_slug = {service.slug: service for service in services}
+    featured_services = []
+    for slug in FEATURED_SERVICE_SLUGS:
+        service = services_by_slug.get(slug)
+        if service:
+            featured_services.append(service)
+    if len(featured_services) < 4:
+        for service in services:
+            if service not in featured_services and len(featured_services) < 4:
+                featured_services.append(service)
     return render(
         request,
         "interface/home.html",
         {
             "providers": providers,
             "zones": zones,
-            "services": seo.SERVICES,
-            "cities": seo.CITIES,
+            "services": services,
+            "featured_services": featured_services,
+            "cities": list(MarketingCity.objects.all()),
         },
     )
 
@@ -138,52 +165,57 @@ def client_action(request, booking_id):
 
 
 def _get_service_or_404(service_slug: str):
-    for service in seo.SERVICES:
-        if service["slug"] == service_slug:
-            return service
-    raise Http404()
+    return get_object_or_404(MarketingService, slug=service_slug)
 
 
 def _get_city_or_404(city_slug: str):
-    for city in seo.CITIES:
-        if city["slug"] == city_slug:
-            return city
-    raise Http404()
+    return get_object_or_404(MarketingCity, slug=city_slug)
 
 
 def _get_districts_for_city(city_slug: str):
-    return seo.DISTRICTS_BY_CITY.get(city_slug, [])
+    return list(MarketingDistrict.objects.filter(city__slug=city_slug))
 
 
 def _get_district_or_404(city_slug: str, district_slug: str):
-    for district in _get_districts_for_city(city_slug):
-        if district["slug"] == district_slug:
-            return district
-    raise Http404()
+    return get_object_or_404(MarketingDistrict, city__slug=city_slug, slug=district_slug)
 
 
 def _city_options(active_city=None):
-    preferred_cities = seo.CITIES[:6]
-    if active_city and not any(city["slug"] == active_city["slug"] for city in preferred_cities):
+    preferred_cities = list(MarketingCity.objects.all()[:6])
+    if active_city and not any(city.slug == active_city.slug for city in preferred_cities):
         preferred_cities.append(active_city)
     return preferred_cities
 
 
-def _build_service_copy(service_meta, city_meta=None):
+def _merge_highlights(base_highlights, *, service_name: str, city=None, city_override=None):
+    if city_override and city_override.highlights:
+        return city_override.highlights
+
+    highlights = base_highlights or []
+    if not highlights:
+        highlights = _default_highlights(service_name)
+
+    if city and not (city_override and city_override.highlights):
+        return [f"{highlight} ({city.name})" for highlight in highlights]
+    return highlights
+
+
+def _build_service_copy(service_meta, city_meta=None, city_override=None):
     base_intro = (
-        f"{service_meta['name']} réalisés par des coiffeuses afro sélectionnées, avec prise de rendez-vous simplifiée."
+        service_meta.intro
+        or f"{service_meta.name} réalisées par des coiffeuses afro sélectionnées, avec prise de rendez-vous simplifiée."
     )
     if city_meta:
-        city_intro = (
-            f"Interventions à {city_meta['name']} et alentours : à domicile ou en salon selon vos préférences."
-        )
+        if city_override and city_override.intro:
+            city_intro = city_override.intro
+        else:
+            city_intro = f"{base_intro} Nous intervenons à {city_meta.name} et ses quartiers avec des artistes locaux."
     else:
         city_intro = "Prestataires mobiles ou en salon sur Toulouse métropole."
-    highlights = [
-        "Temps de réponse rapide : on vous propose un créneau en quelques minutes.",
-        "Brief clair : longueur, mèches fournies ou non, inspirations via photos ou liens.",
-        "Paiement sécurisé après validation avec l'artiste qui correspond le mieux à votre demande.",
-    ]
+
+    highlights = _merge_highlights(
+        service_meta.highlights, service_name=service_meta.name, city=city_meta, city_override=city_override
+    )
     return base_intro, city_intro, highlights
 
 
@@ -191,6 +223,13 @@ def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
     providers = Provider.objects.filter(services__slug=service_slug).distinct()
     intro, city_intro, highlights = _build_service_copy(service_meta)
+    hero_image = service_meta.main_image
+    gallery_images = list(service_meta.images.all())
+
+    meta_description = (
+        service_meta.meta_description
+        or f"{service_meta.name} par des coiffeuses afro sélectionnées. Réservation rapide à Toulouse et alentours."
+    )
 
     return render(
         request,
@@ -205,6 +244,9 @@ def service_page(request, service_slug: str):
             "intro": intro,
             "city_intro": city_intro,
             "highlights": highlights,
+            "hero_image": hero_image,
+            "gallery_images": gallery_images,
+            "meta_description": meta_description,
         },
     )
 
@@ -213,8 +255,12 @@ def service_city_page(request, service_slug: str, city_slug: str):
     service_meta = _get_service_or_404(service_slug)
     city_meta = _get_city_or_404(city_slug)
     district_list = _get_districts_for_city(city_slug)
-    district_slugs = [d["slug"] for d in district_list]
-    intro, city_intro, highlights = _build_service_copy(service_meta, city_meta)
+    district_slugs = [d.slug for d in district_list]
+    service_city_override = MarketingServiceCity.objects.filter(service=service_meta, city=city_meta).first()
+    intro, city_intro, highlights = _build_service_copy(service_meta, city_meta, service_city_override)
+
+    if service_city_override and service_city_override.intro:
+        intro = service_city_override.intro
 
     providers = (
         Provider.objects.filter(
@@ -222,6 +268,23 @@ def service_city_page(request, service_slug: str, city_slug: str):
             provider_zones__zone__slug__in=[city_slug, *district_slugs],
         )
         .distinct()
+    )
+
+    if service_city_override and service_city_override.images.exists():
+        gallery_images = list(service_city_override.images.all())
+    else:
+        gallery_images = list(service_meta.images.all())
+
+    hero_image = (
+        (service_city_override and service_city_override.main_image)
+        or city_meta.main_image
+        or service_meta.main_image
+    )
+
+    meta_description = (
+        (service_city_override and service_city_override.meta_description)
+        or service_meta.meta_description
+        or f"{service_meta.name} par des coiffeuses afro à {city_meta.name} et ses quartiers, réservation rapide."
     )
 
     return render(
@@ -237,6 +300,9 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "intro": intro,
             "city_intro": city_intro,
             "highlights": highlights,
+            "hero_image": hero_image,
+            "gallery_images": gallery_images,
+            "meta_description": meta_description,
         },
     )
 
@@ -245,7 +311,11 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     service_meta = _get_service_or_404(service_slug)
     city_meta = _get_city_or_404(city_slug)
     district_meta = _get_district_or_404(city_slug, district_slug)
-    intro, city_intro, highlights = _build_service_copy(service_meta, city_meta)
+    service_city_override = MarketingServiceCity.objects.filter(service=service_meta, city=city_meta).first()
+    intro, city_intro, highlights = _build_service_copy(service_meta, city_meta, service_city_override)
+
+    if service_city_override and service_city_override.intro:
+        intro = service_city_override.intro
 
     providers = (
         Provider.objects.filter(
@@ -253,6 +323,23 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             provider_zones__zone__slug=district_slug,
         )
         .distinct()
+    )
+
+    if service_city_override and service_city_override.images.exists():
+        gallery_images = list(service_city_override.images.all())
+    else:
+        gallery_images = list(service_meta.images.all())
+
+    hero_image = (
+        (service_city_override and service_city_override.main_image)
+        or district_meta.city.main_image
+        or service_meta.main_image
+    )
+
+    meta_description = (
+        (service_city_override and service_city_override.meta_description)
+        or service_meta.meta_description
+        or f"{service_meta.name} par des artistes afro à {district_meta.name}, {city_meta.name}. Réservation en quelques minutes."
     )
 
     return render(
@@ -268,6 +355,9 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             "intro": intro,
             "city_intro": city_intro,
             "highlights": highlights,
+            "hero_image": hero_image,
+            "gallery_images": gallery_images,
+            "meta_description": meta_description,
         },
     )
 
@@ -297,6 +387,6 @@ def about(request):
         "interface/about.html",
         {
             "faq_items": faq_items,
-            "services": seo.SERVICES,
+            "services": list(MarketingService.objects.all()),
         },
     )

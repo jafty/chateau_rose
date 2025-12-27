@@ -1,13 +1,23 @@
 {% extends "base.html" %}
 
 {% block title %}{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse{% endif %} | Château Rose{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block content %}
 <section class="container page-hero">
-    <div>
-        <span class="pill">Service</span>
-        <h1>{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse{% endif %}, réservés en quelques minutes.</h1>
-        <p class="lead">{{ intro }}</p>
+    <div class="hero-grid">
+        <div>
+            <span class="pill">Service</span>
+            <h1>{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse{% endif %}, réservés en quelques minutes.</h1>
+            <p class="lead">{{ intro }}</p>
+        </div>
+        <div class="hero-media">
+            {% if hero_image %}
+                <img src="{{ hero_image.url }}" alt="{{ service.name }}{% if city %} à {{ city.name }}{% endif %}">
+            {% else %}
+                <img src="https://images.unsplash.com/photo-1626899798511-c3eaacb02846?q=80&w=700&auto=format&fit=crop" alt="Coiffure afro à {{ city.name|default:"Toulouse" }}">
+            {% endif %}
+        </div>
     </div>
 </section>
 
@@ -49,6 +59,24 @@
         {% endif %}
     </div>
 </section>
+
+{% if gallery_images %}
+<section class="container gallery-section" style="padding-top: 10px;">
+    <h2 class="section-title">Inspirations et réalisations</h2>
+    <div class="gallery-scroll">
+        {% for image in gallery_images %}
+            <article class="gallery-item">
+                <div class="gallery-img">
+                    <img src="{{ image.image.url }}" alt="{{ image.caption|default:service.name }}">
+                </div>
+                {% if image.caption %}
+                    <p class="gallery-caption">{{ image.caption }}</p>
+                {% endif %}
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
 
 <section class="container providers-section" style="padding-top:50px;">
     {% if providers %}
