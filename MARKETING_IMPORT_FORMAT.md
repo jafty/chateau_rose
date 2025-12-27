@@ -169,10 +169,20 @@ Rules:
   - Duplicate service slugs.
   - Conflicting city or district definitions across services.
   - Non-list `highlights`/`gallery` fields.
-  - Payloads that are not valid JSON or that lack a top-level `services` list with at least one entry.
+- Payloads that are not valid JSON or that lack a top-level `services` list with at least one entry.
 
 ## Tips for bulk uploads
 
 - Keep slugs URL-friendly (lowercase, hyphenated).
 - Host images at stable URLs accessible by your frontend.
 - Start with a small file and run the import command to catch validation errors early before scaling to a larger tree of services/cities.
+
+## Hosting static images (SEO-friendly approach)
+
+- **Prefer your own domain or CDN**: For SEO and reliability, serve assets from your main domain or a CDN subdomain you control. This keeps page speed and caching under your control and avoids hotlinking penalties from third-party hosts.
+- **Using the `static/` folder:** You can commit demo images to `static/marketing/...` and deploy them with your static assets. After running the app (or `collectstatic` in production), the images are reachable at `https://<your-domain>/static/marketing/<file>` (or `http://localhost:8000/static/marketing/<file>` in dev). Paste that full URL into `main_image_url` or gallery URLs in the admin/import JSON.
+- **GitHub-hosted images:** Technically you can hotlink to `raw.githubusercontent.com`, but it is slower, may change without notice, and is less SEO-friendly than serving from your own static domain. Prefer your own static hosting whenever possible.
+- **Checklist to get a URL quickly:**
+  1. Place your image under `static/marketing/` (e.g., `static/marketing/hero.jpg`).
+  2. Run the site locally (`python manage.py runserver`) and visit `http://localhost:8000/static/marketing/hero.jpg` to confirm it loads.
+  3. Use that full URL in the admin `Main image URL` or in the import JSON. In production, swap the host with your live domain once deployed.
