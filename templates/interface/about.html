@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}À propos de Château Rose | Réservation coiffure afro{% endblock %}
+
+{% block content %}
+<section class="container page-hero">
+    <div>
+        <span class="pill">À propos</span>
+        <h1>Coiffures afro réservées en deux minutes, sans démarchage.</h1>
+        <p class="lead">Château Rose connecte les Toulousain·es aux meilleures coiffeuses afro mobiles ou en salon, avec un process clair et rapide.</p>
+    </div>
+</section>
+
+<section class="container about-grid">
+    <div class="info-card">
+        <h2>Notre promesse</h2>
+        <p>Plus besoin de chercher des heures sur Instagram ou WhatsApp : vous décrivez votre besoin et nous trouvons l'artiste adapté·e. Chaque prestation est cadrée avec un devis, un lieu et un créneau précis.</p>
+        <ul class="highlight-list">
+            <li>Brief complet : photos d'inspiration, longueur de cheveux, mèches à prévoir.</li>
+            <li>Artistes vérifié·es : expérience, hygiène, maîtrise des techniques afro.</li>
+            <li>Réservations fluides : paiement sécurisé après validation de la proposition.</li>
+        </ul>
+    </div>
+    <div class="about-visual">
+        <img src="https://images.unsplash.com/photo-1594223274512-ad4803739b7c?q=80&w=900&auto=format" alt="Coiffeuse afro préparant une cliente">
+    </div>
+</section>
+
+<section class="container faq-section">
+    <div class="faq-header">
+        <div>
+            <h2>Questions fréquentes</h2>
+            <p class="lead">Une organisation transparente pour réserver votre coiffure afro à Toulouse et ses alentours.</p>
+        </div>
+        <a class="btn secondary" href="{% url 'interface:home' %}">Commencer une réservation</a>
+    </div>
+    <div class="faq-grid">
+        {% for item in faq_items %}
+            <article class="faq-card">
+                <h3>{{ item.question }}</h3>
+                <p>{{ item.answer }}</p>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="container service-links">
+    <h2 class="section-title">Services pris en charge</h2>
+    <div class="chips">
+        {% for service in services|slice:":6" %}
+            <a class="chip" href="{% url 'interface:service_page' service.slug %}">{{ service.name }}</a>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

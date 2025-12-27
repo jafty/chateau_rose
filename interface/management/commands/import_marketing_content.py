@@ -1,0 +1,48 @@
+from django.core.management.base import BaseCommand, CommandError
+
+from chateaurose.domain.exceptions import ValidationError
+from chateaurose.domain.use_cases import import_marketing_content
+from chateaurose.infrastructure.marketing_repository import (
+    DjangoMarketingContentRepository,
+)
+
+
+class Command(BaseCommand):
+    help = "Bulk import marketing services, cities, districts, and overrides from a JSON file"
+
+    def add_arguments(self, parser):
+        parser.add_argument("--file", required=True, help="Path to the JSON payload file")
+        parser.add_argument(
+            "--format",
+            default="json",
+            help="Payload format (only 'json' is currently supported)",
+        )
+
+    def handle(self, *args, **options):
+        file_path = options["file"]
+        fmt = options["format"]
+        try:
+            with open(file_path, "r", encoding="utf-8") as fh:
+                raw_content = fh.read()
+        except OSError as exc:
+            raise CommandError(f"Impossible de lire le fichier: {exc}") from exc
+
+        repository = DjangoMarketingContentRepository()
+        try:
+            result = import_marketing_content.execute(
+                raw_content=raw_content,
+                repository=repository,
+                format=fmt,
+            )
+        except ValidationError as exc:
+            raise CommandError(str(exc)) from exc
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Import terminé: "
+                f"{result.services_count} services, "
+                f"{result.cities_count} villes, "
+                f"{result.districts_count} quartiers, "
+                f"{result.overrides_count} overrides."
+            )
+        )

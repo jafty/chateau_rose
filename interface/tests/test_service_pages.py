@@ -2,6 +2,12 @@ from django.test import TestCase
 from django.urls import reverse
 
 from booking.models import Provider, ProviderZone, Service, Zone
+from interface.models import (
+    MarketingCity,
+    MarketingDistrict,
+    MarketingService,
+    MarketingServiceCity,
+)
 
 
 class ServicePagesTests(TestCase):
@@ -9,6 +15,23 @@ class ServicePagesTests(TestCase):
         self.toulouse = Zone.objects.create(name="Toulouse", slug="toulouse")
         self.capitole = Zone.objects.create(name="Capitole", slug="capitole")
         self.colomiers = Zone.objects.create(name="Colomiers", slug="colomiers")
+
+        self.marketing_service = MarketingService.objects.create(
+            name="Tresses / Braids",
+            slug="tresses",
+            intro="Intro tresses",
+            highlights=["Rapide", "Soigné"],
+        )
+        self.marketing_city = MarketingCity.objects.create(
+            name="Toulouse",
+            slug="toulouse",
+            intro="Ville rose",
+        )
+        self.marketing_district = MarketingDistrict.objects.create(
+            city=self.marketing_city,
+            name="Capitole",
+            slug="capitole",
+        )
 
         self.provider_a = Provider.objects.create(name="Prestataire A")
         self.provider_b = Provider.objects.create(name="Prestataire B")
@@ -57,6 +80,51 @@ class ServicePagesTests(TestCase):
         content = response.content.decode()
         self.assertIn(self.provider_a.name, content)
         self.assertNotIn(self.provider_b.name, content)
+
+    def test_service_page_renders_marketing_copy(self):
+        url = reverse("interface:service_page", args=["tresses"])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Intro tresses", content)
+        self.assertIn("Rapide", content)
+
+    def test_service_page_uses_static_main_image_when_no_upload(self):
+        self.marketing_service.main_image_url = "https://static.example.com/tresses.jpg"
+        self.marketing_service.save()
+
+        url = reverse("interface:service_page", args=["tresses"])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("https://static.example.com/tresses.jpg", response.content.decode())
+
+    def test_service_city_page_prefers_city_override_copy(self):
+        MarketingServiceCity.objects.create(
+            service=self.marketing_service,
+            city=self.marketing_city,
+            intro="Intro Toulouse spécifique",
+            highlights=["Point local"],
+        )
+
+        url = reverse("interface:service_city_page", args=["tresses", "toulouse"])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Intro Toulouse spécifique", content)
+        self.assertIn("Point local", content)
+        self.assertNotIn("Intro tresses", content)
+
+    def test_service_city_page_falls_back_with_city_context_when_no_override(self):
+        url = reverse("interface:service_city_page", args=["tresses", "toulouse"])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Toulouse", content)
+        self.assertIn("Intro tresses", content)
 
     def test_unknown_service_or_city_returns_404(self):
         service_url = reverse("interface:service_page", args=["unknown-service"])

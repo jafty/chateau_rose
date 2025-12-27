@@ -52,7 +52,9 @@ fichiers disparaîtront après redeploy/redémarrage ; prévoir un volume ou un
 backend objet (S3/GCS) pour les conserver. Pour les visuels "héros" ou les
 images éditoriales (marketing), privilégier des assets statiques commités
 dans le repo ou servis depuis un CDN afin d'éviter qu'ils disparaissent en
-staging lorsqu'aucune persistance n'est configurée.
+staging lorsqu'aucune persistance n'est configurée. Consultez
+`STORAGE_SETUP.md` pour choisir et configurer un backend local, S3-compatible
+ou GCS.
 
 ## Architecture
 
