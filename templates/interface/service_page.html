@@ -22,29 +22,31 @@
 </section>
 
 <section class="container">
-    <div class="info-card">
-        <div class="breadcrumb">
-            <span><a href="{% url 'interface:home' %}">Accueil</a> › {{ service.name }}{% if city %} › {{ city.name }}{% endif %}{% if district %} › {{ district.name }}{% endif %}</span>
-        </div>
-        <h3 style="margin-bottom:12px;">Choisir une ville</h3>
-        <div class="chips">
-            {% for city_option in cities %}
-                <a class="chip {% if city and city_option.slug == city.slug %}active{% endif %}" href="{% url 'interface:service_city_page' service.slug city_option.slug %}">
-                    {{ city_option.name }}
-                </a>
-            {% endfor %}
-        </div>
-        {% if city and districts %}
-            <h4 style="margin-bottom:10px;">Quartiers à {{ city.name }}</h4>
+    {% if cities %}
+        <div class="info-card">
+            <div class="breadcrumb">
+                <span><a href="{% url 'interface:home' %}">Accueil</a> › {{ service.name }}{% if city %} › {{ city.name }}{% endif %}{% if district %} › {{ district.name }}{% endif %}</span>
+            </div>
+            <h3 style="margin-bottom:12px;">Choisir une ville</h3>
             <div class="chips">
-                {% for district_option in districts %}
-                    <a class="chip {% if district and district_option.slug == district.slug %}active{% endif %}" href="{% url 'interface:service_city_district_page' service.slug city.slug district_option.slug %}">
-                        {{ district_option.name }}
+                {% for city_option in cities %}
+                    <a class="chip {% if city and city_option.slug == city.slug %}active{% endif %}" href="{% url 'interface:service_city_page' service.slug city_option.slug %}">
+                        {{ city_option.name }}
                     </a>
                 {% endfor %}
             </div>
-        {% endif %}
-    </div>
+            {% if city and districts %}
+                <h4 style="margin-bottom:10px;">Quartiers à {{ city.name }}</h4>
+                <div class="chips">
+                    {% for district_option in districts %}
+                        <a class="chip {% if district and district_option.slug == district.slug %}active{% endif %}" href="{% url 'interface:service_city_district_page' service.slug city.slug district_option.slug %}">
+                            {{ district_option.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
 
     <div class="info-card">
         <h3 style="margin-bottom:12px;">{{ service.name }}{% if city %} à {{ city.name }}{% endif %}</h3>
@@ -93,9 +95,9 @@
                     </div>
                     <div class="provider-body">
                         <h3 class="provider-name">{{ provider.name }}</h3>
-                        <p class="provider-loc">Zones : {% for zone in provider.provider_zones.all %}{{ zone.zone.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}</p>
+                        <p class="provider-loc">Zones : {% for zone in provider.zones.all %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}</p>
                         <div class="tags">
-                            {% for srv in provider.services.all|slice:":3" %}
+                            {% for srv in provider.marketing_services.all|slice:":3" %}
                                 <span class="tag">{{ srv.name }}</span>
                             {% endfor %}
                         </div>

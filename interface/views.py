@@ -78,7 +78,7 @@ def provider_list(request):
 def provider_detail(request, provider_id):
     provider = get_object_or_404(Provider, id=provider_id)
     services = Service.objects.filter(provider=provider)
-    zones = Zone.objects.filter(zone_providers__provider=provider)
+    zones = provider.zones.all()
     message = None
     error = None
 
@@ -242,7 +242,7 @@ def _to_override_content(city_override: MarketingServiceCity | None) -> Override
 
 def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
-    providers = Provider.objects.filter(services__slug=service_slug).distinct()
+    providers = Provider.objects.filter(marketing_services__slug=service_slug).distinct()
     service_content = _to_service_content(service_meta)
     marketing_content = build_marketing_content(service=service_content)
     hero_image = marketing_content.hero_image
@@ -288,13 +288,10 @@ def service_city_page(request, service_slug: str, city_slug: str):
     city_intro = marketing_content.city_intro
     highlights = marketing_content.highlights
 
-    providers = (
-        Provider.objects.filter(
-            services__slug=service_slug,
-            provider_zones__zone__slug__in=[city_slug, *district_slugs],
-        )
-        .distinct()
-    )
+    providers = Provider.objects.filter(
+        marketing_services__slug=service_slug,
+        zones__slug__in=[city_slug, *district_slugs],
+    ).distinct()
 
     gallery_images = marketing_content.gallery
     hero_image = marketing_content.hero_image
@@ -335,13 +332,10 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     city_intro = marketing_content.city_intro
     highlights = marketing_content.highlights
 
-    providers = (
-        Provider.objects.filter(
-            services__slug=service_slug,
-            provider_zones__zone__slug=district_slug,
-        )
-        .distinct()
-    )
+    providers = Provider.objects.filter(
+        marketing_services__slug=service_slug,
+        zones__slug=district_slug,
+    ).distinct()
 
     gallery_images = marketing_content.gallery
     hero_image = (
