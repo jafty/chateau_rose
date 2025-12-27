@@ -37,7 +37,9 @@ Ce guide explique comment conteneuriser le projet Django `chateaurose` et le dé
 1. Créez un nouveau projet Railway et liez-le à votre dépôt.
 2. Dans l'onglet Variables, ajoutez les clés ci-dessus.
 3. Choisissez Docker comme méthode de build (Railway détectera le `Dockerfile`).
-4. Commande de démarrage (déjà définie dans l'image) : `python manage.py migrate && python manage.py runserver 0.0.0.0:${PORT:-8000}`.
+4. Si vous déployez sans Docker, Railway lit le `Procfile` :
+   - étape `release` : exécute `python manage.py collectstatic --noinput` pour préparer les assets statiques.
+   - étape `web` : lance `python manage.py migrate && gunicorn chateaurose.wsgi:application --bind 0.0.0.0:${PORT:-8000}` avec WhiteNoise.
 5. Déployez : Railway construira l'image et lancera le service sur le port fourni.
 
 ### Depuis le CLI Railway
