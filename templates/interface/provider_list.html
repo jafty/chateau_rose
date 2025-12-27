@@ -1,19 +1,47 @@
 {% extends "base.html" %}
 
-{% block title %}Prestataires{% endblock %}
+{% block title %}Prestataires afro à Toulouse | Château Rose{% endblock %}
 
 {% block content %}
-<h1>Prestataires</h1>
-<ul>
-  {% for provider in providers %}
-    <li>
-      {% if provider.profile_image %}
-        <img src="{{ provider.profile_image.url }}" alt="{{ provider.name }}" style="max-width:100px;">
-      {% endif %}
-      <a href="{% url 'interface:provider_detail' provider.id %}">{{ provider.name }}</a>
-    </li>
-  {% empty %}
-    <li>Aucun prestataire pour le moment.</li>
-  {% endfor %}
-</ul>
+<section class="container page-hero">
+    <div>
+        <span class="pill">Annuaire des artistes</span>
+        <h1>Prestataires spécialisés en coiffure afro.</h1>
+        <p class="lead">Découvrez les experts en tresses, locks, soins et perruques disponibles près de chez vous.</p>
+    </div>
+</section>
+
+<section class="container providers-section" style="padding-top: 30px;">
+    <div class="providers-grid">
+        {% for provider in providers %}
+            <article class="provider-card">
+                <div class="provider-header">
+                    {% if provider.profile_image %}
+                        <img src="{{ provider.profile_image.url }}" alt="{{ provider.name }}">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1589156191108-c762ff4b96ab?q=80&w=600&auto=format" alt="Coiffeuse afro Toulouse">
+                    {% endif %}
+                    <span class="provider-rating">Disponible</span>
+                </div>
+                <div class="provider-body">
+                    <h3 class="provider-name">{{ provider.name }}</h3>
+                    <p class="provider-loc">Toulouse & métropole</p>
+                    <div class="tags">
+                        {% for service in provider.services.all|slice:":3" %}
+                            <span class="tag">{{ service.name }}</span>
+                        {% empty %}
+                            <span class="tag">Sur mesure</span>
+                        {% endfor %}
+                    </div>
+                    <p class="meta-line">Contact : {% if provider.contact_phone %}{{ provider.contact_phone }}{% else %}à confirmer{% endif %}</p>
+                    <div class="card-actions">
+                        <a class="btn" style="width:100%; text-align:center;" href="{% url 'interface:provider_detail' provider.id %}">Voir le profil</a>
+                    </div>
+                </div>
+            </article>
+        {% empty %}
+            <p class="lead">Aucun prestataire pour le moment.</p>
+        {% endfor %}
+    </div>
+</section>
 {% endblock %}

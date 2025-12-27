@@ -1,16 +1,30 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Chateau Rose{% endblock %}</title>
+    <title>{% block title %}Château Rose | Coiffure Afro à Toulouse{% endblock %}</title>
+    <meta name="description" content="Château Rose simplifie la prise de rendez-vous pour des coiffures afro, tresses, locks et soins premium à Toulouse et dans sa métropole.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@800&family=Space+Garamond:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="{% url 'interface:home' %}">Accueil</a> |
-            <a href="{% url 'interface:provider_list' %}">Prestataires</a>
-        </nav>
+    <header class="site-header">
+        <div class="container nav-wrapper">
+            <a href="{% url 'interface:home' %}" class="logo" aria-label="Revenir à l'accueil Château Rose">
+                <span class="chateau">Château</span><span class="rose"> Rose.</span>
+            </a>
+            <nav class="main-nav" aria-label="Navigation principale">
+                <a href="{% url 'interface:home' %}">Accueil</a>
+                <a href="{% url 'interface:provider_list' %}">Prestataires</a>
+                <a href="{% url 'interface:home' %}#catalogue">Services</a>
+            </nav>
+            <a href="#" class="pro-link">Espace Prestataires</a>
+        </div>
     </header>
 
     <main>
@@ -18,7 +32,44 @@
     </main>
 
     <footer>
-        <p>Chateau Rose</p>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="logo" style="margin-bottom: 14px;">
+                        <span class="chateau" style="color: white;">Château</span><span class="rose"> Rose.</span>
+                    </div>
+                    <p style="color: #444; font-size: 0.9rem; max-width: 260px;">Votre partenaire de confiance pour magnifier vos cheveux afro à Toulouse.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="{% url 'interface:home' %}#catalogue">Tresses</a></li>
+                        <li><a href="{% url 'interface:home' %}#catalogue">Locks</a></li>
+                        <li><a href="{% url 'interface:home' %}#catalogue">Soins</a></li>
+                        <li><a href="{% url 'interface:home' %}#catalogue">Perruques</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Quartiers</h4>
+                    <ul>
+                        <li><a href="{% url 'interface:service_city_district_page' 'tresses' 'toulouse' 'roseraie-jolimont' %}">Roseraie</a></li>
+                        <li><a href="{% url 'interface:service_city_district_page' 'tresses' 'toulouse' 'saint-cyprien' %}">Saint-Cyprien</a></li>
+                        <li><a href="{% url 'interface:service_city_district_page' 'tresses' 'toulouse' 'compans-amidonniers' %}">Compans</a></li>
+                        <li><a href="{% url 'interface:service_city_district_page' 'tresses' 'toulouse' 'carmes-ozenne' %}">Carmes</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Réseaux</h4>
+                    <ul>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Devenir partenaire</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bottom-bar">CHÂTEAU ROSE &copy; 2024 - TOULOUSE</div>
+        </div>
     </footer>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
