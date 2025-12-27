@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from chateaurose.storage_settings import build_storage_settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -59,6 +60,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "storages",
     "interface",
     "booking",
     "providers",
@@ -144,7 +146,11 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+storage_settings = build_storage_settings(os.environ, BASE_DIR)
+STORAGES = storage_settings.storages
+MEDIA_URL = storage_settings.media_url
+MEDIA_ROOT = storage_settings.media_root
+for key, value in storage_settings.extra_settings.items():
+    globals()[key] = value
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
