@@ -162,9 +162,35 @@ def _get_district_or_404(city_slug: str, district_slug: str):
     raise Http404()
 
 
+def _city_options(active_city=None):
+    preferred_cities = seo.CITIES[:6]
+    if active_city and not any(city["slug"] == active_city["slug"] for city in preferred_cities):
+        preferred_cities.append(active_city)
+    return preferred_cities
+
+
+def _build_service_copy(service_meta, city_meta=None):
+    base_intro = (
+        f"{service_meta['name']} réalisés par des coiffeuses afro sélectionnées, avec prise de rendez-vous simplifiée."
+    )
+    if city_meta:
+        city_intro = (
+            f"Interventions à {city_meta['name']} et alentours : à domicile ou en salon selon vos préférences."
+        )
+    else:
+        city_intro = "Prestataires mobiles ou en salon sur Toulouse métropole."
+    highlights = [
+        "Temps de réponse rapide : on vous propose un créneau en quelques minutes.",
+        "Brief clair : longueur, mèches fournies ou non, inspirations via photos ou liens.",
+        "Paiement sécurisé après validation avec l'artiste qui correspond le mieux à votre demande.",
+    ]
+    return base_intro, city_intro, highlights
+
+
 def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
     providers = Provider.objects.filter(services__slug=service_slug).distinct()
+    intro, city_intro, highlights = _build_service_copy(service_meta)
 
     return render(
         request,
@@ -174,8 +200,11 @@ def service_page(request, service_slug: str):
             "city": None,
             "district": None,
             "providers": providers,
-            "cities": seo.CITIES,
+            "cities": _city_options(),
             "districts": [],
+            "intro": intro,
+            "city_intro": city_intro,
+            "highlights": highlights,
         },
     )
 
@@ -185,6 +214,7 @@ def service_city_page(request, service_slug: str, city_slug: str):
     city_meta = _get_city_or_404(city_slug)
     district_list = _get_districts_for_city(city_slug)
     district_slugs = [d["slug"] for d in district_list]
+    intro, city_intro, highlights = _build_service_copy(service_meta, city_meta)
 
     providers = (
         Provider.objects.filter(
@@ -202,8 +232,11 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "city": city_meta,
             "district": None,
             "providers": providers,
-            "cities": seo.CITIES,
+            "cities": _city_options(city_meta),
             "districts": district_list,
+            "intro": intro,
+            "city_intro": city_intro,
+            "highlights": highlights,
         },
     )
 
@@ -212,6 +245,7 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     service_meta = _get_service_or_404(service_slug)
     city_meta = _get_city_or_404(city_slug)
     district_meta = _get_district_or_404(city_slug, district_slug)
+    intro, city_intro, highlights = _build_service_copy(service_meta, city_meta)
 
     providers = (
         Provider.objects.filter(
@@ -229,7 +263,40 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             "city": city_meta,
             "district": district_meta,
             "providers": providers,
-            "cities": seo.CITIES,
+            "cities": _city_options(city_meta),
             "districts": _get_districts_for_city(city_slug),
+            "intro": intro,
+            "city_intro": city_intro,
+            "highlights": highlights,
+        },
+    )
+
+
+def about(request):
+    faq_items = [
+        {
+            "question": "Combien de temps pour obtenir une réponse ?",
+            "answer": "Nous revenons vers vous en quelques minutes avec une proposition d'artiste et un créneau précis.",
+        },
+        {
+            "question": "Travaillez-vous à domicile ou en salon ?",
+            "answer": "Les deux : certaines prestations sont réalisées chez vous, d'autres en salon partenaire, selon vos préférences.",
+        },
+        {
+            "question": "Comment préparer ma demande ?",
+            "answer": "Ajoutez des photos d'inspiration, précisez la longueur souhaitée et indiquez si vous avez besoin de mèches.",
+        },
+        {
+            "question": "Comment se passe le paiement ?",
+            "answer": "Le paiement est sécurisé une fois l'artiste validé et le devis confirmé ensemble.",
+        },
+    ]
+
+    return render(
+        request,
+        "interface/about.html",
+        {
+            "faq_items": faq_items,
+            "services": seo.SERVICES,
         },
     )

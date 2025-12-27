@@ -20,6 +20,7 @@
             </a>
             <nav class="main-nav" aria-label="Navigation principale">
                 <a href="{% url 'interface:home' %}">Accueil</a>
+                <a href="{% url 'interface:about' %}">À propos</a>
                 <a href="{% url 'interface:provider_list' %}">Prestataires</a>
                 <a href="{% url 'interface:home' %}#catalogue">Services</a>
             </nav>
@@ -62,7 +63,7 @@
                     <h4>Réseaux</h4>
                     <ul>
                         <li><a href="#">Instagram</a></li>
-                        <li><a href="#">Contact</a></li>
+                        <li><a href="{% url 'interface:about' %}">À propos</a></li>
                         <li><a href="#">Devenir partenaire</a></li>
                     </ul>
                 </div>

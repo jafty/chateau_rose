@@ -6,12 +6,8 @@
 <section class="container page-hero">
     <div>
         <span class="pill">Service</span>
-        <h1>{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse et alentours{% endif %}</h1>
-        {% if city %}
-            <p class="lead">Prestataires mobiles ou en salon pour {{ service.name|lower }} à {{ city.name }}{% if district %}, secteur {{ district.name }}{% endif %}.</p>
-        {% else %}
-            <p class="lead">Découvrez les prestataires qui proposent {{ service.name|lower }} sur Toulouse et sa métropole.</p>
-        {% endif %}
+        <h1>{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse{% endif %}, réservés en quelques minutes.</h1>
+        <p class="lead">{{ intro }}</p>
     </div>
 </section>
 
@@ -37,6 +33,19 @@
                     </a>
                 {% endfor %}
             </div>
+        {% endif %}
+    </div>
+
+    <div class="info-card">
+        <h3 style="margin-bottom:12px;">{{ service.name }}{% if city %} à {{ city.name }}{% endif %}</h3>
+        <p class="lead">{{ city_intro }}</p>
+        <ul class="highlight-list">
+            {% for highlight in highlights %}
+                <li>{{ highlight }}</li>
+            {% endfor %}
+        </ul>
+        {% if district %}
+            <p class="meta-line">Secteur ciblé : {{ district.name }}.</p>
         {% endif %}
     </div>
 </section>

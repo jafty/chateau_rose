@@ -1,17 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Coiffure afro & tresses à Toulouse | Château Rose{% endblock %}
+{% block title %}Réserve ta coiffure afro à Toulouse en moins de 2 minutes | Château Rose{% endblock %}
 
 {% block content %}
 <section class="container hero-section">
     <div class="bento-grid">
         <div class="hero-main">
-            <h1>Révélez votre beauté afro.</h1>
-            <p class="hero-subtitle">Réservez vos tresses, locks et soins d'exception à domicile à Toulouse, en quelques clics.</p>
-            <div class="hero-meta">
-                <span>{{ providers|length }} prestataires vérifiés</span>
-                <span>Zones : {% for zone in zones|slice:":4" %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if zones|length > 4 %}, ...{% endif %}</span>
-            </div>
+            <h1>Réserve ta coiffure afro à Toulouse, en moins de deux minutes.</h1>
+            <p class="hero-subtitle">Choisis ta prestation, partage une photo d'inspiration et nous validons le bon artiste, au bon créneau, sans démarchage.</p>
             <div style="display:flex; gap:12px; flex-wrap: wrap;">
                 <a href="{% url 'interface:provider_list' %}" class="btn">Trouver un(e) artiste</a>
                 <a href="#catalogue" class="btn secondary">Voir toutes les catégories</a>
@@ -49,7 +45,7 @@
                         {% if photo %}
                             <img src="{{ photo.image.url }}" alt="Réalisations de {{ provider.name }}">
                         {% else %}
-                            <img src="https://images.unsplash.com/photo-1582095133179-bfd08d2fc6b8?q=80&w=600&auto=format&fit=crop" alt="Coiffure afro inspiration">
+                            <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=600&auto=format&fit=crop" alt="Coiffure afro inspiration">
                         {% endif %}
                     </div>
                     <p class="gallery-caption">{{ provider.name }}</p>
@@ -59,6 +55,26 @@
             <p class="lead">Les portfolios arrivent bientôt.</p>
         {% endfor %}
     </div>
+</section>
+
+<section class="container info-grid">
+    <article class="info-card">
+        <h3>Comment ça marche ?</h3>
+        <ul class="highlight-list">
+            <li>Décris ton besoin : tresses, locks, soins... et précise la longueur, la couleur et si tu as besoin de mèches.</li>
+            <li>Ajoute des photos : une photo actuelle et une inspiration pour guider l'artiste.</li>
+            <li>On te répond vite : on te propose une coiffeuse et un créneau disponibles dans ta zone.</li>
+        </ul>
+    </article>
+    <article class="info-card">
+        <h3>Pourquoi Château Rose</h3>
+        <p>Une sélection d'artistes afro à Toulouse et sa métropole, avec des tarifs transparents et des prestations maîtrisées.</p>
+        <ul class="highlight-list">
+            <li>Prise de rendez-vous rapide, sans échanges interminables.</li>
+            <li>Prestations mobiles ou en salon partenaire selon tes préférences.</li>
+            <li>Suivi et paiement sécurisés une fois la proposition validée.</li>
+        </ul>
+    </article>
 </section>
 
 <section class="all-services" id="catalogue">

@@ -6,6 +6,7 @@ app_name = "interface"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("a-propos/", views.about, name="about"),
     path("providers/", views.provider_list, name="provider_list"),
     path("providers/<int:provider_id>/", views.provider_detail, name="provider_detail"),
     path("bookings/<str:booking_id>/provider-action/", views.provider_action, name="provider_action"),
