@@ -53,7 +53,7 @@ Set `FILE_STORAGE_BACKEND` in your environment:
 ## Using committed static images for demos
 If you need fixed images for beta demos without configuring a bucket:
 1. Place your demo assets under `static/marketing/` and commit them.
-2. In the Django admin (or import JSON), set the **Main image URL** or gallery **Image URL** to `/static/marketing/<filename>`.
+2. In the Django admin (or import JSON), set the **Main image URL** or gallery **Image URL** to `/static/marketing/<filename>` (root-relative paths like this are accepted, as are full `https://` URLs).
 3. Keep `FILE_STORAGE_BACKEND=local` (default). WhiteNoise will serve the committed static assets, so they stay stable even if the `media/` folder is cleared.
 
 ## Troubleshooting

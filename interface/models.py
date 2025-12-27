@@ -1,5 +1,7 @@
 from django.db import models
 
+from interface.validators import validate_absolute_or_root_relative_url
+
 
 class MarketingService(models.Model):
     name = models.CharField(max_length=255)
@@ -7,7 +9,12 @@ class MarketingService(models.Model):
     intro = models.TextField(blank=True)
     highlights = models.JSONField(default=list, blank=True)
     main_image = models.ImageField(upload_to="marketing/services/main/", blank=True, null=True)
-    main_image_url = models.URLField(max_length=500, blank=True)
+    main_image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text="Upload an image or provide an absolute URL or /root-relative path.",
+    )
     meta_description = models.TextField(blank=True)
 
     class Meta:
@@ -27,8 +34,13 @@ class MarketingService(models.Model):
 
 class MarketingServiceImage(models.Model):
     service = models.ForeignKey(MarketingService, on_delete=models.CASCADE, related_name="images")
-    image = models.ImageField(upload_to="marketing/services/gallery/")
-    image_url = models.URLField(max_length=500, blank=True)
+    image = models.ImageField(upload_to="marketing/services/gallery/", blank=True)
+    image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text="Upload an image or provide an absolute URL or /root-relative path.",
+    )
     caption = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
 
@@ -50,7 +62,12 @@ class MarketingCity(models.Model):
     slug = models.SlugField(max_length=255, unique=True)
     intro = models.TextField(blank=True)
     main_image = models.ImageField(upload_to="marketing/cities/main/", blank=True, null=True)
-    main_image_url = models.URLField(max_length=500, blank=True)
+    main_image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text="Upload an image or provide an absolute URL or /root-relative path.",
+    )
     meta_description = models.TextField(blank=True)
 
     class Meta:
@@ -89,7 +106,12 @@ class MarketingServiceCity(models.Model):
     intro = models.TextField(blank=True)
     highlights = models.JSONField(default=list, blank=True)
     main_image = models.ImageField(upload_to="marketing/service_city/main/", blank=True, null=True)
-    main_image_url = models.URLField(max_length=500, blank=True)
+    main_image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text="Upload an image or provide an absolute URL or /root-relative path.",
+    )
     meta_description = models.TextField(blank=True)
 
     class Meta:
@@ -112,8 +134,13 @@ class MarketingServiceCityImage(models.Model):
     service_city = models.ForeignKey(
         MarketingServiceCity, on_delete=models.CASCADE, related_name="images"
     )
-    image = models.ImageField(upload_to="marketing/service_city/gallery/")
-    image_url = models.URLField(max_length=500, blank=True)
+    image = models.ImageField(upload_to="marketing/service_city/gallery/", blank=True)
+    image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text="Upload an image or provide an absolute URL or /root-relative path.",
+    )
     caption = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
 
