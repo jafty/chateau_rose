@@ -17,4 +17,4 @@ class DjangoProviderCatalog:
         }
 
     def provider_covers_zone(self, provider_id: str, zone_name: str) -> bool:
-        return Zone.objects.filter(zone_providers__provider_id=provider_id, name=zone_name).exists()
+        return Zone.objects.filter(providers__id=provider_id, name=zone_name).exists()

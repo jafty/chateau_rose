@@ -13,3 +13,7 @@
 ## Assigning services and zones to providers
 - To make a provider appear on filtered pages, create `Service` rows for each marketing service slug they offer, then add `ProviderZone` rows pointing to `Zone` entries whose slugs match the allowed city/district list (e.g., `toulouse`, `capitole`).
 - A provider appears on a service page when they offer that service; on a service+city page when they cover the city or one of its districts; and on a service+city+district page only when they cover that exact district.
+
+## Migrating existing data
+- Migration `booking/0008_backfill_provider_marketing_links` copies existing `Service.slug` values to the new `Provider.marketing_services` bridge whenever a matching `MarketingService.slug` exists. This preserves provider visibility on service pages after upgrading.
+- Existing `ProviderZone` rows already satisfy the new `Provider.zones` many-to-many relationship, so no additional action is required for zone coverage.

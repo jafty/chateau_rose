@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from booking.models import Provider, ProviderZone, Service, Zone
+from booking.models import Provider, ProviderMarketingService, ProviderZone, Zone
 from interface.models import (
     MarketingCity,
     MarketingDistrict,
@@ -36,19 +36,8 @@ class ServicePagesTests(TestCase):
         self.provider_a = Provider.objects.create(name="Prestataire A")
         self.provider_b = Provider.objects.create(name="Prestataire B")
 
-        self.service_tresses_a = Service.objects.create(
-            provider=self.provider_a,
-            name="Tresses / Braids",
-            slug="tresses",
-            base_price_cents=5000,
-            hair_length_adjustments={},
-        )
-        self.service_vanilles_b = Service.objects.create(
-            provider=self.provider_b,
-            name="Vanilles",
-            slug="vanilles",
-            base_price_cents=6000,
-            hair_length_adjustments={},
+        ProviderMarketingService.objects.create(
+            provider=self.provider_a, service=self.marketing_service
         )
 
         ProviderZone.objects.create(provider=self.provider_a, zone=self.capitole)
@@ -64,13 +53,8 @@ class ServicePagesTests(TestCase):
         self.assertNotIn(self.provider_b.name, content)
 
     def test_service_city_page_filters_providers_by_service_and_city(self):
-        # provider_b offers vanilles; add tresses service but in a different city to validate filtering
-        Service.objects.create(
-            provider=self.provider_b,
-            name="Tresses / Braids",
-            slug="tresses",
-            base_price_cents=5500,
-            hair_length_adjustments={},
+        ProviderMarketingService.objects.create(
+            provider=self.provider_b, service=self.marketing_service
         )
 
         url = reverse("interface:service_city_page", args=["tresses", "toulouse"])
