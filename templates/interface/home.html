@@ -1,17 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Coiffure afro & tresses à Toulouse | Château Rose{% endblock %}
+{% block title %}Réserve ta coiffure afro à Toulouse en moins de 2 minutes | Château Rose{% endblock %}
 
 {% block content %}
 <section class="container hero-section">
     <div class="bento-grid">
         <div class="hero-main">
-            <h1>Révélez votre beauté afro.</h1>
-            <p class="hero-subtitle">Réservez vos tresses, locks et soins d'exception à domicile à Toulouse, en quelques clics.</p>
-            <div class="hero-meta">
-                <span>{{ providers|length }} prestataires vérifiés</span>
-                <span>Zones : {% for zone in zones|slice:":4" %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if zones|length > 4 %}, ...{% endif %}</span>
-            </div>
+            <h1>Réserve ta coiffure afro à Toulouse, en moins de deux minutes.</h1>
+            <p class="hero-subtitle">Choisis ta prestation, partage une photo d'inspiration et nous validons le bon artiste, au bon créneau, sans démarchage.</p>
             <div style="display:flex; gap:12px; flex-wrap: wrap;">
                 <a href="{% url 'interface:provider_list' %}" class="btn">Trouver un(e) artiste</a>
                 <a href="#catalogue" class="btn secondary">Voir toutes les catégories</a>
@@ -19,10 +15,13 @@
         </div>
 
         <div class="hero-services">
-            {% for service in services|slice:":4" %}
-                {% cycle 'https://images.unsplash.com/photo-1624896790977-8d76550b0688?q=80&w=400&auto=format&fit=crop' 'https://images.unsplash.com/photo-1595189873499-15d2a90050d2?q=80&w=400&auto=format&fit=crop' 'https://images.unsplash.com/photo-1521115857999-0740a3d4d425?q=80&w=400&auto=format&fit=crop' 'https://images.unsplash.com/photo-1623886735313-17684807490f?q=80&w=400&auto=format&fit=crop' as hero_image silent %}
+            {% for service in featured_services %}
                 <a class="service-mini" href="{% url 'interface:service_page' service.slug %}">
-                    <img src="{% cycle hero_image %}" alt="{{ service.name }}">
+                    {% if service.resolved_main_image %}
+                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1624896790977-8d76550b0688?q=80&w=400&auto=format&fit=crop" alt="{{ service.name }}">
+                    {% endif %}
                     <span>{{ service.name }}</span>
                 </a>
             {% empty %}
@@ -49,7 +48,7 @@
                         {% if photo %}
                             <img src="{{ photo.image.url }}" alt="Réalisations de {{ provider.name }}">
                         {% else %}
-                            <img src="https://images.unsplash.com/photo-1582095133179-bfd08d2fc6b8?q=80&w=600&auto=format&fit=crop" alt="Coiffure afro inspiration">
+                            <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=600&auto=format&fit=crop" alt="Coiffure afro inspiration">
                         {% endif %}
                     </div>
                     <p class="gallery-caption">{{ provider.name }}</p>
@@ -61,15 +60,38 @@
     </div>
 </section>
 
+<section class="container info-grid">
+    <article class="info-card">
+        <h3>Comment ça marche ?</h3>
+        <ul class="highlight-list">
+            <li>Décris ton besoin : tresses, locks, soins... et précise la longueur, la couleur et si tu as besoin de mèches.</li>
+            <li>Ajoute des photos : une photo actuelle et une inspiration pour guider l'artiste.</li>
+            <li>On te répond vite : on te propose une coiffeuse et un créneau disponibles dans ta zone.</li>
+        </ul>
+    </article>
+    <article class="info-card">
+        <h3>Pourquoi Château Rose</h3>
+        <p>Une sélection d'artistes afro à Toulouse et sa métropole, avec des tarifs transparents et des prestations maîtrisées.</p>
+        <ul class="highlight-list">
+            <li>Prise de rendez-vous rapide, sans échanges interminables.</li>
+            <li>Prestations mobiles ou en salon partenaire selon tes préférences.</li>
+            <li>Suivi et paiement sécurisés une fois la proposition validée.</li>
+        </ul>
+    </article>
+</section>
+
 <section class="all-services" id="catalogue">
     <div class="container">
         <h2 class="section-title">Parcourir nos catégories</h2>
         <div class="services-grid">
             {% for service in services %}
-                {% cycle 'https://images.unsplash.com/photo-1604654894610-df63bc536371?q=80&w=500&auto=format' 'https://images.unsplash.com/photo-1595189873499-15d2a90050d2?q=80&w=500&auto=format' 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?q=80&w=500&auto=format' 'https://images.unsplash.com/photo-1623886735313-17684807490f?q=80&w=500&auto=format' as service_img silent %}
                 <article class="service-card-full">
                     <div class="service-card-img">
-                        <img src="{% cycle service_img %}" alt="{{ service.name }} à Toulouse">
+                        {% if service.resolved_main_image %}
+                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?q=80&w=500&auto=format" alt="{{ service.name }} à Toulouse">
+                        {% endif %}
                     </div>
                     <div class="service-card-body">
                         <h3>{{ service.name }}</h3>
