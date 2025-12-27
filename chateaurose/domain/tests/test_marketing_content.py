@@ -2,6 +2,7 @@ import pytest
 
 from chateaurose.domain.services.marketing_content import (
     CityContent,
+    GalleryImage,
     MarketingContent,
     OverrideContent,
     ServiceContent,
@@ -62,25 +63,25 @@ def test_hero_and_gallery_precedence():
     service = ServiceContent(
         name="Tresses",
         main_image="service-hero.jpg",
-        gallery=["s1.jpg", "s2.jpg"],
+        gallery=[GalleryImage(url="s1.jpg"), GalleryImage(url="s2.jpg")],
     )
     city = CityContent(name="Toulouse", main_image="city-hero.jpg")
     override = OverrideContent(
         main_image="override-hero.jpg",
-        gallery=["o1.jpg"],
+        gallery=[GalleryImage(url="o1.jpg", caption="Override")],
     )
 
     content = build_marketing_content(service=service, city=city, override=override)
     assert content.hero_image == "override-hero.jpg"
-    assert content.gallery == ["o1.jpg"]
+    assert [img.url for img in content.gallery] == ["o1.jpg"]
 
     content_no_override = build_marketing_content(service=service, city=city)
     assert content_no_override.hero_image == "city-hero.jpg"
-    assert content_no_override.gallery == ["s1.jpg", "s2.jpg"]
+    assert [img.url for img in content_no_override.gallery] == ["s1.jpg", "s2.jpg"]
 
     content_service_only = build_marketing_content(service=service)
     assert content_service_only.hero_image == "service-hero.jpg"
-    assert content_service_only.gallery == ["s1.jpg", "s2.jpg"]
+    assert [img.url for img in content_service_only.gallery] == ["s1.jpg", "s2.jpg"]
 
 
 def test_district_meta_description_mentions_district_when_no_override():

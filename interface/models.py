@@ -7,6 +7,7 @@ class MarketingService(models.Model):
     intro = models.TextField(blank=True)
     highlights = models.JSONField(default=list, blank=True)
     main_image = models.ImageField(upload_to="marketing/services/main/", blank=True, null=True)
+    main_image_url = models.URLField(max_length=500, blank=True)
     meta_description = models.TextField(blank=True)
 
     class Meta:
@@ -15,10 +16,19 @@ class MarketingService(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def resolved_main_image(self):
+        if self.main_image:
+            return self.main_image.url
+        if self.main_image_url:
+            return self.main_image_url
+        return None
+
 
 class MarketingServiceImage(models.Model):
     service = models.ForeignKey(MarketingService, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to="marketing/services/gallery/")
+    image_url = models.URLField(max_length=500, blank=True)
     caption = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
 
@@ -28,12 +38,19 @@ class MarketingServiceImage(models.Model):
     def __str__(self):
         return f"Image pour {self.service}"
 
+    @property
+    def resolved_url(self):
+        if self.image:
+            return self.image.url
+        return self.image_url or None
+
 
 class MarketingCity(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
     intro = models.TextField(blank=True)
     main_image = models.ImageField(upload_to="marketing/cities/main/", blank=True, null=True)
+    main_image_url = models.URLField(max_length=500, blank=True)
     meta_description = models.TextField(blank=True)
 
     class Meta:
@@ -41,6 +58,14 @@ class MarketingCity(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def resolved_main_image(self):
+        if self.main_image:
+            return self.main_image.url
+        if self.main_image_url:
+            return self.main_image_url
+        return None
 
 
 class MarketingDistrict(models.Model):
@@ -64,6 +89,7 @@ class MarketingServiceCity(models.Model):
     intro = models.TextField(blank=True)
     highlights = models.JSONField(default=list, blank=True)
     main_image = models.ImageField(upload_to="marketing/service_city/main/", blank=True, null=True)
+    main_image_url = models.URLField(max_length=500, blank=True)
     meta_description = models.TextField(blank=True)
 
     class Meta:
@@ -73,12 +99,21 @@ class MarketingServiceCity(models.Model):
     def __str__(self):
         return f"{self.service} - {self.city}"
 
+    @property
+    def resolved_main_image(self):
+        if self.main_image:
+            return self.main_image.url
+        if self.main_image_url:
+            return self.main_image_url
+        return None
+
 
 class MarketingServiceCityImage(models.Model):
     service_city = models.ForeignKey(
         MarketingServiceCity, on_delete=models.CASCADE, related_name="images"
     )
     image = models.ImageField(upload_to="marketing/service_city/gallery/")
+    image_url = models.URLField(max_length=500, blank=True)
     caption = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
 
@@ -87,3 +122,9 @@ class MarketingServiceCityImage(models.Model):
 
     def __str__(self):
         return f"Image pour {self.service_city}"
+
+    @property
+    def resolved_url(self):
+        if self.image:
+            return self.image.url
+        return self.image_url or None

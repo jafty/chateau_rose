@@ -90,6 +90,16 @@ class ServicePagesTests(TestCase):
         self.assertIn("Intro tresses", content)
         self.assertIn("Rapide", content)
 
+    def test_service_page_uses_static_main_image_when_no_upload(self):
+        self.marketing_service.main_image_url = "https://static.example.com/tresses.jpg"
+        self.marketing_service.save()
+
+        url = reverse("interface:service_page", args=["tresses"])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("https://static.example.com/tresses.jpg", response.content.decode())
+
     def test_service_city_page_prefers_city_override_copy(self):
         MarketingServiceCity.objects.create(
             service=self.marketing_service,

@@ -15,6 +15,7 @@ The domain folder holds the business rules in pure Python, independent from Djan
 - **finalize_booking**: lets provider or client confirm/refuse; captures or releases the payment authorization, sends notifications, and guards against invalid states or late confirmations.
 - **expire_booking**: auto-cancels requests older than 48h, releases payment auth, and sends expiry notifications.
 - **send_reminder**: after 24h without response, pings the provider about the pending request.
+- **import_marketing_content**: validates a JSON payload of services, cities, districts, and service+city overrides (copy, highlights, hero/gallery, meta) before persisting. Rejects duplicate/conflicting slugs or bad types to keep the bulk import safe and atomic.
 
 ### Repositories (ports)
 - **Repository / ReadOnlyRepository** (`repositories/base.py`): abstract contracts describing CRUD/list/find operations without assuming storage.
@@ -29,6 +30,7 @@ The domain folder holds the business rules in pure Python, independent from Djan
 ### Infrastructure adapters (`chateaurose/infrastructure`)
 Concrete implementations of the ports for the Django app:
 - **booking_repository.py**: stores and retrieves bookings via Django models.
+- **marketing_repository.py**: atomically upserts marketing services, cities, districts, and service+city overrides (including galleries) from a validated import bundle.
 - **provider_catalog.py**: reads provider/services/zones from Django models for validation and price computations.
 - **payment_stub.py**, **notifier_stub.py**, **reminder_stub.py**: simple stubs used by the web app to simulate payments and messaging.
 
@@ -62,6 +64,9 @@ Concrete implementations of the ports for the Django app:
 
 ### Admin
 Django admin exposes all marketing models with inlines for galleries so editors can manage content without code changes (see `interface/admin.py`).
+
+### Management command
+- **import_marketing_content**: `python manage.py import_marketing_content --file payload.json` reads a JSON file, validates it through the domain use case, and bulk-upserts marketing services/cities/districts and overrides.
 
 ## How to edit copy & media
 - Use Django admin to edit Marketing Service/City/District and Service+City overrides (intros, highlights, hero images, galleries, meta descriptions).

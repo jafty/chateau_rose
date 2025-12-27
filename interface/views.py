@@ -10,6 +10,7 @@ from booking.models import Provider, Service, Zone
 from chateaurose.domain.exceptions import DomainError
 from chateaurose.domain.services.marketing_content import (
     CityContent,
+    GalleryImage,
     OverrideContent,
     ServiceContent,
     build_marketing_content,
@@ -185,13 +186,35 @@ def _city_options(active_city=None):
     return preferred_cities
 
 
+def _gallery_from_service(service_meta: MarketingService):
+    images = []
+    for image in service_meta.images.all():
+        resolved = image.resolved_url
+        if not resolved:
+            continue
+        images.append(GalleryImage(url=resolved, caption=image.caption))
+    return images
+
+
+def _gallery_from_override(override_meta: MarketingServiceCity | None):
+    if not override_meta:
+        return []
+    images = []
+    for image in override_meta.images.all():
+        resolved = image.resolved_url
+        if not resolved:
+            continue
+        images.append(GalleryImage(url=resolved, caption=image.caption))
+    return images
+
+
 def _to_service_content(service_meta: MarketingService) -> ServiceContent:
     return ServiceContent(
         name=service_meta.name,
         intro=service_meta.intro,
         highlights=service_meta.highlights,
-        main_image=service_meta.main_image,
-        gallery=list(service_meta.images.all()),
+        main_image=service_meta.resolved_main_image,
+        gallery=_gallery_from_service(service_meta),
         meta_description=service_meta.meta_description,
     )
 
@@ -200,7 +223,7 @@ def _to_city_content(city_meta: MarketingCity) -> CityContent:
     return CityContent(
         name=city_meta.name,
         intro=city_meta.intro,
-        main_image=city_meta.main_image,
+        main_image=city_meta.resolved_main_image,
         meta_description=city_meta.meta_description,
     )
 
@@ -211,8 +234,8 @@ def _to_override_content(city_override: MarketingServiceCity | None) -> Override
     return OverrideContent(
         intro=city_override.intro,
         highlights=city_override.highlights,
-        main_image=city_override.main_image,
-        gallery=list(city_override.images.all()),
+        main_image=city_override.resolved_main_image,
+        gallery=_gallery_from_override(city_override),
         meta_description=city_override.meta_description,
     )
 
@@ -321,7 +344,11 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     )
 
     gallery_images = marketing_content.gallery
-    hero_image = marketing_content.hero_image or district_meta.city.main_image or service_meta.main_image
+    hero_image = (
+        marketing_content.hero_image
+        or district_meta.city.resolved_main_image
+        or service_meta.resolved_main_image
+    )
     meta_description = marketing_content.meta_description
 
     return render(

@@ -16,12 +16,18 @@ def _default_highlights(service_name: str) -> List[str]:
 
 
 @dataclass
+class GalleryImage:
+    url: str
+    caption: str = ""
+
+
+@dataclass
 class ServiceContent:
     name: str
     intro: str = ""
     highlights: List[str] = field(default_factory=list)
     main_image: Optional[str] = None
-    gallery: List[str] = field(default_factory=list)
+    gallery: List[GalleryImage] = field(default_factory=list)
     meta_description: str = ""
 
 
@@ -38,7 +44,7 @@ class OverrideContent:
     intro: str = ""
     highlights: List[str] = field(default_factory=list)
     main_image: Optional[str] = None
-    gallery: List[str] = field(default_factory=list)
+    gallery: List[GalleryImage] = field(default_factory=list)
     meta_description: str = ""
 
 
@@ -48,7 +54,7 @@ class MarketingContent:
     city_intro: str
     highlights: List[str]
     hero_image: Optional[str]
-    gallery: List[str]
+    gallery: List[GalleryImage]
     meta_description: str
 
 
@@ -116,7 +122,7 @@ def _hero_image(service: ServiceContent, city: Optional[CityContent], override: 
     return service.main_image
 
 
-def _gallery(service: ServiceContent, override: Optional[OverrideContent]) -> List[str]:
+def _gallery(service: ServiceContent, override: Optional[OverrideContent]) -> List[GalleryImage]:
     if override and override.gallery:
         return override.gallery
     return service.gallery

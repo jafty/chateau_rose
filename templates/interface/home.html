@@ -17,8 +17,8 @@
         <div class="hero-services">
             {% for service in featured_services %}
                 <a class="service-mini" href="{% url 'interface:service_page' service.slug %}">
-                    {% if service.main_image %}
-                        <img src="{{ service.main_image.url }}" alt="{{ service.name }}">
+                    {% if service.resolved_main_image %}
+                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}">
                     {% else %}
                         <img src="https://images.unsplash.com/photo-1624896790977-8d76550b0688?q=80&w=400&auto=format&fit=crop" alt="{{ service.name }}">
                     {% endif %}
@@ -87,8 +87,8 @@
             {% for service in services %}
                 <article class="service-card-full">
                     <div class="service-card-img">
-                        {% if service.main_image %}
-                            <img src="{{ service.main_image.url }}" alt="{{ service.name }} à Toulouse">
+                        {% if service.resolved_main_image %}
+                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse">
                         {% else %}
                             <img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?q=80&w=500&auto=format" alt="{{ service.name }} à Toulouse">
                         {% endif %}
