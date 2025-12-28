@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse{% endif %} | Château Rose{% endblock %}
+{% block title %}{{ service.name }}{% if zone %} à {{ zone.name }}{% else %} à Toulouse{% endif %} | Château Rose{% endblock %}
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block content %}
@@ -8,46 +8,38 @@
     <div class="hero-grid">
         <div>
             <span class="pill">Service</span>
-            <h1>{{ service.name }}{% if city %} à {{ city.name }}{% else %} à Toulouse{% endif %}, réservés en quelques minutes.</h1>
+            <h1>{{ service.name }}{% if zone %} à {{ zone.name }}{% else %} à Toulouse{% endif %}, réservés en quelques minutes.</h1>
             <p class="lead">{{ intro }}</p>
         </div>
         <div class="hero-media">
             {% if hero_image %}
-                <img src="{{ hero_image }}" alt="{{ service.name }}{% if city %} à {{ city.name }}{% endif %}">
+                <img src="{{ hero_image }}" alt="{{ service.name }}{% if zone %} à {{ zone.name }}{% endif %}">
             {% else %}
-                <img src="https://images.unsplash.com/photo-1626899798511-c3eaacb02846?q=80&w=700&auto=format&fit=crop" alt="Coiffure afro à {{ city.name|default:"Toulouse" }}">
+                <img src="https://images.unsplash.com/photo-1626899798511-c3eaacb02846?q=80&w=700&auto=format&fit=crop" alt="Coiffure afro à {{ zone.name|default:"Toulouse" }}">
             {% endif %}
         </div>
     </div>
 </section>
 
 <section class="container">
-    <div class="info-card">
-        <div class="breadcrumb">
-            <span><a href="{% url 'interface:home' %}">Accueil</a> › {{ service.name }}{% if city %} › {{ city.name }}{% endif %}{% if district %} › {{ district.name }}{% endif %}</span>
-        </div>
-        <h3 style="margin-bottom:12px;">Choisir une ville</h3>
-        <div class="chips">
-            {% for city_option in cities %}
-                <a class="chip {% if city and city_option.slug == city.slug %}active{% endif %}" href="{% url 'interface:service_city_page' service.slug city_option.slug %}">
-                    {{ city_option.name }}
-                </a>
-            {% endfor %}
-        </div>
-        {% if city and districts %}
-            <h4 style="margin-bottom:10px;">Quartiers à {{ city.name }}</h4>
+    {% if zones %}
+        <div class="info-card">
+            <div class="breadcrumb">
+                <span><a href="{% url 'interface:home' %}">Accueil</a> › {{ service.name }}{% if zone %} › {{ zone.name }}{% endif %}{% if district %} › {{ district.name }}{% endif %}</span>
+            </div>
+            <h3 style="margin-bottom:12px;">Choisir une zone</h3>
             <div class="chips">
-                {% for district_option in districts %}
-                    <a class="chip {% if district and district_option.slug == district.slug %}active{% endif %}" href="{% url 'interface:service_city_district_page' service.slug city.slug district_option.slug %}">
-                        {{ district_option.name }}
+                {% for zone_option in zones %}
+                    <a class="chip {% if zone and zone_option.slug == zone.slug %}active{% endif %}" href="{% url 'interface:service_city_page' service.slug zone_option.slug %}">
+                        {{ zone_option.name }}
                     </a>
                 {% endfor %}
             </div>
-        {% endif %}
-    </div>
+        </div>
+    {% endif %}
 
     <div class="info-card">
-        <h3 style="margin-bottom:12px;">{{ service.name }}{% if city %} à {{ city.name }}{% endif %}</h3>
+        <h3 style="margin-bottom:12px;">{{ service.name }}{% if zone %} à {{ zone.name }}{% endif %}</h3>
         <p class="lead">{{ city_intro }}</p>
         <ul class="highlight-list">
             {% for highlight in highlights %}
@@ -56,6 +48,8 @@
         </ul>
         {% if district %}
             <p class="meta-line">Secteur ciblé : {{ district.name }}.</p>
+        {% elif zone %}
+            <p class="meta-line">Zone ciblée : {{ zone.name }}.</p>
         {% endif %}
     </div>
 </section>
@@ -93,9 +87,12 @@
                     </div>
                     <div class="provider-body">
                         <h3 class="provider-name">{{ provider.name }}</h3>
-                        <p class="provider-loc">Zones : {% for zone in provider.provider_zones.all %}{{ zone.zone.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}</p>
+                        <p class="provider-loc">Zones : {% for zone in provider.zones.all %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}</p>
+                        {% if provider.works_in_salon_only %}
+                            <p class="meta-line" style="color:#9c27b0;">Je ne travaille que depuis chez moi / en salon.</p>
+                        {% endif %}
                         <div class="tags">
-                            {% for srv in provider.services.all|slice:":3" %}
+                            {% for srv in provider.marketing_services.all|slice:":3" %}
                                 <span class="tag">{{ srv.name }}</span>
                             {% endfor %}
                         </div>
@@ -106,8 +103,42 @@
                 </article>
             {% endfor %}
         </div>
-    {% else %}
-        <p class="lead">Aucun prestataire disponible pour le moment.</p>
     {% endif %}
+</section>
+
+<section class="container" style="padding-top:20px; padding-bottom:60px;">
+    <div class="info-card request-card">
+        <div class="request-header">
+            <div>
+                <h3 style="margin-bottom:6px;">Pas le temps d'attendre ?</h3>
+                <p class="lead" style="margin:0;">Laissez-nous vos coordonnées pour que l'on revienne vers vous rapidement, même si aucun prestataire n'est affiché.</p>
+            </div>
+            <span class="request-note">Réponse rapide</span>
+        </div>
+        {% if request_success %}
+            <div class="alert alert-success" role="alert" style="margin-bottom:16px;">
+                Demande enregistrée, nous vous rappelons au plus vite.
+            </div>
+        {% endif %}
+        <form method="post" action="" class="form-grid">
+            {% csrf_token %}
+            <input type="hidden" name="request_service" value="1" />
+            <div class="form-field">
+                <label for="id_client_name">Votre nom</label>
+                {{ request_form.client_name }}
+            </div>
+            <div class="form-field">
+                <label for="id_client_phone">Téléphone</label>
+                {{ request_form.client_phone }}
+            </div>
+            <div class="form-field full-width">
+                <label for="id_details">Dites-nous en plus</label>
+                {{ request_form.details }}
+            </div>
+            <div class="form-actions full-width">
+                <button type="submit" class="btn">Envoyer ma demande</button>
+            </div>
+        </form>
+    </div>
 </section>
 {% endblock %}

@@ -13,9 +13,4 @@ class InMemoryMarketingContentRepository(MarketingContentRepository):
     def bulk_import(self, bundle: MarketingImportBundle) -> ImportResult:
         self.calls += 1
         self.received_bundle = bundle
-        return ImportResult(
-            services_count=len(bundle.services),
-            cities_count=len(bundle.cities),
-            districts_count=sum(len(city.districts) for city in bundle.cities),
-            overrides_count=len(bundle.service_city_overrides),
-        )
+        return ImportResult(services_count=len(bundle.services))

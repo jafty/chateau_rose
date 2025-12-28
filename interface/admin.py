@@ -1,12 +1,10 @@
 from django.contrib import admin
 
 from interface.models import (
-    MarketingCity,
-    MarketingDistrict,
     MarketingService,
-    MarketingServiceCity,
-    MarketingServiceCityImage,
     MarketingServiceImage,
+    MarketingZone,
+    ServiceRequest,
 )
 
 
@@ -23,29 +21,15 @@ class MarketingServiceAdmin(admin.ModelAdmin):
     inlines = [MarketingServiceImageInline]
 
 
-@admin.register(MarketingCity)
-class MarketingCityAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug")
-    search_fields = ("name", "slug")
-    prepopulated_fields = {"slug": ("name",)}
+@admin.register(MarketingZone)
+class MarketingZoneAdmin(admin.ModelAdmin):
+    list_display = ("zone",)
+    search_fields = ("zone__name", "zone__slug")
+    autocomplete_fields = ("zone",)
 
 
-@admin.register(MarketingDistrict)
-class MarketingDistrictAdmin(admin.ModelAdmin):
-    list_display = ("name", "city")
-    search_fields = ("name", "slug", "city__name")
-    prepopulated_fields = {"slug": ("name",)}
-    list_filter = ("city",)
-
-
-class MarketingServiceCityImageInline(admin.TabularInline):
-    model = MarketingServiceCityImage
-    extra = 1
-
-
-@admin.register(MarketingServiceCity)
-class MarketingServiceCityAdmin(admin.ModelAdmin):
-    list_display = ("service", "city")
-    search_fields = ("service__name", "city__name")
-    list_filter = ("city", "service")
-    inlines = [MarketingServiceCityImageInline]
+@admin.register(ServiceRequest)
+class ServiceRequestAdmin(admin.ModelAdmin):
+    list_display = ("marketing_service", "zone", "client_name", "client_phone", "created_at")
+    list_filter = ("marketing_service", "zone")
+    search_fields = ("client_name", "client_phone", "details")
