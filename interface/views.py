@@ -8,25 +8,15 @@ from django.utils import timezone
 
 from booking.models import Provider, Service, Zone
 from chateaurose.domain.exceptions import DomainError
-from chateaurose.domain.services.marketing_content import (
-    CityContent,
-    GalleryImage,
-    OverrideContent,
-    ServiceContent,
-    build_marketing_content,
-)
+from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
 from chateaurose.domain.use_cases import request_haircut, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
 from chateaurose.infrastructure.notifier_stub import NotifierStub
 from chateaurose.infrastructure.payment_stub import PaymentGatewayStub
 from chateaurose.infrastructure.provider_catalog import DjangoProviderCatalog
-from interface.models import (
-    MarketingCity,
-    MarketingDistrict,
-    MarketingService,
-    MarketingServiceCity,
-)
+from interface.forms import ServiceRequestForm
+from interface.models import MarketingService
 
 repo = DjangoBookingRepository()
 notifier = NotifierStub()
@@ -65,7 +55,6 @@ def home(request):
             "zones": zones,
             "services": services,
             "featured_services": featured_services,
-            "cities": list(MarketingCity.objects.all()),
         },
     )
 
@@ -78,7 +67,7 @@ def provider_list(request):
 def provider_detail(request, provider_id):
     provider = get_object_or_404(Provider, id=provider_id)
     services = Service.objects.filter(provider=provider)
-    zones = Zone.objects.filter(zone_providers__provider=provider)
+    zones = provider.zones.all()
     message = None
     error = None
 
@@ -167,40 +156,36 @@ def _get_service_or_404(service_slug: str):
     return get_object_or_404(MarketingService, slug=service_slug)
 
 
-def _get_city_or_404(city_slug: str):
-    return get_object_or_404(MarketingCity, slug=city_slug)
+def _get_zone_or_404(zone_slug: str):
+    return get_object_or_404(Zone, slug=zone_slug)
 
 
-def _get_districts_for_city(city_slug: str):
-    return list(MarketingDistrict.objects.filter(city__slug=city_slug))
+def _zone_options(active_zone=None):
+    zones = list(Zone.objects.all().order_by("name"))
+    if active_zone and not any(zone.slug == active_zone.slug for zone in zones):
+        zones.append(active_zone)
+    return zones
 
 
-def _get_district_or_404(city_slug: str, district_slug: str):
-    return get_object_or_404(MarketingDistrict, city__slug=city_slug, slug=district_slug)
+def _build_service_request_form(request, service_meta: MarketingService, zone):
+    form = ServiceRequestForm(request.POST or None)
+    request_success = False
 
+    if request.method == "POST" and request.POST.get("request_service") == "1":
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.marketing_service = service_meta
+            record.zone = zone
+            record.save()
+            request_success = True
+            form = ServiceRequestForm()
 
-def _city_options(active_city=None):
-    preferred_cities = list(MarketingCity.objects.all()[:6])
-    if active_city and not any(city.slug == active_city.slug for city in preferred_cities):
-        preferred_cities.append(active_city)
-    return preferred_cities
+    return form, request_success
 
 
 def _gallery_from_service(service_meta: MarketingService):
     images = []
     for image in service_meta.images.all():
-        resolved = image.resolved_url
-        if not resolved:
-            continue
-        images.append(GalleryImage(url=resolved, caption=image.caption))
-    return images
-
-
-def _gallery_from_override(override_meta: MarketingServiceCity | None):
-    if not override_meta:
-        return []
-    images = []
-    for image in override_meta.images.all():
         resolved = image.resolved_url
         if not resolved:
             continue
@@ -219,36 +204,20 @@ def _to_service_content(service_meta: MarketingService) -> ServiceContent:
     )
 
 
-def _to_city_content(city_meta: MarketingCity) -> CityContent:
-    return CityContent(
-        name=city_meta.name,
-        intro=city_meta.intro,
-        main_image=city_meta.resolved_main_image,
-        meta_description=city_meta.meta_description,
-    )
-
-
-def _to_override_content(city_override: MarketingServiceCity | None) -> OverrideContent | None:
-    if not city_override:
-        return None
-    return OverrideContent(
-        intro=city_override.intro,
-        highlights=city_override.highlights,
-        main_image=city_override.resolved_main_image,
-        gallery=_gallery_from_override(city_override),
-        meta_description=city_override.meta_description,
-    )
-
-
 def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
-    providers = Provider.objects.filter(services__slug=service_slug).distinct()
+    providers = list(
+        Provider.objects.filter(marketing_services__slug=service_slug).distinct()
+    )
+    request_form, request_success = _build_service_request_form(
+        request, service_meta, zone=None
+    )
     service_content = _to_service_content(service_meta)
     marketing_content = build_marketing_content(service=service_content)
     hero_image = marketing_content.hero_image
     gallery_images = marketing_content.gallery
     intro = marketing_content.intro
-    city_intro = marketing_content.city_intro
+    city_intro = marketing_content.location_intro
     highlights = marketing_content.highlights
     meta_description = marketing_content.meta_description
 
@@ -257,43 +226,40 @@ def service_page(request, service_slug: str):
         "interface/service_page.html",
         {
             "service": service_meta,
-            "city": None,
-            "district": None,
+            "zone": None,
             "providers": providers,
-            "cities": _city_options(),
-            "districts": [],
+            "zones": _zone_options(),
             "intro": intro,
             "city_intro": city_intro,
             "highlights": highlights,
             "hero_image": hero_image,
             "gallery_images": gallery_images,
             "meta_description": meta_description,
+            "request_form": request_form,
+            "request_success": request_success,
         },
     )
 
 
 def service_city_page(request, service_slug: str, city_slug: str):
     service_meta = _get_service_or_404(service_slug)
-    city_meta = _get_city_or_404(city_slug)
-    district_list = _get_districts_for_city(city_slug)
-    district_slugs = [d.slug for d in district_list]
-    service_city_override = MarketingServiceCity.objects.filter(service=service_meta, city=city_meta).first()
+    zone = _get_zone_or_404(city_slug)
     marketing_content = build_marketing_content(
         service=_to_service_content(service_meta),
-        city=_to_city_content(city_meta),
-        override=_to_override_content(service_city_override),
-        district_name=None,
+        location_name=zone.name,
     )
     intro = marketing_content.intro
-    city_intro = marketing_content.city_intro
+    city_intro = marketing_content.location_intro
     highlights = marketing_content.highlights
 
-    providers = (
+    providers = list(
         Provider.objects.filter(
-            services__slug=service_slug,
-            provider_zones__zone__slug__in=[city_slug, *district_slugs],
-        )
-        .distinct()
+            marketing_services__slug=service_slug,
+            zones__slug=zone.slug,
+        ).distinct()
+    )
+    request_form, request_success = _build_service_request_form(
+        request, service_meta, zone=zone
     )
 
     gallery_images = marketing_content.gallery
@@ -305,50 +271,45 @@ def service_city_page(request, service_slug: str, city_slug: str):
         "interface/service_page.html",
         {
             "service": service_meta,
-            "city": city_meta,
+            "zone": zone,
             "district": None,
             "providers": providers,
-            "cities": _city_options(city_meta),
-            "districts": district_list,
+            "zones": _zone_options(zone),
             "intro": intro,
             "city_intro": city_intro,
             "highlights": highlights,
             "hero_image": hero_image,
             "gallery_images": gallery_images,
             "meta_description": meta_description,
+            "request_form": request_form,
+            "request_success": request_success,
         },
     )
 
 
 def service_city_district_page(request, service_slug: str, city_slug: str, district_slug: str):
     service_meta = _get_service_or_404(service_slug)
-    city_meta = _get_city_or_404(city_slug)
-    district_meta = _get_district_or_404(city_slug, district_slug)
-    service_city_override = MarketingServiceCity.objects.filter(service=service_meta, city=city_meta).first()
+    zone = _get_zone_or_404(district_slug)
     marketing_content = build_marketing_content(
         service=_to_service_content(service_meta),
-        city=_to_city_content(city_meta),
-        override=_to_override_content(service_city_override),
-        district_name=district_meta.name,
+        location_name=zone.name,
     )
     intro = marketing_content.intro
-    city_intro = marketing_content.city_intro
+    city_intro = marketing_content.location_intro
     highlights = marketing_content.highlights
 
-    providers = (
+    providers = list(
         Provider.objects.filter(
-            services__slug=service_slug,
-            provider_zones__zone__slug=district_slug,
-        )
-        .distinct()
+            marketing_services__slug=service_slug,
+            zones__slug=zone.slug,
+        ).distinct()
+    )
+    request_form, request_success = _build_service_request_form(
+        request, service_meta, zone=zone
     )
 
     gallery_images = marketing_content.gallery
-    hero_image = (
-        marketing_content.hero_image
-        or district_meta.city.resolved_main_image
-        or service_meta.resolved_main_image
-    )
+    hero_image = marketing_content.hero_image or service_meta.resolved_main_image
     meta_description = marketing_content.meta_description
 
     return render(
@@ -356,17 +317,18 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
         "interface/service_page.html",
         {
             "service": service_meta,
-            "city": city_meta,
-            "district": district_meta,
+            "zone": zone,
+            "district": None,
             "providers": providers,
-            "cities": _city_options(city_meta),
-            "districts": _get_districts_for_city(city_slug),
+            "zones": _zone_options(zone),
             "intro": intro,
             "city_intro": city_intro,
             "highlights": highlights,
             "hero_image": hero_image,
             "gallery_images": gallery_images,
             "meta_description": meta_description,
+            "request_form": request_form,
+            "request_success": request_success,
         },
     )
 

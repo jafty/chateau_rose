@@ -7,6 +7,19 @@ class Provider(models.Model):
     contact_phone = models.CharField(max_length=64, blank=True)
     contact_email = models.EmailField(blank=True)
     profile_image = models.ImageField(upload_to="providers/profile/", blank=True, null=True)
+    works_in_salon_only = models.BooleanField(default=False)
+    zones = models.ManyToManyField(
+        "Zone",
+        through="ProviderZone",
+        related_name="providers",
+        blank=True,
+    )
+    marketing_services = models.ManyToManyField(
+        "interface.MarketingService",
+        through="ProviderMarketingService",
+        related_name="providers",
+        blank=True,
+    )
 
     def __str__(self):
         return self.name
@@ -58,6 +71,23 @@ class ProviderZone(models.Model):
 
     def __str__(self):
         return f"{self.provider} - {self.zone}"
+
+
+class ProviderMarketingService(models.Model):
+    provider = models.ForeignKey(
+        Provider, on_delete=models.CASCADE, related_name="provider_marketing_services"
+    )
+    service = models.ForeignKey(
+        "interface.MarketingService",
+        on_delete=models.CASCADE,
+        related_name="marketing_service_providers",
+    )
+
+    class Meta:
+        unique_together = ("provider", "service")
+
+    def __str__(self):
+        return f"{self.provider} - {self.service}"
 
 
 class Booking(models.Model):

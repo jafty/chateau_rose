@@ -16,7 +16,7 @@ class StorageSettings:
 def build_storage_settings(env: Mapping[str, str], base_dir: Path) -> StorageSettings:
     backend = env.get("FILE_STORAGE_BACKEND", "local").lower()
     storages: MutableMapping[str, dict] = {
-        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"}
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}
     }
 
     if backend == "local":
