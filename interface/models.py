@@ -32,6 +32,38 @@ class MarketingService(models.Model):
         return None
 
 
+class MarketingZone(models.Model):
+    zone = models.OneToOneField(
+        "booking.Zone",
+        on_delete=models.CASCADE,
+        related_name="marketing_profile",
+    )
+    intro = models.TextField(blank=True)
+    highlights = models.JSONField(default=list, blank=True)
+    hero_image = models.ImageField(upload_to="marketing/zones/main/", blank=True, null=True)
+    hero_image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text="Upload an image or provide an absolute URL or /root-relative path.",
+    )
+    meta_description = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("zone__name",)
+
+    def __str__(self):
+        return f"Profil marketing - {self.zone.name}"
+
+    @property
+    def resolved_hero_image(self):
+        if self.hero_image:
+            return self.hero_image.url
+        if self.hero_image_url:
+            return self.hero_image_url
+        return None
+
+
 class MarketingServiceImage(models.Model):
     service = models.ForeignKey(MarketingService, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to="marketing/services/gallery/", blank=True)

@@ -455,6 +455,29 @@ p.lead {
     margin-bottom: 26px;
 }
 
+.request-card {
+    border: 1px solid #f1e7ed;
+    border-radius: 14px;
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.request-note {
+    background: var(--accent-pink);
+    color: var(--primary);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
 .info-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -478,6 +501,53 @@ p.lead {
     content: "✔";
     color: var(--primary);
     margin-right: 8px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-field.full-width,
+.form-grid .full-width { grid-column: 1 / -1; }
+
+.form-field label {
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #e6d7df;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-field textarea { resize: vertical; min-height: 120px; }
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(190, 24, 93, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
 }
 
 .about-grid {

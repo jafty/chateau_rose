@@ -107,9 +107,14 @@
 </section>
 
 <section class="container" style="padding-top:20px; padding-bottom:60px;">
-    <div class="info-card">
-        <h3 style="margin-bottom:8px;">Pas le temps d'attendre ?</h3>
-        <p class="lead">Laissez-nous vos coordonnées pour que l'on revienne vers vous rapidement, même si aucun prestataire n'est affiché.</p>
+    <div class="info-card request-card">
+        <div class="request-header">
+            <div>
+                <h3 style="margin-bottom:6px;">Pas le temps d'attendre ?</h3>
+                <p class="lead" style="margin:0;">Laissez-nous vos coordonnées pour que l'on revienne vers vous rapidement, même si aucun prestataire n'est affiché.</p>
+            </div>
+            <span class="request-note">Réponse rapide</span>
+        </div>
         {% if request_success %}
             <div class="alert alert-success" role="alert" style="margin-bottom:16px;">
                 Demande enregistrée, nous vous rappelons au plus vite.
@@ -126,11 +131,11 @@
                 <label for="id_client_phone">Téléphone</label>
                 {{ request_form.client_phone }}
             </div>
-            <div class="form-field" style="grid-column: 1 / -1;">
+            <div class="form-field full-width">
                 <label for="id_details">Dites-nous en plus</label>
                 {{ request_form.details }}
             </div>
-            <div class="form-actions" style="grid-column: 1 / -1; text-align:right;">
+            <div class="form-actions full-width">
                 <button type="submit" class="btn">Envoyer ma demande</button>
             </div>
         </form>

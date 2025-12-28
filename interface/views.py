@@ -16,7 +16,7 @@ from chateaurose.infrastructure.notifier_stub import NotifierStub
 from chateaurose.infrastructure.payment_stub import PaymentGatewayStub
 from chateaurose.infrastructure.provider_catalog import DjangoProviderCatalog
 from interface.forms import ServiceRequestForm
-from interface.models import MarketingService
+from interface.models import MarketingService, MarketingZone
 
 repo = DjangoBookingRepository()
 notifier = NotifierStub()
@@ -204,6 +204,20 @@ def _to_service_content(service_meta: MarketingService) -> ServiceContent:
     )
 
 
+def _apply_zone_marketing(service_meta: MarketingService, marketing_zone: MarketingZone):
+    if not marketing_zone:
+        return _to_service_content(service_meta)
+
+    return ServiceContent(
+        name=service_meta.name,
+        intro=marketing_zone.intro or service_meta.intro,
+        highlights=marketing_zone.highlights or service_meta.highlights,
+        main_image=marketing_zone.resolved_hero_image or service_meta.resolved_main_image,
+        gallery=_gallery_from_service(service_meta),
+        meta_description=marketing_zone.meta_description or service_meta.meta_description,
+    )
+
+
 def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
     providers = list(
@@ -244,8 +258,9 @@ def service_page(request, service_slug: str):
 def service_city_page(request, service_slug: str, city_slug: str):
     service_meta = _get_service_or_404(service_slug)
     zone = _get_zone_or_404(city_slug)
+    marketing_zone = MarketingZone.objects.filter(zone=zone).first()
     marketing_content = build_marketing_content(
-        service=_to_service_content(service_meta),
+        service=_apply_zone_marketing(service_meta, marketing_zone),
         location_name=zone.name,
     )
     intro = marketing_content.intro
@@ -290,8 +305,9 @@ def service_city_page(request, service_slug: str, city_slug: str):
 def service_city_district_page(request, service_slug: str, city_slug: str, district_slug: str):
     service_meta = _get_service_or_404(service_slug)
     zone = _get_zone_or_404(district_slug)
+    marketing_zone = MarketingZone.objects.filter(zone=zone).first()
     marketing_content = build_marketing_content(
-        service=_to_service_content(service_meta),
+        service=_apply_zone_marketing(service_meta, marketing_zone),
         location_name=zone.name,
     )
     intro = marketing_content.intro

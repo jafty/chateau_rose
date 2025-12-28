@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from interface.models import MarketingService, MarketingServiceImage, ServiceRequest
+from interface.models import (
+    MarketingService,
+    MarketingServiceImage,
+    MarketingZone,
+    ServiceRequest,
+)
 
 
 class MarketingServiceImageInline(admin.TabularInline):
@@ -14,6 +19,13 @@ class MarketingServiceAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [MarketingServiceImageInline]
+
+
+@admin.register(MarketingZone)
+class MarketingZoneAdmin(admin.ModelAdmin):
+    list_display = ("zone",)
+    search_fields = ("zone__name", "zone__slug")
+    autocomplete_fields = ("zone",)
 
 
 @admin.register(ServiceRequest)
