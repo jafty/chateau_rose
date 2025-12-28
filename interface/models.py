@@ -55,3 +55,28 @@ class MarketingServiceImage(models.Model):
         if self.image:
             return self.image.url
         return self.image_url or None
+
+
+class ServiceRequest(models.Model):
+    marketing_service = models.ForeignKey(
+        MarketingService,
+        on_delete=models.CASCADE,
+        related_name="service_requests",
+    )
+    zone = models.ForeignKey(
+        "booking.Zone",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="service_requests",
+    )
+    client_name = models.CharField(max_length=255)
+    client_phone = models.CharField(max_length=64)
+    details = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"Demande {self.marketing_service.name} ({self.client_name})"

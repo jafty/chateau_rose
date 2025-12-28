@@ -15,6 +15,7 @@ from chateaurose.infrastructure.booking_repository import DjangoBookingRepositor
 from chateaurose.infrastructure.notifier_stub import NotifierStub
 from chateaurose.infrastructure.payment_stub import PaymentGatewayStub
 from chateaurose.infrastructure.provider_catalog import DjangoProviderCatalog
+from interface.forms import ServiceRequestForm
 from interface.models import MarketingService
 
 repo = DjangoBookingRepository()
@@ -166,6 +167,22 @@ def _zone_options(active_zone=None):
     return zones
 
 
+def _build_service_request_form(request, service_meta: MarketingService, zone):
+    form = ServiceRequestForm(request.POST or None)
+    request_success = False
+
+    if request.method == "POST" and request.POST.get("request_service") == "1":
+        if form.is_valid():
+            record = form.save(commit=False)
+            record.marketing_service = service_meta
+            record.zone = zone
+            record.save()
+            request_success = True
+            form = ServiceRequestForm()
+
+    return form, request_success
+
+
 def _gallery_from_service(service_meta: MarketingService):
     images = []
     for image in service_meta.images.all():
@@ -189,7 +206,12 @@ def _to_service_content(service_meta: MarketingService) -> ServiceContent:
 
 def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
-    providers = Provider.objects.filter(marketing_services__slug=service_slug).distinct()
+    providers = list(
+        Provider.objects.filter(marketing_services__slug=service_slug).distinct()
+    )
+    request_form, request_success = _build_service_request_form(
+        request, service_meta, zone=None
+    )
     service_content = _to_service_content(service_meta)
     marketing_content = build_marketing_content(service=service_content)
     hero_image = marketing_content.hero_image
@@ -213,6 +235,8 @@ def service_page(request, service_slug: str):
             "hero_image": hero_image,
             "gallery_images": gallery_images,
             "meta_description": meta_description,
+            "request_form": request_form,
+            "request_success": request_success,
         },
     )
 
@@ -228,10 +252,15 @@ def service_city_page(request, service_slug: str, city_slug: str):
     city_intro = marketing_content.location_intro
     highlights = marketing_content.highlights
 
-    providers = Provider.objects.filter(
-        marketing_services__slug=service_slug,
-        zones__slug=zone.slug,
-    ).distinct()
+    providers = list(
+        Provider.objects.filter(
+            marketing_services__slug=service_slug,
+            zones__slug=zone.slug,
+        ).distinct()
+    )
+    request_form, request_success = _build_service_request_form(
+        request, service_meta, zone=zone
+    )
 
     gallery_images = marketing_content.gallery
     hero_image = marketing_content.hero_image
@@ -252,6 +281,8 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "hero_image": hero_image,
             "gallery_images": gallery_images,
             "meta_description": meta_description,
+            "request_form": request_form,
+            "request_success": request_success,
         },
     )
 
@@ -267,10 +298,15 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     city_intro = marketing_content.location_intro
     highlights = marketing_content.highlights
 
-    providers = Provider.objects.filter(
-        marketing_services__slug=service_slug,
-        zones__slug=zone.slug,
-    ).distinct()
+    providers = list(
+        Provider.objects.filter(
+            marketing_services__slug=service_slug,
+            zones__slug=zone.slug,
+        ).distinct()
+    )
+    request_form, request_success = _build_service_request_form(
+        request, service_meta, zone=zone
+    )
 
     gallery_images = marketing_content.gallery
     hero_image = marketing_content.hero_image or service_meta.resolved_main_image
@@ -291,6 +327,8 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             "hero_image": hero_image,
             "gallery_images": gallery_images,
             "meta_description": meta_description,
+            "request_form": request_form,
+            "request_success": request_success,
         },
     )
 

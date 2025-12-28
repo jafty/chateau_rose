@@ -7,6 +7,7 @@ class Provider(models.Model):
     contact_phone = models.CharField(max_length=64, blank=True)
     contact_email = models.EmailField(blank=True)
     profile_image = models.ImageField(upload_to="providers/profile/", blank=True, null=True)
+    works_in_salon_only = models.BooleanField(default=False)
     zones = models.ManyToManyField(
         "Zone",
         through="ProviderZone",

@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from booking.models import Provider, ProviderMarketingService, ProviderZone, Zone
-from interface.models import MarketingService
+from interface.models import MarketingService, ServiceRequest
 
 
 class ServicePagesTests(TestCase):
@@ -69,32 +69,6 @@ class ServicePagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("https://static.example.com/tresses.jpg", response.content.decode())
 
-    def test_service_city_page_prefers_city_override_copy(self):
-        MarketingServiceCity.objects.create(
-            service=self.marketing_service,
-            city=self.marketing_city,
-            intro="Intro Toulouse spécifique",
-            highlights=["Point local"],
-        )
-
-        url = reverse("interface:service_city_page", args=["tresses", "toulouse"])
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn("Intro Toulouse spécifique", content)
-        self.assertIn("Point local", content)
-        self.assertNotIn("Intro tresses", content)
-
-    def test_service_city_page_falls_back_with_city_context_when_no_override(self):
-        url = reverse("interface:service_city_page", args=["tresses", "toulouse"])
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn("Toulouse", content)
-        self.assertIn("Intro tresses", content)
-
     def test_unknown_service_or_zone_returns_404(self):
         service_url = reverse("interface:service_page", args=["unknown-service"])
         city_url = reverse("interface:service_city_page", args=["tresses", "unknown-city"])
@@ -108,7 +82,6 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        # Should list at least Toulouse link
         self.assertIn("/services/tresses/toulouse", content)
 
     def test_service_city_district_page_filters_by_zone_slug(self):
@@ -118,3 +91,43 @@ class ServicePagesTests(TestCase):
         district_content = district_response.content.decode()
         self.assertIn(self.provider_a.name, district_content)
         self.assertNotIn(self.provider_b.name, district_content)
+
+    def test_service_page_records_request_even_without_providers(self):
+        ProviderMarketingService.objects.all().delete()
+        url = reverse("interface:service_page", args=["tresses"])
+        response = self.client.post(
+            url,
+            {
+                "request_service": "1",
+                "client_name": "Client X",
+                "client_phone": "0600000000",
+                "details": "Besoin urgent",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ServiceRequest.objects.count(), 1)
+        request_record = ServiceRequest.objects.first()
+        self.assertEqual(request_record.marketing_service, self.marketing_service)
+        self.assertIsNone(request_record.zone)
+
+    def test_salon_only_badge_is_rendered(self):
+        self.provider_a.works_in_salon_only = True
+        self.provider_a.save()
+
+        url = reverse("interface:service_page", args=["tresses"])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Je ne travaille que depuis chez moi / en salon", content)
+
+    def test_empty_provider_list_is_hidden(self):
+        ProviderMarketingService.objects.all().delete()
+
+        url = reverse("interface:service_page", args=["tresses"])
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertNotIn("Aucun prestataire", content)

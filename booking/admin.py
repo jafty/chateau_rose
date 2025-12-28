@@ -14,9 +14,15 @@ from interface.models import MarketingService
 
 
 class ProviderAdminForm(forms.ModelForm):
-    zones = forms.ModelMultipleChoiceField(queryset=Zone.objects.all(), required=False)
+    zones = forms.ModelMultipleChoiceField(
+        queryset=Zone.objects.all(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+    )
     marketing_services = forms.ModelMultipleChoiceField(
-        queryset=MarketingService.objects.all(), required=False
+        queryset=MarketingService.objects.all(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
     )
 
     class Meta:
@@ -27,6 +33,7 @@ class ProviderAdminForm(forms.ModelForm):
             "contact_phone",
             "contact_email",
             "profile_image",
+            "works_in_salon_only",
             "zones",
             "marketing_services",
         )
@@ -63,7 +70,7 @@ class ProviderAdminForm(forms.ModelForm):
 @admin.register(Provider)
 class ProviderAdmin(admin.ModelAdmin):
     form = ProviderAdminForm
-    list_display = ("name", "contact_phone", "contact_email")
+    list_display = ("name", "contact_phone", "contact_email", "works_in_salon_only")
     inlines = []
 
 
