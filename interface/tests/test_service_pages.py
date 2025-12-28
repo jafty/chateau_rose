@@ -2,12 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from booking.models import Provider, ProviderMarketingService, ProviderZone, Zone
-from interface.models import (
-    MarketingCity,
-    MarketingDistrict,
-    MarketingService,
-    MarketingServiceCity,
-)
+from interface.models import MarketingService
 
 
 class ServicePagesTests(TestCase):
@@ -22,17 +17,6 @@ class ServicePagesTests(TestCase):
             intro="Intro tresses",
             highlights=["Rapide", "Soigné"],
         )
-        self.marketing_city = MarketingCity.objects.create(
-            name="Toulouse",
-            slug="toulouse",
-            intro="Ville rose",
-        )
-        self.marketing_district = MarketingDistrict.objects.create(
-            city=self.marketing_city,
-            name="Capitole",
-            slug="capitole",
-        )
-
         self.provider_a = Provider.objects.create(name="Prestataire A")
         self.provider_b = Provider.objects.create(name="Prestataire B")
 
@@ -40,6 +24,7 @@ class ServicePagesTests(TestCase):
             provider=self.provider_a, service=self.marketing_service
         )
 
+        ProviderZone.objects.create(provider=self.provider_a, zone=self.toulouse)
         ProviderZone.objects.create(provider=self.provider_a, zone=self.capitole)
         ProviderZone.objects.create(provider=self.provider_b, zone=self.colomiers)
 
@@ -52,7 +37,7 @@ class ServicePagesTests(TestCase):
         self.assertIn(self.provider_a.name, content)
         self.assertNotIn(self.provider_b.name, content)
 
-    def test_service_city_page_filters_providers_by_service_and_city(self):
+    def test_service_city_page_filters_providers_by_service_and_zone(self):
         ProviderMarketingService.objects.create(
             provider=self.provider_b, service=self.marketing_service
         )
@@ -110,14 +95,14 @@ class ServicePagesTests(TestCase):
         self.assertIn("Toulouse", content)
         self.assertIn("Intro tresses", content)
 
-    def test_unknown_service_or_city_returns_404(self):
+    def test_unknown_service_or_zone_returns_404(self):
         service_url = reverse("interface:service_page", args=["unknown-service"])
         city_url = reverse("interface:service_city_page", args=["tresses", "unknown-city"])
 
         self.assertEqual(self.client.get(service_url).status_code, 404)
         self.assertEqual(self.client.get(city_url).status_code, 404)
 
-    def test_service_page_lists_city_links(self):
+    def test_service_page_lists_zone_links(self):
         url = reverse("interface:service_page", args=["tresses"])
         response = self.client.get(url)
 
@@ -126,13 +111,7 @@ class ServicePagesTests(TestCase):
         # Should list at least Toulouse link
         self.assertIn("/services/tresses/toulouse", content)
 
-    def test_service_city_page_lists_district_links_and_filters_district(self):
-        url = reverse("interface:service_city_page", args=["tresses", "toulouse"])
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn("/services/tresses/toulouse/capitole", content)
-
+    def test_service_city_district_page_filters_by_zone_slug(self):
         district_url = reverse("interface:service_city_district_page", args=["tresses", "toulouse", "capitole"])
         district_response = self.client.get(district_url)
         self.assertEqual(district_response.status_code, 200)
