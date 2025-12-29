@@ -62,11 +62,11 @@
 </section>
 
 <section class="container" style="padding: 24px 0;" id="service-request">
-    {% include "interface/partials/service_request_form.html" with title="Tu veux te faire coiffer rapidement ?" lead="Confie-nous ton besoin : on te rappelle rapidement avec une estimation basée sur ton service et ta zone." %}
+    {% include "interface/partials/service_request_form.html" with title="Tu veux qu'on cale ton RDV à ta place ?" lead="Si tu veux aller plus vite, confie-nous ton besoin : on s'occupera nous-même de trouver la ou le prestataire qui te correspond, à Toulouse et aux environs." %}
 </section>
 
 <section class="container providers-section">
-    <h2 class="section-title">Prestataires disponibles</h2>
+    <h2 class="section-title">Nos As de la coiffure afro à Toulouse</h2>
     <div class="providers-grid">
         {% for provider in providers %}
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
@@ -101,7 +101,7 @@
 
 <section class="all-services" id="catalogue">
     <div class="container">
-        <h2 class="section-title">Parcourir nos catégories</h2>
+        <h2 class="section-title">Des coupes afros pour toutes les envies</h2>
         <div class="services-grid">
             {% for service in services %}
                 <article class="service-card-full">
