@@ -21,6 +21,10 @@
 body {
     font-family: 'Space Grotesk', sans-serif;
     background-color: var(--bg-wall);
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)),
+        url("../assets/cork_background.jpg");
+    background-repeat: repeat;
     color: var(--ink-primary);
     line-height: 1.6;
     overflow-x: hidden;
