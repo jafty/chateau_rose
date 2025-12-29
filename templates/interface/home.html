@@ -46,8 +46,8 @@
             {% with photo=provider.photos.first %}
                 <article class="gallery-item">
                     <div class="gallery-img">
-                        {% if photo %}
-                            <img src="{{ photo.image.url }}" alt="Réalisations de {{ provider.name }}">
+                        {% if photo and photo.resolved_url %}
+                            <img src="{{ photo.resolved_url }}" alt="Réalisations de {{ provider.name }}">
                         {% else %}
                             <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure afro">
                         {% endif %}
@@ -116,8 +116,8 @@
         {% for provider in providers %}
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                 <div class="provider-header">
-                    {% if provider.profile_image %}
-                        <img src="{{ provider.profile_image.url }}" alt="{{ provider.name }}">
+                    {% if provider.resolved_profile_image %}
+                        <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}">
                     {% else %}
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro">
                     {% endif %}

@@ -13,7 +13,10 @@ class MarketingService(models.Model):
         max_length=500,
         blank=True,
         validators=[validate_absolute_or_root_relative_url],
-        help_text="Upload an image or provide an absolute URL or /root-relative path.",
+        help_text=(
+            "Upload an image or provide an absolute URL, /root-relative path, "
+            "or relative static asset path."
+        ),
     )
     meta_description = models.TextField(blank=True)
 
@@ -45,7 +48,10 @@ class MarketingZone(models.Model):
         max_length=500,
         blank=True,
         validators=[validate_absolute_or_root_relative_url],
-        help_text="Upload an image or provide an absolute URL or /root-relative path.",
+        help_text=(
+            "Upload an image or provide an absolute URL, /root-relative path, "
+            "or relative static asset path."
+        ),
     )
     meta_description = models.TextField(blank=True)
 
@@ -71,7 +77,10 @@ class MarketingServiceImage(models.Model):
         max_length=500,
         blank=True,
         validators=[validate_absolute_or_root_relative_url],
-        help_text="Upload an image or provide an absolute URL or /root-relative path.",
+        help_text=(
+            "Upload an image or provide an absolute URL, /root-relative path, "
+            "or relative static asset path."
+        ),
     )
     caption = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)

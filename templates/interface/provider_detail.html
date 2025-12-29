@@ -20,8 +20,8 @@
     <div class="provider-layout">
         <aside class="provider-sidebar">
             <div class="profile-photo-frame">
-                {% if provider.profile_image %}
-                    <img src="{{ provider.profile_image.url }}" alt="Photo de {{ provider.name }}">
+                {% if provider.resolved_profile_image %}
+                    <img src="{{ provider.resolved_profile_image }}" alt="Photo de {{ provider.name }}">
                 {% else %}
                     <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portrait prestataire coiffure afro">
                 {% endif %}
@@ -45,7 +45,9 @@
                     {% if provider.photos.all %}
                         <div class="photo-grid">
                             {% for photo in provider.photos.all %}
-                                <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:provider.name }}">
+                                {% if photo.resolved_url %}
+                                    <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}">
+                                {% endif %}
                             {% endfor %}
                         </div>
                     {% else %}
