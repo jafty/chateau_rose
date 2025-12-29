@@ -4,8 +4,15 @@
 {% block title %}{{ provider.name }} | Château Rose{% endblock %}
 
 {% block content %}
-<section class="container page-hero">
-    <div class="paper-card" style="max-width: 760px; transform: rotate(-1deg);">
+<section class="container provider-hero">
+    <div class="hero-backdrop">
+        {% if provider.profile_image %}
+            <img src="{{ provider.profile_image.url }}" alt="Arrière-plan pour {{ provider.name }}">
+        {% else %}
+            <img src="https://images.unsplash.com/photo-1504595403659-9088ce801e29?q=80&w=1200&auto=format&fit=crop" alt="Inspiration coiffure afro">
+        {% endif %}
+    </div>
+    <div class="paper-card provider-profile-card">
         <span class="pill">Profil prestataire</span>
         <h1 style="margin: 14px 0 12px;">{{ provider.name }}</h1>
         <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés." }}</p>
@@ -15,8 +22,8 @@
 </section>
 
 <section class="container detail-grid">
-    <div class="paper-card" style="display: grid; gap: 20px;">
-        <div style="overflow:hidden; box-shadow: var(--shadow-paper);">
+    <div class="provider-visuals">
+        <div class="visual-frame">
             {% if provider.profile_image %}
                 <img src="{{ provider.profile_image.url }}" alt="Photo de {{ provider.name }}">
             {% else %}
@@ -45,7 +52,7 @@
         {% endif %}
     </div>
 
-    <div class="paper-card" style="display: grid; gap: 14px;">
+    <div class="provider-form" style="display: grid; gap: 14px; align-content: start;">
         {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
         {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
 

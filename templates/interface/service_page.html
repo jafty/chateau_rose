@@ -89,7 +89,7 @@
                         <h3 class="provider-name">{{ provider.name }}</h3>
                         <p class="provider-loc">Zones : {% for zone in provider.zones.all %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}</p>
                         {% if provider.works_in_salon_only %}
-                            <p class="meta-line" style="color:#9c27b0;">Je ne travaille que depuis chez moi / en salon.</p>
+                            <p class="meta-line" style="color:#9c27b0;">Je reçois chez moi ou en salon partenaire (pas de déplacement).</p>
                         {% endif %}
                         <div class="tags">
                             {% for srv in provider.marketing_services.all|slice:":3" %}
