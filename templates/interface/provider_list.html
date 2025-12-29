@@ -16,7 +16,7 @@
                 <span>Prestations à domicile, chez le prestataire ou en salon partenaire</span>
                 <span>Estimation de tarifs affichés avant validation</span>
             </div>
-            <div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap;">
+            <div style="margin-top:30px; display:flex; gap:12px; flex-wrap:wrap;">
                 <a class="btn" href="#providers">Choisir un prestataire</a>
                 <a class="btn secondary" href="#process">Comment ça se passe</a>
             </div>
@@ -47,7 +47,7 @@
     </article>
 </section>
 
-<section class="container providers-section" id="providers" style="padding-top: 30px;">
+<section class="container providers-section" id="providers" style="padding-top: 60px;">
     <div class="providers-grid">
         {% for provider in providers %}
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
