@@ -96,6 +96,13 @@
                                 {% endfor %}
                             </select>
                         </div>
+                        <div class="form-field estimation-box">
+                            <label>Estimation du tarif</label>
+                            <p class="estimate-value" id="price-estimate">
+                                {% if default_starting_price %}À partir de {{ default_starting_price }}{% else %}Sélectionnez un service pour voir une estimation{% endif %}
+                            </p>
+                            <p class="meta-line" id="estimate-details">Les variations se calculent selon la longueur des cheveux et l'ajout de mèches.</p>
+                        </div>
                         <div class="form-field">
                             <label for="client_name">Nom <span class="required-mark">*</span></label>
                             <input type="text" name="client_name" id="client_name" required autocomplete="name">
@@ -122,7 +129,9 @@
                         </div>
                         <div class="form-field">
                             <label for="hair_length">Longueur de cheveux <span class="required-mark">*</span></label>
-                            <input type="text" name="hair_length" id="hair_length" placeholder="Épaules, milieu du dos..." required>
+                            <select name="hair_length" id="hair_length" required disabled>
+                                <option value="" selected disabled>Choisis un service d'abord</option>
+                            </select>
                         </div>
                         <div class="form-field checkbox-field">
                             <label for="meche"><input type="checkbox" name="meche" id="meche"> <span>Besoin de mèches fournies</span></label>
@@ -149,4 +158,83 @@
         </div>
     </div>
 </section>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const pricingData = JSON.parse('{{ pricing_data|default:"{}"|escapejs }}');
+        const serviceSelect = document.getElementById('service_id');
+        const hairLengthSelect = document.getElementById('hair_length');
+        const mecheCheckbox = document.getElementById('meche');
+        const priceEstimate = document.getElementById('price-estimate');
+        const estimateDetails = document.getElementById('estimate-details');
+
+        const formatPrice = (cents) => {
+            if (cents === null || cents === undefined) return '';
+            const euros = cents / 100;
+            return euros % 1 === 0 ? `${euros.toFixed(0)} €` : `${euros.toFixed(2)} €`;
+        };
+
+        const updateHairLengths = (serviceId) => {
+            hairLengthSelect.innerHTML = '';
+            hairLengthSelect.disabled = true;
+            if (!serviceId || !pricingData[serviceId]) return;
+            const optionPlaceholder = document.createElement('option');
+            optionPlaceholder.value = '';
+            optionPlaceholder.textContent = 'Choisis une longueur';
+            optionPlaceholder.disabled = true;
+            optionPlaceholder.selected = true;
+            hairLengthSelect.appendChild(optionPlaceholder);
+            const lengths = pricingData[serviceId].lengths || {};
+            Object.keys(lengths)
+                .sort()
+                .forEach((lengthKey) => {
+                    const opt = document.createElement('option');
+                    opt.value = lengthKey;
+                    const delta = lengths[lengthKey];
+                    const displayDelta = delta === 0 ? '' : delta > 0 ? ` (+${formatPrice(delta)})` : ` (${formatPrice(delta)})`;
+                    opt.textContent = `${lengthKey}${displayDelta}`;
+                    hairLengthSelect.appendChild(opt);
+                });
+            hairLengthSelect.disabled = false;
+        };
+
+        const minAdjustment = (lengths) => {
+            const values = Object.values(lengths || {});
+            if (!values.length) return 0;
+            return Math.min(...values);
+        };
+
+        const refreshEstimate = () => {
+            const serviceId = serviceSelect.value;
+            if (!serviceId || !pricingData[serviceId]) {
+                priceEstimate.textContent = '{{ default_starting_price|default:"Sélectionne un service pour voir une estimation" }}';
+                estimateDetails.textContent = 'Sélectionnez un service, une longueur et si les mèches doivent être fournies.';
+                return;
+            }
+            const pricing = pricingData[serviceId];
+            const base = pricing.base;
+            const lengths = pricing.lengths || {};
+            const selectedLength = hairLengthSelect.value;
+            const lengthAdj = selectedLength ? lengths[selectedLength] ?? 0 : minAdjustment(lengths);
+            const mecheAdj = mecheCheckbox.checked ? pricing.meche_bonus || 0 : 0;
+            const estimateCents = base + lengthAdj + mecheAdj;
+            priceEstimate.textContent = `À partir de ${formatPrice(estimateCents)}`;
+            const lengthText = selectedLength ? `longueur "${selectedLength}"` : 'longueur la plus courte disponible';
+            const mecheText = mecheCheckbox.checked ? 'avec mèches incluses' : 'sans mèches fournies';
+            estimateDetails.textContent = `Base ${formatPrice(base)}, ajustée pour ${lengthText} (${mecheText}).`;
+        };
+
+        serviceSelect?.addEventListener('change', (event) => {
+            updateHairLengths(event.target.value);
+            mecheCheckbox.checked = false;
+            refreshEstimate();
+        });
+
+        hairLengthSelect?.addEventListener('change', refreshEstimate);
+        mecheCheckbox?.addEventListener('change', refreshEstimate);
+
+        if (serviceSelect.value) {
+            updateHairLengths(serviceSelect.value);
+        }
+    });
+</script>
 {% endblock %}

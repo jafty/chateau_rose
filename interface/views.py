@@ -1,8 +1,8 @@
-import os
-
+import json
 import os
 from datetime import datetime
 
+from django import forms
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden
@@ -72,6 +72,7 @@ def home(request):
         for service in services:
             if service not in featured_services and len(featured_services) < 4:
                 featured_services.append(service)
+    request_form, request_success = _build_service_request_form(request, service_meta=None, zone=None)
     return render(
         request,
         "interface/home.html",
@@ -80,6 +81,8 @@ def home(request):
             "zones": zones,
             "services": services,
             "featured_services": featured_services,
+            "request_form": request_form,
+            "request_success": request_success,
         },
     )
 
@@ -92,8 +95,20 @@ def provider_list(request):
 def provider_detail(request, provider_id):
     provider = get_object_or_404(Provider, id=provider_id)
     services = list(Service.objects.filter(provider=provider))
+    pricing_data = {}
+    starting_prices = []
     for service in services:
         service.price_display = _format_price(service.base_price_cents)
+        adjustments = service.hair_length_adjustments or {}
+        min_adj = min(adjustments.values()) if adjustments else 0
+        starting_price = service.base_price_cents + min_adj
+        starting_prices.append(starting_price)
+        pricing_data[str(service.id)] = {
+            "base": service.base_price_cents,
+            "lengths": adjustments,
+            "meche_bonus": service.meche_bonus_cents,
+            "starting_from": starting_price,
+        }
     zones = provider.zones.all()
     message = None
     error = None
@@ -144,7 +159,15 @@ def provider_detail(request, provider_id):
     return render(
         request,
         "interface/provider_detail.html",
-        {"provider": provider, "services": services, "zones": zones, "message": message, "error": error},
+        {
+            "provider": provider,
+            "services": services,
+            "zones": zones,
+            "message": message,
+            "error": error,
+            "pricing_data": json.dumps(pricing_data),
+            "default_starting_price": _format_price(min(starting_prices)) if starting_prices else None,
+        },
     )
 
 
@@ -200,18 +223,36 @@ def _zone_options(active_zone=None):
     return zones
 
 
-def _build_service_request_form(request, service_meta: MarketingService, zone):
+def _build_service_request_form(request, service_meta: MarketingService | None, zone):
     form = ServiceRequestForm(request.POST or None)
     request_success = False
+
+    if service_meta:
+        form.fields["marketing_service"].initial = service_meta
+        form.fields["marketing_service"].widget = forms.HiddenInput()
+        form.fields["marketing_service"].required = False
+    if zone:
+        form.fields["zone"].initial = zone
+        form.fields["zone"].widget = forms.HiddenInput()
+        form.fields["zone"].required = False
 
     if request.method == "POST" and request.POST.get("request_service") == "1":
         if form.is_valid():
             record = form.save(commit=False)
-            record.marketing_service = service_meta
-            record.zone = zone
+            record.marketing_service = service_meta or form.cleaned_data.get("marketing_service")
+            if zone:
+                record.zone = zone
             record.save()
             request_success = True
             form = ServiceRequestForm()
+            if service_meta:
+                form.fields["marketing_service"].initial = service_meta
+                form.fields["marketing_service"].widget = forms.HiddenInput()
+                form.fields["marketing_service"].required = False
+            if zone:
+                form.fields["zone"].initial = zone
+                form.fields["zone"].widget = forms.HiddenInput()
+                form.fields["zone"].required = False
 
     return form, request_success
 

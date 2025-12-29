@@ -1,0 +1,51 @@
+<div class="info-card request-card" {% if anchor_id %}id="{{ anchor_id }}"{% endif %}>
+    <div class="request-header">
+        <div>
+            <h3 style="margin-bottom:6px;">{{ title }}</h3>
+            <p class="lead" style="margin:0;">{{ lead }}</p>
+        </div>
+    </div>
+    {% if request_success %}
+        <div class="alert alert-success" role="alert" style="margin-bottom:16px;">
+            Demande enregistrée, nous vous rappelons au plus vite.
+        </div>
+    {% endif %}
+    <form method="post" action="{{ form_action|default:'' }}" class="form-grid">
+        {% csrf_token %}
+        <input type="hidden" name="request_service" value="1" />
+        {% if request_form.marketing_service.is_hidden %}
+            {{ request_form.marketing_service }}
+        {% else %}
+            <div class="form-field">
+                <label for="id_marketing_service">Service souhaité</label>
+                {{ request_form.marketing_service }}
+            </div>
+        {% endif %}
+        {% if request_form.zone.is_hidden %}
+            {{ request_form.zone }}
+        {% else %}
+            <div class="form-field">
+                <label for="id_zone">Zone</label>
+                {{ request_form.zone }}
+                {% if request_form.zone.help_text %}
+                    <small class="field-hint">{{ request_form.zone.help_text }}</small>
+                {% endif %}
+            </div>
+        {% endif %}
+        <div class="form-field">
+            <label for="id_client_name">Votre nom</label>
+            {{ request_form.client_name }}
+        </div>
+        <div class="form-field">
+            <label for="id_client_phone">Téléphone</label>
+            {{ request_form.client_phone }}
+        </div>
+        <div class="form-field full-width">
+            <label for="id_details">Dites-nous en plus</label>
+            {{ request_form.details }}
+        </div>
+        <div class="form-actions full-width">
+            <button type="submit" class="btn">Envoyer ma demande</button>
+        </div>
+    </form>
+</div>

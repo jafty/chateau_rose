@@ -96,6 +96,28 @@ class ServiceAdmin(admin.ModelAdmin):
     list_display = ("name", "slug", "provider", "base_price_cents")
     list_filter = ("provider",)
     search_fields = ("name", "slug")
+    form = type(
+        "ServiceAdminForm",
+        (forms.ModelForm,),
+        {
+            "hair_length_adjustments": forms.JSONField(
+                required=False,
+                help_text="JSON longueur -> supplément en centimes (ex: {\"court\":0, \"mi-long\":1000, \"long\":2000}).",
+            ),
+            "meche_bonus_cents": forms.IntegerField(
+                required=False,
+                help_text="Supplément en centimes lorsque l'option mèches fournies est cochée.",
+            ),
+            "Meta": type(
+                "Meta",
+                (),
+                {
+                    "model": Service,
+                    "fields": ("provider", "name", "slug", "base_price_cents", "hair_length_adjustments", "meche_bonus_cents"),
+                },
+            ),
+        },
+    )
 
 
 @admin.register(Zone)

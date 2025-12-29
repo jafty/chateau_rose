@@ -622,7 +622,10 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     font-size: 0.95rem;
 }
 .provider-form-grid textarea { min-height: 140px; }
-.checkbox-field label { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; white-space: nowrap; }
+.provider-form-grid .estimation-box { grid-column: 1 / -1; background: #fff5fb; border: 1px solid #f3c1da; border-radius: 12px; padding: 12px; }
+.provider-form-grid .estimation-box .estimate-value { font-weight: 800; font-size: 1.1rem; margin: 0; }
+.provider-form-grid .checkbox-field { grid-column: 1 / -1; }
+.checkbox-field label { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; white-space: nowrap; width: auto; }
 @media (min-width: 720px) { .provider-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .required-mark { color: var(--rose-accent); }
@@ -653,6 +656,8 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 .highlight-list { display: grid; gap: 10px; color: var(--ink-secondary); }
 .highlight-list li { line-height: 1.5; }
+.highlight-list.pink-checks li { position: relative; padding-left: 26px; }
+.highlight-list.pink-checks li::before { content: "✔"; color: #e91e63; position: absolute; left: 0; top: 0; font-weight: 800; }
 
 .info-card form { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .info-card label { font-weight: 700; display: block; margin-bottom: 6px; }
