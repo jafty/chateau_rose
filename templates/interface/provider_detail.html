@@ -11,10 +11,6 @@
         {% if zones %}
             <p class="meta-line">Zones : {% for zone in zones %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
         {% endif %}
-        <div class="provider-contacts">
-            {% if provider.contact_phone %}<span class="meta-line">Téléphone : {{ provider.contact_phone }}</span>{% endif %}
-            {% if provider.contact_email %}<span class="meta-line">Email : {{ provider.contact_email }}</span>{% endif %}
-        </div>
     </div>
 
     <div class="provider-layout">
