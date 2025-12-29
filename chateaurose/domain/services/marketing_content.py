@@ -18,6 +18,19 @@ def _default_highlights(service_name: str, location: Optional[str]) -> List[str]
     return base
 
 
+def _with_location(highlights: List[str], location: Optional[str]) -> List[str]:
+    if not location:
+        return list(highlights)
+
+    normalized_location = location.lower()
+    return [
+        highlight
+        if normalized_location in highlight.lower()
+        else f"{highlight} ({location})"
+        for highlight in highlights
+    ]
+
+
 @dataclass
 class GalleryImage:
     url: str
@@ -50,13 +63,15 @@ def build_marketing_content(
     location_name: Optional[str] = None,
 ) -> MarketingContent:
     intro = service.intro or DEFAULT_INTRO_TEMPLATE.format(service_name=service.name)
-    location_intro = intro
     if location_name:
-        location_intro = f"{intro} Nous intervenons à {location_name} et dans les environs." if intro else f"Prestations à {location_name}."
+        location_intro = f"Disponible à {location_name} et dans les environs."
     else:
         location_intro = intro or "Prestataires mobiles ou en salon sur Toulouse métropole."
 
-    highlights = service.highlights or _default_highlights(service.name, location_name)
+    highlights = _with_location(
+        service.highlights or _default_highlights(service.name, location_name),
+        location_name,
+    )
     meta_description = service.meta_description
     if not meta_description:
         if location_name:
