@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 
+from interface.validators import validate_absolute_or_root_relative_url
+
 
 class Provider(models.Model):
     name = models.CharField(max_length=255)
@@ -8,6 +10,15 @@ class Provider(models.Model):
     contact_phone = models.CharField(max_length=64, blank=True)
     contact_email = models.EmailField(blank=True)
     profile_image = models.ImageField(upload_to="providers/profile/", blank=True, null=True)
+    profile_image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text=(
+            "Upload an image or provide an absolute URL, /root-relative path, "
+            "or relative static asset path."
+        ),
+    )
     works_in_salon_only = models.BooleanField(default=False)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -31,6 +42,12 @@ class Provider(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def resolved_profile_image(self):
+        if self.profile_image:
+            return self.profile_image.url
+        return self.profile_image_url or None
 
 
 class Zone(models.Model):
@@ -58,7 +75,16 @@ class Service(models.Model):
 
 class ProviderPhoto(models.Model):
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="photos")
-    image = models.ImageField(upload_to="providers/gallery/")
+    image = models.ImageField(upload_to="providers/gallery/", blank=True)
+    image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text=(
+            "Upload an image or provide an absolute URL, /root-relative path, "
+            "or relative static asset path."
+        ),
+    )
     caption = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -68,6 +94,12 @@ class ProviderPhoto(models.Model):
 
     def __str__(self):
         return f"Photo de {self.provider}"
+
+    @property
+    def resolved_url(self):
+        if self.image:
+            return self.image.url
+        return self.image_url or None
 
 
 class ProviderZone(models.Model):

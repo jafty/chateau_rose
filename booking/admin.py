@@ -33,6 +33,7 @@ class ProviderAdminForm(forms.ModelForm):
             "contact_phone",
             "contact_email",
             "profile_image",
+            "profile_image_url",
             "works_in_salon_only",
             "user",
             "zones",
@@ -84,7 +85,7 @@ class ProviderAdmin(admin.ModelAdmin):
 class ProviderPhotoInline(admin.TabularInline):
     model = ProviderPhoto
     extra = 1
-    fields = ("image", "caption", "order")
+    fields = (("image", "image_url"), "caption", "order")
     ordering = ("order",)
 
 

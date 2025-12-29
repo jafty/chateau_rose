@@ -52,8 +52,8 @@
         {% for provider in providers %}
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                 <div class="provider-header">
-                    {% if provider.profile_image %}
-                        <img src="{{ provider.profile_image.url }}" alt="{{ provider.name }}">
+                    {% if provider.resolved_profile_image %}
+                        <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}">
                     {% else %}
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Profil prestataire coiffure afro">
                     {% endif %}

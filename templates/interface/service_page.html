@@ -78,8 +78,8 @@
             {% for provider in providers %}
                 <article class="provider-card">
                     <div class="provider-header">
-                        {% if provider.profile_image %}
-                            <img src="{{ provider.profile_image.url }}" alt="{{ provider.name }}">
+                        {% if provider.resolved_profile_image %}
+                            <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}">
                         {% else %}
                             <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?q=80&w=600&auto=format" alt="Coiffeuse afro à Toulouse">
                         {% endif %}
