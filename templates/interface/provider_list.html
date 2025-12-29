@@ -1,25 +1,62 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Prestataires afro à Toulouse | Château Rose{% endblock %}
 
+{% block meta_description %}Prestataires spécialisés en coiffure afro à Toulouse : tresses, locks, soins et perruques. Choisis un créneau et échange directement avec la bonne personne.{% endblock %}
+
 {% block content %}
-<section class="container page-hero">
-    <div>
-        <span class="pill">Annuaire des artistes</span>
-        <h1>Prestataires spécialisés en coiffure afro.</h1>
-        <p class="lead">Découvrez les experts en tresses, locks, soins et perruques disponibles près de chez vous.</p>
+<section class="container page-hero providers-hero">
+    <div class="hero-grid">
+        <div>
+            <span class="pill">Prestataires vérifiés</span>
+            <h1>Coiffure afro sans aller-retours.</h1>
+            <p class="lead">Décris la coupe ou le soin, ajoute une photo, et choisis le prestataire qui correspond le mieux à ta zone et à ton style.</p>
+            <div class="hero-meta">
+                <span>Réponse rapide dans ta métropole</span>
+                <span>Prestations à domicile ou en salon indépendant</span>
+                <span>Tarifs affichés avant validation</span>
+            </div>
+            <div style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap;">
+                <a class="btn" href="#providers">Choisir un prestataire</a>
+                <a class="btn secondary" href="#process">Comment ça se passe</a>
+            </div>
+        </div>
+        <div class="hero-media">
+            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataires coiffure afro">
+        </div>
     </div>
 </section>
 
-<section class="container providers-section" style="padding-top: 30px;">
+<section class="container info-grid" id="process">
+    <article class="info-card">
+        <h3>Décris ce que tu veux</h3>
+        <ul class="highlight-list">
+            <li>Type de prestation (tresses, locks, soin, perruque) et longueur souhaitée.</li>
+            <li>Photo actuelle + inspiration pour que le prestataire visualise.</li>
+            <li>Zone et disponibilités pour proposer un créneau clair.</li>
+        </ul>
+    </article>
+    <article class="info-card">
+        <h3>Choisis le bon profil</h3>
+        <p>Chaque fiche affiche les spécialités, les zones desservies et les réalisations récentes. Tu contactes directement la bonne personne.</p>
+        <ul class="highlight-list">
+            <li>Pas de démarchage ni de messages à rallonge.</li>
+            <li>Disponibilités indiquées, prestation confirmée rapidement.</li>
+            <li>Accueil à domicile ou dans un salon indépendant.</li>
+        </ul>
+    </article>
+</section>
+
+<section class="container providers-section" id="providers" style="padding-top: 30px;">
     <div class="providers-grid">
         {% for provider in providers %}
-            <article class="provider-card">
+            <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                 <div class="provider-header">
                     {% if provider.profile_image %}
                         <img src="{{ provider.profile_image.url }}" alt="{{ provider.name }}">
                     {% else %}
-                        <img src="https://images.unsplash.com/photo-1589156191108-c762ff4b96ab?q=80&w=600&auto=format" alt="Coiffeuse afro Toulouse">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Profil prestataire coiffure afro">
                     {% endif %}
                     <span class="provider-rating">Disponible</span>
                 </div>
@@ -30,18 +67,26 @@
                         {% for service in provider.services.all|slice:":3" %}
                             <span class="tag">{{ service.name }}</span>
                         {% empty %}
-                            <span class="tag">Sur mesure</span>
+                            <span class="tag">Coiffure afro</span>
                         {% endfor %}
                     </div>
                     <p class="meta-line">Contact : {% if provider.contact_phone %}{{ provider.contact_phone }}{% else %}à confirmer{% endif %}</p>
-                    <div class="card-actions">
-                        <a class="btn" style="width:100%; text-align:center;" href="{% url 'interface:provider_detail' provider.id %}">Voir le profil</a>
+                    <div class="card-actions" aria-hidden="true">
+                        <span class="service-card-link">Voir le profil</span>
                     </div>
                 </div>
-            </article>
+            </a>
         {% empty %}
             <p class="lead">Aucun prestataire pour le moment.</p>
         {% endfor %}
     </div>
+</section>
+
+<section class="container cta-banner">
+    <div>
+        <h3>Besoin d'un avis avant de choisir ?</h3>
+        <p class="lead">Envoie une photo et ta zone : on oriente vers le prestataire disponible qui maîtrise ton type de coiffure.</p>
+    </div>
+    <a class="btn" href="{% url 'interface:home' %}#catalogue">Déposer ma demande</a>
 </section>
 {% endblock %}

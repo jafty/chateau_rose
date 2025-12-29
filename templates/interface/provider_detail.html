@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ provider.name }} | Château Rose{% endblock %}
 
 {% block content %}
 <section class="container page-hero">
     <div>
-        <span class="pill">Profil artiste</span>
+        <span class="pill">Profil prestataire</span>
         <h1>{{ provider.name }}</h1>
         <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés." }}</p>
         {% if provider.contact_phone %}<p class="meta-line">Téléphone : {{ provider.contact_phone }}</p>{% endif %}
@@ -19,7 +20,7 @@
             {% if provider.profile_image %}
                 <img src="{{ provider.profile_image.url }}" alt="Photo de {{ provider.name }}">
             {% else %}
-                <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=900&auto=format" alt="Portrait d'un(e) coiffeur(se) afro">
+                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portrait prestataire coiffure afro">
             {% endif %}
         </div>
 
@@ -36,9 +37,9 @@
             <div class="info-card">
                 <h3 class="provider-name" style="font-size:1.6rem; margin-bottom:10px;">Réalisations</h3>
                 <div class="photo-grid">
-                    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=600&auto=format" alt="Inspiration coiffure afro">
-                    <img src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&w=600&auto=format" alt="Tresses et coiffures afro">
-                    <img src="https://images.unsplash.com/photo-1519419940514-65f8e3a3bafc?q=80&w=600&auto=format" alt="Coiffure protectrice afro">
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Inspiration coiffure afro">
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses et coiffures afro">
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure protectrice afro">
                 </div>
             </div>
         {% endif %}
