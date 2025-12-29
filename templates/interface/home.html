@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Réserve ta coiffure afro à Toulouse en moins de 2 minutes | Château Rose{% endblock %}
 
@@ -7,10 +8,10 @@
     <div class="bento-grid">
         <div class="hero-main">
             <h1>Réserve ta coiffure afro à Toulouse, en moins de deux minutes.</h1>
-            <p class="hero-subtitle">Choisis ta prestation, partage une photo d'inspiration et nous validons le bon artiste, au bon créneau, sans démarchage.</p>
+            <p class="hero-subtitle">Décris ton besoin, ajoute une photo d'inspiration et reçois une proposition claire d'un prestataire fiable proche de chez toi.</p>
             <div style="display:flex; gap:12px; flex-wrap: wrap;">
-                <a href="{% url 'interface:provider_list' %}" class="btn">Trouver un(e) artiste</a>
-                <a href="#catalogue" class="btn secondary">Voir toutes les catégories</a>
+                <a href="{% url 'interface:provider_list' %}" class="btn">Voir les prestataires</a>
+                <a href="#catalogue" class="btn secondary">Choisir ma catégorie</a>
             </div>
         </div>
 
@@ -20,20 +21,20 @@
                     {% if service.resolved_main_image %}
                         <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}">
                     {% else %}
-                        <img src="https://images.unsplash.com/photo-1624896790977-8d76550b0688?q=80&w=400&auto=format&fit=crop" alt="{{ service.name }}">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}">
                     {% endif %}
                     <span>{{ service.name }}</span>
                 </a>
             {% empty %}
                 <div class="service-mini" aria-hidden="true">
-                    <img src="https://images.unsplash.com/photo-1582095133179-bfd08d2fc6b8?q=80&w=400&auto=format&fit=crop" alt="Coiffure afro">
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure afro">
                     <span>Coiffures d'exception</span>
                 </div>
             {% endfor %}
         </div>
 
         <div class="hero-trust">
-            <p>"L'élégance de la coiffure afro, simplifiée."</p>
+            <p>Plus besoin de bloquer l'après-midi en salon : nos prestataires viennent à toi ou t'accueillent sans attente.</p>
         </div>
     </div>
 </section>
@@ -48,7 +49,7 @@
                         {% if photo %}
                             <img src="{{ photo.image.url }}" alt="Réalisations de {{ provider.name }}">
                         {% else %}
-                            <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=600&auto=format&fit=crop" alt="Coiffure afro inspiration">
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure afro">
                         {% endif %}
                     </div>
                     <p class="gallery-caption">{{ provider.name }}</p>
@@ -62,20 +63,20 @@
 
 <section class="container info-grid">
     <article class="info-card">
-        <h3>Comment ça marche ?</h3>
+        <h3>Dépose ta demande en quelques minutes</h3>
         <ul class="highlight-list">
-            <li>Décris ton besoin : tresses, locks, soins... et précise la longueur, la couleur et si tu as besoin de mèches.</li>
-            <li>Ajoute des photos : une photo actuelle et une inspiration pour guider l'artiste.</li>
-            <li>On te répond vite : on te propose une coiffeuse et un créneau disponibles dans ta zone.</li>
+            <li>Explique le service : tresses, locks, soins, perruque... avec la longueur et la couleur voulues.</li>
+            <li>Ajoute une photo actuelle et une inspiration pour guider le prestataire.</li>
+            <li>Le prestataire confirmé te répond avec un créneau et un tarif nets.</li>
         </ul>
     </article>
     <article class="info-card">
-        <h3>Pourquoi Château Rose</h3>
-        <p>Une sélection d'artistes afro à Toulouse et sa métropole, avec des tarifs transparents et des prestations maîtrisées.</p>
+        <h3>Pourquoi ça marche</h3>
+        <p>Des prestataires afro sélectionnés à Toulouse et sa métropole, avec des prestations maîtrisées et des réponses rapides.</p>
         <ul class="highlight-list">
-            <li>Prise de rendez-vous rapide, sans échanges interminables.</li>
-            <li>Prestations mobiles ou en salon partenaire selon tes préférences.</li>
-            <li>Suivi et paiement sécurisés une fois la proposition validée.</li>
+            <li>Pas d'allers-retours : un seul formulaire, une réponse claire.</li>
+            <li>Prestations à domicile ou en salon indépendant selon ta zone.</li>
+            <li>Suivi simple et paiement sécurisé une fois la proposition validée.</li>
         </ul>
     </article>
 </section>
@@ -87,11 +88,11 @@
             {% for service in services %}
                 <article class="service-card-full">
                     <div class="service-card-img">
-                        {% if service.resolved_main_image %}
-                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse">
-                        {% else %}
-                            <img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?q=80&w=500&auto=format" alt="{{ service.name }} à Toulouse">
-                        {% endif %}
+                    {% if service.resolved_main_image %}
+                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse">
+                    {% else %}
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse">
+                    {% endif %}
                     </div>
                     <div class="service-card-body">
                         <h3>{{ service.name }}</h3>
@@ -104,35 +105,35 @@
 </section>
 
 <section class="container providers-section">
-    <h2 class="section-title">Artistes à la une</h2>
+    <h2 class="section-title">Prestataires disponibles</h2>
     <div class="providers-grid">
         {% for provider in providers %}
-            <article class="provider-card">
+            <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                 <div class="provider-header">
                     {% if provider.profile_image %}
                         <img src="{{ provider.profile_image.url }}" alt="{{ provider.name }}">
                     {% else %}
-                        <img src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?q=80&w=600&auto=format" alt="Coiffeuse afro à Toulouse">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro">
                     {% endif %}
                     <span class="provider-rating">Sur devis personnalisé</span>
                 </div>
                 <div class="provider-body">
                     <h3 class="provider-name">{{ provider.name }}</h3>
-                    <p class="provider-loc">Prestations à Toulouse & alentours</p>
+                    <p class="provider-loc">Prestations à Toulouse et alentours</p>
                     <div class="tags">
                         {% for service in provider.services.all|slice:":3" %}
                             <span class="tag">{{ service.name }}</span>
                         {% empty %}
-                            <span class="tag">Consultation</span>
+                            <span class="tag">Coiffure afro</span>
                         {% endfor %}
                     </div>
                     <div class="card-actions">
-                        <a class="btn" style="width:100%; text-align:center;" href="{% url 'interface:provider_detail' provider.id %}">Voir ses tarifs</a>
+                        <span class="service-card-link">Voir le profil</span>
                     </div>
                 </div>
-            </article>
+            </a>
         {% empty %}
-            <p class="lead">Les artistes seront publiés très bientôt.</p>
+            <p class="lead">Les prestataires seront publiés très bientôt.</p>
         {% endfor %}
     </div>
 </section>
