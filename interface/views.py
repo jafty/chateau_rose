@@ -353,11 +353,11 @@ def about(request):
     faq_items = [
         {
             "question": "Combien de temps pour obtenir une réponse ?",
-            "answer": "Nous revenons vers vous en quelques minutes avec une proposition d'artiste et un créneau précis.",
+            "answer": "Le prestataire qui correspond à ta demande te répond généralement en quelques minutes avec un créneau clair.",
         },
         {
             "question": "Travaillez-vous à domicile ou en salon ?",
-            "answer": "Les deux : certaines prestations sont réalisées chez vous, d'autres en salon partenaire, selon vos préférences.",
+            "answer": "Les deux : déplacement à domicile possible, ou accueil chez le prestataire / en salon partenaire selon la prestation.",
         },
         {
             "question": "Comment préparer ma demande ?",
@@ -365,7 +365,7 @@ def about(request):
         },
         {
             "question": "Comment se passe le paiement ?",
-            "answer": "Le paiement est sécurisé une fois l'artiste validé et le devis confirmé ensemble.",
+            "answer": "Une empreinte bancaire est prise : l'acompte n'est validé qu'après accord commun avec le prestataire, puis le reste se règle directement avec lui (cash, Lydia...).",
         },
     ]
 

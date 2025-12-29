@@ -6,10 +6,14 @@
 {% block content %}
 <section class="container hero-section">
     <div class="bento-grid">
-        <div class="hero-main">
-            <h1>Réserve ta coiffure afro à Toulouse, en moins de deux minutes.</h1>
-            <p class="hero-subtitle">Décris ton besoin, ajoute une photo d'inspiration et reçois une proposition claire d'un prestataire fiable proche de chez toi.</p>
-            <div style="display:flex; gap:12px; flex-wrap: wrap;">
+        <div class="hero-main paper-card">
+            <div class="pin"></div>
+            <div class="hero-headings">
+                <h1>Réserve ta coiffure afro à Toulouse, en moins de deux minutes.</h1>
+                <p class="hero-note">Plus besoin de bloquer l'après-midi en salon : nos prestataires viennent à toi ou t'accueillent sans attente.</p>
+                <p class="hero-subtitle">Décris ton besoin, ajoute une photo d'inspiration et reçois une proposition claire d'un prestataire fiable proche de chez toi.</p>
+            </div>
+            <div class="btn-group">
                 <a href="{% url 'interface:provider_list' %}" class="btn">Voir les prestataires</a>
                 <a href="#catalogue" class="btn secondary">Choisir ma catégorie</a>
             </div>
@@ -17,7 +21,7 @@
 
         <div class="hero-services">
             {% for service in featured_services %}
-                <a class="service-mini" href="{% url 'interface:service_page' service.slug %}">
+                <a class="polaroid" href="{% url 'interface:service_page' service.slug %}">
                     {% if service.resolved_main_image %}
                         <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}">
                     {% else %}
@@ -26,21 +30,17 @@
                     <span>{{ service.name }}</span>
                 </a>
             {% empty %}
-                <div class="service-mini" aria-hidden="true">
+                <div class="polaroid" aria-hidden="true">
                     <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure afro">
                     <span>Coiffures d'exception</span>
                 </div>
             {% endfor %}
         </div>
-
-        <div class="hero-trust">
-            <p>Plus besoin de bloquer l'après-midi en salon : nos prestataires viennent à toi ou t'accueillent sans attente.</p>
-        </div>
     </div>
 </section>
 
 <section class="container gallery-section">
-    <h2 class="section-title">Portfolios du moment</h2>
+    <h2 class="section-header">Portfolios du moment</h2>
     <div class="gallery-scroll" id="gallery">
         {% for provider in providers|slice:":6" %}
             {% with photo=provider.photos.first %}
@@ -61,24 +61,26 @@
     </div>
 </section>
 
-<section class="container info-grid">
-    <article class="info-card">
-        <h3>Dépose ta demande en quelques minutes</h3>
-        <ul class="highlight-list">
-            <li>Explique le service : tresses, locks, soins, perruque... avec la longueur et la couleur voulues.</li>
-            <li>Ajoute une photo actuelle et une inspiration pour guider le prestataire.</li>
-            <li>Le prestataire confirmé te répond avec un créneau et un tarif nets.</li>
-        </ul>
-    </article>
-    <article class="info-card">
-        <h3>Pourquoi ça marche</h3>
-        <p>Des prestataires afro sélectionnés à Toulouse et sa métropole, avec des prestations maîtrisées et des réponses rapides.</p>
-        <ul class="highlight-list">
-            <li>Pas d'allers-retours : un seul formulaire, une réponse claire.</li>
-            <li>Prestations à domicile ou en salon indépendant selon ta zone.</li>
-            <li>Suivi simple et paiement sécurisé une fois la proposition validée.</li>
-        </ul>
-    </article>
+<section class="info-section">
+    <div class="container info-grid">
+        <article class="info-card manifesto-card">
+            <h2 class="info-title">Dépose ta demande en quelques minutes</h2>
+            <ul class="highlight-list step-list">
+                <li>Explique le service : tresses, locks, soins, perruque... avec la longueur et la couleur voulues.</li>
+                <li>Ajoute une photo actuelle et une inspiration pour guider le prestataire.</li>
+                <li>Le prestataire confirmé te répond avec un créneau et un tarif nets.</li>
+            </ul>
+        </article>
+        <article class="info-card info-why">
+            <h2 class="info-title">Pourquoi Château Rose ?</h2>
+            <p>Des profils afro vérifiés qui se déplacent, t'accueillent chez eux ou en salon partenaire, avec un brief clair dès le départ et des échanges rapides.</p>
+            <ul class="stat-line">
+                <li><strong>Prestations</strong><span>À domicile, en salon partenaire ou chez le prestataire selon ce qui t'arrange.</span></li>
+                <li><strong>Suivi simple</strong><span>Pas d'allers-retours : un seul formulaire, une réponse claire du bon prestataire.</span></li>
+                <li><strong>Acompte anti no-show</strong><span>Une empreinte bancaire puis un acompte validé seulement après accord commun; le reste se règle directement avec le prestataire.</span></li>
+            </ul>
+        </article>
+    </div>
 </section>
 
 <section class="all-services" id="catalogue">
