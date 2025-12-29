@@ -4,117 +4,146 @@
 {% block title %}{{ provider.name }} | Château Rose{% endblock %}
 
 {% block content %}
-<section class="container provider-hero">
-    <div class="hero-backdrop">
-        {% if provider.profile_image %}
-            <img src="{{ provider.profile_image.url }}" alt="Arrière-plan pour {{ provider.name }}">
-        {% else %}
-            <img src="https://images.unsplash.com/photo-1504595403659-9088ce801e29?q=80&w=1200&auto=format&fit=crop" alt="Inspiration coiffure afro">
-        {% endif %}
-    </div>
-    <div class="paper-card provider-profile-card">
+<section class="container provider-profile">
+    <div class="provider-page-header paper-card">
         <span class="pill">Profil prestataire</span>
-        <h1 style="margin: 14px 0 12px;">{{ provider.name }}</h1>
+        <h1 class="provider-page-title">{{ provider.name }}</h1>
         <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés." }}</p>
-        {% if provider.contact_phone %}<p class="meta-line">Téléphone : {{ provider.contact_phone }}</p>{% endif %}
-        {% if provider.contact_email %}<p class="meta-line">Email : {{ provider.contact_email }}</p>{% endif %}
-    </div>
-</section>
-
-<section class="container detail-grid">
-    <div class="provider-visuals">
-        <div class="visual-frame">
-            {% if provider.profile_image %}
-                <img src="{{ provider.profile_image.url }}" alt="Photo de {{ provider.name }}">
-            {% else %}
-                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portrait prestataire coiffure afro">
-            {% endif %}
+        {% if zones %}
+            <p class="meta-line">Zones : {% for zone in zones %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+        {% endif %}
+        <div class="provider-contacts">
+            {% if provider.contact_phone %}<span class="meta-line">Téléphone : {{ provider.contact_phone }}</span>{% endif %}
+            {% if provider.contact_email %}<span class="meta-line">Email : {{ provider.contact_email }}</span>{% endif %}
         </div>
+    </div>
 
-        {% if provider.photos.all %}
-            <div class="info-card">
-                <h3 class="provider-name" style="font-size:1.6rem; margin-bottom:10px;">Réalisations</h3>
-                <div class="photo-grid">
-                    {% for photo in provider.photos.all %}
-                        <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:provider.name }}">
+    <div class="provider-layout">
+        <aside class="provider-sidebar">
+            <div class="profile-photo-frame">
+                {% if provider.profile_image %}
+                    <img src="{{ provider.profile_image.url }}" alt="Photo de {{ provider.name }}">
+                {% else %}
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portrait prestataire coiffure afro">
+                {% endif %}
+                <div class="provider-tag-cloud">
+                    {% for service in provider.marketing_services.all|slice:":6" %}
+                        <span class="tag">{{ service.name }}</span>
+                    {% empty %}
+                        <span class="tag">Coiffure afro</span>
                     {% endfor %}
                 </div>
             </div>
-        {% else %}
-            <div class="info-card">
-                <h3 class="provider-name" style="font-size:1.6rem; margin-bottom:10px;">Réalisations</h3>
-                <div class="photo-grid">
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Inspiration coiffure afro">
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses et coiffures afro">
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure protectrice afro">
-                </div>
+            <div class="paper-card provider-sidebar-card">
+                <p class="provider-note">Partagez vos inspirations, votre longueur de cheveux et vos disponibilités.</p>
             </div>
-        {% endif %}
-    </div>
+        </aside>
 
-    <div class="provider-form" style="display: grid; gap: 14px; align-content: start;">
-        {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
-        {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+        <div class="provider-main">
+            <section class="content-section">
+                <h3 class="section-title provider-section-title">Réalisations</h3>
+                <div class="paper-card provider-gallery-card">
+                    {% if provider.photos.all %}
+                        <div class="photo-grid">
+                            {% for photo in provider.photos.all %}
+                                <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:provider.name }}">
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="photo-grid">
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Inspiration coiffure afro">
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses et coiffures afro">
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure protectrice afro">
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
 
-        <div class="form-card" style="margin-top: 4px;">
-            <h3 class="provider-name" style="font-size:1.6rem; margin-bottom:10px;">Demander une prestation</h3>
-            <p class="meta-line">Partagez vos inspirations, votre longueur de cheveux et vos disponibilités.</p>
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div>
-                    <label for="service_id">Service souhaité</label>
-                    <select name="service_id" id="service_id" required>
+            <section class="content-section">
+                <div class="paper-card provider-services-card">
+                    <h3 class="section-title provider-section-title">Services et tarifs</h3>
+                    <ul class="services-list-simple">
                         {% for service in services %}
-                            <option value="{{ service.id }}">{{ service.name }} ({{ service.base_price_cents }} cts)</option>
+                            <li class="service-line">
+                                <div class="service-name">
+                                    <h4>{{ service.name }}</h4>
+                                </div>
+                                <span class="service-price">{{ service.price_display }}</span>
+                            </li>
+                        {% empty %}
+                            <li class="service-line"><p class="meta-line" style="margin: 0;">Tarifs à confirmer avec le prestataire.</p></li>
                         {% endfor %}
-                    </select>
+                    </ul>
                 </div>
-                <div>
-                    <label for="client_name">Nom</label>
-                    <input type="text" name="client_name" id="client_name" required>
+            </section>
+
+            <section class="content-section">
+                {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
+                {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+
+                <div class="paper-card provider-form-card">
+                    <h3 class="section-title provider-section-title">Demander une prestation</h3>
+                    <p class="meta-line">Envoyez votre demande détaillée directement à {{ provider.name }}.</p>
+                    <form method="post" enctype="multipart/form-data" class="provider-form-grid">
+                        {% csrf_token %}
+                        <div class="form-field">
+                            <label for="service_id">Service souhaité</label>
+                            <select name="service_id" id="service_id" required>
+                                {% for service in services %}
+                                    <option value="{{ service.id }}">{{ service.name }} - {{ service.price_display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="client_name">Nom</label>
+                            <input type="text" name="client_name" id="client_name" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="client_phone">Téléphone</label>
+                            <input type="text" name="client_phone" id="client_phone" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="location">Lieu</label>
+                            <select name="location" id="location" required>
+                                {% for zone in zones %}
+                                    <option value="{{ zone.name }}">{{ zone.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="desired_date">Date souhaitée</label>
+                            <input type="text" name="desired_date" id="desired_date" placeholder="Ex: Samedi matin" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="hair_length">Longueur de cheveux</label>
+                            <input type="text" name="hair_length" id="hair_length" placeholder="Épaules, milieu du dos..." required>
+                        </div>
+                        <div class="form-field checkbox-field">
+                            <label><input type="checkbox" name="meche"> Besoin de mèches fournies</label>
+                        </div>
+                        <div class="form-field">
+                            <label for="current_hair_picture_file">Photo actuelle (upload)</label>
+                            <input type="file" name="current_hair_picture_file" id="current_hair_picture_file" accept="image/*">
+                        </div>
+                        <div class="form-field">
+                            <label for="current_hair_picture">Photo actuelle (URL)</label>
+                            <input type="text" name="current_hair_picture" id="current_hair_picture" placeholder="https://...">
+                        </div>
+                        <div class="form-field full-width">
+                            <label for="inspiration_pictures">Photos d'inspiration</label>
+                            <input type="file" name="inspiration_pictures" id="inspiration_pictures" accept="image/*" multiple>
+                        </div>
+                        <div class="form-field full-width">
+                            <label for="free_text">Infos complémentaires</label>
+                            <textarea name="free_text" id="free_text" placeholder="Longueur souhaitée, couleurs, contraintes horaires..."></textarea>
+                        </div>
+                        <input type="hidden" name="provider_id" value="{{ provider.id }}">
+                        <div class="form-actions full-width">
+                            <button type="submit" class="btn" style="width: 100%; text-align: center;">Envoyer la demande</button>
+                        </div>
+                    </form>
                 </div>
-                <div>
-                    <label for="client_phone">Téléphone</label>
-                    <input type="text" name="client_phone" id="client_phone" required>
-                </div>
-                <div>
-                    <label for="location">Lieu</label>
-                    <select name="location" id="location" required>
-                        {% for zone in zones %}
-                            <option value="{{ zone.name }}">{{ zone.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label for="desired_date">Date souhaitée</label>
-                    <input type="text" name="desired_date" id="desired_date" placeholder="Ex: Samedi matin" required>
-                </div>
-                <div>
-                    <label for="hair_length">Longueur de cheveux</label>
-                    <input type="text" name="hair_length" id="hair_length" placeholder="Épaules, milieu du dos..." required>
-                </div>
-                <div>
-                    <label><input type="checkbox" name="meche"> Besoin de mèches fournies</label>
-                </div>
-                <div>
-                    <label for="current_hair_picture_file">Photo actuelle (upload)</label>
-                    <input type="file" name="current_hair_picture_file" id="current_hair_picture_file" accept="image/*">
-                </div>
-                <div>
-                    <label for="current_hair_picture">Photo actuelle (URL)</label>
-                    <input type="text" name="current_hair_picture" id="current_hair_picture" placeholder="https://...">
-                </div>
-                <div>
-                    <label for="inspiration_pictures">Photos d'inspiration</label>
-                    <input type="file" name="inspiration_pictures" id="inspiration_pictures" accept="image/*" multiple>
-                </div>
-                <div>
-                    <label for="free_text">Infos complémentaires</label>
-                    <textarea name="free_text" id="free_text" placeholder="Longueur souhaitée, couleurs, contraintes horaires..."></textarea>
-                </div>
-                <input type="hidden" name="provider_id" value="{{ provider.id }}">
-                <button type="submit" class="btn">Envoyer la demande</button>
-            </form>
+            </section>
         </div>
     </div>
 </section>

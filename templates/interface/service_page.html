@@ -56,7 +56,7 @@
 
 {% if gallery_images %}
 <section class="container gallery-section" style="padding-top: 10px;">
-    <h2 class="section-title">Inspirations et réalisations</h2>
+    <h2 class="section-title service-gallery-title">Inspirations et réalisations</h2>
         <div class="gallery-scroll">
             {% for image in gallery_images %}
                 <article class="gallery-item">
@@ -89,7 +89,7 @@
                         <h3 class="provider-name">{{ provider.name }}</h3>
                         <p class="provider-loc">Zones : {% for zone in provider.zones.all %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}</p>
                         {% if provider.works_in_salon_only %}
-                            <p class="meta-line" style="color:#9c27b0;">Je reçois chez moi ou en salon partenaire (pas de déplacement).</p>
+                            <p class="meta-line" style="color:#9c27b0;">Je ne travaille que depuis chez moi / en salon.</p>
                         {% endif %}
                         <div class="tags">
                             {% for srv in provider.marketing_services.all|slice:":3" %}
@@ -113,7 +113,6 @@
                 <h3 style="margin-bottom:6px;">Pas le temps d'attendre ?</h3>
                 <p class="lead" style="margin:0;">Laissez-nous vos coordonnées pour que l'on revienne vers vous rapidement, même si aucun prestataire n'est affiché.</p>
             </div>
-            <span class="request-note">Réponse rapide</span>
         </div>
         {% if request_success %}
             <div class="alert alert-success" role="alert" style="margin-bottom:16px;">
