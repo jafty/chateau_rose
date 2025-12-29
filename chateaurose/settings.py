@@ -154,3 +154,6 @@ for key, value in storage_settings.extra_settings.items():
     globals()[key] = value
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+LOGIN_URL = "/providers/connexion/"
+LOGIN_REDIRECT_URL = "/providers/"
+LOGOUT_REDIRECT_URL = "/"

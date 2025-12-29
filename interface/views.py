@@ -1,5 +1,8 @@
 import os
 
+import os
+from datetime import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden
@@ -38,6 +41,21 @@ def _save_upload(file_obj, prefix: str):
         return None
     filename = file_obj.name
     return default_storage.save(os.path.join(prefix, filename), file_obj)
+
+
+def _parse_desired_date(raw_value: str | None) -> str | None:
+    if not raw_value:
+        return None
+
+    for date_format in ("%Y-%m-%dT%H:%M", "%d/%m/%Y %H:%M", "%Y-%m-%d"):
+        try:
+            parsed = datetime.strptime(raw_value, date_format)
+            aware_date = timezone.make_aware(parsed)
+            return aware_date.isoformat()
+        except (ValueError, TypeError):
+            continue
+
+    return None
 
 
 def home(request):
@@ -83,10 +101,15 @@ def provider_detail(request, provider_id):
     if request.method == "POST":
         data = request.POST
         meche_bool = data.get("meche") == "on"
-        current_picture = data.get("current_hair_picture")
         uploaded_current = request.FILES.get("current_hair_picture_file")
-        if uploaded_current:
-            current_picture = _save_upload(uploaded_current, "bookings/current/")
+        desired_date = _parse_desired_date(data.get("desired_date"))
+
+        if not desired_date:
+            error = "Merci d'utiliser une date au format JJ/MM/AAAA HH:MM."
+
+        current_picture = _save_upload(uploaded_current, "bookings/current/") if uploaded_current else None
+        if not current_picture and not error:
+            error = "Merci d'ajouter une photo de tes cheveux."
 
         inspiration_paths = []
         for upload in request.FILES.getlist("inspiration_pictures"):
@@ -94,28 +117,29 @@ def provider_detail(request, provider_id):
             if saved:
                 inspiration_paths.append(saved)
 
-        try:
-            booking = request_haircut.execute(
-                provider_id=str(provider.id),
-                service_id=data.get("service_id"),
-                client_contact={"name": data.get("client_name"), "phone": data.get("client_phone")},
-                location=data.get("location"),
-                desired_date=data.get("desired_date"),
-                hair_length=data.get("hair_length"),
-                meche=meche_bool,
-                current_hair_picture=current_picture,
-                inspiration_pictures=inspiration_paths,
-                free_text=data.get("free_text", ""),
-                booking_repository=repo,
-                provider_catalog=provider_catalog,
-                payment_gateway=payment_gateway,
-                notifier=notifier,
-                reminder_gateway=None,
-                clock=type("Clock", (), {"now": timezone.now}),
-            )
-            message = f"Demande envoyée. ID: {booking.id}"
-        except DomainError as exc:
-            error = str(exc)
+        if not error:
+            try:
+                booking = request_haircut.execute(
+                    provider_id=str(provider.id),
+                    service_id=data.get("service_id"),
+                    client_contact={"name": data.get("client_name"), "phone": data.get("client_phone")},
+                    location=data.get("location"),
+                    desired_date=desired_date,
+                    hair_length=data.get("hair_length"),
+                    meche=meche_bool,
+                    current_hair_picture=current_picture,
+                    inspiration_pictures=inspiration_paths,
+                    free_text=data.get("free_text", ""),
+                    booking_repository=repo,
+                    provider_catalog=provider_catalog,
+                    payment_gateway=payment_gateway,
+                    notifier=notifier,
+                    reminder_gateway=None,
+                    clock=type("Clock", (), {"now": timezone.now}),
+                )
+                message = f"Demande envoyée. ID: {booking.id}"
+            except DomainError as exc:
+                error = str(exc)
 
     return render(
         request,

@@ -34,6 +34,7 @@ class ProviderAdminForm(forms.ModelForm):
             "contact_email",
             "profile_image",
             "works_in_salon_only",
+            "user",
             "zones",
             "marketing_services",
         )
@@ -70,7 +71,13 @@ class ProviderAdminForm(forms.ModelForm):
 @admin.register(Provider)
 class ProviderAdmin(admin.ModelAdmin):
     form = ProviderAdminForm
-    list_display = ("name", "contact_phone", "contact_email", "works_in_salon_only")
+    list_display = (
+        "name",
+        "contact_phone",
+        "contact_email",
+        "works_in_salon_only",
+        "user",
+    )
     inlines = []
 
 

@@ -162,12 +162,12 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 .btn {
     display: inline-block;
-    background: var(--ink-primary);
+    background: var(--rose-accent);
     color: var(--bg-paper);
     padding: 1rem 2rem;
     font-weight: 700;
     text-transform: uppercase;
-    border: 2px solid var(--ink-primary);
+    border: 2px solid var(--rose-accent);
     letter-spacing: 1px;
     transition: all 0.2s ease;
     box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
@@ -176,13 +176,14 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .btn:hover {
     transform: translate(-2px, -2px);
     box-shadow: 6px 6px 0px rgba(0,0,0,0.15);
-    background: var(--rose-accent);
-    border-color: var(--rose-accent);
+    background: #b83f63;
+    border-color: #b83f63;
 }
 
 .btn.secondary {
     background: transparent;
-    color: var(--ink-primary);
+    color: var(--rose-accent);
+    border-color: var(--rose-accent);
 }
 
 .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
@@ -275,6 +276,9 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     font-style: italic;
     font-weight: 600;
     font-size: 1.05rem;
+    text-decoration: underline;
+    text-decoration-color: var(--rose-accent);
+    text-underline-offset: 6px;
 }
 
 .quote-card {
@@ -434,6 +438,16 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     gap: 32px;
 }
 
+.accent-underline {
+    text-decoration: underline;
+    text-decoration-color: var(--rose-accent);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 6px;
+    color: inherit;
+}
+
+.accent-underline:hover { color: var(--rose-accent); }
+
 .service-card-full {
     transition: 0.3s ease;
     position: relative;
@@ -592,7 +606,9 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .service-price { font-weight: 700; color: var(--rose-accent); white-space: nowrap; }
 
 .provider-form-card { display: grid; gap: 14px; }
-.provider-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.provider-form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.provider-form-grid .form-field { display: grid; gap: 6px; }
+.provider-form-grid .field-hint { color: var(--ink-secondary); font-size: 0.85rem; }
 .provider-form-grid .full-width { grid-column: 1 / -1; }
 .provider-form-grid label { font-weight: 700; font-size: 0.95rem; }
 .provider-form-grid input,
@@ -606,7 +622,18 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     font-size: 0.95rem;
 }
 .provider-form-grid textarea { min-height: 140px; }
-.checkbox-field label { display: flex; gap: 8px; align-items: center; font-weight: 600; }
+.checkbox-field label { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; white-space: nowrap; }
+@media (min-width: 720px) { .provider-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.required-mark { color: var(--rose-accent); }
+.table-wrapper { overflow-x: auto; }
+.dashboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.dashboard-table th, .dashboard-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #E5E7EB; }
+.dashboard-table th { color: var(--ink-secondary); font-size: 0.9rem; }
+.status-pill { display: inline-block; padding: 6px 10px; background: #FEF2F2; color: #991B1B; border-radius: 999px; font-weight: 700; font-size: 0.85rem; }
+.login-form { display: grid; gap: 12px; margin-top: 14px; max-width: 420px; }
+.login-form label { font-weight: 700; }
+.login-form input { width: 100%; padding: 12px; border: 1px solid #E5E7EB; background: #fff; border-radius: 8px; font-size: 0.95rem; }
 
 /* --- SERVICE PAGE / FORMS --- */
 .chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 28px; }

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion prestataire{% endblock %}
+
+{% block content %}
+<section class="container page-hero">
+    <div class="paper-card" style="max-width:720px; transform: rotate(-1deg);">
+        <span class="pill">Espace prestataire</span>
+        <h1 style="margin: 12px 0 10px;">Connecte-toi à ton espace</h1>
+        <p class="lead">Identifie-toi pour accéder à ton tableau de bord privé.</p>
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <label for="id_username">Adresse e-mail</label>
+            {{ form.username }}
+            <label for="id_password">Mot de passe</label>
+            {{ form.password }}
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+            <button type="submit" class="btn" style="justify-self:start;">Se connecter</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

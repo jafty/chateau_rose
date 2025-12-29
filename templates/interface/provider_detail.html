@@ -86,47 +86,50 @@
                     <form method="post" enctype="multipart/form-data" class="provider-form-grid">
                         {% csrf_token %}
                         <div class="form-field">
-                            <label for="service_id">Service souhaité</label>
+                            <label for="service_id">Service souhaité <span class="required-mark">*</span></label>
                             <select name="service_id" id="service_id" required>
+                                <option value="" selected disabled>Choisis un service</option>
                                 {% for service in services %}
                                     <option value="{{ service.id }}">{{ service.name }} - {{ service.price_display }}</option>
+                                {% empty %}
+                                    <option value="" disabled>Aucun service publié pour le moment</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="form-field">
-                            <label for="client_name">Nom</label>
-                            <input type="text" name="client_name" id="client_name" required>
+                            <label for="client_name">Nom <span class="required-mark">*</span></label>
+                            <input type="text" name="client_name" id="client_name" required autocomplete="name">
                         </div>
                         <div class="form-field">
-                            <label for="client_phone">Téléphone</label>
-                            <input type="text" name="client_phone" id="client_phone" required>
+                            <label for="client_phone">Téléphone <span class="required-mark">*</span></label>
+                            <input type="tel" name="client_phone" id="client_phone" required autocomplete="tel">
                         </div>
                         <div class="form-field">
-                            <label for="location">Lieu</label>
+                            <label for="location">Lieu <span class="required-mark">*</span></label>
                             <select name="location" id="location" required>
+                                <option value="" selected disabled>Choisis ta zone</option>
                                 {% for zone in zones %}
                                     <option value="{{ zone.name }}">{{ zone.name }}</option>
+                                {% empty %}
+                                    <option value="" disabled>Zones en cours d'ajout</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="form-field">
-                            <label for="desired_date">Date souhaitée</label>
-                            <input type="text" name="desired_date" id="desired_date" placeholder="Ex: Samedi matin" required>
+                            <label for="desired_date">Date souhaitée <span class="required-mark">*</span></label>
+                            <input type="datetime-local" name="desired_date" id="desired_date" inputmode="numeric" placeholder="JJ/MM/AAAA HH:MM" required>
+                            <small class="field-hint">Format : JJ/MM/AAAA HH:MM (24h)</small>
                         </div>
                         <div class="form-field">
-                            <label for="hair_length">Longueur de cheveux</label>
+                            <label for="hair_length">Longueur de cheveux <span class="required-mark">*</span></label>
                             <input type="text" name="hair_length" id="hair_length" placeholder="Épaules, milieu du dos..." required>
                         </div>
                         <div class="form-field checkbox-field">
-                            <label><input type="checkbox" name="meche"> Besoin de mèches fournies</label>
+                            <label for="meche"><input type="checkbox" name="meche" id="meche"> <span>Besoin de mèches fournies</span></label>
                         </div>
                         <div class="form-field">
-                            <label for="current_hair_picture_file">Photo actuelle (upload)</label>
-                            <input type="file" name="current_hair_picture_file" id="current_hair_picture_file" accept="image/*">
-                        </div>
-                        <div class="form-field">
-                            <label for="current_hair_picture">Photo actuelle (URL)</label>
-                            <input type="text" name="current_hair_picture" id="current_hair_picture" placeholder="https://...">
+                            <label for="current_hair_picture_file">Photo de tes cheveux <span class="required-mark">*</span></label>
+                            <input type="file" name="current_hair_picture_file" id="current_hair_picture_file" accept="image/*" required>
                         </div>
                         <div class="form-field full-width">
                             <label for="inspiration_pictures">Photos d'inspiration</label>

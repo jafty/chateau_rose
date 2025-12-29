@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -8,6 +9,13 @@ class Provider(models.Model):
     contact_email = models.EmailField(blank=True)
     profile_image = models.ImageField(upload_to="providers/profile/", blank=True, null=True)
     works_in_salon_only = models.BooleanField(default=False)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="provider_profile",
+    )
     zones = models.ManyToManyField(
         "Zone",
         through="ProviderZone",
