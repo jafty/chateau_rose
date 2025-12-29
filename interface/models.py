@@ -113,6 +113,7 @@ class ServiceRequest(models.Model):
     )
     client_name = models.CharField(max_length=255)
     client_phone = models.CharField(max_length=64)
+    desired_date = models.DateTimeField()
     details = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
