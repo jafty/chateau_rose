@@ -541,6 +541,11 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     gap: 32px;
 }
 
+@media (max-width: 720px) {
+    .providers-grid { padding-inline: 6px; }
+    .provider-card { margin-inline: 12px; }
+}
+
 .provider-card {
     background: var(--bg-paper);
     box-shadow: var(--shadow-paper);
@@ -691,11 +696,13 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .provider-layout { display: grid; grid-template-columns: 320px 1fr; gap: 2rem; align-items: start; }
 @media (max-width: 950px) {
     .provider-layout { grid-template-columns: 1fr; gap: 1.2rem; }
-    .provider-sidebar { position: static; top: auto; }
     .profile-photo-frame { transform: none; max-width: 460px; margin: 0 auto; }
 }
 
-.provider-sidebar { position: sticky; top: 80px; display: grid; gap: 1.2rem; height: max-content; }
+.provider-sidebar { display: grid; gap: 1.2rem; height: max-content; }
+@media (min-width: 951px) {
+    .provider-sidebar { position: sticky; top: 80px; }
+}
 .profile-photo-frame {
     background: white;
     padding: 1rem 1rem 2.5rem 1rem;
