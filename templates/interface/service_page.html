@@ -9,7 +9,7 @@
         <div class="paper-card" style="transform: rotate(-1deg);">
             <span class="pill">Service</span>
             <h1 style="margin: 12px 0 10px;">{{ service.name }}{% if zone %} à {{ zone.name }}{% else %} à Toulouse{% endif %}, réservés en quelques minutes.</h1>
-            <p class="lead">{{ intro }}</p>
+            <p class="lead">{{ intro|linebreaksbr }}</p>
         </div>
         <div class="hero-media about-visual" style="transform: rotate(1deg);">
             {% if hero_image %}
@@ -40,7 +40,7 @@
 
     <div class="info-card paper-card" style="transform: rotate(1deg);">
         <h3 style="margin-bottom:12px;">{{ service.name }}{% if zone %} à {{ zone.name }}{% endif %}</h3>
-        <p class="lead">{{ city_intro }}</p>
+        <p class="lead">{{ city_intro|linebreaksbr }}</p>
         <ul class="highlight-list pink-checks">
             {% for highlight in highlights %}
                 <li>{{ highlight }}</li>

@@ -16,6 +16,23 @@ def test_highlights_and_intro_include_location_when_given():
     assert all("Toulouse" in h for h in content.highlights)
 
 
+def test_highlights_with_location_are_not_duplicated():
+    service = ServiceContent(name="Tresses", highlights=["Pose soignée (Toulouse)"])
+
+    content = build_marketing_content(service=service, location_name="Toulouse")
+
+    assert content.highlights == ["Pose soignée (Toulouse)"]
+
+
+def test_location_intro_focuses_on_availability():
+    service = ServiceContent(name="Locks", intro="Intro sans localisation")
+
+    content = build_marketing_content(service=service, location_name="Lyon")
+
+    assert content.intro == "Intro sans localisation"
+    assert content.location_intro.startswith("Disponible à Lyon")
+
+
 def test_fallbacks_when_service_missing_fields():
     service = ServiceContent(name="Locks")
 
