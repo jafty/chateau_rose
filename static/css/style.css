@@ -611,7 +611,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .provider-form-grid .field-hint { color: var(--ink-secondary); font-size: 0.85rem; }
 .provider-form-grid .full-width { grid-column: 1 / -1; }
 .provider-form-grid label { font-weight: 700; font-size: 0.95rem; }
-.provider-form-grid input,
+.provider-form-grid input:not([type="checkbox"]),
 .provider-form-grid select,
 .provider-form-grid textarea {
     width: 100%;
@@ -621,6 +621,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     border-radius: 8px;
     font-size: 0.95rem;
 }
+.checkbox-field input[type="checkbox"] { width: auto; }
 .provider-form-grid textarea { min-height: 140px; }
 .provider-form-grid .estimation-box { grid-column: 1 / -1; background: #fff5fb; border: 1px solid #f3c1da; border-radius: 12px; padding: 12px; }
 .provider-form-grid .estimation-box .estimate-value { font-weight: 800; font-size: 1.1rem; margin: 0; }

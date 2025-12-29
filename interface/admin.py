@@ -11,6 +11,7 @@ from interface.models import (
 class MarketingServiceImageInline(admin.TabularInline):
     model = MarketingServiceImage
     extra = 1
+    fields = (("image", "image_url"), "caption", "order")
 
 
 @admin.register(MarketingService)
@@ -18,6 +19,10 @@ class MarketingServiceAdmin(admin.ModelAdmin):
     list_display = ("name", "slug")
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
+    fieldsets = (
+        (None, {"fields": ("name", "slug", "intro", "highlights", "meta_description")}),
+        ("Image", {"fields": (("main_image", "main_image_url"),)}),
+    )
     inlines = [MarketingServiceImageInline]
 
 
@@ -26,6 +31,10 @@ class MarketingZoneAdmin(admin.ModelAdmin):
     list_display = ("zone",)
     search_fields = ("zone__name", "zone__slug")
     autocomplete_fields = ("zone",)
+    fieldsets = (
+        (None, {"fields": ("zone", "intro", "highlights", "meta_description")}),
+        ("Image", {"fields": (("hero_image", "hero_image_url"),)}),
+    )
 
 
 @admin.register(ServiceRequest)
