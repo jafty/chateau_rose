@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Réserve ta coiffure afro à Toulouse en moins de 2 minutes | Château Rose{% endblock %}
 
@@ -20,13 +21,13 @@
                     {% if service.resolved_main_image %}
                         <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}">
                     {% else %}
-                        <img src="https://images.unsplash.com/photo-1624896790977-8d76550b0688?q=80&w=400&auto=format&fit=crop" alt="{{ service.name }}">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}">
                     {% endif %}
                     <span>{{ service.name }}</span>
                 </a>
             {% empty %}
                 <div class="service-mini" aria-hidden="true">
-                    <img src="https://images.unsplash.com/photo-1582095133179-bfd08d2fc6b8?q=80&w=400&auto=format&fit=crop" alt="Coiffure afro">
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure afro">
                     <span>Coiffures d'exception</span>
                 </div>
             {% endfor %}
@@ -87,11 +88,11 @@
             {% for service in services %}
                 <article class="service-card-full">
                     <div class="service-card-img">
-                        {% if service.resolved_main_image %}
-                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse">
-                        {% else %}
-                            <img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?q=80&w=500&auto=format" alt="{{ service.name }} à Toulouse">
-                        {% endif %}
+                    {% if service.resolved_main_image %}
+                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse">
+                    {% else %}
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse">
+                    {% endif %}
                     </div>
                     <div class="service-card-body">
                         <h3>{{ service.name }}</h3>
