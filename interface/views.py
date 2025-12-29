@@ -26,6 +26,13 @@ provider_catalog = DjangoProviderCatalog()
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
 
 
+def _format_price(cents: int) -> str:
+    euros = cents / 100
+    if cents % 100 == 0:
+        return f"{euros:.0f} €"
+    return f"{euros:.2f} €"
+
+
 def _save_upload(file_obj, prefix: str):
     if not file_obj:
         return None
@@ -66,7 +73,9 @@ def provider_list(request):
 
 def provider_detail(request, provider_id):
     provider = get_object_or_404(Provider, id=provider_id)
-    services = Service.objects.filter(provider=provider)
+    services = list(Service.objects.filter(provider=provider))
+    for service in services:
+        service.price_display = _format_price(service.base_price_cents)
     zones = provider.zones.all()
     message = None
     error = None
@@ -353,7 +362,7 @@ def about(request):
     faq_items = [
         {
             "question": "Combien de temps pour obtenir une réponse ?",
-            "answer": "Le prestataire qui correspond à ta demande te répond généralement en quelques minutes avec un créneau clair.",
+            "answer": "Le prestataire qui correspond à ta demande te répond généralement en quelques heures avec un créneau clair.",
         },
         {
             "question": "Travaillez-vous à domicile ou en salon ?",
@@ -361,7 +370,7 @@ def about(request):
         },
         {
             "question": "Comment préparer ma demande ?",
-            "answer": "Ajoutez des photos d'inspiration, précisez la longueur souhaitée et indiquez si vous avez besoin de mèches.",
+            "answer": "Suis simplement les indications du formulaire, pensées pour aider le prestataire à bien comprendre ton besoin.",
         },
         {
             "question": "Comment se passe le paiement ?",
