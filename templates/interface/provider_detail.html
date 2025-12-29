@@ -30,7 +30,7 @@
                 </div>
             </div>
             <div class="paper-card provider-sidebar-card">
-                <p class="provider-note">Partagez vos inspirations, votre longueur de cheveux et vos disponibilités.</p>
+                <p class="provider-note">Partage tes inspirations, ta longueur de cheveux et tes dispos.</p>
             </div>
         </aside>
 
@@ -80,7 +80,7 @@
 
                 <div class="paper-card provider-form-card">
                     <h3 class="section-title provider-section-title">Demander une prestation</h3>
-                    <p class="meta-line">Envoyez votre demande détaillée directement à {{ provider.name }}.</p>
+                    <p class="meta-line">Envoie ta demande détaillée directement à {{ provider.name }}.</p>
                     <form method="post" enctype="multipart/form-data" class="provider-form-grid">
                         {% csrf_token %}
                         <div class="form-field">
@@ -102,15 +102,15 @@
                             <p class="meta-line" id="estimate-details">Les variations se calculent selon la longueur des cheveux et l'ajout de mèches.</p>
                         </div>
                         <div class="form-field">
-                            <label for="client_name">Nom <span class="required-mark">*</span></label>
+                            <label for="client_name">Ton nom <span class="required-mark">*</span></label>
                             <input type="text" name="client_name" id="client_name" required autocomplete="name">
                         </div>
                         <div class="form-field">
-                            <label for="client_phone">Téléphone <span class="required-mark">*</span></label>
+                            <label for="client_phone">Ton téléphone <span class="required-mark">*</span></label>
                             <input type="tel" name="client_phone" id="client_phone" required autocomplete="tel">
                         </div>
                         <div class="form-field">
-                            <label for="location">Lieu <span class="required-mark">*</span></label>
+                            <label for="location">Ta zone <span class="required-mark">*</span></label>
                             <select name="location" id="location" required>
                                 <option value="" selected disabled>Choisis ta zone</option>
                                 {% for zone in zones %}
@@ -148,7 +148,7 @@
                         </div>
                         <input type="hidden" name="provider_id" value="{{ provider.id }}">
                         <div class="form-actions full-width">
-                            <button type="submit" class="btn" style="width: 100%; text-align: center;">Envoyer la demande</button>
+                            <button type="submit" class="btn" style="width: 100%; text-align: center;">Envoyer ma demande</button>
                         </div>
                     </form>
                 </div>

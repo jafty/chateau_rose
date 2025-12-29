@@ -101,6 +101,7 @@ class ServicePagesTests(TestCase):
                 "request_service": "1",
                 "client_name": "Client X",
                 "client_phone": "0600000000",
+                "desired_date": "2026-01-10T17:00",
                 "details": "Besoin urgent",
             },
         )
@@ -110,6 +111,10 @@ class ServicePagesTests(TestCase):
         request_record = ServiceRequest.objects.first()
         self.assertEqual(request_record.marketing_service, self.marketing_service)
         self.assertIsNone(request_record.zone)
+        self.assertEqual(
+            request_record.desired_date.strftime("%Y-%m-%dT%H:%M"),
+            "2026-01-10T17:00",
+        )
 
     def test_salon_only_badge_is_rendered(self):
         self.provider_a.works_in_salon_only = True

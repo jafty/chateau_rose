@@ -17,7 +17,7 @@
             {{ request_form.marketing_service }}
         {% else %}
             <div class="form-field">
-                <label for="id_marketing_service">Service souhaité</label>
+                <label for="id_marketing_service">Service souhaité <span class="required-mark">*</span></label>
                 {{ request_form.marketing_service }}
             </div>
         {% endif %}
@@ -33,11 +33,18 @@
             </div>
         {% endif %}
         <div class="form-field">
-            <label for="id_client_name">Votre nom</label>
+            <label for="id_desired_date">Date souhaitée <span class="required-mark">*</span></label>
+            {{ request_form.desired_date }}
+            {% if request_form.desired_date.help_text %}
+                <small class="field-hint">{{ request_form.desired_date.help_text }}</small>
+            {% endif %}
+        </div>
+        <div class="form-field">
+            <label for="id_client_name">Ton nom <span class="required-mark">*</span></label>
             {{ request_form.client_name }}
         </div>
         <div class="form-field">
-            <label for="id_client_phone">Téléphone</label>
+            <label for="id_client_phone">Téléphone <span class="required-mark">*</span></label>
             {{ request_form.client_phone }}
         </div>
         <div class="form-field full-width">
