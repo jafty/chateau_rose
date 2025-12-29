@@ -120,11 +120,9 @@
                     {% else %}
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro">
                     {% endif %}
-                    <span class="provider-rating">Sur devis personnalisé</span>
                 </div>
                 <div class="provider-body">
                     <h3 class="provider-name">{{ provider.name }}</h3>
-                    <p class="provider-loc">Prestations à Toulouse et alentours</p>
                     <div class="tags">
                         {% for service in provider.services.all|slice:":3" %}
                             <span class="tag">{{ service.name }}</span>

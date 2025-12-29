@@ -205,7 +205,6 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .bento-grid {
     display: grid;
     grid-template-columns: 1.5fr 1fr;
-    grid-template-rows: auto auto;
     gap: 2rem;
 }
 
@@ -214,7 +213,6 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .hero-main {
-    grid-row: 1 / 3;
     display: flex;
     flex-direction: column;
     gap: 1.6rem;
@@ -445,8 +443,20 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 .services-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 32px;
+}
+
+@media (min-width: 720px) {
+    .services-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+@media (min-width: 1200px) {
+    .services-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
 }
 
 .accent-underline {
@@ -493,8 +503,14 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 .providers-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 32px;
+}
+
+@media (min-width: 1200px) {
+    .providers-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
 }
 
 .provider-card {
