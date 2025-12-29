@@ -8,9 +8,9 @@
 {% block content %}
 <section class="container page-hero providers-hero">
     <div class="hero-grid">
-        <div>
+        <div class="paper-card" style="transform: rotate(-1deg);">
             <span class="pill">Prestataires vérifiés</span>
-            <h1>Coiffure afro sans aller-retours.</h1>
+            <h1 style="margin: 12px 0 10px;">Coiffure afro sans aller-retours.</h1>
             <p class="lead">Décris la coupe ou le soin, ajoute une photo, et choisis le prestataire qui correspond le mieux à ta zone et à ton style.</p>
             <div class="hero-meta">
                 <span>Réponse rapide dans ta métropole</span>
@@ -22,14 +22,14 @@
                 <a class="btn secondary" href="#process">Comment ça se passe</a>
             </div>
         </div>
-        <div class="hero-media">
+        <div class="hero-media about-visual" style="transform: rotate(1deg);">
             <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataires coiffure afro">
         </div>
     </div>
 </section>
 
 <section class="container info-grid" id="process">
-    <article class="info-card">
+    <article class="info-card paper-card" style="transform: rotate(-1deg);">
         <h3>Décris ce que tu veux</h3>
         <ul class="highlight-list">
             <li>Type de prestation (tresses, locks, soin, perruque) et longueur souhaitée.</li>
@@ -37,7 +37,7 @@
             <li>Zone et disponibilités pour proposer un créneau clair.</li>
         </ul>
     </article>
-    <article class="info-card">
+    <article class="info-card paper-card" style="transform: rotate(1deg);">
         <h3>Choisis le bon profil</h3>
         <p>Chaque fiche affiche les spécialités, les zones desservies et les réalisations récentes. Tu contactes directement la bonne personne.</p>
         <ul class="highlight-list">

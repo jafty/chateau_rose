@@ -5,9 +5,9 @@
 
 {% block content %}
 <section class="container page-hero">
-    <div>
+    <div class="paper-card" style="max-width: 760px; transform: rotate(-1deg);">
         <span class="pill">Profil prestataire</span>
-        <h1>{{ provider.name }}</h1>
+        <h1 style="margin: 14px 0 12px;">{{ provider.name }}</h1>
         <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés." }}</p>
         {% if provider.contact_phone %}<p class="meta-line">Téléphone : {{ provider.contact_phone }}</p>{% endif %}
         {% if provider.contact_email %}<p class="meta-line">Email : {{ provider.contact_email }}</p>{% endif %}
@@ -15,8 +15,8 @@
 </section>
 
 <section class="container detail-grid">
-    <div>
-        <div class="info-card" style="padding:0;">
+    <div class="paper-card" style="display: grid; gap: 20px;">
+        <div style="overflow:hidden; box-shadow: var(--shadow-paper);">
             {% if provider.profile_image %}
                 <img src="{{ provider.profile_image.url }}" alt="Photo de {{ provider.name }}">
             {% else %}
@@ -45,11 +45,11 @@
         {% endif %}
     </div>
 
-    <div>
+    <div class="paper-card" style="display: grid; gap: 14px;">
         {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
         {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
 
-        <div class="form-card">
+        <div class="form-card" style="margin-top: 4px;">
             <h3 class="provider-name" style="font-size:1.6rem; margin-bottom:10px;">Demander une prestation</h3>
             <p class="meta-line">Partagez vos inspirations, votre longueur de cheveux et vos disponibilités.</p>
             <form method="post" enctype="multipart/form-data">
