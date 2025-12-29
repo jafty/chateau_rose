@@ -1,13 +1,51 @@
 {% extends "base.html" %}
 
-{% block title %}Prestataires{% endblock %}
+{% block title %}Espace prestataire{% endblock %}
 
 {% block content %}
 <section class="container page-hero">
-    <div class="paper-card" style="max-width:760px; transform: rotate(-1deg);">
-        <span class="pill">Prestataires</span>
-        <h1 style="margin: 12px 0 10px;">Section Prestataires</h1>
-        <p class="lead">Gestion des prestataires à venir.</p>
+    <div class="paper-card" style="max-width:860px; transform: rotate(-1deg);">
+        <span class="pill">Espace prestataire</span>
+        <h1 style="margin: 12px 0 10px;">Bienvenue {{ provider.name }}</h1>
+        <p class="lead">Cet espace privé est relié à ton compte : seul(e) toi peux y accéder avec tes identifiants.</p>
+        <p class="meta-line">Partage ce lien d'accès uniquement si tu veux inviter quelqu'un à se connecter en ton nom : <code>{{ request.build_absolute_uri }}</code></p>
+        <div class="btn-group" style="margin-top:10px;">
+            <a class="btn secondary" href="{% url 'providers:logout' %}">Se déconnecter</a>
+        </div>
+    </div>
+</section>
+
+<section class="container" style="padding-bottom:60px;">
+    <div class="paper-card" style="transform: rotate(1deg);">
+        <h3 class="section-title provider-section-title">Dernières demandes reçues</h3>
+        {% if bookings %}
+            <div class="table-wrapper">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Client</th>
+                            <th>Service</th>
+                            <th>Date souhaitée</th>
+                            <th>Lieu</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                            <tr>
+                                <td>{{ booking.client_name }}</td>
+                                <td>{{ booking.service.name }}</td>
+                                <td>{{ booking.desired_date }}</td>
+                                <td>{{ booking.location }}</td>
+                                <td><span class="status-pill">{{ booking.status }}</span></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="meta-line">Aucune demande pour le moment.</p>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

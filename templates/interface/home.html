@@ -27,12 +27,12 @@
                     {% else %}
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}">
                     {% endif %}
-                    <span>{{ service.name }}</span>
+                    <span class="accent-underline">{{ service.name }}</span>
                 </a>
             {% empty %}
                 <div class="polaroid" aria-hidden="true">
                     <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure afro">
-                    <span>Coiffures d'exception</span>
+                    <span class="accent-underline">Coiffures d'exception</span>
                 </div>
             {% endfor %}
         </div>
@@ -98,8 +98,7 @@
                     {% endif %}
                     </div>
                     <div class="service-card-body">
-                        <h3>{{ service.name }}</h3>
-                        <a href="{% url 'interface:service_page' service.slug %}" class="service-card-link">Découvrir</a>
+                        <h3><a href="{% url 'interface:service_page' service.slug %}" class="accent-underline">{{ service.name }}</a></h3>
                     </div>
                 </article>
             {% endfor %}
