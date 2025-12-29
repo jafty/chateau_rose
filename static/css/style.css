@@ -101,6 +101,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     justify-content: space-between;
     align-items: center;
     gap: 20px;
+    position: relative;
 }
 
 .logo {
@@ -158,6 +159,42 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     text-transform: uppercase;
     font-size: 0.85rem;
     letter-spacing: 1px;
+}
+
+.pro-link-mobile { display: none; }
+
+.nav-toggle {
+    background: transparent;
+    border: 2px solid var(--ink-primary);
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+    align-items: center;
+    box-shadow: var(--shadow-paper);
+}
+
+.nav-toggle .bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--ink-primary);
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.nav-toggle.is-open .bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle.is-open .bar:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.is-open .bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 /* --- PAPER & BUTTONS --- */
@@ -594,6 +631,53 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     background: var(--bg-paper);
     border: 1px solid rgba(0,0,0,0.05);
     box-shadow: var(--shadow-paper);
+}
+
+@media (max-width: 960px) {
+    .nav-wrapper {
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-toggle {
+        display: flex;
+        z-index: 4;
+    }
+
+    .main-nav {
+        position: absolute;
+        inset: calc(100% - 12px) 24px auto;
+        background: var(--bg-paper);
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: var(--shadow-paper);
+        border-radius: 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 18px 16px;
+        gap: 12px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px);
+        transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+        z-index: 3;
+    }
+
+    .main-nav.is-open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .pro-link-desktop { display: none; }
+    .pro-link-mobile { display: inline-block; font-size: 0.85rem; }
+}
+
+@media (max-width: 720px) {
+    .cta-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
 }
 
 /* --- PROVIDER PROFILE LAYOUT --- */

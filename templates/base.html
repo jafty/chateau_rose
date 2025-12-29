@@ -19,13 +19,19 @@
             <a href="{% url 'interface:home' %}" class="logo" aria-label="Revenir à l'accueil Château Rose">
                 <span class="chateau">Château</span><span class="rose"> Rose.</span>
             </a>
-            <nav class="main-nav" aria-label="Navigation principale">
+            <button class="nav-toggle" aria-expanded="false" aria-controls="primary-navigation" aria-label="Ouvrir le menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+            <nav class="main-nav" aria-label="Navigation principale" id="primary-navigation">
                 <a href="{% url 'interface:home' %}">Accueil</a>
                 <a href="{% url 'interface:about' %}">À propos</a>
                 <a href="{% url 'interface:provider_list' %}">Prestataires</a>
                 <a href="{% url 'interface:home' %}#catalogue">Services</a>
+                <a href="{% url 'interface:home' %}#service-request" class="pro-link pro-link-mobile">Je cale un RDV rapide</a>
             </nav>
-            <a href="{% url 'interface:home' %}#service-request" class="pro-link">Je cale un RDV rapide</a>
+            <a href="{% url 'interface:home' %}#service-request" class="pro-link pro-link-desktop">Je cale un RDV rapide</a>
         </div>
     </header>
 
@@ -72,6 +78,7 @@
         </div>
         <div class="container bottom-bar">CHÂTEAU ROSE &copy; 2024 - TOULOUSE</div>
     </footer>
+    <script src="{% static 'js/navigation.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
