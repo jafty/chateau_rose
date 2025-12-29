@@ -7,7 +7,7 @@
     </div>
     {% if request_success %}
         <div class="alert alert-success" role="alert" style="margin-bottom:16px;">
-            Demande enregistrée, nous vous rappelons au plus vite.
+            Demande enregistrée, nous te rappelons au plus vite.
         </div>
     {% endif %}
     <form method="post" action="{{ form_action|default:'' }}" class="form-grid">
@@ -41,7 +41,7 @@
             {{ request_form.client_phone }}
         </div>
         <div class="form-field full-width">
-            <label for="id_details">Dites-nous en plus</label>
+            <label for="id_details">Dis-nous en plus</label>
             {{ request_form.details }}
         </div>
         <div class="form-actions full-width">
