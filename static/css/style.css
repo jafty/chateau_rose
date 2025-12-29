@@ -221,7 +221,10 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     transform: rotate(-1deg);
 }
 
-.hero-main h1 { font-size: clamp(2.4rem, 4vw, 3.6rem); }
+.hero-main h1 { 
+    font-size: clamp(2.4rem, 4vw, 3.6rem);
+    margin-top: 50px;
+}
 
 .hero-headings { display: flex; flex-direction: column; gap: 0.8rem; }
 
@@ -231,7 +234,8 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     font-style: italic;
     color: var(--ink-secondary);
     max-width: 620px;
-    padding-bottom: 25px;
+    padding-top: 30px;
+    padding-bottom: 40px;
 }
 
 .hero-note {
@@ -660,7 +664,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .breadcrumb a { color: var(--ink-secondary); }
 
 .info-card.basic { border: 1px solid rgba(0,0,0,0.05); }
-.request-card { border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; }
+.request-card { border: 1px solid rgba(0,0,0,0.08); }
 .request-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
 .request-note { background: var(--bg-paper); color: var(--rose-accent); padding: 10px 14px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6); }
 
@@ -689,7 +693,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .form-card { background: var(--bg-paper); box-shadow: var(--shadow-paper); padding: 2rem; border: 1px solid rgba(0,0,0,0.04); display: grid; gap: 14px; }
 .form-card form { display: grid; gap: 14px; }
 .form-card label { font-weight: 700; font-size: 0.95rem; }
-.form-card input, .form-card select, .form-card textarea { width: 100%; padding: 12px; border: 1px solid #E5E7EB; background: #fff; border-radius: 8px; font-size: 0.95rem; }
+.form-card input, .form-card select, .form-card textarea { width: 100%; padding: 12px; border: 1px solid #E5E7EB; background: #fff; font-size: 0.95rem; }
 
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
 .form-grid .form-field { display: grid; gap: 8px; }
