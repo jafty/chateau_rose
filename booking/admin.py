@@ -1,6 +1,17 @@
 from django import forms
 from django.contrib import admin
 
+from import_export.admin import ImportExportModelAdmin
+
+from booking.resources import (
+    ProviderMarketingServiceResource,
+    ProviderPhotoResource,
+    ProviderResource,
+    ProviderZoneResource,
+    ServiceResource,
+    ZoneResource,
+)
+
 from .models import (
     Booking,
     Provider,
@@ -70,7 +81,7 @@ class ProviderAdminForm(forms.ModelForm):
 
 
 @admin.register(Provider)
-class ProviderAdmin(admin.ModelAdmin):
+class ProviderAdmin(ImportExportModelAdmin):
     form = ProviderAdminForm
     list_display = (
         "name",
@@ -80,6 +91,7 @@ class ProviderAdmin(admin.ModelAdmin):
         "user",
     )
     inlines = []
+    resource_class = ProviderResource
 
 
 class ProviderPhotoInline(admin.TabularInline):
@@ -92,11 +104,20 @@ class ProviderPhotoInline(admin.TabularInline):
 ProviderAdmin.inlines.append(ProviderPhotoInline)
 
 
+@admin.register(ProviderPhoto)
+class ProviderPhotoAdmin(ImportExportModelAdmin):
+    list_display = ("provider", "caption", "order")
+    list_filter = ("provider",)
+    search_fields = ("caption",)
+    resource_class = ProviderPhotoResource
+
+
 @admin.register(Service)
-class ServiceAdmin(admin.ModelAdmin):
+class ServiceAdmin(ImportExportModelAdmin):
     list_display = ("name", "slug", "provider", "base_price_cents")
     list_filter = ("provider",)
     search_fields = ("name", "slug")
+    resource_class = ServiceResource
     form = type(
         "ServiceAdminForm",
         (forms.ModelForm,),
@@ -122,21 +143,24 @@ class ServiceAdmin(admin.ModelAdmin):
 
 
 @admin.register(Zone)
-class ZoneAdmin(admin.ModelAdmin):
+class ZoneAdmin(ImportExportModelAdmin):
     list_display = ("name", "slug")
     search_fields = ("name", "slug")
+    resource_class = ZoneResource
 
 
 @admin.register(ProviderZone)
-class ProviderZoneAdmin(admin.ModelAdmin):
+class ProviderZoneAdmin(ImportExportModelAdmin):
     list_display = ("provider", "zone")
     list_filter = ("provider", "zone")
+    resource_class = ProviderZoneResource
 
 
 @admin.register(ProviderMarketingService)
-class ProviderMarketingServiceAdmin(admin.ModelAdmin):
+class ProviderMarketingServiceAdmin(ImportExportModelAdmin):
     list_display = ("provider", "service")
     list_filter = ("provider", "service")
+    resource_class = ProviderMarketingServiceResource
 
 
 @admin.register(Booking)

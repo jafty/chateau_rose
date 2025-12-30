@@ -62,3 +62,7 @@ Le projet suit une approche hexagonale (Ports & Adapters) pour séparer le
 cœur métier des détails techniques. Une présentation détaillée des couches,
 de leurs dépendances et de l'emplacement des tests est disponible dans
 [README_ARCHI.md](README_ARCHI.md).
+
+## Import/export des données
+
+L'admin Django inclut désormais [django-import-export](https://django-import-export.readthedocs.io/) pour importer/exporter les prestataires, services, pages marketing, etc. Les formats de colonnes et l'ordre conseillé pour les imports sont décrits dans [docs/IMPORT_EXPORT.md](docs/IMPORT_EXPORT.md).
