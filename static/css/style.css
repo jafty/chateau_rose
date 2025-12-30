@@ -758,6 +758,23 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .login-form label { font-weight: 700; }
 .login-form input { width: 100%; padding: 12px; border: 1px solid #E5E7EB; background: #fff; border-radius: 8px; font-size: 0.95rem; }
 
+@media (max-width: 640px) {
+    .provider-profile,
+    .providers-section,
+    .provider-hero,
+    .page-hero.providers-hero {
+        padding-inline: clamp(16px, 5vw, 22px);
+    }
+
+    .provider-page-header,
+    .provider-profile-card,
+    .provider-main > .paper-card,
+    .provider-sidebar > .paper-card,
+    .provider-sidebar > .profile-photo-frame {
+        margin-inline: clamp(6px, 3vw, 12px);
+    }
+}
+
 /* --- SERVICE PAGE / FORMS --- */
 .chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 28px; }
 .chip { padding: 10px 14px; background: #fff; border: 1px solid #eee; border-radius: 50px; font-weight: 600; font-size: 0.9rem; color: var(--ink-secondary); }
