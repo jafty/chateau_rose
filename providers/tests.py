@@ -68,7 +68,7 @@ class ProviderDashboardTests(TestCase):
             detail_url,
             {
                 "action": "propose",
-                "proposed_price_cents": "7200",
+                "proposed_price_euros": "72,00",
                 "proposed_date": "2026-02-01T10:00",
             },
             follow=True,
@@ -79,6 +79,20 @@ class ProviderDashboardTests(TestCase):
         self.assertEqual(booking.status, "PENDING_CLIENT_VALIDATION")
         self.assertEqual(booking.proposed_price_cents, 7200)
         self.assertEqual(booking.proposed_date, "2026-02-01T10:00")
+
+    def test_booking_detail_shows_photos_and_prices_in_euros(self):
+        booking = self._create_booking()
+        booking.inspiration_pictures = ["/media/inspo1.jpg", "/media/inspo2.jpg"]
+        booking.save()
+
+        detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
+        response = self.client.get(detail_url)
+
+        self.assertContains(response, "65,00 €")
+        self.assertNotContains(response, "cts")
+        self.assertContains(response, "src=\"/media/hair.jpg\"")
+        self.assertContains(response, "src=\"/media/inspo1.jpg\"")
+        self.assertContains(response, "src=\"/media/inspo2.jpg\"")
 
     def test_provider_can_confirm_booking_from_detail(self):
         booking = self._create_booking()

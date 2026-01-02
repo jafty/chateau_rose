@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load price_filters %}
 
 {% block title %}Demande {{ booking.booking_id }}{% endblock %}
 
@@ -29,12 +30,32 @@
             <li><strong>Date souhaitée :</strong> {{ booking.desired_date }}</li>
             <li><strong>Lieu :</strong> {{ booking.location }}</li>
             <li><strong>Cheveux :</strong> {{ booking.hair_length }} {% if booking.meche %}(avec mèche){% endif %}</li>
-            <li><strong>Estimation :</strong> {{ booking.estimated_price_cents }} cts</li>
+            <li><strong>Estimation :</strong> {{ booking.estimated_price_cents|cents_to_euros }}</li>
             {% if booking.proposed_price_cents %}
-                <li><strong>Proposition en cours :</strong> {{ booking.proposed_price_cents }} cts le {{ booking.proposed_date }}</li>
+                <li><strong>Proposition en cours :</strong> {{ booking.proposed_price_cents|cents_to_euros }} le {{ booking.proposed_date }}</li>
             {% endif %}
             <li><strong>Client :</strong> {{ booking.client_name }} - {{ booking.client_phone }}</li>
         </ul>
+
+        <div class="card-grid" style="margin-top:20px;">
+            <div class="paper-card">
+                <h4>Photos envoyées</h4>
+                <div class="photo-grid">
+                    {% if booking.current_hair_picture %}
+                        <div class="profile-photo-frame" style="min-height:200px;">
+                            <img src="{{ booking.current_hair_picture }}" alt="Cheveux actuels" />
+                        </div>
+                    {% endif %}
+                    {% for picture in booking.inspiration_pictures %}
+                        <div class="profile-photo-frame" style="min-height:200px;">
+                            <img src="{{ picture }}" alt="Inspiration coiffure" />
+                        </div>
+                    {% empty %}
+                        <p class="meta-line">Pas d'inspiration fournie.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
 
         <div class="card-grid" style="margin-top:20px;">
             <div class="paper-card">
@@ -43,8 +64,8 @@
                     {% csrf_token %}
                     <input type="hidden" name="action" value="propose" />
                     <div class="form-group">
-                        <label for="price">Tarif proposé (centimes)</label>
-                        <input id="price" type="number" name="proposed_price_cents" min="0" required />
+                        <label for="price">Tarif proposé (€)</label>
+                        <input id="price" type="number" name="proposed_price_euros" min="0" step="0.01" required />
                     </div>
                     <div class="form-group">
                         <label for="proposed_date">Date proposée</label>

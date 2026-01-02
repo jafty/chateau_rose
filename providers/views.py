@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
@@ -15,6 +17,22 @@ from providers.forms import ProviderSignupForm
 repo = DjangoBookingRepository()
 notifier = NotifierStub()
 payment_gateway = PaymentGatewayStub()
+
+
+def _parse_price_to_cents(raw_value: str) -> int:
+    if raw_value is None:
+        raise DomainError("Le tarif proposé doit être renseigné.")
+
+    normalized = raw_value.replace(",", ".")
+    try:
+        euros = Decimal(normalized)
+    except (InvalidOperation, TypeError):
+        raise DomainError("Le tarif proposé doit être un nombre.")
+
+    cents = int((euros * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    if cents < 0:
+        raise DomainError("Le tarif proposé doit être positif.")
+    return cents
 
 
 @login_required(login_url="providers:login")
@@ -60,10 +78,9 @@ def booking_detail(request, booking_id):
         action = request.POST.get("action")
         try:
             if action == "propose":
-                try:
-                    price_cents = int(request.POST.get("proposed_price_cents", 0))
-                except ValueError:
-                    raise DomainError("Le tarif proposé doit être un nombre.")
+                price_cents = _parse_price_to_cents(
+                    request.POST.get("proposed_price_euros")
+                )
                 proposed_date = request.POST.get("proposed_date")
                 update_proposal.execute(
                     booking_id=booking.booking_id,
