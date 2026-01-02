@@ -8,7 +8,8 @@ SUBMITTED = "SUBMITTED"
 
 
 def _generate_id() -> str:
-    return f"booking_{uuid.uuid4().hex}"
+    readable = uuid.uuid4().hex[:8].upper()
+    return f"BK-{readable}"
 
 
 def execute(

@@ -9,6 +9,8 @@ app_name = "providers"
 
 urlpatterns = [
     path("", views.index, name="providers_index"),
+    path("inscription/", views.signup, name="signup"),
+    path("demandes/<str:booking_id>/", views.booking_detail, name="booking_detail"),
     path(
         "connexion/",
         auth_views.LoginView.as_view(template_name="providers/login.html"),

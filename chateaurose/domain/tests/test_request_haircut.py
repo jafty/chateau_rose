@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import pytest
 
@@ -90,6 +90,61 @@ def test_request_haircut_submitted_with_auth_and_notification():
             "body": f"{provider_id} a bien reçu votre demande. Vous recevrez un message lorsque le rendez-vous sera confirmé.",
         },
     ]
+
+
+def test_request_haircut_generates_readable_id():
+    now = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    clock = FixedClock(now)
+
+    provider_id = "provider_1"
+    service_id = "service_tresses"
+    zone = "Saint-Cyprien"
+
+    services_by_provider = {
+        provider_id: {
+            service_id: {
+                "id": service_id,
+                "name": "Tresses africaines",
+                "base_price_cents": 5000,
+                "hair_length_adjustments": {"long": 1500, "medium": 0, "short": -500},
+                "meche_bonus_cents": 2000,
+            }
+        }
+    }
+    zones_by_provider = {provider_id: {zone}}
+
+    provider_catalog = InMemoryProviderCatalog(
+        services_by_provider=services_by_provider,
+        zones_by_provider=zones_by_provider,
+    )
+    booking_repository = InMemoryBookingRepository()
+    payment_gateway = InMemoryPaymentGateway()
+    notifier = InMemoryNotifier()
+    reminder_gateway = InMemoryReminderGateway()
+
+    booking = request_haircut.execute(
+        provider_id=provider_id,
+        service_id=service_id,
+        client_contact={"name": "Sarah", "phone": "+33600000000"},
+        location=zone,
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=True,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=["s3://bucket/inspo1.jpg"],
+        free_text="",
+        booking_repository=booking_repository,
+        provider_catalog=provider_catalog,
+        payment_gateway=payment_gateway,
+        notifier=notifier,
+        reminder_gateway=reminder_gateway,
+        clock=clock,
+    )
+
+    assert booking.id.startswith("BK-")
+    readable_part = booking.id.split("BK-")[-1]
+    assert len(readable_part) == 8
+    assert readable_part.isalnum()
 
 
 def test_request_haircut_rejects_service_not_offered():

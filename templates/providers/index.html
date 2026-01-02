@@ -23,6 +23,7 @@
                 <table class="dashboard-table">
                     <thead>
                         <tr>
+                            <th>Demande</th>
                             <th>Client</th>
                             <th>Service</th>
                             <th>Date souhaitée</th>
@@ -33,6 +34,7 @@
                     <tbody>
                         {% for booking in bookings %}
                             <tr>
+                                <td><a href="{% url 'providers:booking_detail' booking.booking_id %}">{{ booking.booking_id }}</a></td>
                                 <td>{{ booking.client_name }}</td>
                                 <td>{{ booking.service.name }}</td>
                                 <td>{{ booking.desired_date }}</td>

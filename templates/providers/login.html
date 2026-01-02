@@ -19,6 +19,7 @@
                 <input type="hidden" name="next" value="{{ next }}">
             {% endif %}
             <button type="submit" class="btn" style="justify-self:start;">Se connecter</button>
+            <p class="meta-line">Pas encore de compte ? <a href="{% url 'providers:signup' %}">Créer mon espace</a></p>
         </form>
     </div>
 </section>
