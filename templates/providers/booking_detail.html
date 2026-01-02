@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Demande {{ booking.booking_id }}{% endblock %}
+
+{% block content %}
+<section class="container page-hero">
+    <div class="paper-card" style="max-width:860px;">
+        <span class="pill">Détail de la demande</span>
+        <h1 style="margin: 12px 0 10px;">{{ booking.service.name }} pour {{ booking.client_name }}</h1>
+        <p class="lead">ID court : <strong>{{ booking.booking_id }}</strong></p>
+        <div class="btn-group" style="margin-top:10px;">
+            <a class="btn secondary" href="{% url 'providers:providers_index' %}">← Retour aux demandes</a>
+            <a class="btn secondary" href="{% url 'providers:logout' %}">Se déconnecter</a>
+        </div>
+    </div>
+</section>
+
+<section class="container" style="padding-bottom:60px;">
+    <div class="paper-card">
+        {% if message %}
+            <div class="alert success">{{ message }}</div>
+        {% endif %}
+        {% if error %}
+            <div class="alert danger">{{ error }}</div>
+        {% endif %}
+        <h3 class="section-title provider-section-title">Informations</h3>
+        <ul class="meta-list">
+            <li><strong>Statut :</strong> <span class="status-pill">{{ booking.status }}</span></li>
+            <li><strong>Date souhaitée :</strong> {{ booking.desired_date }}</li>
+            <li><strong>Lieu :</strong> {{ booking.location }}</li>
+            <li><strong>Cheveux :</strong> {{ booking.hair_length }} {% if booking.meche %}(avec mèche){% endif %}</li>
+            <li><strong>Estimation :</strong> {{ booking.estimated_price_cents }} cts</li>
+            {% if booking.proposed_price_cents %}
+                <li><strong>Proposition en cours :</strong> {{ booking.proposed_price_cents }} cts le {{ booking.proposed_date }}</li>
+            {% endif %}
+            <li><strong>Client :</strong> {{ booking.client_name }} - {{ booking.client_phone }}</li>
+        </ul>
+
+        <div class="card-grid" style="margin-top:20px;">
+            <div class="paper-card">
+                <h4>Envoyer une nouvelle proposition</h4>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="propose" />
+                    <div class="form-group">
+                        <label for="price">Tarif proposé (centimes)</label>
+                        <input id="price" type="number" name="proposed_price_cents" min="0" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="proposed_date">Date proposée</label>
+                        <input id="proposed_date" type="text" name="proposed_date" placeholder="2026-02-01T10:00" required />
+                    </div>
+                    <button class="btn primary" type="submit">Envoyer au client</button>
+                </form>
+            </div>
+            <div class="paper-card">
+                <h4>Confirmer ou refuser</h4>
+                <form method="post" style="margin-bottom:10px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="confirm" />
+                    <button class="btn primary" type="submit">Confirmer la demande</button>
+                </form>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reject" />
+                    <button class="btn danger" type="submit">Refuser</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

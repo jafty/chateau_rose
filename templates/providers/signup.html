@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Créer un compte prestataire{% endblock %}
+
+{% block content %}
+<section class="container page-hero">
+    <div class="paper-card" style="max-width:720px;">
+        <span class="pill">Prestataire</span>
+        <h1 style="margin: 12px 0 10px;">Créer ton compte</h1>
+        <p class="lead">Renseigne tes coordonnées pour accéder à ton espace et gérer les demandes qui te sont envoyées.</p>
+    </div>
+</section>
+
+<section class="container" style="padding-bottom:60px;">
+    <div class="paper-card" style="max-width:720px;">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<p class="meta-line">{{ field.help_text }}</p>{% endif %}
+                    {% for error in field.errors %}
+                        <div class="alert danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <div class="alert danger">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+            <button class="btn primary" type="submit">Créer mon espace</button>
+            <a class="btn secondary" href="{% url 'providers:login' %}">J'ai déjà un compte</a>
+        </form>
+    </div>
+</section>
+{% endblock %}
