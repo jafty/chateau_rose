@@ -1,4 +1,7 @@
+from urllib.parse import urlparse
+
 from django.conf import settings
+from django.core.files.storage import default_storage
 from django.db import models
 
 from interface.validators import validate_absolute_or_root_relative_url
@@ -160,3 +163,31 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.booking_id} - {self.status}"
+
+    @staticmethod
+    def _resolve_media_url(path: str | None):
+        if not path:
+            return None
+
+        parsed = urlparse(path)
+        # Already absolute (http, https, etc.) or root-relative URL
+        if parsed.scheme or path.startswith("/"):
+            return path
+
+        return default_storage.url(path)
+
+    @property
+    def resolved_current_hair_picture(self):
+        return self._resolve_media_url(self.current_hair_picture)
+
+    @property
+    def resolved_inspiration_pictures(self):
+        if not self.inspiration_pictures:
+            return []
+
+        resolved = []
+        for picture in self.inspiration_pictures:
+            url = self._resolve_media_url(picture)
+            if url:
+                resolved.append(url)
+        return resolved

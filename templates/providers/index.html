@@ -10,7 +10,10 @@
         <p class="lead">Cet espace privé est relié à ton compte : seul(e) toi peux y accéder avec tes identifiants.</p>
         <p class="meta-line">Partage ce lien d'accès uniquement si tu veux inviter quelqu'un à se connecter en ton nom : <code>{{ request.build_absolute_uri }}</code></p>
         <div class="btn-group" style="margin-top:10px;">
-            <a class="btn secondary" href="{% url 'providers:logout' %}">Se déconnecter</a>
+            <form method="post" action="{% url 'providers:logout' %}">
+                {% csrf_token %}
+                <button class="btn secondary" type="submit">Se déconnecter</button>
+            </form>
         </div>
     </div>
 </section>
