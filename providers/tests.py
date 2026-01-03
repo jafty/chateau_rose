@@ -94,6 +94,19 @@ class ProviderDashboardTests(TestCase):
         self.assertContains(response, "src=\"/media/inspo1.jpg\"")
         self.assertContains(response, "src=\"/media/inspo2.jpg\"")
 
+    def test_relative_photo_paths_are_resolved_with_media_url(self):
+        booking = self._create_booking()
+        booking.current_hair_picture = "bookings/current/test.jpg"
+        booking.inspiration_pictures = ["bookings/inspiration/1.jpg", "/already/root.jpg"]
+        booking.save()
+
+        detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
+        response = self.client.get(detail_url)
+
+        self.assertContains(response, "src=\"/media/bookings/current/test.jpg\"")
+        self.assertContains(response, "src=\"/media/bookings/inspiration/1.jpg\"")
+        self.assertContains(response, "src=\"/already/root.jpg\"")
+
     def test_provider_can_confirm_booking_from_detail(self):
         booking = self._create_booking()
         detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
@@ -103,6 +116,14 @@ class ProviderDashboardTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(booking.status, "CONFIRMED")
+
+    def test_logout_via_post_logs_out_and_redirects(self):
+        response = self.client.post(reverse("providers:logout"), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+        # Final redirect should land on the public home page
+        self.assertTrue(any(url.endswith(reverse("interface:home")) for url, _ in response.redirect_chain))
 
 
 class ProviderSignupTests(TestCase):

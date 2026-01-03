@@ -11,7 +11,10 @@
         <p class="lead">ID court : <strong>{{ booking.booking_id }}</strong></p>
         <div class="btn-group" style="margin-top:10px;">
             <a class="btn secondary" href="{% url 'providers:providers_index' %}">← Retour aux demandes</a>
-            <a class="btn secondary" href="{% url 'providers:logout' %}">Se déconnecter</a>
+            <form method="post" action="{% url 'providers:logout' %}">
+                {% csrf_token %}
+                <button class="btn secondary" type="submit">Se déconnecter</button>
+            </form>
         </div>
     </div>
 </section>
@@ -41,12 +44,12 @@
             <div class="paper-card">
                 <h4>Photos envoyées</h4>
                 <div class="photo-grid">
-                    {% if booking.current_hair_picture %}
+                    {% if booking.resolved_current_hair_picture %}
                         <div class="profile-photo-frame" style="min-height:200px;">
-                            <img src="{{ booking.current_hair_picture }}" alt="Cheveux actuels" />
+                            <img src="{{ booking.resolved_current_hair_picture }}" alt="Cheveux actuels" />
                         </div>
                     {% endif %}
-                    {% for picture in booking.inspiration_pictures %}
+                    {% for picture in booking.resolved_inspiration_pictures %}
                         <div class="profile-photo-frame" style="min-height:200px;">
                             <img src="{{ picture }}" alt="Inspiration coiffure" />
                         </div>
