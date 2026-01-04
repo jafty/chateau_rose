@@ -153,6 +153,8 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
+        self.assertIn(self.marketing_service.intro, content)
         self.assertIn(marketing_zone.intro, content)
+        self.assertIn("Rapide", content)
         self.assertIn("Capitole highlight", content)
         self.assertIn(marketing_zone.hero_image_url, content)
