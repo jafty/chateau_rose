@@ -282,13 +282,30 @@ def _apply_zone_marketing(service_meta: MarketingService, marketing_zone: Market
     if not marketing_zone:
         return _to_service_content(service_meta)
 
+    intro_parts = [service_meta.intro]
+    if marketing_zone.intro:
+        intro_parts.append(marketing_zone.intro)
+
+    merged_highlights = list(service_meta.highlights)
+    if marketing_zone.highlights:
+        for highlight in marketing_zone.highlights:
+            if highlight and highlight not in merged_highlights:
+                merged_highlights.append(highlight)
+
+    meta_description = service_meta.meta_description or ""
+    if marketing_zone.meta_description:
+        if meta_description:
+            meta_description = f"{meta_description} {marketing_zone.meta_description}".strip()
+        else:
+            meta_description = marketing_zone.meta_description
+
     return ServiceContent(
         name=service_meta.name,
-        intro=marketing_zone.intro or service_meta.intro,
-        highlights=marketing_zone.highlights or service_meta.highlights,
+        intro=" ".join([part for part in intro_parts if part]),
+        highlights=merged_highlights,
         main_image=marketing_zone.resolved_hero_image or service_meta.resolved_main_image,
         gallery=_gallery_from_service(service_meta),
-        meta_description=marketing_zone.meta_description or service_meta.meta_description,
+        meta_description=meta_description,
     )
 
 
