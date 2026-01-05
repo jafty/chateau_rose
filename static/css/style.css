@@ -764,6 +764,248 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     }
 }
 
+/* ==========================================================================
+   SERVICE HUB & SEO PAGES (AJOUTS)
+   ========================================================================== */
+
+/* --- LAYOUT PRINCIPAL (MAIN + SIDEBAR) --- */
+.service-hub-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    align-items: start;
+    padding-bottom: 80px;
+}
+
+@media (min-width: 960px) {
+    .service-hub-layout {
+        grid-template-columns: 1fr 320px;
+    }
+}
+
+/* --- HERO SPECIFIQUE HUB --- */
+.hero-content h1 {
+    font-size: clamp(2.5rem, 4vw, 3.8rem);
+    margin: 20px 0;
+    line-height: 1.1;
+}
+
+/* --- CARTES PRESTATAIRES COMPACTES (LISTE) --- */
+.provider-card-compact {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-paper);
+    box-shadow: var(--shadow-paper);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 6px solid white;
+    position: relative;
+    overflow: hidden;
+}
+
+.provider-card-compact:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lifted);
+}
+
+@media (min-width: 600px) {
+    .provider-card-compact {
+        flex-direction: row;
+        height: 220px;
+    }
+    .provider-card-compact .provider-header {
+        width: 220px;
+        height: 100%;
+        flex-shrink: 0;
+    }
+}
+
+.provider-header img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.provider-body {
+    padding: 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.provider-name {
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+}
+
+.provider-loc {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--ink-secondary);
+    font-size: 1.1rem;
+}
+
+/* --- SIDEBAR & NAVIGATION ZONES --- */
+.service-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+@media (min-width: 960px) {
+    .service-sidebar {
+        position: sticky;
+        top: 40px;
+    }
+}
+
+.nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nav-link {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed rgba(0,0,0,0.1);
+    font-size: 0.95rem;
+    color: var(--ink-secondary);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    padding-left: 8px;
+    color: var(--rose-accent);
+    border-bottom-color: var(--rose-accent);
+}
+
+.nav-link.active {
+    color: var(--rose-accent);
+    font-weight: 700;
+    border-bottom: 1.5px solid var(--rose-accent);
+}
+
+.nav-link span:last-child {
+    color: var(--rose-accent);
+    font-weight: bold;
+}
+
+/* --- FORMULAIRE DE DEMANDE RAPIDE (INLINE) --- */
+.inline-form-card {
+    background: #FFF9F9;
+    border: 2px dashed #f3c1da;
+    padding: clamp(1.5rem, 5vw, 2.5rem);
+}
+
+.inline-form-card h3,
+.inline-form-card h2,
+.inline-form-card h1 {
+    color: var(--ink-primary);
+}
+
+.inline-form-card h3 {
+    color: var(--rose-accent);
+    margin-bottom: 10px;
+}
+
+/* Grille de formulaire interne */
+.form-grid {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+@media (min-width: 640px) {
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-field label {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ink-primary);
+}
+
+.form-field.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Surcharge des inputs pour cohérence */
+.inline-form-card input,
+.inline-form-card select,
+.inline-form-card textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #E5E7EB;
+    background: #fff;
+    font-family: inherit;
+    font-size: 0.95rem;
+    border-radius: 0;
+}
+
+.inline-form-card textarea {
+    min-height: 100px;
+}
+
+/* --- GALERIE HORIZONTALE --- */
+.gallery-scroll {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+    margin-top: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rose-accent) transparent;
+}
+
+.gallery-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.gallery-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--rose-accent);
+    border-radius: 10px;
+}
+
+.gallery-item-hub {
+    flex: 0 0 200px;
+    height: 200px;
+    border: 5px solid white;
+    box-shadow: var(--shadow-paper);
+    transition: transform 0.3s ease;
+}
+
+.gallery-item-hub:hover {
+    transform: scale(1.05) rotate(0deg) !important;
+    z-index: 2;
+}
+
+/* --- ALERTES & MESSAGES --- */
+.alert {
+    padding: 16px;
+    border-radius: 0;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.alert.error {
+    background: #FFF5F5;
+    color: #C53030;
+    border-left: 4px solid #FC8181;
+}
+
 /* --- SERVICE PAGE / FORMS --- */
 .chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 28px; }
 .chip { padding: 10px 14px; background: #fff; border: 1px solid #eee; border-radius: 0; font-weight: 600; font-size: 0.9rem; color: var(--ink-secondary); }
@@ -809,13 +1051,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .form-card label { font-weight: 700; font-size: 0.95rem; }
 .form-card input, .form-card select, .form-card textarea { width: 100%; padding: 12px; border: 1px solid #E5E7EB; background: #fff; font-size: 0.95rem; }
 
-.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
-.form-grid .form-field { display: grid; gap: 8px; }
-.form-grid .full-width { grid-column: 1 / -1; }
-
-.alert { padding: 12px 14px; border-radius: 0; font-weight: 600; }
 .alert.success { background: #ECFDF3; color: #166534; border: 1px solid #BBF7D0; }
-.alert.error { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
 
 .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
 .meta-line { color: var(--ink-secondary); font-size: 0.95rem; }
