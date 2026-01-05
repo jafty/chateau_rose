@@ -5,6 +5,7 @@ from typing import List, Optional
 DEFAULT_INTRO_TEMPLATE = (
     "{service_name} réalisées par des coiffeuses afro sélectionnées, avec prise de rendez-vous simplifiée."
 )
+DEFAULT_LOCATION_INTRO = "Prestataires mobiles ou en salon sur Toulouse métropole."
 
 
 def _default_highlights(service_name: str, location: Optional[str]) -> List[str]:
@@ -66,7 +67,7 @@ def build_marketing_content(
     if location_name:
         location_intro = f"Disponible à {location_name} et dans les environs."
     else:
-        location_intro = intro or "Prestataires mobiles ou en salon sur Toulouse métropole."
+        location_intro = DEFAULT_LOCATION_INTRO
 
     highlights = _with_location(
         service.highlights or _default_highlights(service.name, location_name),

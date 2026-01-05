@@ -1,4 +1,5 @@
 from chateaurose.domain.services.marketing_content import (
+    DEFAULT_LOCATION_INTRO,
     GalleryImage,
     MarketingContent,
     ServiceContent,
@@ -40,6 +41,7 @@ def test_fallbacks_when_service_missing_fields():
 
     assert content.hero_image is None
     assert content.gallery == []
+    assert content.location_intro == DEFAULT_LOCATION_INTRO
     assert "Toulouse" in content.meta_description
 
 
