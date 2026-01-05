@@ -783,6 +783,15 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     }
 }
 
+.providers-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
 /* --- HERO SPECIFIQUE HUB --- */
 .hero-content h1 {
     font-size: clamp(2.5rem, 4vw, 3.8rem);
@@ -805,6 +814,44 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .provider-card-compact:hover {
     transform: translateY(-5px);
     box-shadow: var(--shadow-lifted);
+}
+
+.provider-card-compact .provider-header {
+    height: 240px;
+}
+
+@media (max-width: 720px) {
+    .service-hub-layout {
+        gap: 28px;
+    }
+
+    .providers-header {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 16px;
+        gap: 8px;
+    }
+
+    .provider-card-compact {
+        border-width: 4px;
+    }
+
+    .provider-card-compact .provider-header {
+        height: 200px;
+    }
+
+    .provider-card-compact .provider-body {
+        padding: 18px;
+    }
+
+    .gallery-item-hub {
+        flex: 0 0 160px;
+        height: 160px;
+    }
+
+    .service-sidebar {
+        gap: 16px;
+    }
 }
 
 @media (min-width: 600px) {

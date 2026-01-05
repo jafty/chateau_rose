@@ -52,11 +52,8 @@
         
         <!-- Liste des Prestataires -->
         <div id="providers-list" style="scroll-margin-top: 100px;">
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px;">
+            <div class="providers-header">
                 <h2 style="font-size: 2rem;">Nos talents disponibles</h2>
-                {% if providers %}
-                    <span class="pill" style="background: var(--rose-accent); color: white;">{{ providers|length }} Pro{{ providers|length|pluralize }}</span>
-                {% endif %}
             </div>
 
             {% if providers %}
