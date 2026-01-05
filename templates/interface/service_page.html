@@ -98,6 +98,10 @@
     .gallery-scroll {
         max-width: 100%; /* Empêche de casser la grille */
     }
+
+    #providers-list {
+        margin-top: clamp(40px, 5vw, 60px);
+    }
 </style>
 {% endblock %}
 
@@ -124,7 +128,9 @@
             <p class="lead">{{ intro|linebreaksbr }}</p>
 
             <div class="btn-group">
-                <a href="#providers-list" class="btn">Voir les prestataires</a>
+                {% if providers %}
+                    <a href="#providers-list" class="btn">Voir les prestataires</a>
+                {% endif %}
                 <a href="#service-request" class="btn secondary">Je demande une prestation</a>
             </div>
         </div>
@@ -147,15 +153,13 @@
     <div class="main-content">
 
         <!-- Liste des Prestataires -->
-        <div id="providers-list" style="scroll-margin-top: 100px;">
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px;">
-                <h2 style="font-size: 2rem;">Nos talents disponibles</h2>
-                {% if providers %}
+        {% if providers %}
+            <div id="providers-list" style="scroll-margin-top: 100px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px;">
+                    <h2 style="font-size: 2rem;">Nos talents disponibles</h2>
                     <span class="pill" style="background: var(--rose-accent); color: white;">{{ providers|length }} Pro{{ providers|length|pluralize }}</span>
-                {% endif %}
-            </div>
+                </div>
 
-            {% if providers %}
                 <div style="display: grid; gap: 24px;">
                     {% for provider in providers %}
                         <article class="provider-card-compact">
@@ -193,12 +197,8 @@
                         </article>
                     {% endfor %}
                 </div>
-            {% else %}
-                <div class="alert error" style="margin-bottom: 24px;">
-                    Désolé, aucune prestataire n'est disponible immédiatement sur ce secteur.
-                </div>
-            {% endif %}
-        </div>
+            </div>
+        {% endif %}
 
         <!-- Galerie Inspirations -->
         {% if gallery_images %}
