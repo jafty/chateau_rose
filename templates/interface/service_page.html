@@ -155,10 +155,7 @@
         <!-- Liste des Prestataires -->
         {% if providers %}
             <div id="providers-list" style="scroll-margin-top: 100px;">
-                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px;">
-                    <h2 style="font-size: 2rem;">Nos talents disponibles</h2>
-                    <span class="pill" style="background: var(--rose-accent); color: white;">{{ providers|length }} Pro{{ providers|length|pluralize }}</span>
-                </div>
+                <h2 style="font-size: 2rem; margin-bottom: 24px;">Nos talents disponibles</h2>
 
                 <div style="display: grid; gap: 24px;">
                     {% for provider in providers %}
@@ -169,7 +166,6 @@
                                 {% else %}
                                     <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?q=80&w=600&auto=format" alt="Avatar coiffeuse">
                                 {% endif %}
-                                <span class="pill" style="position: absolute; bottom: 10px; left: 10px; padding: 4px 10px; font-size: 0.7rem;">⭐ Top Rated</span>
                             </div>
                             <div class="provider-body">
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
