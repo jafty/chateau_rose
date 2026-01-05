@@ -8,7 +8,7 @@
 {% block content %}
 
 <!-- SECTION HERO -->
-<section class="container page-hero">
+<section class="page-shell page-hero">
     <div class="hero-grid">
         <div class="hero-content">
             <div>
@@ -17,14 +17,14 @@
                 <span class="pill" style="background:white; color:var(--ink-secondary);">{{ zone.name }}</span>
                 {% endif %}
             </div>
-            
+
             <h1>
                 {{ service.name }} <br>
                 <span style="font-style: italic; font-family: 'Cormorant Garamond'; color: var(--rose-accent);">
                     {% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}
                 </span>
             </h1>
-            
+
             <p class="lead">{{ intro|linebreaksbr }}</p>
 
             <div class="btn-group">
@@ -45,7 +45,7 @@
 </section>
 
 <!-- LAYOUT PRINCIPAL -->
-<section class="container service-hub-layout">
+<section class="page-shell service-hub-layout">
     
     <!-- GAUCHE : CONTENU -->
     <div class="main-content">
