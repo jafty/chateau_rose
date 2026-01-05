@@ -3,12 +3,99 @@
 {% block title %}{{ service.name }}{% if zone %} à {{ zone.name }}{% else %} à Toulouse{% endif %} | Château Rose{% endblock %}
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
-{% block extra_head %}{% endblock %}
+{% block extra_head %}
+<style>
+    /* Layout spécifique pour le Hub de Service (Main + Sidebar) */
+    .service-hub-layout {
+        display: grid;
+        /* Le minmax(0, 1fr) est CRUCIAL : il empêche le grid de s'élargir au delà du viewport si le contenu (ex: galerie) est large */
+        grid-template-columns: minmax(0, 1fr);
+        gap: 30px;
+        align-items: start;
+        padding-bottom: 80px;
+    }
+
+    @media (min-width: 960px) {
+        .service-hub-layout {
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 40px;
+        }
+    }
+
+    /* Fix pour la grille du hero définie dans style.css qui pourrait poser problème */
+    .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 30px;
+        align-items: center;
+    }
+    @media (min-width: 768px) { 
+        .hero-grid { grid-template-columns: 1.2fr 0.8fr; gap: 40px; } 
+    }
+
+    /* Ajustements Hero */
+    .hero-content h1 { font-size: clamp(2.5rem, 4vw, 3.8rem); margin: 20px 0; line-height: 1.1; word-wrap: break-word; }
+    
+    /* Image Polaroïd responsive */
+    .hero-media.polaroid {
+        width: 100%; /* Force l'image à ne pas dépasser son conteneur */
+        max-width: 400px; /* Garde la limite max */
+        margin-inline: auto; /* Centre sur mobile */
+    }
+
+    /* Carte Prestataire Compacte */
+    .provider-card-compact {
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-paper);
+        box-shadow: var(--shadow-paper);
+        transition: transform 0.3s ease;
+        border: 6px solid white;
+        position: relative;
+    }
+    
+    .provider-header { height: 200px; position: relative; }
+
+    @media (min-width: 600px) {
+        .provider-card-compact { flex-direction: row; height: 220px; }
+        .provider-card-compact .provider-header { width: 220px; height: 100%; flex-shrink: 0; }
+    }
+
+    .provider-header img { width: 100%; height: 100%; object-fit: cover; }
+    .provider-body { padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .provider-name { font-size: 1.6rem; margin-bottom: 4px; }
+    .provider-loc { font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--ink-secondary); }
+    
+    /* Sidebar Sticky */
+    .service-sidebar { display: flex; flex-direction: column; gap: 24px; }
+    @media (min-width: 960px) { .service-sidebar { position: sticky; top: 40px; } }
+
+    .nav-list { display: flex; flex-direction: column; gap: 4px; }
+    .nav-link { 
+        display: flex; justify-content: space-between; padding: 8px 0; 
+        border-bottom: 1px dashed rgba(0,0,0,0.05); font-size: 0.95rem; color: var(--ink-secondary);
+    }
+    .nav-link.active { color: var(--rose-accent); font-weight: 700; border-bottom-style: solid; }
+    .nav-link span:last-child { color: var(--rose-accent); }
+
+    /* Formulaire de demande rapide inline */
+    .inline-form-card {
+        background: #FFF9F9;
+        border: 2px dashed #f3c1da;
+        padding: clamp(1.5rem, 4vw, 2.5rem); /* Padding réduit sur mobile */
+    }
+
+    /* Galerie Scroll Fix */
+    .gallery-scroll {
+        max-width: 100%; /* Empêche de casser la grille */
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 
 <!-- SECTION HERO -->
-<section class="page-shell page-hero">
+<section class="container page-hero">
     <div class="hero-grid">
         <div class="hero-content">
             <div>
@@ -33,7 +120,7 @@
             </div>
         </div>
 
-        <div class="hero-media polaroid" style="max-width: 400px; margin: 0 auto;">
+        <div class="hero-media polaroid">
             {% if hero_image %}
                 <img src="{{ hero_image }}" alt="{{ service.name }} à {{ zone.name|default:'Toulouse' }}">
             {% else %}
@@ -45,15 +132,18 @@
 </section>
 
 <!-- LAYOUT PRINCIPAL -->
-<section class="page-shell service-hub-layout">
-    
+<section class="container service-hub-layout">
+
     <!-- GAUCHE : CONTENU -->
     <div class="main-content">
-        
+
         <!-- Liste des Prestataires -->
         <div id="providers-list" style="scroll-margin-top: 100px;">
-            <div class="providers-header">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px;">
                 <h2 style="font-size: 2rem;">Nos talents disponibles</h2>
+                {% if providers %}
+                    <span class="pill" style="background: var(--rose-accent); color: white;">{{ providers|length }} Pro{{ providers|length|pluralize }}</span>
+                {% endif %}
             </div>
 
             {% if providers %}
@@ -69,27 +159,21 @@
                                 <span class="pill" style="position: absolute; bottom: 10px; left: 10px; padding: 4px 10px; font-size: 0.7rem;">⭐ Top Rated</span>
                             </div>
                             <div class="provider-body">
-                                <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div>
                                         <h3 class="provider-name">{{ provider.name }}</h3>
                                         <p class="provider-loc">
                                             {% for z in provider.zones.all %}{{ z.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}
                                         </p>
                                     </div>
-                                    <div class="tags" style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                                    <div class="tags">
                                         {% if provider.works_in_salon_only %}
                                             <span class="tag" style="background:#fce7f3; color:#be185d;">Salon</span>
                                         {% else %}
                                             <span class="tag">Domicile</span>
                                         {% endif %}
-                                        {% for srv in provider.marketing_services.all|slice:":2" %}
-                                            <span class="tag" style="background:#f3f4f6; color:#111827;">{{ srv.name }}</span>
-                                        {% endfor %}
                                     </div>
                                 </div>
-                                {% if provider.works_in_salon_only %}
-                                    <p class="meta-line" style="color:#9c27b0; margin: 6px 0 0;">Je ne travaille que depuis chez moi / en salon.</p>
-                                {% endif %}
                                 <p style="font-size: 0.9rem; color: var(--ink-secondary); margin: 12px 0 16px;">
                                     Spécialiste {{ service.name|lower }}. Réservation rapide via Château Rose.
                                 </p>
@@ -110,13 +194,10 @@
         <!-- Galerie Inspirations -->
         {% if gallery_images %}
         <div style="margin-top: 60px;">
-            <div style="display:flex; justify-content: space-between; align-items: center; gap: 12px;">
-                <h3 style="font-size: 1.6rem; margin-bottom: 16px;">Réalisations récentes</h3>
-                <a class="link" href="/realisations/">Voir toutes les réalisations</a>
-            </div>
-            <div class="gallery-scroll">
+            <h3 style="font-size: 1.6rem; margin-bottom: 16px;">Réalisations récentes</h3>
+            <div class="gallery-scroll" style="display: flex; gap: 16px; overflow-x: auto; padding-bottom: 16px;">
                 {% for image in gallery_images %}
-                    <div class="gallery-item-hub">
+                    <div class="gallery-item" style="flex: 0 0 200px; height: 200px; border: 4px solid white; box-shadow: var(--shadow-paper);">
                         <img src="{{ image.url }}" alt="Réalisation {{ service.name }}">
                     </div>
                 {% endfor %}
@@ -125,8 +206,8 @@
         {% endif %}
 
         <!-- Formulaire de demande rapide (Ancre) -->
-        <div style="margin-top: 60px;">
-            {% include "interface/partials/service_request_form.html" with anchor_id="service-request" title="Pas le temps d'attendre ?" lead="Laisse-nous tes critères, on te trouve une experte et on gère la prise de rendez-vous pour toi." %}
+        <div style="margin-top: 60px;" id="service-request">
+            {% include "interface/partials/service_request_form.html" with title="Pas le temps d'attendre ?" lead="Laisse-nous tes critères, on te trouve une experte et on gère la prise de rendez-vous pour toi." %}
         </div>
 
     </div>
@@ -143,7 +224,7 @@
                     📍 Tout Toulouse <span>→</span>
                 </a>
                 {% for zone_option in zones %}
-                    <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}" 
+                    <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}"
                        class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">
                         {{ zone_option.name }} <span>→</span>
                     </a>
