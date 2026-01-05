@@ -97,8 +97,8 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 /* --- HEADER (TICKET STYLE) --- */
 .site-header {
-    padding: 40px 0 24px;
-    margin-bottom: 40px;
+    padding: 20px 0 16px;
+    margin-bottom: 20px;
     border-bottom: 2px dashed rgba(0,0,0,0.2);
     position: relative;
     z-index: 2;
