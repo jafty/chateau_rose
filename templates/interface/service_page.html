@@ -3,110 +3,252 @@
 {% block title %}{{ service.name }}{% if zone %} à {{ zone.name }}{% else %} à Toulouse{% endif %} | Château Rose{% endblock %}
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
+{% block extra_head %}
+<style>
+    /* Layout spécifique pour le Hub de Service (Main + Sidebar) */
+    .service-hub-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 40px;
+        align-items: start;
+        padding-bottom: 80px;
+    }
+
+    @media (min-width: 960px) {
+        .service-hub-layout {
+            grid-template-columns: 1fr 320px;
+        }
+    }
+
+    /* Ajustements Hero */
+    .hero-content h1 { font-size: clamp(2.5rem, 4vw, 3.8rem); margin: 20px 0; line-height: 1.1; }
+    
+    /* Carte Prestataire Compacte */
+    .provider-card-compact {
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-paper);
+        box-shadow: var(--shadow-paper);
+        transition: transform 0.3s ease;
+        border: 6px solid white;
+        position: relative;
+    }
+    
+    @media (min-width: 600px) {
+        .provider-card-compact { flex-direction: row; height: 220px; }
+        .provider-card-compact .provider-header { width: 220px; height: 100%; flex-shrink: 0; }
+    }
+
+    .provider-header img { width: 100%; height: 100%; object-fit: cover; }
+    .provider-body { padding: 24px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .provider-name { font-size: 1.6rem; margin-bottom: 4px; }
+    .provider-loc { font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--ink-secondary); }
+    
+    /* Sidebar Sticky */
+    .service-sidebar { display: flex; flex-direction: column; gap: 24px; }
+    @media (min-width: 960px) { .service-sidebar { position: sticky; top: 40px; } }
+
+    .nav-list { display: flex; flex-direction: column; gap: 4px; }
+    .nav-link { 
+        display: flex; justify-content: space-between; padding: 8px 0; 
+        border-bottom: 1px dashed rgba(0,0,0,0.05); font-size: 0.95rem; color: var(--ink-secondary);
+    }
+    .nav-link.active { color: var(--rose-accent); font-weight: 700; border-bottom-style: solid; }
+    .nav-link span:last-child { color: var(--rose-accent); }
+
+    /* Formulaire de demande rapide inline */
+    .inline-form-card {
+        background: #FFF9F9;
+        border: 2px dashed #f3c1da;
+        padding: 2.5rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+
+<!-- SECTION HERO -->
 <section class="container page-hero">
     <div class="hero-grid">
-        <div class="paper-card">
-            <span class="pill">Service</span>
-            <h1 style="margin: 12px 0 10px;">{{ service.name }}{% if zone %} à {{ zone.name }}{% else %} à Toulouse{% endif %}, réservés en quelques minutes.</h1>
+        <div class="hero-content">
+            <div>
+                <span class="pill">Service Vérifié</span>
+                {% if zone %}
+                <span class="pill" style="background:white; color:var(--ink-secondary);">{{ zone.name }}</span>
+                {% endif %}
+            </div>
+            
+            <h1>
+                {{ service.name }} <br>
+                <span style="font-style: italic; font-family: 'Cormorant Garamond'; color: var(--rose-accent);">
+                    {% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}
+                </span>
+            </h1>
+            
             <p class="lead">{{ intro|linebreaksbr }}</p>
+
+            <div class="btn-group">
+                <a href="#providers-list" class="btn">Voir les prestataires</a>
+                <a href="#service-request" class="btn secondary">Je demande une prestation</a>
+            </div>
         </div>
-        <div class="hero-media about-visual" style="transform: rotate(1deg);">
+
+        <div class="hero-media polaroid" style="max-width: 400px; margin: 0 auto;">
             {% if hero_image %}
-                <img src="{{ hero_image }}" alt="{{ service.name }}{% if zone %} à {{ zone.name }}{% endif %}">
+                <img src="{{ hero_image }}" alt="{{ service.name }} à {{ zone.name|default:'Toulouse' }}">
             {% else %}
-                <img src="https://images.unsplash.com/photo-1626899798511-c3eaacb02846?q=80&w=700&auto=format&fit=crop" alt="Coiffure afro à {{ zone.name|default:"Toulouse" }}">
+                <img src="https://images.unsplash.com/photo-1605406575497-015ab0d21b9b?q=80&w=600&auto=format&fit=crop" alt="Coiffure Afro Château Rose">
             {% endif %}
+            <span>Résultat garanti Château Rose</span>
         </div>
     </div>
 </section>
 
-<section class="container" style="display: grid; gap: 24px;">
-    {% if zones %}
-        <div class="info-card paper-card">
-            <div class="breadcrumb">
-                <span><a href="{% url 'interface:home' %}">Accueil</a> › {{ service.name }}{% if zone %} › {{ zone.name }}{% endif %}{% if district %} › {{ district.name }}{% endif %}</span>
+<!-- LAYOUT PRINCIPAL -->
+<section class="container service-hub-layout">
+    
+    <!-- GAUCHE : CONTENU -->
+    <div class="main-content">
+        
+        <!-- Liste des Prestataires -->
+        <div id="providers-list" style="scroll-margin-top: 100px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px;">
+                <h2 style="font-size: 2rem;">Nos talents disponibles</h2>
+                {% if providers %}
+                    <span class="pill" style="background: var(--rose-accent); color: white;">{{ providers|length }} Pro{{ providers|length|pluralize }}</span>
+                {% endif %}
             </div>
-            <h3 style="margin-bottom:12px;">Choisir une zone</h3>
-            <div class="chips">
+
+            {% if providers %}
+                <div style="display: grid; gap: 24px;">
+                    {% for provider in providers %}
+                        <article class="provider-card-compact">
+                            <div class="provider-header">
+                                {% if provider.resolved_profile_image %}
+                                    <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}">
+                                {% else %}
+                                    <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?q=80&w=600&auto=format" alt="Avatar coiffeuse">
+                                {% endif %}
+                                <span class="pill" style="position: absolute; bottom: 10px; left: 10px; padding: 4px 10px; font-size: 0.7rem;">⭐ Top Rated</span>
+                            </div>
+                            <div class="provider-body">
+                                <div style="display: flex; justify-content: space-between; align-items: start; gap: 12px;">
+                                    <div>
+                                        <h3 class="provider-name">{{ provider.name }}</h3>
+                                        <p class="provider-loc">
+                                            {% for z in provider.zones.all %}{{ z.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}
+                                        </p>
+                                    </div>
+                                    <div class="tags" style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                                        {% if provider.works_in_salon_only %}
+                                            <span class="tag" style="background:#fce7f3; color:#be185d;">Salon</span>
+                                        {% else %}
+                                            <span class="tag">Domicile</span>
+                                        {% endif %}
+                                        {% for srv in provider.marketing_services.all|slice:":2" %}
+                                            <span class="tag" style="background:#f3f4f6; color:#111827;">{{ srv.name }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if provider.works_in_salon_only %}
+                                    <p class="meta-line" style="color:#9c27b0; margin: 6px 0 0;">Je ne travaille que depuis chez moi / en salon.</p>
+                                {% endif %}
+                                <p style="font-size: 0.9rem; color: var(--ink-secondary); margin: 12px 0 16px;">
+                                    Spécialiste {{ service.name|lower }}. Réservation rapide via Château Rose.
+                                </p>
+                                <a href="{% url 'interface:provider_detail' provider.id %}" class="btn" style="padding: 10px 20px; font-size: 0.8rem; align-self: flex-start;">
+                                    Voir le profil
+                                </a>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert error" style="margin-bottom: 24px;">
+                    Désolé, aucune prestataire n'est disponible immédiatement sur ce secteur.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Galerie Inspirations -->
+        {% if gallery_images %}
+        <div style="margin-top: 60px;">
+            <div style="display:flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <h3 style="font-size: 1.6rem; margin-bottom: 16px;">Réalisations récentes</h3>
+                <a class="link" href="/realisations/">Voir toutes les réalisations</a>
+            </div>
+            <div class="gallery-scroll" style="display: flex; gap: 16px; overflow-x: auto; padding-bottom: 16px;">
+                {% for image in gallery_images %}
+                    <div class="gallery-item" style="flex: 0 0 200px; height: 200px; border: 4px solid white; box-shadow: var(--shadow-paper);">
+                        <img src="{{ image.url }}" alt="Réalisation {{ service.name }}">
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Formulaire de demande rapide (Ancre) -->
+        <div style="margin-top: 60px;">
+            {% include "interface/partials/service_request_form.html" with anchor_id="service-request" title="Pas le temps d'attendre ?" lead="Laisse-nous tes critères, on te trouve une experte et on gère la prise de rendez-vous pour toi." %}
+        </div>
+
+    </div>
+
+    <!-- DROITE : SIDEBAR -->
+    <aside class="service-sidebar">
+        
+        <!-- Navigation par Zones -->
+        {% if zones %}
+        <div class="paper-card" style="padding: 1.5rem;">
+            <h4 style="margin-bottom: 16px; border-bottom: 2px dashed rgba(0,0,0,0.1); padding-bottom: 8px;">Explorer les quartiers</h4>
+            <div class="nav-list">
+                <a href="{% url 'interface:service_page' service.slug %}" class="nav-link">
+                    📍 Tout Toulouse <span>→</span>
+                </a>
                 {% for zone_option in zones %}
-                    <a class="chip {% if zone and zone_option.slug == zone.slug %}active{% endif %}" href="{% url 'interface:service_city_page' service.slug zone_option.slug %}">
-                        {{ zone_option.name }}
+                    <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}" 
+                       class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">
+                        {{ zone_option.name }} <span>→</span>
                     </a>
                 {% endfor %}
             </div>
         </div>
-    {% endif %}
-
-    <div class="info-card paper-card">
-        <h3 style="margin-bottom:12px;">{{ service.name }}{% if zone %} à {{ zone.name }}{% endif %}</h3>
-        <p class="lead">{{ city_intro|linebreaksbr }}</p>
-        <ul class="highlight-list pink-checks">
-            {% for highlight in highlights %}
-                <li>{{ highlight }}</li>
-            {% endfor %}
-        </ul>
-        {% if district %}
-            <p class="meta-line">Secteur ciblé : {{ district.name }}.</p>
-        {% elif zone %}
-            <p class="meta-line">Zone ciblée : {{ zone.name }}.</p>
         {% endif %}
-    </div>
-</section>
 
-{% if gallery_images %}
-<section class="container gallery-section" style="padding-top: 10px;">
-    <h2 class="section-title service-gallery-title">Inspirations et réalisations</h2>
-        <div class="gallery-scroll">
-            {% for image in gallery_images %}
-                <article class="gallery-item">
-                    <div class="gallery-img">
-                        <img src="{{ image.url }}" alt="{{ image.caption|default:service.name }}">
-                    </div>
-                    {% if image.caption %}
-                        <p class="gallery-caption">{{ image.caption }}</p>
-                    {% endif %}
-                </article>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-
-<section class="container providers-section" style="padding-top:50px;">
-    {% if providers %}
-        <div class="providers-grid">
-            {% for provider in providers %}
-                <article class="provider-card">
-                    <div class="provider-header">
-                        {% if provider.resolved_profile_image %}
-                            <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}">
-                        {% else %}
-                            <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?q=80&w=600&auto=format" alt="Coiffeuse afro à Toulouse">
-                        {% endif %}
-                        <span class="provider-rating">Spécialiste {{ service.name|lower }}</span>
-                    </div>
-                    <div class="provider-body">
-                        <h3 class="provider-name">{{ provider.name }}</h3>
-                        <p class="provider-loc">Zones : {% for zone in provider.zones.all %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}</p>
-                        {% if provider.works_in_salon_only %}
-                            <p class="meta-line" style="color:#9c27b0;">Je ne travaille que depuis chez moi / en salon.</p>
-                        {% endif %}
-                        <div class="tags">
-                            {% for srv in provider.marketing_services.all|slice:":3" %}
-                                <span class="tag">{{ srv.name }}</span>
-                            {% endfor %}
-                        </div>
-                        <div class="card-actions">
-                            <a class="btn" style="width:100%; text-align:center;" href="{% url 'interface:provider_detail' provider.id %}">Prendre contact</a>
-                        </div>
-                    </div>
-                </article>
-            {% endfor %}
+        <!-- Pourquoi nous ? -->
+        <div class="paper-card" style="background: white;">
+            <h4 style="margin-bottom: 12px;">Pourquoi Château Rose ?</h4>
+            <ul class="highlight-list pink-checks">
+                <li>Profils vérifiés par nos soins</li>
+                <li>Photos 100% réelles</li>
+                <li>Paiement sécurisé</li>
+                <li>SAV toulousain disponible</li>
+            </ul>
         </div>
-    {% endif %}
-</section>
 
-<section class="container" style="padding-top:20px; padding-bottom:60px;">
-    {% include "interface/partials/service_request_form.html" with anchor_id="service-request" title="Pas le temps d'attendre ?" lead="Laisse-nous tes coordonnées : on te recontacte vite et on cale un créneau fiable, même si aucun prestataire n'est affiché." %}
+        <!-- SEO / Contenu Ville -->
+        <div style="padding: 10px;">
+            <h4 style="font-family: 'Cormorant Garamond'; font-style: italic; font-size: 1.3rem; margin-bottom: 10px;">
+                {{ service.name }} à {% if zone %}{{ zone.name }}{% else %}Toulouse{% endif %}
+            </h4>
+            <div style="font-size: 0.9rem; color: var(--ink-secondary); line-height: 1.6;">
+                {{ city_intro|linebreaks }}
+            </div>
+            
+            {% if highlights %}
+            <ul class="highlight-list" style="margin-top: 15px;">
+                {% for h in highlights %}
+                    <li style="font-size: 0.85rem; color: var(--ink-secondary); margin-bottom: 5px;">• {{ h }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        
+        <!-- Bouton secondaire Sidebar -->
+        <a href="#service-request" class="btn secondary" style="width: 100%; text-align: center; font-size: 0.8rem;">
+            Je cherche un modèle
+        </a>
+    </aside>
+
 </section>
 {% endblock %}
