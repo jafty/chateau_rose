@@ -60,7 +60,8 @@
         wrapper.appendChild(hiddenInput);
 
         const selectedOption = select.options[select.selectedIndex];
-        if (selectedOption) {
+        const hasSelectedValue = selectedOption && selectedOption.value !== '';
+        if (hasSelectedValue) {
             textInput.value = selectedOption.textContent;
             hiddenInput.value = selectedOption.value;
         }
