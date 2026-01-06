@@ -80,12 +80,28 @@
     @media (min-width: 960px) { .service-sidebar { position: sticky; top: 40px; } }
 
     .nav-list { display: flex; flex-direction: column; gap: 4px; }
-    .nav-link { 
-        display: flex; justify-content: space-between; padding: 8px 0; 
+    .nav-link {
+        display: flex; justify-content: space-between; padding: 8px 0;
         border-bottom: 1px dashed rgba(0,0,0,0.05); font-size: 0.95rem; color: var(--ink-secondary);
     }
     .nav-link.active { color: var(--rose-accent); font-weight: 700; border-bottom-style: solid; }
     .nav-link span:last-child { color: var(--rose-accent); }
+
+    .zone-accordion { display: flex; flex-direction: column; gap: 10px; }
+    .zone-accordion .zone-list-full { border-top: 1px dashed rgba(0,0,0,0.06); padding-top: 6px; }
+    .zone-toggle {
+        align-self: flex-start;
+        font-size: 0.85rem;
+        color: var(--rose-accent);
+        background: none;
+        border: none;
+        padding: 4px 0;
+        cursor: pointer;
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+    }
+    .zone-toggle:focus-visible { outline: 2px solid var(--rose-accent); outline-offset: 2px; }
 
     /* Formulaire de demande rapide inline */
     .inline-form-card {
@@ -224,17 +240,44 @@
         {% if zones %}
         <div class="paper-card" style="padding: 1.5rem;">
             <h4 style="margin-bottom: 16px; border-bottom: 2px dashed rgba(0,0,0,0.1); padding-bottom: 8px;">Explorer les quartiers</h4>
-            <div class="nav-list">
-                <a href="{% url 'interface:service_page' service.slug %}" class="nav-link">
-                    📍 Tout Toulouse <span>→</span>
-                </a>
-                {% for zone_option in zones %}
-                    <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}"
-                       class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">
-                        {{ zone_option.name }} <span>→</span>
+            {% with featured_zones=zones|slice:":5" %}
+            <div class="zone-accordion">
+                <div class="nav-list" data-featured-zones>
+                    <a href="{% url 'interface:service_page' service.slug %}" class="nav-link {% if not zone %}active{% endif %}">
+                        📍 Tout Toulouse <span>→</span>
                     </a>
-                {% endfor %}
+                    {% for zone_option in featured_zones %}
+                        <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}"
+                           class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">
+                            {{ zone_option.name }} <span>→</span>
+                        </a>
+                    {% endfor %}
+                    {% if zone and zone not in featured_zones %}
+                        <a href="{% url 'interface:service_city_page' service.slug zone.slug %}"
+                           class="nav-link active">
+                            {{ zone.name }} <span>→</span>
+                        </a>
+                    {% endif %}
+                </div>
+
+                <div class="nav-list zone-list-full" data-zone-accordion-content hidden>
+                    <a href="{% url 'interface:service_page' service.slug %}" class="nav-link {% if not zone %}active{% endif %}">
+                        📍 Tout Toulouse <span>→</span>
+                    </a>
+                    {% for zone_option in zones %}
+                        <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}"
+                           class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">
+                            {{ zone_option.name }} <span>→</span>
+                        </a>
+                    {% endfor %}
+                </div>
+
+                <button type="button" class="zone-toggle" data-zone-accordion-trigger aria-expanded="false">
+                    <span data-zone-toggle-label>Voir tout</span>
+                    <span aria-hidden="true" data-zone-toggle-icon>↓</span>
+                </button>
             </div>
+            {% endwith %}
         </div>
         {% endif %}
 
@@ -274,4 +317,31 @@
     </aside>
 
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.querySelector('[data-zone-accordion-trigger]');
+    const content = document.querySelector('[data-zone-accordion-content]');
+
+    if (!toggle || !content) return;
+
+    const label = toggle.querySelector('[data-zone-toggle-label]');
+    const icon = toggle.querySelector('[data-zone-toggle-icon]');
+
+    toggle.addEventListener('click', function() {
+        const isOpen = content.classList.toggle('is-open');
+        content.hidden = !isOpen;
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+        if (label) {
+            label.textContent = isOpen ? 'Voir moins' : 'Voir tout';
+        }
+        if (icon) {
+            icon.textContent = isOpen ? '↑' : '↓';
+        }
+    });
+});
+</script>
 {% endblock %}
