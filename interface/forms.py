@@ -1,4 +1,5 @@
 from django import forms
+from django.urls import reverse
 
 from booking.models import Zone
 from interface.models import MarketingService, ServiceRequest
@@ -47,3 +48,14 @@ class ServiceRequestForm(forms.ModelForm):
             "client_phone": "Téléphone",
             "details": "Détails ou besoin",
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["zone"].widget.attrs.update(
+            {
+                "data-zone-search-url": reverse("interface:zone_search"),
+                "data-zone-value-field": "id",
+                "data-zone-label-field": "name",
+                "data-zone-search-placeholder": "Cherche une zone ou un quartier",
+            }
+        )

@@ -5,7 +5,7 @@ from datetime import datetime
 from django import forms
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
-from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -85,6 +85,20 @@ def home(request):
             "request_success": request_success,
         },
     )
+
+
+def zone_search(request):
+    if request.method != "GET":
+        return HttpResponseBadRequest("Méthode non autorisée")
+
+    term = request.GET.get("q", "").strip()
+    zones = Zone.objects.all().order_by("name")
+    if term:
+        zones = zones.filter(name__icontains=term)
+
+    zones = zones[:20]
+    payload = {"results": [{"id": zone.id, "name": zone.name, "slug": zone.slug} for zone in zones]}
+    return JsonResponse(payload)
 
 
 def provider_list(request):
