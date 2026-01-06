@@ -89,6 +89,8 @@
 
     .zone-accordion { display: flex; flex-direction: column; gap: 10px; }
     .zone-accordion .zone-list-full { border-top: 1px dashed rgba(0,0,0,0.06); padding-top: 6px; }
+    .zone-accordion .zone-list-full { display: none; flex-direction: column; }
+    .zone-accordion .zone-list-full.is-open { display: flex; }
     .zone-toggle {
         align-self: flex-start;
         font-size: 0.85rem;

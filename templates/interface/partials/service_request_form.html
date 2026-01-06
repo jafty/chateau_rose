@@ -23,7 +23,14 @@
         {% endif %}
         <div class="form-field">
             <label for="id_location_preference">Lieu préféré</label>
-            {{ request_form.location_preference }}
+            <div class="choice-toggle-group" role="radiogroup" aria-label="Lieu préféré">
+                {% for option in request_form.location_preference %}
+                    <label class="choice-toggle">
+                        {{ option.tag }}
+                        <span>{{ option.choice_label }}</span>
+                    </label>
+                {% endfor %}
+            </div>
         </div>
         {% if request_form.zone.is_hidden %}
             {{ request_form.zone }}
