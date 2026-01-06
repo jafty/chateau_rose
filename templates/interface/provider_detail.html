@@ -9,9 +9,6 @@
         <h1 class="provider-page-title">{{ provider.name }}</h1>
         <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés." }}</p>
         <p class="meta-line">Lieux proposés : {{ provider.location_mode_label }}</p>
-        {% if zones %}
-            <p class="meta-line">Zones : {% for zone in zones %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-        {% endif %}
     </div>
 
     <div class="provider-layout">
@@ -33,6 +30,16 @@
             <div class="paper-card provider-sidebar-card">
                 <p class="provider-note">Partage tes inspirations, ta longueur de cheveux et tes dispos.</p>
             </div>
+            {% if zones %}
+                <div class="paper-card provider-sidebar-card">
+                    <h4 class="section-title provider-section-title">Zones desservies</h4>
+                    <div class="chips">
+                        {% for zone in zones %}
+                            <span class="chip">{{ zone.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
         </aside>
 
         <div class="provider-main">
