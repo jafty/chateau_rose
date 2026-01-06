@@ -136,12 +136,24 @@ def provider_detail(request, provider_id):
         data = request.POST
         meche_bool = data.get("meche") == "on"
         location_choice = data.get("location")
+        location_preference = data.get("location_preference")
         uploaded_current = request.FILES.get("current_hair_picture_file")
         desired_date = _parse_desired_date(data.get("desired_date"))
 
         location = location_choice or ""
         if provider.location_mode == Provider.LOCATION_MODE_SALON_ONLY:
             location = SALON_LOCATION_LABEL
+            location_preference = "salon"
+        elif provider.location_mode == Provider.LOCATION_MODE_HYBRID:
+            if location_preference == "salon":
+                location = SALON_LOCATION_LABEL
+            elif location_preference == "domicile" or location_choice:
+                location = location_choice or ""
+                location_preference = location_preference or "domicile"
+            else:
+                error = "Merci de choisir si tu préfères venir au salon ou demander un déplacement."
+        else:
+            location_preference = location_preference or "domicile"
 
         if not location:
             error = "Merci de choisir un lieu."

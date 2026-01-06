@@ -34,23 +34,25 @@
                 {% with featured_zones=zones|slice:":8" %}
                     <div class="paper-card provider-sidebar-card">
                         <h4 class="section-title provider-section-title">Zones desservies</h4>
-                        <div class="chips" data-featured-zones>
-                            {% for zone in featured_zones %}
-                                <span class="chip">{{ zone.name }}</span>
-                            {% endfor %}
-                        </div>
-
-                        {% if zones|length > featured_zones|length %}
-                            <div class="chips zone-list-full" data-zone-accordion-content hidden>
-                                {% for zone in zones %}
+                        <div class="zone-accordion">
+                            <div class="chips" data-featured-zones>
+                                {% for zone in featured_zones %}
                                     <span class="chip">{{ zone.name }}</span>
                                 {% endfor %}
                             </div>
-                            <button type="button" class="zone-toggle" data-zone-accordion-trigger aria-expanded="false">
-                                <span data-zone-toggle-label>Voir plus</span>
-                                <span aria-hidden="true" data-zone-toggle-icon>↓</span>
-                            </button>
-                        {% endif %}
+
+                            {% if zones|length > featured_zones|length %}
+                                <div class="chips zone-list-full" data-zone-accordion-content hidden>
+                                    {% for zone in zones %}
+                                        <span class="chip">{{ zone.name }}</span>
+                                    {% endfor %}
+                                </div>
+                                <button type="button" class="zone-toggle" data-zone-accordion-trigger aria-expanded="false">
+                                    <span data-zone-toggle-label>Voir plus</span>
+                                    <span aria-hidden="true" data-zone-toggle-icon>↓</span>
+                                </button>
+                            {% endif %}
+                        </div>
                     </div>
                 {% endwith %}
             {% endif %}
@@ -136,7 +138,22 @@
                             {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
                                 <div class="meta-line">{{ provider.location_mode_label }}</div>
                                 <input type="hidden" name="location" value="{{ salon_location_label }}">
+                                <input type="hidden" name="location_preference" value="salon">
                             {% else %}
+                                {% if provider.location_mode == provider.LOCATION_MODE_HYBRID %}
+                                    <div class="location-choice" data-location-preference>
+                                        <label class="choice-pill" data-location-choice="salon">
+                                            <input type="radio" name="location_preference" value="salon" checked>
+                                            <span>En salon / chez la pro</span>
+                                        </label>
+                                        <label class="choice-pill" data-location-choice="domicile">
+                                            <input type="radio" name="location_preference" value="domicile">
+                                            <span>À domicile</span>
+                                        </label>
+                                    </div>
+                                {% else %}
+                                    <input type="hidden" name="location_preference" value="domicile">
+                                {% endif %}
                                 <select
                                     name="location"
                                     id="location"
@@ -205,6 +222,9 @@
         const zoneToggle = document.querySelector('[data-zone-accordion-trigger]');
         const zoneContent = document.querySelector('[data-zone-accordion-content]');
         const featuredZones = document.querySelector('[data-featured-zones]');
+        const locationSelect = document.getElementById('location');
+        const locationPreferenceRadios = document.querySelectorAll('input[name="location_preference"]');
+        const locationChoiceLabels = document.querySelectorAll('[data-location-choice]');
 
         const setZoneState = (isOpen) => {
             if (!zoneContent || !zoneToggle) return;
@@ -225,6 +245,28 @@
                 const nextState = !zoneContent.classList.contains('is-open');
                 setZoneState(nextState);
             });
+        }
+
+        const syncLocationPreference = () => {
+            const selected = document.querySelector('input[name="location_preference"]:checked')?.value;
+
+            locationChoiceLabels.forEach((label) => {
+                const choice = label.dataset.locationChoice;
+                label.classList.toggle('is-selected', choice === selected);
+            });
+
+            if (!locationSelect) return;
+            const isSalonChoice = selected === 'salon';
+
+            if (isSalonChoice) {
+                locationSelect.value = '';
+            }
+            locationSelect.disabled = isSalonChoice;
+        };
+
+        if (locationPreferenceRadios.length) {
+            syncLocationPreference();
+            locationPreferenceRadios.forEach((radio) => radio.addEventListener('change', syncLocationPreference));
         }
 
         const formatPrice = (cents) => {
