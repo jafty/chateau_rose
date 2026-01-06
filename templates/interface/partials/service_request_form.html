@@ -21,6 +21,10 @@
                 {{ request_form.marketing_service }}
             </div>
         {% endif %}
+        <div class="form-field">
+            <label for="id_location_preference">Lieu préféré</label>
+            {{ request_form.location_preference }}
+        </div>
         {% if request_form.zone.is_hidden %}
             {{ request_form.zone }}
         {% else %}
