@@ -117,7 +117,7 @@ class ServicePagesTests(TestCase):
         )
 
     def test_salon_only_badge_is_rendered(self):
-        self.provider_a.works_in_salon_only = True
+        self.provider_a.location_mode = Provider.LOCATION_MODE_SALON_ONLY
         self.provider_a.save()
 
         url = reverse("interface:service_page", args=["tresses"])
@@ -125,7 +125,8 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn("Je ne travaille que depuis chez moi / en salon", content)
+        self.assertIn("Salon</span>", content)
+        self.assertNotIn("Salon &amp; domicile", content)
 
     def test_empty_provider_list_is_hidden(self):
         ProviderMarketingService.objects.all().delete()

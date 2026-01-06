@@ -26,7 +26,7 @@ Import/export actions are available from each admin list view that subclasses `I
 | Model | Admin resource | Key columns |
 | --- | --- | --- |
 | Zones | `ZoneResource` | `id`, `name`, `slug` |
-| Providers | `ProviderResource` | `id`, `name`, `description`, `contact_phone`, `contact_email`, `profile_image_url`, `works_in_salon_only`, `user_username` |
+| Providers | `ProviderResource` | `id`, `name`, `description`, `contact_phone`, `contact_email`, `profile_image_url`, `location_mode`, `user_username` |
 | Services | `ServiceResource` | `id`, `provider_id`, `name`, `slug`, `base_price_cents`, `hair_length_adjustments` (JSON), `meche_bonus_cents` |
 | Provider photos | `ProviderPhotoResource` | `id`, `provider_id`, `image_url`, `caption`, `order` |
 | Provider ↔ Zones | `ProviderZoneResource` | `id`, `provider_id`, `zone_slug` |

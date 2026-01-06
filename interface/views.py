@@ -17,7 +17,10 @@ from chateaurose.domain.use_cases import request_haircut, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
 from chateaurose.infrastructure.notifier_stub import NotifierStub
 from chateaurose.infrastructure.payment_stub import PaymentGatewayStub
-from chateaurose.infrastructure.provider_catalog import DjangoProviderCatalog
+from chateaurose.infrastructure.provider_catalog import (
+    DjangoProviderCatalog,
+    SALON_LOCATION_LABEL,
+)
 from interface.forms import ServiceRequestForm
 from interface.models import MarketingService, MarketingZone
 
@@ -127,12 +130,21 @@ def provider_detail(request, provider_id):
     zones = provider.zones.all()
     message = None
     error = None
+    salon_location_label = SALON_LOCATION_LABEL
 
     if request.method == "POST":
         data = request.POST
         meche_bool = data.get("meche") == "on"
+        location_choice = data.get("location")
         uploaded_current = request.FILES.get("current_hair_picture_file")
         desired_date = _parse_desired_date(data.get("desired_date"))
+
+        location = location_choice or ""
+        if provider.location_mode == Provider.LOCATION_MODE_SALON_ONLY:
+            location = SALON_LOCATION_LABEL
+
+        if not location:
+            error = "Merci de choisir un lieu."
 
         if not desired_date:
             error = "Merci d'utiliser une date au format JJ/MM/AAAA HH:MM."
@@ -153,7 +165,7 @@ def provider_detail(request, provider_id):
                     provider_id=str(provider.id),
                     service_id=data.get("service_id"),
                     client_contact={"name": data.get("client_name"), "phone": data.get("client_phone")},
-                    location=data.get("location"),
+                    location=location,
                     desired_date=desired_date,
                     hair_length=data.get("hair_length"),
                     meche=meche_bool,
@@ -182,6 +194,7 @@ def provider_detail(request, provider_id):
             "error": error,
             "pricing_data": json.dumps(pricing_data),
             "default_starting_price": _format_price(min(starting_prices)) if starting_prices else None,
+            "salon_location_label": salon_location_label,
         },
     )
 

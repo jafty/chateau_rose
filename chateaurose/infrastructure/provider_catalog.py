@@ -1,6 +1,8 @@
 from booking.models import Provider, Service, Zone
 from chateaurose.domain.exceptions import NotFound
 
+SALON_LOCATION_LABEL = "Salon"
+
 
 class DjangoProviderCatalog:
     def get_service(self, provider_id: str, service_id: str):
@@ -17,4 +19,15 @@ class DjangoProviderCatalog:
         }
 
     def provider_covers_zone(self, provider_id: str, zone_name: str) -> bool:
+        try:
+            provider = Provider.objects.get(id=provider_id)
+        except Provider.DoesNotExist:
+            return False
+
+        if provider.location_mode == Provider.LOCATION_MODE_SALON_ONLY:
+            return zone_name == SALON_LOCATION_LABEL
+
+        if provider.location_mode == Provider.LOCATION_MODE_HYBRID and zone_name == SALON_LOCATION_LABEL:
+            return True
+
         return Zone.objects.filter(providers__id=provider_id, name=zone_name).exists()
