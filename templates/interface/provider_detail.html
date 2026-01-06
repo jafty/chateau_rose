@@ -4,7 +4,7 @@
 {% block title %}{{ provider.name }} | Château Rose{% endblock %}
 
 {% block content %}
-<section class="container provider-profile">
+<section class="page-shell provider-profile">
     <div class="provider-page-header paper-card">
         <h1 class="provider-page-title">{{ provider.name }}</h1>
         <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés." }}</p>
@@ -31,14 +31,28 @@
                 <p class="provider-note">Partage tes inspirations, ta longueur de cheveux et tes dispos.</p>
             </div>
             {% if zones %}
-                <div class="paper-card provider-sidebar-card">
-                    <h4 class="section-title provider-section-title">Zones desservies</h4>
-                    <div class="chips">
-                        {% for zone in zones %}
-                            <span class="chip">{{ zone.name }}</span>
-                        {% endfor %}
+                {% with featured_zones=zones|slice:":8" %}
+                    <div class="paper-card provider-sidebar-card">
+                        <h4 class="section-title provider-section-title">Zones desservies</h4>
+                        <div class="chips" data-featured-zones>
+                            {% for zone in featured_zones %}
+                                <span class="chip">{{ zone.name }}</span>
+                            {% endfor %}
+                        </div>
+
+                        {% if zones|length > featured_zones|length %}
+                            <div class="chips zone-list-full" data-zone-accordion-content hidden>
+                                {% for zone in zones %}
+                                    <span class="chip">{{ zone.name }}</span>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="zone-toggle" data-zone-accordion-trigger aria-expanded="false">
+                                <span data-zone-toggle-label>Voir plus</span>
+                                <span aria-hidden="true" data-zone-toggle-icon>↓</span>
+                            </button>
+                        {% endif %}
                     </div>
-                </div>
+                {% endwith %}
             {% endif %}
         </aside>
 
@@ -86,7 +100,7 @@
                 {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
                 {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
 
-                <div class="paper-card provider-form-card">
+                <div class="provider-form-card inline-form-card">
                     <h3 class="section-title provider-section-title">Demander une prestation</h3>
                     <p class="meta-line">Envoie ta demande détaillée directement à {{ provider.name }}.</p>
                     <form method="post" enctype="multipart/form-data" class="provider-form-grid">
@@ -188,6 +202,30 @@
         const mecheCheckbox = document.getElementById('meche');
         const priceEstimate = document.getElementById('price-estimate');
         const estimateDetails = document.getElementById('estimate-details');
+        const zoneToggle = document.querySelector('[data-zone-accordion-trigger]');
+        const zoneContent = document.querySelector('[data-zone-accordion-content]');
+        const featuredZones = document.querySelector('[data-featured-zones]');
+
+        const setZoneState = (isOpen) => {
+            if (!zoneContent || !zoneToggle) return;
+            zoneContent.hidden = !isOpen;
+            zoneContent.classList.toggle('is-open', isOpen);
+            if (featuredZones) featuredZones.hidden = isOpen;
+            zoneToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+            const label = zoneToggle.querySelector('[data-zone-toggle-label]');
+            const icon = zoneToggle.querySelector('[data-zone-toggle-icon]');
+            if (label) label.textContent = isOpen ? 'Voir moins' : 'Voir plus';
+            if (icon) icon.textContent = isOpen ? '↑' : '↓';
+        };
+
+        if (zoneToggle && zoneContent) {
+            setZoneState(false);
+            zoneToggle.addEventListener('click', () => {
+                const nextState = !zoneContent.classList.contains('is-open');
+                setZoneState(nextState);
+            });
+        }
 
         const formatPrice = (cents) => {
             if (cents === null || cents === undefined) return '';

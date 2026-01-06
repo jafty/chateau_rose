@@ -328,15 +328,17 @@
 document.addEventListener('DOMContentLoaded', function() {
     const toggle = document.querySelector('[data-zone-accordion-trigger]');
     const content = document.querySelector('[data-zone-accordion-content]');
+    const featuredList = document.querySelector('[data-featured-zones]');
 
     if (!toggle || !content) return;
 
     const label = toggle.querySelector('[data-zone-toggle-label]');
     const icon = toggle.querySelector('[data-zone-toggle-icon]');
 
-    toggle.addEventListener('click', function() {
-        const isOpen = content.classList.toggle('is-open');
+    const setState = (isOpen) => {
         content.hidden = !isOpen;
+        content.classList.toggle('is-open', isOpen);
+        if (featuredList) featuredList.hidden = isOpen;
         toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 
         if (label) {
@@ -345,6 +347,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (icon) {
             icon.textContent = isOpen ? '↑' : '↓';
         }
+    };
+
+    setState(false);
+
+    toggle.addEventListener('click', function() {
+        const nextState = !content.classList.contains('is-open');
+        setState(nextState);
     });
 });
 </script>
