@@ -8,6 +8,7 @@
     <div class="provider-page-header paper-card">
         <h1 class="provider-page-title">{{ provider.name }}</h1>
         <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés." }}</p>
+        <p class="meta-line">Lieux proposés : {{ provider.location_mode_label }}</p>
         {% if zones %}
             <p class="meta-line">Zones : {% for zone in zones %}{{ zone.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
         {% endif %}
@@ -110,23 +111,31 @@
                             <input type="tel" name="client_phone" id="client_phone" required autocomplete="tel">
                         </div>
                         <div class="form-field">
-                            <label for="location">Ta zone <span class="required-mark">*</span></label>
-                            <select
-                                name="location"
-                                id="location"
-                                required
-                                data-zone-search-url="{% url 'interface:zone_search' %}"
-                                data-zone-value-field="name"
-                                data-zone-label-field="name"
-                                data-zone-search-placeholder="Commence à taper ta zone"
-                            >
-                                <option value="" selected disabled>Choisis ta zone</option>
-                                {% for zone in zones %}
-                                    <option value="{{ zone.name }}">{{ zone.name }}</option>
-                                {% empty %}
-                                    <option value="" disabled>Zones en cours d'ajout</option>
-                                {% endfor %}
-                            </select>
+                            <label for="location">Lieu de prestation <span class="required-mark">*</span></label>
+                            {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
+                                <div class="meta-line">{{ provider.location_mode_label }}</div>
+                                <input type="hidden" name="location" value="{{ salon_location_label }}">
+                            {% else %}
+                                <select
+                                    name="location"
+                                    id="location"
+                                    required
+                                    data-zone-search-url="{% url 'interface:zone_search' %}"
+                                    data-zone-value-field="name"
+                                    data-zone-label-field="name"
+                                    data-zone-search-placeholder="Commence à taper ta zone"
+                                >
+                                    <option value="" selected disabled>Choisis un lieu</option>
+                                    {% if provider.location_mode == provider.LOCATION_MODE_HYBRID %}
+                                        <option value="{{ salon_location_label }}">Au salon / chez la pro</option>
+                                    {% endif %}
+                                    {% for zone in zones %}
+                                        <option value="{{ zone.name }}">{{ zone.name }}</option>
+                                    {% empty %}
+                                        <option value="" disabled>Zones en cours d'ajout</option>
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
                         </div>
                         <div class="form-field">
                             <label for="desired_date">Date souhaitée <span class="required-mark">*</span></label>

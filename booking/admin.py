@@ -46,7 +46,7 @@ class ProviderAdminForm(forms.ModelForm):
             "contact_email",
             "profile_image",
             "profile_image_url",
-            "works_in_salon_only",
+            "location_mode",
             "user",
             "zones",
             "marketing_services",
@@ -88,9 +88,10 @@ class ProviderAdmin(ImportExportModelAdmin):
         "name",
         "contact_phone",
         "contact_email",
-        "works_in_salon_only",
+        "location_mode",
         "user",
     )
+    list_filter = ("location_mode",)
     inlines = []
     resource_class = ProviderResource
 

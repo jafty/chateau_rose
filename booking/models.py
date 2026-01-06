@@ -8,6 +8,15 @@ from interface.validators import validate_absolute_or_root_relative_url
 
 
 class Provider(models.Model):
+    LOCATION_MODE_SALON_ONLY = "salon_only"
+    LOCATION_MODE_CLIENT_HOME_ONLY = "client_home_only"
+    LOCATION_MODE_HYBRID = "hybrid"
+    LOCATION_MODE_CHOICES = (
+        (LOCATION_MODE_SALON_ONLY, "Salon uniquement"),
+        (LOCATION_MODE_CLIENT_HOME_ONLY, "À domicile uniquement"),
+        (LOCATION_MODE_HYBRID, "Salon ou domicile"),
+    )
+
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     contact_phone = models.CharField(max_length=64, blank=True)
@@ -22,7 +31,11 @@ class Provider(models.Model):
             "or relative static asset path."
         ),
     )
-    works_in_salon_only = models.BooleanField(default=False)
+    location_mode = models.CharField(
+        max_length=32,
+        choices=LOCATION_MODE_CHOICES,
+        default=LOCATION_MODE_HYBRID,
+    )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -51,6 +64,10 @@ class Provider(models.Model):
         if self.profile_image:
             return self.profile_image.url
         return self.profile_image_url or None
+
+    @property
+    def location_mode_label(self):
+        return dict(self.LOCATION_MODE_CHOICES).get(self.location_mode, "")
 
 
 class Zone(models.Model):

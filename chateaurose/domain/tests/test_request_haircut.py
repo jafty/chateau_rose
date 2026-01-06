@@ -300,6 +300,59 @@ def test_request_haircut_rejects_zone_not_covered():
     assert reminder_gateway.reminders == []
 
 
+def test_salon_only_provider_allows_salon_location_without_zones():
+    now = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    clock = FixedClock(now)
+
+    provider_id = "provider_1"
+    service_id = "service_tresses"
+
+    services_by_provider = {
+        provider_id: {
+            service_id: {
+                "id": service_id,
+                "name": "Tresses africaines",
+                "base_price_cents": 5000,
+                "hair_length_adjustments": {"long": 1500, "medium": 0, "short": -500},
+                "meche_bonus_cents": 2000,
+            }
+        }
+    }
+    zones_by_provider = {provider_id: set()}
+    location_modes = {provider_id: InMemoryProviderCatalog.LOCATION_MODE_SALON_ONLY}
+
+    provider_catalog = InMemoryProviderCatalog(
+        services_by_provider=services_by_provider,
+        zones_by_provider=zones_by_provider,
+        location_modes=location_modes,
+    )
+    booking_repository = InMemoryBookingRepository()
+    payment_gateway = InMemoryPaymentGateway()
+    notifier = InMemoryNotifier()
+    reminder_gateway = InMemoryReminderGateway()
+
+    request = request_haircut.execute(
+        provider_id=provider_id,
+        service_id=service_id,
+        client_contact={"name": "Sarah", "phone": "+33600000000"},
+        location=InMemoryProviderCatalog.SALON_LOCATION_LABEL,
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        booking_repository=booking_repository,
+        provider_catalog=provider_catalog,
+        payment_gateway=payment_gateway,
+        notifier=notifier,
+        reminder_gateway=reminder_gateway,
+        clock=clock,
+    )
+
+    assert request.location == InMemoryProviderCatalog.SALON_LOCATION_LABEL
+
+
 @pytest.mark.parametrize(
     "missing_field, payload",
     [

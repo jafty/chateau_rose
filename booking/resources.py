@@ -30,7 +30,7 @@ class ProviderResource(resources.ModelResource):
             "contact_phone",
             "contact_email",
             "profile_image_url",
-            "works_in_salon_only",
+            "location_mode",
             "user",
         )
         export_order = fields
