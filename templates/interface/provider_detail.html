@@ -111,7 +111,15 @@
                         </div>
                         <div class="form-field">
                             <label for="location">Ta zone <span class="required-mark">*</span></label>
-                            <select name="location" id="location" required>
+                            <select
+                                name="location"
+                                id="location"
+                                required
+                                data-zone-search-url="{% url 'interface:zone_search' %}"
+                                data-zone-value-field="name"
+                                data-zone-label-field="name"
+                                data-zone-search-placeholder="Commence à taper ta zone"
+                            >
                                 <option value="" selected disabled>Choisis ta zone</option>
                                 {% for zone in zones %}
                                     <option value="{{ zone.name }}">{{ zone.name }}</option>
