@@ -139,6 +139,7 @@ class ProviderSignupTests(TestCase):
                 "name": "Nouvelle Pro",
                 "contact_email": "new@pro.fr",
                 "contact_phone": "+33102030405",
+                "location_mode": Provider.LOCATION_MODE_HYBRID,
             },
             follow=True,
         )
@@ -149,4 +150,5 @@ class ProviderSignupTests(TestCase):
 
         self.assertEqual(provider.name, "Nouvelle Pro")
         self.assertEqual(provider.contact_email, "new@pro.fr")
+        self.assertEqual(provider.location_mode, Provider.LOCATION_MODE_HYBRID)
         self.assertTrue(response.wsgi_request.user.is_authenticated)

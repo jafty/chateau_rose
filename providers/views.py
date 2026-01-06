@@ -132,6 +132,7 @@ def signup(request):
                 contact_email=form.cleaned_data.get("contact_email")
                 or form.cleaned_data.get("email"),
                 contact_phone=form.cleaned_data.get("contact_phone", ""),
+                location_mode=form.cleaned_data.get("location_mode", Provider.LOCATION_MODE_HYBRID),
                 user=user,
             )
             login(request, user)
