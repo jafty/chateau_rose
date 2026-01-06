@@ -719,7 +719,14 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .service-line h4 { margin: 0; font-size: 1.1rem; }
 .service-price { font-weight: 700; color: var(--rose-accent); white-space: nowrap; }
 
-.provider-form-card { display: grid; gap: 14px; }
+.provider-form-card {
+    display: grid;
+    gap: 14px;
+    background: #FFF9F9;
+    border: 2px dashed #f3c1da;
+    padding: clamp(1.5rem, 5vw, 2.5rem);
+    box-shadow: var(--shadow-paper);
+}
 .provider-form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
 .provider-form-grid .form-field { display: grid; gap: 6px; }
 .provider-form-grid .field-hint { color: var(--ink-secondary); font-size: 0.85rem; }
@@ -735,6 +742,25 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     border-radius: 0;
     font-size: 0.95rem;
 }
+
+.zone-list-full { margin-top: 12px; }
+
+.zone-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: #FFF9F9;
+    border: 1px dashed rgba(209, 77, 114, 0.4);
+    color: var(--rose-accent);
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.zone-toggle:hover { background: #fff2f6; }
 .checkbox-field input[type="checkbox"] { width: auto; }
 .provider-form-grid textarea { min-height: 140px; }
 .provider-form-grid .estimation-box { grid-column: 1 / -1; background: #fff5fb; border: 1px solid #f3c1da; border-radius: 0; padding: 12px; }
