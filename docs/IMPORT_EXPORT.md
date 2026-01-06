@@ -15,6 +15,10 @@ This project ships with [django-import-export](https://django-import-export.read
    ```
 3. Log in to the Django admin at `/admin/`.
 
+### Editing providers manually
+- In the **Providers** admin form, the **Zones** and **Services marketing** fields use Django's filterable dual-list widget. Use the search box above each list to narrow options, then click the arrows between the lists to move items in or out of the selection.
+- The widget includes built-in JavaScript and CSS (loaded automatically by the admin), so zone/service choices persist when you save the provider.
+
 ## Where to import
 Import/export actions are available from each admin list view that subclasses `ImportExportModelAdmin`.
 
