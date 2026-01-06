@@ -35,6 +35,10 @@
         const valueField = select.dataset.zoneValueField || 'id';
         const placeholder = select.dataset.zoneSearchPlaceholder || 'Rechercher une zone';
 
+        const allowedValues = Array.from(select.options)
+            .map((option) => option.value)
+            .filter((value) => value !== '');
+
         const hiddenInput = document.createElement('input');
         hiddenInput.type = 'hidden';
         hiddenInput.name = select.name;
@@ -75,7 +79,10 @@
                 .then((response) => response.json())
                 .then((data) => {
                     const results = Array.isArray(data.results) ? data.results : [];
-                    populateOptions(datalist, results, labelField, valueField);
+                    const filteredResults = allowedValues.length
+                        ? results.filter((item) => allowedValues.includes(String(item[valueField] ?? '')))
+                        : results;
+                    populateOptions(datalist, filteredResults, labelField, valueField);
                 })
                 .catch(() => {
                     datalist.innerHTML = '';
@@ -91,6 +98,8 @@
             const match = Array.from(datalist.options).find((option) => option.value === textInput.value);
             hiddenInput.value = match ? match.dataset.value || match.value : '';
         });
+
+        fetchResults('');
     };
 
     document.addEventListener('DOMContentLoaded', () => {
