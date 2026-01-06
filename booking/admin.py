@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.widgets import FilteredSelectMultiple
 
 from import_export.admin import ImportExportModelAdmin
 
@@ -28,12 +29,12 @@ class ProviderAdminForm(forms.ModelForm):
     zones = forms.ModelMultipleChoiceField(
         queryset=Zone.objects.all(),
         required=False,
-        widget=forms.CheckboxSelectMultiple,
+        widget=FilteredSelectMultiple("zones", is_stacked=False),
     )
     marketing_services = forms.ModelMultipleChoiceField(
         queryset=MarketingService.objects.all(),
         required=False,
-        widget=forms.CheckboxSelectMultiple,
+        widget=FilteredSelectMultiple("services", is_stacked=False),
     )
 
     class Meta:
