@@ -14,7 +14,16 @@ class ServiceRequestForm(forms.ModelForm):
         queryset=Zone.objects.all(),
         required=False,
         label="Zone",
-        help_text="Facultatif : nous orientons vers un prestataire proche.",
+        help_text=(
+            "Indique ton quartier si tu veux une prestation à domicile,"
+            " pour être mis(e) en relation avec un prestataire proche."
+        ),
+    )
+    location_preference = forms.ChoiceField(
+        label="Où veux-tu réaliser la prestation ?",
+        choices=ServiceRequest.LOCATION_PREFERENCE_CHOICES,
+        initial=ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
+        widget=forms.RadioSelect,
     )
     desired_date = forms.DateTimeField(
         label="Date souhaitée",
@@ -35,6 +44,7 @@ class ServiceRequestForm(forms.ModelForm):
         fields = [
             "marketing_service",
             "zone",
+            "location_preference",
             "desired_date",
             "client_name",
             "client_phone",

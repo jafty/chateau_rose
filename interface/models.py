@@ -99,6 +99,13 @@ class MarketingServiceImage(models.Model):
 
 
 class ServiceRequest(models.Model):
+    LOCATION_PREFERENCE_CLIENT_HOME = "client_home"
+    LOCATION_PREFERENCE_SALON = "salon"
+    LOCATION_PREFERENCE_CHOICES = (
+        (LOCATION_PREFERENCE_CLIENT_HOME, "À domicile"),
+        (LOCATION_PREFERENCE_SALON, "En salon / chez le prestataire"),
+    )
+
     marketing_service = models.ForeignKey(
         MarketingService,
         on_delete=models.CASCADE,
@@ -110,6 +117,11 @@ class ServiceRequest(models.Model):
         null=True,
         blank=True,
         related_name="service_requests",
+    )
+    location_preference = models.CharField(
+        max_length=32,
+        choices=LOCATION_PREFERENCE_CHOICES,
+        default=LOCATION_PREFERENCE_CLIENT_HOME,
     )
     client_name = models.CharField(max_length=255)
     client_phone = models.CharField(max_length=64)
