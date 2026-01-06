@@ -7,26 +7,6 @@
         };
     };
 
-    const buildDatalist = (input) => {
-        const list = document.createElement('datalist');
-        const listId = `zone-options-${Math.random().toString(36).slice(2)}`;
-        list.id = listId;
-        input.setAttribute('list', listId);
-        return list;
-    };
-
-    const populateOptions = (datalist, results, labelField, valueField) => {
-        datalist.innerHTML = '';
-        results.forEach((item) => {
-            const option = document.createElement('option');
-            const label = item[labelField] ?? '';
-            option.value = label;
-            option.dataset.value = item[valueField] ?? '';
-            option.dataset.label = label;
-            datalist.appendChild(option);
-        });
-    };
-
     const initZoneSearch = (select) => {
         const searchUrl = select.dataset.zoneSearchUrl;
         if (!searchUrl) return;
@@ -54,9 +34,12 @@
         textInput.autocomplete = 'off';
         textInput.className = 'zone-search__input';
 
-        const datalist = buildDatalist(textInput);
+        const dropdown = document.createElement('div');
+        dropdown.className = 'zone-search__dropdown';
+        dropdown.hidden = true;
+
         wrapper.appendChild(textInput);
-        wrapper.appendChild(datalist);
+        wrapper.appendChild(dropdown);
         wrapper.appendChild(hiddenInput);
 
         const selectedOption = select.options[select.selectedIndex];
@@ -71,6 +54,36 @@
         select.setAttribute('aria-hidden', 'true');
         select.after(wrapper);
 
+        const closeDropdown = () => {
+            dropdown.hidden = true;
+            dropdown.innerHTML = '';
+        };
+
+        const openDropdown = () => {
+            dropdown.hidden = dropdown.children.length === 0;
+        };
+
+        const populateOptions = (results) => {
+            dropdown.innerHTML = '';
+            results.forEach((item) => {
+                const option = document.createElement('button');
+                const label = item[labelField] ?? '';
+                const value = item[valueField] ?? '';
+                option.type = 'button';
+                option.className = 'zone-search__option';
+                option.textContent = label;
+                option.dataset.value = value;
+                option.dataset.label = label;
+                option.addEventListener('click', () => {
+                    textInput.value = label;
+                    hiddenInput.value = value || label;
+                    closeDropdown();
+                });
+                dropdown.appendChild(option);
+            });
+            openDropdown();
+        };
+
         const fetchResults = debounce((term) => {
             const url = new URL(searchUrl, window.location.origin);
             if (term) {
@@ -83,21 +96,37 @@
                     const filteredResults = allowedValues.length
                         ? results.filter((item) => allowedValues.includes(String(item[valueField] ?? '')))
                         : results;
-                    populateOptions(datalist, filteredResults, labelField, valueField);
+                    populateOptions(filteredResults);
                 })
                 .catch(() => {
-                    datalist.innerHTML = '';
+                    closeDropdown();
                 });
         }, 250);
 
         textInput.addEventListener('input', (event) => {
             hiddenInput.value = '';
             fetchResults(event.target.value.trim());
+            dropdown.hidden = false;
         });
 
         textInput.addEventListener('change', () => {
-            const match = Array.from(datalist.options).find((option) => option.value === textInput.value);
-            hiddenInput.value = match ? match.dataset.value || match.value : '';
+            const match = Array.from(dropdown.children).find((option) => option.dataset.label === textInput.value);
+            hiddenInput.value = match ? match.dataset.value || match.dataset.label : '';
+            closeDropdown();
+        });
+
+        textInput.addEventListener('focus', () => {
+            if (dropdown.children.length) {
+                dropdown.hidden = false;
+            } else {
+                fetchResults(textInput.value.trim());
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!wrapper.contains(event.target)) {
+                closeDropdown();
+            }
         });
 
         fetchResults('');
