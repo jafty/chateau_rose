@@ -189,9 +189,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
                                     <div>
                                         <h3 class="provider-name">{{ provider.name }}</h3>
-                                        <p class="provider-loc">
-                                            {% for z in provider.zones.all %}{{ z.name }}{% if not forloop.last %}, {% endif %}{% empty %}Toulouse{% endfor %}
-                                        </p>
+                                        <p class="provider-loc">{{ provider.location_mode_label }}</p>
                                     </div>
                                     <div class="tags">
                                         {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
