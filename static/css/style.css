@@ -809,6 +809,8 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     .provider-page-header,
     .provider-profile-card,
     .provider-main > .paper-card,
+    .provider-main .paper-card,
+    .provider-main .provider-form-card,
     .provider-sidebar > .paper-card,
     .provider-sidebar > .profile-photo-frame {
         margin-inline: clamp(6px, 3vw, 12px);

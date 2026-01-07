@@ -244,7 +244,7 @@
         {% if zones %}
         <div class="paper-card" style="padding: 1.5rem;">
             <h4 style="margin-bottom: 16px; border-bottom: 2px dashed rgba(0,0,0,0.1); padding-bottom: 8px;">Explorer les quartiers</h4>
-            {% with featured_zones=zones|slice:":5" %}
+            {% with featured_zones=zones|slice:":5" remainder_zones=zones|slice:"5:" %}
             <div class="zone-accordion">
                 <div class="nav-list" data-featured-zones>
                     <a href="{% url 'interface:service_page' service.slug %}" class="nav-link {% if not zone %}active{% endif %}">
@@ -264,22 +264,23 @@
                     {% endif %}
                 </div>
 
-                <div class="nav-list zone-list-full" data-zone-accordion-content hidden>
-                    <a href="{% url 'interface:service_page' service.slug %}" class="nav-link {% if not zone %}active{% endif %}">
-                        📍 Tout Toulouse <span>→</span>
-                    </a>
-                    {% for zone_option in zones %}
-                        <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}"
-                           class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">
-                            {{ zone_option.name }} <span>→</span>
-                        </a>
-                    {% endfor %}
-                </div>
+                {% if remainder_zones %}
+                    <div class="nav-list zone-list-full" data-zone-accordion-content hidden>
+                        {% for zone_option in remainder_zones %}
+                            {% if not zone or zone_option.slug != zone.slug or zone in featured_zones %}
+                                <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}"
+                                   class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">
+                                    {{ zone_option.name }} <span>→</span>
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
 
-                <button type="button" class="zone-toggle" data-zone-accordion-trigger aria-expanded="false">
-                    <span data-zone-toggle-label>Voir tout</span>
-                    <span aria-hidden="true" data-zone-toggle-icon>↓</span>
-                </button>
+                    <button type="button" class="zone-toggle" data-zone-accordion-trigger aria-expanded="false">
+                        <span data-zone-toggle-label>Voir tout</span>
+                        <span aria-hidden="true" data-zone-toggle-icon>↓</span>
+                    </button>
+                {% endif %}
             </div>
             {% endwith %}
         </div>
@@ -328,8 +329,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const toggle = document.querySelector('[data-zone-accordion-trigger]');
     const content = document.querySelector('[data-zone-accordion-content]');
-    const featuredList = document.querySelector('[data-featured-zones]');
-
     if (!toggle || !content) return;
 
     const label = toggle.querySelector('[data-zone-toggle-label]');
@@ -338,7 +337,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const setState = (isOpen) => {
         content.hidden = !isOpen;
         content.classList.toggle('is-open', isOpen);
-        if (featuredList) featuredList.hidden = isOpen;
         toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 
         if (label) {
