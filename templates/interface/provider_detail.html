@@ -31,7 +31,7 @@
                 <p class="provider-note">Partage tes inspirations, ta longueur de cheveux et tes dispos.</p>
             </div>
             {% if zones %}
-                {% with featured_zones=zones|slice:":8" %}
+                {% with featured_zones=zones|slice:":8" remainder_zones=zones|slice:"8:" %}
                     <div class="paper-card provider-sidebar-card">
                         <h4 class="section-title provider-section-title">Zones desservies</h4>
                         <div class="zone-accordion">
@@ -41,9 +41,9 @@
                                 {% endfor %}
                             </div>
 
-                            {% if zones|length > featured_zones|length %}
+                            {% if remainder_zones %}
                                 <div class="chips zone-list-full" data-zone-accordion-content hidden>
-                                    {% for zone in zones %}
+                                    {% for zone in remainder_zones %}
                                         <span class="chip">{{ zone.name }}</span>
                                     {% endfor %}
                                 </div>
@@ -221,7 +221,6 @@
         const estimateDetails = document.getElementById('estimate-details');
         const zoneToggle = document.querySelector('[data-zone-accordion-trigger]');
         const zoneContent = document.querySelector('[data-zone-accordion-content]');
-        const featuredZones = document.querySelector('[data-featured-zones]');
         const locationSelect = document.getElementById('location');
         const locationPreferenceRadios = document.querySelectorAll('input[name="location_preference"]');
         const locationChoiceLabels = document.querySelectorAll('[data-location-choice]');
@@ -230,7 +229,6 @@
             if (!zoneContent || !zoneToggle) return;
             zoneContent.hidden = !isOpen;
             zoneContent.classList.toggle('is-open', isOpen);
-            if (featuredZones) featuredZones.hidden = isOpen;
             zoneToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 
             const label = zoneToggle.querySelector('[data-zone-toggle-label]');
