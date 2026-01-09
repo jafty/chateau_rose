@@ -9,6 +9,7 @@ urlpatterns = [
     path("a-propos/", views.about, name="about"),
     path("prestataires/", views.provider_list, name="provider_list"),
     path("prestataires/<int:provider_id>/", views.provider_detail, name="provider_detail"),
+    path("mentions-legales-rgpd/", views.legal, name="legal"),
     path("zones/recherche/", views.zone_search, name="zone_search"),
     path("bookings/<str:booking_id>/provider-action/", views.provider_action, name="provider_action"),
     path("bookings/<str:booking_id>/client-action/", views.client_action, name="client_action"),

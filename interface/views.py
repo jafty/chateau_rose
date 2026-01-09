@@ -480,6 +480,10 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     )
 
 
+def legal(request):
+    return render(request, "interface/legal.html")
+
+
 def about(request):
     faq_items = [
         {
