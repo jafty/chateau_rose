@@ -512,3 +512,19 @@ def about(request):
             "services": list(MarketingService.objects.all()),
         },
     )
+
+
+def legal_notice(request):
+    return render(request, "interface/legal_notice.html")
+
+
+def terms_of_sale(request):
+    return render(request, "interface/terms_of_sale.html")
+
+
+def terms_of_use(request):
+    return render(request, "interface/terms_of_use.html")
+
+
+def privacy_policy(request):
+    return render(request, "interface/privacy_policy.html")
