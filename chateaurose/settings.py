@@ -145,12 +145,13 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 storage_settings = build_storage_settings(os.environ, BASE_DIR)
 STORAGES = storage_settings.storages
 MEDIA_URL = storage_settings.media_url
 MEDIA_ROOT = storage_settings.media_root
+SERVE_MEDIA = _get_bool_env("DJANGO_SERVE_MEDIA", DEBUG)
 for key, value in storage_settings.extra_settings.items():
     globals()[key] = value
 

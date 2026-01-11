@@ -17,6 +17,9 @@ Set `FILE_STORAGE_BACKEND` in your environment:
 
 ### Common
 - `FILE_STORAGE_BACKEND`: `local`, `s3`, or `gcs`.
+- `MEDIA_ROOT`: (local only) absolute path where uploads are stored (example: `/app/media` on Railway volumes).
+- `MEDIA_URL`: (local only) public URL prefix for uploads (default: `/media/`).
+- `DJANGO_SERVE_MEDIA`: set to `true` if you want Django to serve media files directly (suitable for low traffic only).
 
 ### S3-compatible
 - `AWS_STORAGE_BUCKET_NAME` (**required**)
@@ -49,6 +52,16 @@ Set `FILE_STORAGE_BACKEND` in your environment:
    - Optional: `AWS_S3_CUSTOM_DOMAIN` if you have a CDN in front.
 4. **Upload images to the bucket:** either manually via the provider console or any S3 client. The admin forms and import command will store object keys automatically on upload.
 5. **Verify:** visit an existing marketing page and confirm the image URLs point to your bucket domain.
+
+## Quick start on Railway (volume-mounted media)
+If you have a small amount of user-generated content and want to keep media on a Railway volume:
+1. **Create a Railway volume** and mount it at `/app/media`.
+2. **Set env vars in Railway:**
+   - `FILE_STORAGE_BACKEND=local`
+   - `MEDIA_ROOT=/app/media`
+   - `DJANGO_SERVE_MEDIA=true` (optional, serves files through Django; acceptable for small traffic)
+3. **Deploy and upload:** any `ImageField` uploads will land in the volume.
+4. **Verify:** visit a record with an image and confirm the URL starts with `/media/`.
 
 ## Using committed static images for demos
 If you need fixed images for beta demos without configuring a bucket:
