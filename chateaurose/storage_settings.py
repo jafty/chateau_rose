@@ -16,12 +16,15 @@ class StorageSettings:
 def build_storage_settings(env: Mapping[str, str], base_dir: Path) -> StorageSettings:
     backend = env.get("FILE_STORAGE_BACKEND", "local").lower()
     storages: MutableMapping[str, dict] = {
-        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"}
     }
 
     if backend == "local":
         storages["default"] = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
-        return StorageSettings(storages=dict(storages), media_url="/media/", media_root=base_dir / "media", extra_settings={})
+        media_url = env.get("MEDIA_URL", "/media/")
+        media_root_env = env.get("MEDIA_ROOT")
+        media_root = Path(media_root_env) if media_root_env else base_dir / "media"
+        return StorageSettings(storages=dict(storages), media_url=media_url, media_root=media_root, extra_settings={})
 
     if backend == "s3":
         bucket = env.get("AWS_STORAGE_BUCKET_NAME")
