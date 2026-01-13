@@ -1,10 +1,7 @@
 import json
-import os
-from datetime import datetime
 
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.core.files.storage import default_storage
 from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -21,8 +18,9 @@ from chateaurose.infrastructure.provider_catalog import (
     DjangoProviderCatalog,
     SALON_LOCATION_LABEL,
 )
-from interface.forms import ServiceRequestForm
+from interface.forms import ProviderBookingRequestForm, ServiceRequestForm
 from interface.models import MarketingService, MarketingZone
+from interface.services import booking_requests
 
 repo = DjangoBookingRepository()
 notifier = NotifierStub()
@@ -32,32 +30,13 @@ provider_catalog = DjangoProviderCatalog()
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
 
 
-def _format_price(cents: int) -> str:
-    euros = cents / 100
-    if cents % 100 == 0:
-        return f"{euros:.0f} €"
-    return f"{euros:.2f} €"
-
-
-def _save_upload(file_obj, prefix: str):
-    if not file_obj:
-        return None
-    filename = file_obj.name
-    return default_storage.save(os.path.join(prefix, filename), file_obj)
-
-
-def _parse_desired_date(raw_value: str | None) -> str | None:
-    if not raw_value:
-        return None
-
-    for date_format in ("%Y-%m-%dT%H:%M", "%d/%m/%Y %H:%M", "%Y-%m-%d"):
-        try:
-            parsed = datetime.strptime(raw_value, date_format)
-            aware_date = timezone.make_aware(parsed)
-            return aware_date.isoformat()
-        except (ValueError, TypeError):
-            continue
-
+def _first_form_error(form: forms.Form) -> str | None:
+    non_field_errors = form.non_field_errors()
+    if non_field_errors:
+        return non_field_errors[0]
+    for field_errors in form.errors.values():
+        if field_errors:
+            return field_errors[0]
     return None
 
 
@@ -113,77 +92,36 @@ def provider_list(request):
 def provider_detail(request, provider_id):
     provider = get_object_or_404(Provider, id=provider_id)
     services = list(Service.objects.filter(provider=provider))
-    pricing_data = {}
-    starting_prices = []
-    for service in services:
-        service.price_display = _format_price(service.base_price_cents)
-        adjustments = service.hair_length_adjustments or {}
-        min_adj = min(adjustments.values()) if adjustments else 0
-        starting_price = service.base_price_cents + min_adj
-        starting_prices.append(starting_price)
-        pricing_data[str(service.id)] = {
-            "base": service.base_price_cents,
-            "lengths": adjustments,
-            "meche_bonus": service.meche_bonus_cents,
-            "starting_from": starting_price,
-        }
+    pricing_data, starting_prices = booking_requests.build_pricing_data(services)
     zones = provider.zones.all()
     message = None
     error = None
     salon_location_label = SALON_LOCATION_LABEL
 
     if request.method == "POST":
-        data = request.POST
-        meche_bool = data.get("meche") == "on"
-        location_choice = data.get("location")
-        location_preference = data.get("location_preference")
-        uploaded_current = request.FILES.get("current_hair_picture_file")
-        desired_date = _parse_desired_date(data.get("desired_date"))
-
-        location = location_choice or ""
-        if provider.location_mode == Provider.LOCATION_MODE_SALON_ONLY:
-            location = SALON_LOCATION_LABEL
-            location_preference = "salon"
-        elif provider.location_mode == Provider.LOCATION_MODE_HYBRID:
-            if location_preference == "salon":
-                location = SALON_LOCATION_LABEL
-            elif location_preference == "domicile" or location_choice:
-                location = location_choice or ""
-                location_preference = location_preference or "domicile"
-            else:
-                error = "Merci de choisir si tu préfères venir au salon ou demander un déplacement."
-        else:
-            location_preference = location_preference or "domicile"
-
-        if not location:
-            error = "Merci de choisir un lieu."
-
-        if not desired_date:
-            error = "Merci d'utiliser une date au format JJ/MM/AAAA HH:MM."
-
-        current_picture = _save_upload(uploaded_current, "bookings/current/") if uploaded_current else None
-        if not current_picture and not error:
-            error = "Merci d'ajouter une photo de tes cheveux."
-
-        inspiration_paths = []
-        for upload in request.FILES.getlist("inspiration_pictures"):
-            saved = _save_upload(upload, "bookings/inspiration/")
-            if saved:
-                inspiration_paths.append(saved)
-
-        if not error:
+        form = ProviderBookingRequestForm(request.POST, request.FILES, provider=provider)
+        if form.is_valid():
+            current_picture = booking_requests.save_current_hair_picture(
+                form.cleaned_data["current_hair_picture_file"]
+            )
+            inspiration_paths = booking_requests.save_inspiration_pictures(
+                form.get_inspiration_files()
+            )
             try:
                 booking = request_haircut.execute(
                     provider_id=str(provider.id),
-                    service_id=data.get("service_id"),
-                    client_contact={"name": data.get("client_name"), "phone": data.get("client_phone")},
-                    location=location,
-                    desired_date=desired_date,
-                    hair_length=data.get("hair_length"),
-                    meche=meche_bool,
+                    service_id=form.cleaned_data.get("service_id"),
+                    client_contact={
+                        "name": form.cleaned_data.get("client_name"),
+                        "phone": form.cleaned_data.get("client_phone"),
+                    },
+                    location=form.cleaned_data.get("location"),
+                    desired_date=form.cleaned_data.get("desired_date"),
+                    hair_length=form.cleaned_data.get("hair_length"),
+                    meche=form.cleaned_data.get("meche", False),
                     current_hair_picture=current_picture,
                     inspiration_pictures=inspiration_paths,
-                    free_text=data.get("free_text", ""),
+                    free_text=form.cleaned_data.get("free_text", ""),
                     booking_repository=repo,
                     provider_catalog=provider_catalog,
                     payment_gateway=payment_gateway,
@@ -194,6 +132,8 @@ def provider_detail(request, provider_id):
                 message = f"Demande envoyée. ID: {booking.id}"
             except DomainError as exc:
                 error = str(exc)
+        else:
+            error = _first_form_error(form)
 
     return render(
         request,
@@ -205,7 +145,9 @@ def provider_detail(request, provider_id):
             "message": message,
             "error": error,
             "pricing_data": json.dumps(pricing_data),
-            "default_starting_price": _format_price(min(starting_prices)) if starting_prices else None,
+            "default_starting_price": (
+                booking_requests.format_price(min(starting_prices)) if starting_prices else None
+            ),
             "salon_location_label": salon_location_label,
         },
     )
