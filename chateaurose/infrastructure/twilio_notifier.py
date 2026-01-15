@@ -34,6 +34,14 @@ class TwilioNotifier:
             return None
 
         raw = str(recipient).strip()
+        provider_phone = (
+            Provider.objects.filter(id=raw).values_list("contact_phone", flat=True).first()
+        )
+        if provider_phone:
+            cleaned = provider_phone.strip()
+            if cleaned:
+                return _ResolvedRecipient(sms=cleaned, whatsapp=f"whatsapp:{cleaned}")
+
         if raw.startswith("whatsapp:"):
             phone = raw.removeprefix("whatsapp:").strip()
             if not phone:
@@ -43,18 +51,7 @@ class TwilioNotifier:
         normalized = raw.replace(" ", "").replace("-", "")
         if normalized.startswith("+") or normalized.isdigit():
             return _ResolvedRecipient(sms=normalized, whatsapp=f"whatsapp:{normalized}")
-
-        provider_phone = (
-            Provider.objects.filter(id=raw).values_list("contact_phone", flat=True).first()
-        )
-        if not provider_phone:
-            return None
-
-        cleaned = provider_phone.strip()
-        if not cleaned:
-            return None
-
-        return _ResolvedRecipient(sms=cleaned, whatsapp=f"whatsapp:{cleaned}")
+        return None
 
 
 class _ResolvedRecipient:
