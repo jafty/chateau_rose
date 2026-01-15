@@ -10,13 +10,13 @@ from booking.models import Booking, Provider
 from chateaurose.domain.exceptions import DomainError
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
-from chateaurose.infrastructure.notifier_stub import NotifierStub
-from chateaurose.infrastructure.payment_stub import PaymentGatewayStub
+from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
+from chateaurose.infrastructure.twilio_notifier import TwilioNotifier
 from providers.forms import ProviderSignupForm
 
 repo = DjangoBookingRepository()
-notifier = NotifierStub()
-payment_gateway = PaymentGatewayStub()
+notifier = TwilioNotifier()
+payment_gateway = StripePaymentGateway()
 
 
 def _parse_price_to_cents(raw_value: str) -> int:

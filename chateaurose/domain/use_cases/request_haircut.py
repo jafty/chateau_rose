@@ -63,7 +63,7 @@ def execute(
 
     booking_id = _generate_id()
     payment_auth_id = payment_gateway.create_auth(
-        amount_cents=1000,
+        amount_cents=estimated_price,
         currency="EUR",
         reference=booking_id,
     )
@@ -115,7 +115,7 @@ def execute(
             body="La demande a expiré faute de confirmation.",
         )
         reminder_gateway.schedule(
-            recipient=client_contact["name"],
+            recipient=client_contact["phone"],
             send_at=created_at + timedelta(hours=48),
             subject="Demande expirée",
             body="Votre demande a expiré faute de confirmation.",
