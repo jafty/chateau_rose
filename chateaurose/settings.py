@@ -159,3 +159,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "/providers/connexion/"
 LOGIN_REDIRECT_URL = "/providers/"
 LOGOUT_REDIRECT_URL = "/"
+
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_PAYMENT_CURRENCY = os.environ.get("STRIPE_PAYMENT_CURRENCY", "EUR")
+STRIPE_CAPTURE_METHOD = os.environ.get("STRIPE_CAPTURE_METHOD", "manual")
+
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
+TWILIO_SMS_FROM = os.environ.get("TWILIO_SMS_FROM", "")
+TWILIO_WHATSAPP_FROM = os.environ.get("TWILIO_WHATSAPP_FROM", "")
+TWILIO_ENABLE_SMS = _get_bool_env("TWILIO_ENABLE_SMS", True)
+TWILIO_ENABLE_WHATSAPP = _get_bool_env("TWILIO_ENABLE_WHATSAPP", False)
