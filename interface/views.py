@@ -15,7 +15,7 @@ from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
 from chateaurose.domain.use_cases import request_haircut, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
-from chateaurose.infrastructure.twilio_notifier import TwilioNotifier
+from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_catalog import (
     DjangoProviderCatalog,
     SALON_LOCATION_LABEL,
@@ -25,7 +25,7 @@ from interface.models import MarketingService, MarketingZone
 from interface.services import booking_requests
 
 repo = DjangoBookingRepository()
-notifier = TwilioNotifier()
+notifier = EmailNotifier()
 payment_gateway = StripePaymentGateway()
 provider_catalog = DjangoProviderCatalog()
 
