@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 from django.conf import settings
 from twilio.rest import Client
 
 from booking.models import Provider
+
+
+logger = logging.getLogger(__name__)
 
 
 class TwilioNotifier:
@@ -17,16 +22,34 @@ class TwilioNotifier:
 
         message_body = f"{subject}\n{body}".strip()
         if settings.TWILIO_ENABLE_SMS and settings.TWILIO_SMS_FROM:
-            self._client.messages.create(
+            message = self._client.messages.create(
                 body=message_body,
                 from_=settings.TWILIO_SMS_FROM,
                 to=resolved.sms,
             )
+            logger.info(
+                "Twilio SMS sent",
+                extra={
+                    "from": settings.TWILIO_SMS_FROM,
+                    "to": resolved.sms,
+                    "sid": getattr(message, "sid", None),
+                    "body": message_body,
+                },
+            )
         if settings.TWILIO_ENABLE_WHATSAPP and settings.TWILIO_WHATSAPP_FROM:
-            self._client.messages.create(
+            message = self._client.messages.create(
                 body=message_body,
                 from_=settings.TWILIO_WHATSAPP_FROM,
                 to=resolved.whatsapp,
+            )
+            logger.info(
+                "Twilio WhatsApp sent",
+                extra={
+                    "from": settings.TWILIO_WHATSAPP_FROM,
+                    "to": resolved.whatsapp,
+                    "sid": getattr(message, "sid", None),
+                    "body": message_body,
+                },
             )
 
     def _resolve_recipient(self, recipient: str) -> _ResolvedRecipient | None:
