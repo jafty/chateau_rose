@@ -49,9 +49,9 @@ class MarketingZoneAdmin(ImportExportModelAdmin):
 
 @admin.register(ServiceRequest)
 class ServiceRequestAdmin(admin.ModelAdmin):
-    list_display = ("marketing_service", "zone", "client_name", "client_phone", "created_at")
+    list_display = ("marketing_service", "zone", "client_name", "client_email", "created_at")
     list_filter = ("marketing_service", "zone")
-    search_fields = ("client_name", "client_phone", "details")
+    search_fields = ("client_name", "client_email", "details")
 
 
 @admin.register(MarketingServiceImage)

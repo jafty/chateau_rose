@@ -38,7 +38,7 @@ class ProviderRequestUploadTests(TestCase):
             data={
                 "service_id": self.service.id,
                 "client_name": "Alice",
-                "client_phone": "0600000000",
+                "client_email": "test@example.com",
                 "location": self.zone.name,
                 "desired_date": "2026-01-01",
                 "hair_length": "medium",
@@ -71,7 +71,7 @@ class ProviderRequestUploadTests(TestCase):
             data={
                 "service_id": self.service.id,
                 "client_name": "Alice",
-                "client_phone": "0600000000",
+                "client_email": "test@example.com",
                 "location_preference": "salon",
                 "desired_date": "2026-01-01T12:00",
                 "hair_length": "medium",

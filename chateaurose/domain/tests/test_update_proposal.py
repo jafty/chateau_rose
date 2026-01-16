@@ -15,7 +15,7 @@ def test_provider_proposes_update_moves_to_pending_client_validation_and_notifie
     notifier = InMemoryNotifier()
 
     provider_id = "provider_1"
-    client = {"name": "Sarah", "phone": "+33600000000"}
+    client = {"name": "Sarah", "email": "sarah@example.com"}
     booking = BookingRequest(
         id="booking_1",
         provider_id=provider_id,
@@ -50,7 +50,7 @@ def test_provider_proposes_update_moves_to_pending_client_validation_and_notifie
 
     assert notifier.messages == [
         {
-            "recipient": client["phone"],
+            "recipient": client["email"],
             "subject": "Proposition de rendez-vous",
             "body": "Une nouvelle proposition est disponible pour votre demande.",
         }
@@ -65,7 +65,7 @@ def test_update_proposal_rejects_wrong_provider():
         id="booking_2",
         provider_id="provider_1",
         service_id="service_tresses",
-        client_contact={"name": "Sarah", "phone": "+33600000000"},
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location="Saint-Cyprien",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
@@ -102,7 +102,7 @@ def test_update_proposal_rejects_terminal_state():
         id="booking_3",
         provider_id="provider_1",
         service_id="service_tresses",
-        client_contact={"name": "Sarah", "phone": "+33600000000"},
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location="Saint-Cyprien",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
@@ -135,7 +135,7 @@ def test_provider_can_send_multiple_proposals_before_terminal():
     notifier = InMemoryNotifier()
 
     provider_id = "provider_1"
-    client = {"name": "Sarah", "phone": "+33600000000"}
+    client = {"name": "Sarah", "email": "sarah@example.com"}
     booking = BookingRequest(
         id="booking_multi",
         provider_id=provider_id,

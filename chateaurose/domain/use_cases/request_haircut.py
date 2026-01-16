@@ -24,6 +24,7 @@ def execute(
     current_hair_picture: str,
     inspiration_pictures: list,
     free_text: str,
+    payment_auth_id: str | None = None,
     booking_repository,
     provider_catalog,
     payment_gateway,
@@ -35,7 +36,7 @@ def execute(
         ("provider_id", provider_id),
         ("service_id", service_id),
         ("client_name", client_contact.get("name")),
-        ("client_phone", client_contact.get("phone")),
+        ("client_email", client_contact.get("email")),
         ("location", location),
         ("desired_date", desired_date),
         ("hair_length", hair_length),
@@ -62,11 +63,12 @@ def execute(
     estimated_price = base_price + length_adj + meche_bonus
 
     booking_id = _generate_id()
-    payment_auth_id = payment_gateway.create_auth(
-        amount_cents=estimated_price,
-        currency="EUR",
-        reference=booking_id,
-    )
+    if not payment_auth_id:
+        payment_auth_id = payment_gateway.create_auth(
+            amount_cents=estimated_price,
+            currency="EUR",
+            reference=booking_id,
+        )
 
     created_at = clock.now()
     booking = BookingRequest(
@@ -96,7 +98,7 @@ def execute(
         f"{client_contact['name']} veut prendre rendez-vous avec vous.",
     )
     notifier.notify(
-        client_contact["phone"],
+        client_contact["email"],
         "Demande envoyée",
         f"{provider_id} a bien reçu votre demande. Vous recevrez un message lorsque le rendez-vous sera confirmé.",
     )
@@ -115,7 +117,7 @@ def execute(
             body="La demande a expiré faute de confirmation.",
         )
         reminder_gateway.schedule(
-            recipient=client_contact["phone"],
+            recipient=client_contact["email"],
             send_at=created_at + timedelta(hours=48),
             subject="Demande expirée",
             body="Votre demande a expiré faute de confirmation.",

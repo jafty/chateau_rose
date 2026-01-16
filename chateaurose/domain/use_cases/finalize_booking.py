@@ -40,7 +40,7 @@ def execute(
                 "Vous avez confirmé le rendez-vous.",
             )
             notifier.notify(
-                booking.client_contact["phone"],
+                booking.client_contact["email"],
                 "Rendez-vous confirmé",
                 "Votre rendez-vous est confirmé.",
             )
@@ -53,7 +53,7 @@ def execute(
                 "Vous avez annulé la demande.",
             )
             notifier.notify(
-                booking.client_contact["phone"],
+                booking.client_contact["email"],
                 "Demande annulée",
                 "Votre demande a été refusée.",
             )
@@ -70,7 +70,7 @@ def execute(
                 "La cliente a accepté la proposition.",
             )
             notifier.notify(
-                booking.client_contact["phone"],
+                booking.client_contact["email"],
                 "Rendez-vous confirmé",
                 "Votre rendez-vous est confirmé.",
             )
@@ -83,7 +83,7 @@ def execute(
                 "La cliente a refusé la proposition.",
             )
             notifier.notify(
-                booking.client_contact["phone"],
+                booking.client_contact["email"],
                 "Demande annulée",
                 "Votre demande a été refusée.",
             )

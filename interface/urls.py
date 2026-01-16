@@ -13,6 +13,11 @@ urlpatterns = [
     path("confidentialite/", views.privacy_policy, name="privacy_policy"),
     path("prestataires/", views.provider_list, name="provider_list"),
     path("prestataires/<int:provider_id>/", views.provider_detail, name="provider_detail"),
+    path(
+        "prestataires/payment-intent/",
+        views.provider_payment_intent,
+        name="provider_payment_intent",
+    ),
     path("mentions-legales-rgpd/", views.legal, name="legal"),
     path("zones/recherche/", views.zone_search, name="zone_search"),
     path("bookings/<str:booking_id>/provider-action/", views.provider_action, name="provider_action"),

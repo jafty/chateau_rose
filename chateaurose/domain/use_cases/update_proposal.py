@@ -27,7 +27,7 @@ def execute(
     booking_repository.update(booking)
 
     notifier.notify(
-        booking.client_contact["phone"],
+        booking.client_contact["email"],
         "Proposition de rendez-vous",
         "Une nouvelle proposition est disponible pour votre demande.",
     )

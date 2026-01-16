@@ -162,7 +162,7 @@ class Booking(models.Model):
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="bookings")
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="bookings")
     client_name = models.CharField(max_length=255)
-    client_phone = models.CharField(max_length=64)
+    client_email = models.EmailField()
     location = models.CharField(max_length=255)
     desired_date = models.CharField(max_length=128)
     hair_length = models.CharField(max_length=64)

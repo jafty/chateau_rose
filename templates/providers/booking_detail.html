@@ -37,7 +37,7 @@
             {% if booking.proposed_price_cents %}
                 <li><strong>Proposition en cours :</strong> {{ booking.proposed_price_cents|cents_to_euros }} le {{ booking.proposed_date }}</li>
             {% endif %}
-            <li><strong>Client :</strong> {{ booking.client_name }} - {{ booking.client_phone }}</li>
+            <li><strong>Client :</strong> {{ booking.client_name }} - {{ booking.client_email }}</li>
         </ul>
 
         <div class="card-grid" style="margin-top:20px;">
