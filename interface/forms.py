@@ -55,7 +55,7 @@ class ServiceRequestForm(forms.ModelForm):
             "location_preference",
             "desired_date",
             "client_name",
-            "client_phone",
+            "client_email",
             "details",
         ]
         widgets = {
@@ -63,7 +63,7 @@ class ServiceRequestForm(forms.ModelForm):
         }
         labels = {
             "client_name": "Ton nom",
-            "client_phone": "Téléphone",
+            "client_email": "Email",
             "details": "Détails ou besoin",
         }
 
@@ -82,7 +82,7 @@ class ServiceRequestForm(forms.ModelForm):
 class ProviderBookingRequestForm(forms.Form):
     service_id = forms.IntegerField(label="Service souhaité")
     client_name = forms.CharField(label="Ton nom")
-    client_phone = forms.CharField(label="Téléphone")
+    client_email = forms.EmailField(label="Email")
     location = forms.CharField(label="Lieu de prestation", required=False)
     location_preference = forms.ChoiceField(
         choices=(("salon", "En salon / chez la pro"), ("domicile", "À domicile")),
@@ -98,9 +98,11 @@ class ProviderBookingRequestForm(forms.Form):
         widget=MultiFileInput(attrs={"multiple": True}),
     )
     free_text = forms.CharField(label="Infos complémentaires", required=False, widget=forms.Textarea)
+    payment_auth_id = forms.CharField(required=False)
 
     def __init__(self, *args, **kwargs):
         self.provider = kwargs.pop("provider", None)
+        self.require_payment_auth = kwargs.pop("require_payment_auth", True)
         super().__init__(*args, **kwargs)
 
     def clean_desired_date(self):
@@ -146,6 +148,11 @@ class ProviderBookingRequestForm(forms.Form):
 
         if not cleaned_data.get("current_hair_picture_file"):
             raise forms.ValidationError("Merci d'ajouter une photo de tes cheveux.")
+
+        if self.require_payment_auth and not cleaned_data.get("payment_auth_id"):
+            raise forms.ValidationError(
+                "Merci d'ajouter une empreinte bancaire pour sécuriser la demande."
+            )
 
         cleaned_data["location"] = location
         cleaned_data["location_preference"] = location_preference

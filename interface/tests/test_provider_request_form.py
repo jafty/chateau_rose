@@ -15,10 +15,11 @@ class ProviderBookingRequestFormTests(TestCase):
             data={
                 "service_id": 1,
                 "client_name": "Alice",
-                "client_phone": "0600000000",
+                "client_email": "test@example.com",
                 "location": self.zone.name,
                 "location_preference": "domicile",
                 "desired_date": "invalid-date",
+                "payment_auth_id": "pi_123",
             },
             files={"current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair")},
             provider=self.provider,
@@ -35,8 +36,9 @@ class ProviderBookingRequestFormTests(TestCase):
             data={
                 "service_id": 1,
                 "client_name": "Alice",
-                "client_phone": "0600000000",
+                "client_email": "test@example.com",
                 "desired_date": "2026-01-01T12:00",
+                "payment_auth_id": "pi_123",
             },
             files={"current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair")},
             provider=self.provider,
@@ -56,9 +58,10 @@ class ProviderBookingRequestFormTests(TestCase):
             data={
                 "service_id": 1,
                 "client_name": "Alice",
-                "client_phone": "0600000000",
+                "client_email": "test@example.com",
                 "location_preference": "domicile",
                 "desired_date": "2026-01-01T12:00",
+                "payment_auth_id": "pi_123",
             },
             files={"current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair")},
             provider=self.provider,
@@ -72,9 +75,10 @@ class ProviderBookingRequestFormTests(TestCase):
             data={
                 "service_id": 1,
                 "client_name": "Alice",
-                "client_phone": "0600000000",
+                "client_email": "test@example.com",
                 "location_preference": "salon",
                 "desired_date": "2026-01-01T12:00",
+                "payment_auth_id": "pi_123",
             },
             provider=self.provider,
         )

@@ -124,7 +124,7 @@ class ServiceRequest(models.Model):
         default=LOCATION_PREFERENCE_CLIENT_HOME,
     )
     client_name = models.CharField(max_length=255)
-    client_phone = models.CharField(max_length=64)
+    client_email = models.EmailField()
     desired_date = models.DateTimeField()
     details = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

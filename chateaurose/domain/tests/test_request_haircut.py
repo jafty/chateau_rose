@@ -48,7 +48,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
     request = request_haircut.execute(
         provider_id=provider_id,
         service_id=service_id,
-        client_contact={"name": "Sarah", "phone": "+33600000000"},
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location=zone,
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
@@ -85,7 +85,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
             "body": "Sarah veut prendre rendez-vous avec vous.",
         },
         {
-            "recipient": "+33600000000",
+            "recipient": "sarah@example.com",
             "subject": "Demande envoyée",
             "body": f"{provider_id} a bien reçu votre demande. Vous recevrez un message lorsque le rendez-vous sera confirmé.",
         },
@@ -125,7 +125,7 @@ def test_request_haircut_generates_readable_id():
     booking = request_haircut.execute(
         provider_id=provider_id,
         service_id=service_id,
-        client_contact={"name": "Sarah", "phone": "+33600000000"},
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location=zone,
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
@@ -171,7 +171,7 @@ def test_request_haircut_rejects_service_not_offered():
         request_haircut.execute(
             provider_id=provider_id,
             service_id=service_id,
-            client_contact={"name": "Sarah", "phone": "+33600000000"},
+            client_contact={"name": "Sarah", "email": "sarah@example.com"},
             location=zone,
             desired_date="2026-01-10T17:00:00Z",
             hair_length="long",
@@ -226,7 +226,7 @@ def test_request_haircut_estimated_price_defaults_to_base_when_no_adjustments():
     request = request_haircut.execute(
         provider_id=provider_id,
         service_id=service_id,
-        client_contact={"name": "Sarah", "phone": "+33600000000"},
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location=zone,
         desired_date="2026-01-10T17:00:00Z",
         hair_length="medium",
@@ -278,7 +278,7 @@ def test_request_haircut_rejects_zone_not_covered():
         request_haircut.execute(
             provider_id=provider_id,
             service_id=service_id,
-            client_contact={"name": "Sarah", "phone": "+33600000000"},
+            client_contact={"name": "Sarah", "email": "sarah@example.com"},
             location="OutOfZone",
             desired_date="2026-01-10T17:00:00Z",
             hair_length="medium",
@@ -334,7 +334,7 @@ def test_salon_only_provider_allows_salon_location_without_zones():
     request = request_haircut.execute(
         provider_id=provider_id,
         service_id=service_id,
-        client_contact={"name": "Sarah", "phone": "+33600000000"},
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location=InMemoryProviderCatalog.SALON_LOCATION_LABEL,
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
@@ -356,8 +356,8 @@ def test_salon_only_provider_allows_salon_location_without_zones():
 @pytest.mark.parametrize(
     "missing_field, payload",
     [
-        ("client_name", {"client_contact": {"name": "", "phone": "+33600000000"}}),
-        ("client_phone", {"client_contact": {"name": "Sarah", "phone": ""}}),
+        ("client_name", {"client_contact": {"name": "", "email": "sarah@example.com"}}),
+        ("client_email", {"client_contact": {"name": "Sarah", "email": ""}}),
         ("location", {"location": ""}),
         ("desired_date", {"desired_date": ""}),
         ("hair_length", {"hair_length": ""}),
@@ -396,7 +396,7 @@ def test_request_haircut_missing_mandatory_fields(missing_field, payload):
     base_kwargs = dict(
         provider_id=provider_id,
         service_id=service_id,
-        client_contact={"name": "Sarah", "phone": "+33600000000"},
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location=zone,
         desired_date="2026-01-10T17:00:00Z",
         hair_length="medium",

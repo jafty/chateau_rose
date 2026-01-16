@@ -100,7 +100,7 @@ class ServicePagesTests(TestCase):
             {
                 "request_service": "1",
                 "client_name": "Client X",
-                "client_phone": "0600000000",
+                "client_email": "test@example.com",
                 "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
                 "desired_date": "2026-01-10T17:00",
                 "details": "Besoin urgent",

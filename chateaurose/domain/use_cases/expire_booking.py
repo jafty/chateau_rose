@@ -31,7 +31,7 @@ def execute(
             "La demande a expiré après 48h sans confirmation.",
         )
         notifier.notify(
-            booking.client_contact["phone"],
+            booking.client_contact["email"],
             "Demande expirée",
             "Votre demande a expiré après 48h sans confirmation.",
         )

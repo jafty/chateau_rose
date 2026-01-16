@@ -1,9 +1,11 @@
 import json
+import uuid
 
 from django import forms
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.conf import settings
 from django.utils import timezone
 
 from booking.models import Provider, Service, Zone
@@ -97,9 +99,16 @@ def provider_detail(request, provider_id):
     message = None
     error = None
     salon_location_label = SALON_LOCATION_LABEL
+    stripe_public_key = settings.STRIPE_PUBLIC_KEY
+    require_payment_auth = bool(stripe_public_key)
 
     if request.method == "POST":
-        form = ProviderBookingRequestForm(request.POST, request.FILES, provider=provider)
+        form = ProviderBookingRequestForm(
+            request.POST,
+            request.FILES,
+            provider=provider,
+            require_payment_auth=require_payment_auth,
+        )
         if form.is_valid():
             current_picture = booking_requests.save_current_hair_picture(
                 form.cleaned_data["current_hair_picture_file"]
@@ -113,7 +122,7 @@ def provider_detail(request, provider_id):
                     service_id=form.cleaned_data.get("service_id"),
                     client_contact={
                         "name": form.cleaned_data.get("client_name"),
-                        "phone": form.cleaned_data.get("client_phone"),
+                        "email": form.cleaned_data.get("client_email"),
                     },
                     location=form.cleaned_data.get("location"),
                     desired_date=form.cleaned_data.get("desired_date"),
@@ -122,6 +131,7 @@ def provider_detail(request, provider_id):
                     current_hair_picture=current_picture,
                     inspiration_pictures=inspiration_paths,
                     free_text=form.cleaned_data.get("free_text", ""),
+                    payment_auth_id=form.cleaned_data.get("payment_auth_id"),
                     booking_repository=repo,
                     provider_catalog=provider_catalog,
                     payment_gateway=payment_gateway,
@@ -149,7 +159,57 @@ def provider_detail(request, provider_id):
                 booking_requests.format_price(min(starting_prices)) if starting_prices else None
             ),
             "salon_location_label": salon_location_label,
+            "stripe_public_key": stripe_public_key,
         },
+    )
+
+
+def provider_payment_intent(request):
+    if request.method != "POST":
+        return HttpResponseBadRequest("Méthode non autorisée")
+
+    if not settings.STRIPE_SECRET_KEY:
+        return JsonResponse({"error": "Paiement indisponible."}, status=400)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (TypeError, json.JSONDecodeError):
+        return HttpResponseBadRequest("Requête invalide")
+
+    provider_id = payload.get("provider_id")
+    service_id = payload.get("service_id")
+    hair_length = payload.get("hair_length")
+    meche = payload.get("meche")
+
+    if not all([provider_id, service_id, hair_length]) or meche is None:
+        return JsonResponse({"error": "Informations manquantes."}, status=400)
+
+    try:
+        service = provider_catalog.get_service(provider_id, service_id)
+    except KeyError:
+        return JsonResponse({"error": "Service non disponible."}, status=400)
+
+    length_adjustments = service.get("hair_length_adjustments", {})
+    if hair_length not in length_adjustments:
+        return JsonResponse({"error": "Longueur de cheveux non supportée."}, status=400)
+
+    base_price = service["base_price_cents"]
+    length_adj = length_adjustments[hair_length]
+    meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
+    estimated_price = base_price + length_adj + meche_bonus
+
+    intent = payment_gateway.create_payment_intent(
+        amount_cents=estimated_price,
+        currency="EUR",
+        reference=f"estimate-{uuid.uuid4().hex[:10]}",
+    )
+
+    return JsonResponse(
+        {
+            "client_secret": intent["client_secret"],
+            "payment_auth_id": intent["id"],
+            "amount_cents": estimated_price,
+        }
     )
 
 
