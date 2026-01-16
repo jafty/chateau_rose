@@ -6,7 +6,7 @@ from django.utils import timezone
 from booking.models import Booking
 from chateaurose.domain.use_cases import send_reminder
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
-from chateaurose.infrastructure.twilio_notifier import TwilioNotifier
+from chateaurose.infrastructure.email_notifier import EmailNotifier
 
 
 class Command(BaseCommand):
@@ -18,7 +18,7 @@ class Command(BaseCommand):
         bookings = Booking.objects.filter(status="SUBMITTED", created_at__lte=threshold)
 
         repository = DjangoBookingRepository()
-        notifier = TwilioNotifier()
+        notifier = EmailNotifier()
 
         for booking in bookings:
             send_reminder.execute(
