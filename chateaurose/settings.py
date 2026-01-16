@@ -170,3 +170,17 @@ TWILIO_SMS_FROM = os.environ.get("TWILIO_SMS_FROM", "")
 TWILIO_WHATSAPP_FROM = os.environ.get("TWILIO_WHATSAPP_FROM", "")
 TWILIO_ENABLE_SMS = _get_bool_env("TWILIO_ENABLE_SMS", True)
 TWILIO_ENABLE_WHATSAPP = _get_bool_env("TWILIO_ENABLE_WHATSAPP", False)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
+    },
+}
