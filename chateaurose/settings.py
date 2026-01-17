@@ -181,6 +181,12 @@ if (
 ):
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+BREVO_API_URL = os.environ.get("BREVO_API_URL", "https://api.brevo.com/v3/smtp/email")
+BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", "")
+BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "")
+BREVO_TIMEOUT_SECONDS = int(os.environ.get("BREVO_TIMEOUT_SECONDS", "10"))
+
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
 TWILIO_SMS_FROM = os.environ.get("TWILIO_SMS_FROM", "")

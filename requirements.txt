@@ -8,3 +8,4 @@ django-storages[boto3,google]>=1.14.3
 django-import-export>=4.0.7
 stripe>=9.7.0
 twilio>=9.4.0
+requests>=2.31.0
