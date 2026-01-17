@@ -19,13 +19,22 @@ class EmailNotifier:
         if not resolved:
             return
 
-        send_mail(
-            subject=subject,
-            message=body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[resolved],
-            fail_silently=False,
-        )
+        try:
+            send_mail(
+                subject=subject,
+                message=body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[resolved],
+                fail_silently=False,
+            )
+        except Exception:
+            logger.warning(
+                "Email notification failed",
+                extra={"to": resolved, "subject": subject},
+                exc_info=True,
+            )
+            return
+
         logger.info(
             "Email notification sent",
             extra={"to": resolved, "subject": subject},
