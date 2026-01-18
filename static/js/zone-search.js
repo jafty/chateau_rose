@@ -50,6 +50,8 @@
         }
 
         select.name = '';
+        select.required = false;
+        select.removeAttribute('required');
         select.hidden = true;
         select.setAttribute('aria-hidden', 'true');
         select.after(wrapper);
