@@ -38,6 +38,9 @@ def _get_bool_env(var_name: str, default: bool = False) -> bool:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = _get_bool_env("DJANGO_DEBUG", True)
+PREPEND_WWW = _get_bool_env("DJANGO_PREPEND_WWW", False)
+CANONICAL_HOST = os.environ.get("DJANGO_CANONICAL_HOST", "")
+CANONICAL_SCHEME = os.environ.get("DJANGO_CANONICAL_SCHEME", "https")
 
 allowed_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS")
 if allowed_hosts:
@@ -69,6 +72,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "chateaurose.middleware.CanonicalHostRedirectMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -90,6 +94,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "chateaurose.context_processors.canonical_url",
             ],
         },
     },
