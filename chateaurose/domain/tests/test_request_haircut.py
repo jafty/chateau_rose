@@ -62,6 +62,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
         notifier=notifier,
         reminder_gateway=reminder_gateway,
         clock=clock,
+        provider_booking_url_base="https://example.com/providers/demandes/",
     )
 
     assert request.status == request_haircut.SUBMITTED
@@ -72,9 +73,9 @@ def test_request_haircut_submitted_with_auth_and_notification():
     assert request.payment_auth_id == "auth_1"
     assert request.created_at == now
 
-    # Payment auth created for €10
+    # Payment auth created for €85
     assert payment_gateway.auth_calls == [
-        {"amount_cents": 1000, "currency": "EUR", "reference": request.id, "id": "auth_1"}
+        {"amount_cents": 8500, "currency": "EUR", "reference": request.id, "id": "auth_1"}
     ]
 
     # Provider and client notified immediately
@@ -82,12 +83,41 @@ def test_request_haircut_submitted_with_auth_and_notification():
         {
             "recipient": provider_id,
             "subject": "Nouvelle demande de coiffure",
-            "body": "Sarah veut prendre rendez-vous avec vous.",
+            "body": "\n".join(
+                [
+                    "Bonne nouvelle ! Tu as une nouvelle demande de coiffure.",
+                    "Client·e : Sarah (sarah@example.com)",
+                    "Prestation : Tresses africaines",
+                    "Date souhaitée : 2026-01-10T17:00:00Z",
+                    "Lieu : Saint-Cyprien",
+                    "Longueur : long",
+                    "Mèches : oui",
+                    f"ID demande : {request.id}",
+                    "Message : Je suis dispo surtout les vendredis soir",
+                    "",
+                    "Pour répondre et proposer un créneau, ouvre la demande :",
+                    f"https://example.com/providers/demandes/{request.id}/",
+                ]
+            ),
         },
         {
             "recipient": "sarah@example.com",
             "subject": "Demande envoyée",
-            "body": f"{provider_id} a bien reçu votre demande. Vous recevrez un message lorsque le rendez-vous sera confirmé.",
+            "body": "\n".join(
+                [
+                    "Merci Sarah ! Ta demande pour Tresses africaines est bien envoyée.",
+                    "On revient vers toi dès que la coiffeuse te propose un créneau.",
+                    "",
+                    "Récapitulatif :",
+                    "- Prestation : Tresses africaines",
+                    "- Date souhaitée : 2026-01-10T17:00:00Z",
+                    "- Lieu : Saint-Cyprien",
+                    "- Longueur : long",
+                    "- Mèches : oui",
+                    f"- ID demande : {request.id}",
+                    "- Ton message : Je suis dispo surtout les vendredis soir",
+                ]
+            ),
         },
     ]
 

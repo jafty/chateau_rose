@@ -116,6 +116,7 @@ def provider_detail(request, provider_id):
             inspiration_paths = booking_requests.save_inspiration_pictures(
                 form.get_inspiration_files()
             )
+            provider_booking_url_base = request.build_absolute_uri("/providers/demandes/")
             try:
                 booking = request_haircut.execute(
                     provider_id=str(provider.id),
@@ -132,6 +133,7 @@ def provider_detail(request, provider_id):
                     inspiration_pictures=inspiration_paths,
                     free_text=form.cleaned_data.get("free_text", ""),
                     payment_auth_id=form.cleaned_data.get("payment_auth_id"),
+                    provider_booking_url_base=provider_booking_url_base,
                     booking_repository=repo,
                     provider_catalog=provider_catalog,
                     payment_gateway=payment_gateway,

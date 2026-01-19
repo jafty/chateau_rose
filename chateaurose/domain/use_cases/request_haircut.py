@@ -25,6 +25,7 @@ def execute(
     inspiration_pictures: list,
     free_text: str,
     payment_auth_id: str | None = None,
+    provider_booking_url_base: str | None = None,
     booking_repository,
     provider_catalog,
     payment_gateway,
@@ -92,15 +93,55 @@ def execute(
 
     booking_repository.add(booking)
 
+    provider_booking_url = None
+    if provider_booking_url_base:
+        provider_booking_url = f"{provider_booking_url_base.rstrip('/')}/{booking_id}/"
+
+    provider_message_lines = [
+        "Bonne nouvelle ! Tu as une nouvelle demande de coiffure.",
+        f"Client·e : {client_contact['name']} ({client_contact['email']})",
+        f"Prestation : {service['name']}",
+        f"Date souhaitée : {desired_date}",
+        f"Lieu : {location}",
+        f"Longueur : {hair_length}",
+        f"Mèches : {'oui' if meche else 'non'}",
+        f"ID demande : {booking_id}",
+    ]
+    if free_text:
+        provider_message_lines.append(f"Message : {free_text}")
+    if provider_booking_url:
+        provider_message_lines.extend(
+            [
+                "",
+                "Pour répondre et proposer un créneau, ouvre la demande :",
+                provider_booking_url,
+            ]
+        )
+
+    client_message_lines = [
+        f"Merci {client_contact['name']} ! Ta demande pour {service['name']} est bien envoyée.",
+        "On revient vers toi dès que la coiffeuse te propose un créneau.",
+        "",
+        "Récapitulatif :",
+        f"- Prestation : {service['name']}",
+        f"- Date souhaitée : {desired_date}",
+        f"- Lieu : {location}",
+        f"- Longueur : {hair_length}",
+        f"- Mèches : {'oui' if meche else 'non'}",
+        f"- ID demande : {booking_id}",
+    ]
+    if free_text:
+        client_message_lines.append(f"- Ton message : {free_text}")
+
     notifier.notify(
         provider_id,
         "Nouvelle demande de coiffure",
-        f"{client_contact['name']} veut prendre rendez-vous avec vous.",
+        "\n".join(provider_message_lines),
     )
     notifier.notify(
         client_contact["email"],
         "Demande envoyée",
-        f"{provider_id} a bien reçu votre demande. Vous recevrez un message lorsque le rendez-vous sera confirmé.",
+        "\n".join(client_message_lines),
     )
 
     if reminder_gateway:
