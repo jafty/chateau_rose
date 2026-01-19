@@ -32,6 +32,8 @@ Ce guide explique comment conteneuriser le projet Django `chateaurose` et le dé
 - `DJANGO_DEBUG=False`
 - `DJANGO_ALLOWED_HOSTS=*` (ou votre domaine Railway spécifique)
 - `PORT=8000` (Railway fournit généralement `PORT`, mais le définir explicitement reste sûr).
+- `DJANGO_CANONICAL_HOST=www.chateau-rose.fr` (force un 301 vers le domaine canonique)
+- `DJANGO_CANONICAL_SCHEME=https` (utilisé pour l'URL canonique + redirection)
 
 ### Depuis l'interface Railway
 1. Créez un nouveau projet Railway et liez-le à votre dépôt.
@@ -55,3 +57,4 @@ railway up
 - **Base de données** : la configuration par défaut utilise SQLite. Pour Railway, préférez un add-on Postgres et ajustez `DATABASES` dans `chateaurose/settings.py` (non inclus par défaut).
 - **Fichiers statiques** : `STATIC_ROOT` pointe vers `staticfiles`. Exécutez `python manage.py collectstatic` lors d'un déploiement de production si nécessaire.
 - **Allowed hosts** : alimentez `DJANGO_ALLOWED_HOSTS` avec votre domaine (séparé par des virgules). Pour un test rapide, `localhost,127.0.0.1` suffit.
+- **Redirection du domaine Railway** : si vous gardez le domaine public Railway, activez `DJANGO_CANONICAL_HOST` pour renvoyer un 301 vers `www.chateau-rose.fr`. Sinon, vous pouvez supprimer/désactiver ce domaine dans l'onglet Domains de Railway pour éviter tout doublon SEO.
