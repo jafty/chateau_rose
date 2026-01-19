@@ -57,13 +57,16 @@ class TwilioNotifier:
             return None
 
         raw = str(recipient).strip()
-        provider_phone = (
-            Provider.objects.filter(id=raw).values_list("contact_phone", flat=True).first()
-        )
-        if provider_phone:
-            cleaned = provider_phone.strip()
-            if cleaned:
-                return _ResolvedRecipient(sms=cleaned, whatsapp=f"whatsapp:{cleaned}")
+        if raw.isdigit():
+            provider_phone = (
+                Provider.objects.filter(id=raw)
+                .values_list("contact_phone", flat=True)
+                .first()
+            )
+            if provider_phone:
+                cleaned = provider_phone.strip()
+                if cleaned:
+                    return _ResolvedRecipient(sms=cleaned, whatsapp=f"whatsapp:{cleaned}")
 
         if raw.startswith("whatsapp:"):
             phone = raw.removeprefix("whatsapp:").strip()
