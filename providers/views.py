@@ -10,12 +10,12 @@ from booking.models import Booking, Provider
 from chateaurose.domain.exceptions import DomainError
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
+from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
-from chateaurose.infrastructure.twilio_notifier import TwilioNotifier
 from providers.forms import ProviderSignupForm
 
 repo = DjangoBookingRepository()
-notifier = TwilioNotifier()
+notifier = EmailNotifier()
 payment_gateway = StripePaymentGateway()
 
 
