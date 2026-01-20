@@ -1,6 +1,9 @@
 import os
+from io import BytesIO
 
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from PIL import Image, ImageOps
 
 
 def format_price(cents: int) -> str:
@@ -28,11 +31,29 @@ def build_pricing_data(services):
     return pricing_data, starting_prices
 
 
+def _compress_image(file_obj, max_px: int = 700, quality: int = 80):
+    try:
+        file_obj.seek(0)
+        with Image.open(file_obj) as image:
+            image = ImageOps.exif_transpose(image)
+            image = image.convert("RGB")
+            image.thumbnail((max_px, max_px), Image.LANCZOS)
+            buffer = BytesIO()
+            image.save(buffer, format="JPEG", quality=quality, optimize=True)
+        return ContentFile(buffer.getvalue()), ".jpg"
+    except Exception:
+        file_obj.seek(0)
+        return file_obj, os.path.splitext(file_obj.name)[1]
+
+
 def save_upload(file_obj, prefix: str):
     if not file_obj:
         return None
-    filename = file_obj.name
-    return default_storage.save(os.path.join(prefix, filename), file_obj)
+    compressed, extension = _compress_image(file_obj)
+    original_name = os.path.basename(file_obj.name)
+    base_name, _ = os.path.splitext(original_name)
+    filename = f"{base_name}{extension or ''}"
+    return default_storage.save(os.path.join(prefix, filename), compressed)
 
 
 def save_current_hair_picture(file_obj):
