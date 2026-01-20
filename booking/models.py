@@ -5,6 +5,23 @@ from django.core.files.storage import default_storage
 from django.db import models
 
 from interface.validators import validate_absolute_or_root_relative_url
+from interface.services.image_processing import compress_image_field
+
+
+def _should_compress_image(instance: models.Model, field_name: str) -> bool:
+    image_field = getattr(instance, field_name)
+    if not image_field:
+        return False
+    if not instance.pk:
+        return True
+    try:
+        previous = type(instance).objects.get(pk=instance.pk)
+    except type(instance).DoesNotExist:
+        return True
+    previous_field = getattr(previous, field_name)
+    if not previous_field:
+        return True
+    return image_field.name != previous_field.name
 
 
 class Provider(models.Model):
@@ -69,6 +86,11 @@ class Provider(models.Model):
     def location_mode_label(self):
         return dict(self.LOCATION_MODE_CHOICES).get(self.location_mode, "")
 
+    def save(self, *args, **kwargs):
+        if _should_compress_image(self, "profile_image"):
+            compress_image_field(self.profile_image, max_px=1200, quality=80)
+        return super().save(*args, **kwargs)
+
 
 class Zone(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -120,6 +142,11 @@ class ProviderPhoto(models.Model):
         if self.image:
             return self.image.url
         return self.image_url or None
+
+    def save(self, *args, **kwargs):
+        if _should_compress_image(self, "image"):
+            compress_image_field(self.image, max_px=900, quality=80)
+        return super().save(*args, **kwargs)
 
 
 class ProviderZone(models.Model):
