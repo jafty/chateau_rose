@@ -19,7 +19,7 @@ from interface.models import (
 class MarketingServiceImageInline(admin.TabularInline):
     model = MarketingServiceImage
     extra = 1
-    fields = (("image", "image_url"), "caption", "order")
+    fields = ("image", "caption", "order")
 
 
 @admin.register(MarketingService)
@@ -29,7 +29,7 @@ class MarketingServiceAdmin(ImportExportModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     fieldsets = (
         (None, {"fields": ("name", "slug", "intro", "highlights", "meta_description")}),
-        ("Image", {"fields": (("main_image", "main_image_url"),)}),
+        ("Image", {"fields": ("main_image",)}),
     )
     inlines = [MarketingServiceImageInline]
     resource_class = MarketingServiceResource
@@ -42,7 +42,7 @@ class MarketingZoneAdmin(ImportExportModelAdmin):
     autocomplete_fields = ("zone",)
     fieldsets = (
         (None, {"fields": ("zone", "intro", "highlights", "meta_description")}),
-        ("Image", {"fields": (("hero_image", "hero_image_url"),)}),
+        ("Image", {"fields": ("hero_image",)}),
     )
     resource_class = MarketingZoneResource
 
