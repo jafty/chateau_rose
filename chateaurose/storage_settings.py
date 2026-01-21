@@ -46,9 +46,15 @@ def build_storage_settings(env: Mapping[str, str], base_dir: Path) -> StorageSet
             "AWS_S3_CACHE_CONTROL",
             "max-age=31536000, s-maxage=31536000, immutable",
         )
+        querystring_auth = env.get("AWS_QUERYSTRING_AUTH")
+        if querystring_auth is None:
+            querystring_auth_value = False
+        else:
+            querystring_auth_value = querystring_auth.strip().lower() in {"1", "true", "yes", "on"}
         extra_settings = {
             "AWS_STORAGE_BUCKET_NAME": bucket,
             "AWS_S3_OBJECT_PARAMETERS": {"CacheControl": cache_control},
+            "AWS_QUERYSTRING_AUTH": querystring_auth_value,
         }
         if region:
             extra_settings["AWS_S3_REGION_NAME"] = region

@@ -23,22 +23,22 @@
                 <a class="polaroid" href="{% url 'interface:service_page' service.slug %}">
                     {% if service.resolved_main_image %}
                         {% if forloop.first %}
-                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}" loading="eager" fetchpriority="high" decoding="async">
+                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}" width="320" height="320" loading="eager" fetchpriority="high" decoding="async">
                         {% else %}
-                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}" loading="lazy" decoding="async">
+                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}" width="320" height="320" loading="lazy" decoding="async">
                         {% endif %}
                     {% else %}
                         {% if forloop.first %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}" loading="eager" fetchpriority="high" decoding="async">
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}" width="320" height="320" loading="eager" fetchpriority="high" decoding="async">
                         {% else %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}" loading="lazy" decoding="async">
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}" width="320" height="320" loading="lazy" decoding="async">
                         {% endif %}
                     {% endif %}
                     <span class="accent-underline">{{ service.name }}</span>
                 </a>
             {% empty %}
                 <div class="polaroid" aria-hidden="true">
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure afro" loading="lazy" decoding="async">
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure afro" width="320" height="320" loading="lazy" decoding="async">
                     <span class="accent-underline">Coiffures d'exception</span>
                 </div>
             {% endfor %}
@@ -82,9 +82,9 @@
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                 <div class="provider-header">
                     {% if provider.resolved_profile_image %}
-                        <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}" loading="lazy" decoding="async">
+                        <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}" width="300" height="320" loading="lazy" decoding="async">
                     {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro" loading="lazy" decoding="async">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro" width="300" height="320" loading="lazy" decoding="async">
                     {% endif %}
                 </div>
                 <div class="provider-body">
@@ -116,9 +116,9 @@
                 <article class="service-card-full">
                     <div class="service-card-img">
                     {% if service.resolved_main_image %}
-                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
+                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" width="300" height="240" loading="lazy" decoding="async">
                     {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" width="300" height="240" loading="lazy" decoding="async">
                     {% endif %}
                     </div>
                     <div class="service-card-body">
@@ -138,9 +138,9 @@
                 <article class="gallery-item">
                     <div class="gallery-img">
                         {% if photo and photo.resolved_url %}
-                            <img src="{{ photo.resolved_url }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async">
+                            <img src="{{ photo.resolved_url }}" alt="Réalisations de {{ provider.name }}" width="300" height="320" loading="lazy" decoding="async">
                         {% else %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure afro" loading="lazy" decoding="async">
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure afro" width="300" height="320" loading="lazy" decoding="async">
                         {% endif %}
                     </div>
                     <p class="gallery-caption">{{ provider.name }}</p>
