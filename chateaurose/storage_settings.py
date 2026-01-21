@@ -42,8 +42,13 @@ def build_storage_settings(env: Mapping[str, str], base_dir: Path) -> StorageSet
             else:
                 media_url = f"https://{bucket}.s3.amazonaws.com/"
 
+        cache_control = env.get(
+            "AWS_S3_CACHE_CONTROL",
+            "max-age=31536000, s-maxage=31536000, immutable",
+        )
         extra_settings = {
             "AWS_STORAGE_BUCKET_NAME": bucket,
+            "AWS_S3_OBJECT_PARAMETERS": {"CacheControl": cache_control},
         }
         if region:
             extra_settings["AWS_S3_REGION_NAME"] = region

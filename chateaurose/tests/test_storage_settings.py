@@ -38,6 +38,10 @@ def test_s3_storage_with_custom_domain(base_dir: Path):
     assert settings.storages["default"]["BACKEND"] == "storages.backends.s3boto3.S3Boto3Storage"
     assert settings.media_url == "https://cdn.example.com/"
     assert settings.extra_settings["AWS_STORAGE_BUCKET_NAME"] == "demo-bucket"
+    assert (
+        settings.extra_settings["AWS_S3_OBJECT_PARAMETERS"]["CacheControl"]
+        == "max-age=31536000, s-maxage=31536000, immutable"
+    )
     assert settings.extra_settings["AWS_S3_REGION_NAME"] == "eu-west-3"
     assert settings.extra_settings["AWS_S3_CUSTOM_DOMAIN"] == "cdn.example.com"
     assert settings.media_root is None
