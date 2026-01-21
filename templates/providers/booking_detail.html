@@ -46,12 +46,12 @@
                 <div class="photo-grid">
                     {% if booking.resolved_current_hair_picture %}
                         <div class="profile-photo-frame" style="min-height:200px;">
-                            <img src="{{ booking.resolved_current_hair_picture }}" alt="Cheveux actuels" />
+                            <img src="{{ booking.resolved_current_hair_picture }}" alt="Cheveux actuels" loading="lazy" decoding="async" />
                         </div>
                     {% endif %}
                     {% for picture in booking.resolved_inspiration_pictures %}
                         <div class="profile-photo-frame" style="min-height:200px;">
-                            <img src="{{ picture }}" alt="Inspiration coiffure" />
+                            <img src="{{ picture }}" alt="Inspiration coiffure" loading="lazy" decoding="async" />
                         </div>
                     {% empty %}
                         <p class="meta-line">Pas d'inspiration fournie.</p>

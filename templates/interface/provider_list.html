@@ -22,7 +22,7 @@
             </div>
         </div>
         <div class="hero-media about-visual" style="transform: rotate(1deg);">
-            <img src="{% static 'demo_pictures/tressage_chambre.png' %}" alt="Prestataires coiffure afro">
+            <img src="{% static 'demo_pictures/tressage_chambre.png' %}" alt="Prestataires coiffure afro" loading="lazy" decoding="async">
         </div>
     </div>
 </section>
@@ -53,9 +53,9 @@
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                 <div class="provider-header">
                     {% if provider.resolved_profile_image %}
-                        <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}">
+                        <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}" loading="lazy" decoding="async">
                     {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Profil prestataire coiffure afro">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Profil prestataire coiffure afro" loading="lazy" decoding="async">
                     {% endif %}
                     <span class="provider-rating">Disponible</span>
                 </div>

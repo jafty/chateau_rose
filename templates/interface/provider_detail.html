@@ -15,9 +15,9 @@
         <aside class="provider-sidebar">
             <div class="profile-photo-frame">
                 {% if provider.resolved_profile_image %}
-                    <img src="{{ provider.resolved_profile_image }}" alt="Photo de {{ provider.name }}">
+                    <img src="{{ provider.resolved_profile_image }}" alt="Photo de {{ provider.name }}" loading="lazy" decoding="async">
                 {% else %}
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portrait prestataire coiffure afro">
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portrait prestataire coiffure afro" loading="lazy" decoding="async">
                 {% endif %}
                 <div class="provider-tag-cloud">
                     {% for service in provider.marketing_services.all|slice:":6" %}
@@ -66,15 +66,15 @@
                         <div class="photo-grid">
                             {% for photo in provider.photos.all %}
                                 {% if photo.resolved_url %}
-                                    <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}">
+                                    <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="lazy" decoding="async">
                                 {% endif %}
                             {% endfor %}
                         </div>
                     {% else %}
                         <div class="photo-grid">
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Inspiration coiffure afro">
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses et coiffures afro">
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure protectrice afro">
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Inspiration coiffure afro" loading="lazy" decoding="async">
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses et coiffures afro" loading="lazy" decoding="async">
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure protectrice afro" loading="lazy" decoding="async">
                         </div>
                     {% endif %}
                 </div>
