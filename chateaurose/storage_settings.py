@@ -48,7 +48,7 @@ def build_storage_settings(env: Mapping[str, str], base_dir: Path) -> StorageSet
         )
         querystring_auth = env.get("AWS_QUERYSTRING_AUTH")
         if querystring_auth is None:
-            querystring_auth_value = False
+            querystring_auth_value = True
         else:
             querystring_auth_value = querystring_auth.strip().lower() in {"1", "true", "yes", "on"}
         extra_settings = {
