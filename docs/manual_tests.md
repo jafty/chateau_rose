@@ -11,7 +11,7 @@ Ce document couvre les tests manuels pour les fonctionnalités déjà livrées (
 1. **Navigation principale et footer**
    - Ouvrir la page d'accueil.
    - Vérifier que les liens de la barre de navigation pointent vers Accueil, À propos, Prestataires, Services et l'ancre "Je cale un RDV rapide".
-   - Faire défiler jusqu'au footer : cliquer sur le lien **Espace prestataire** et confirmer l'accès à `/providers/` (la page doit charger sans erreur).
+   - Faire défiler jusqu'au footer : cliquer sur le lien **Espace prestataire** et confirmer l'accès à `/espace_pro/` (la page doit charger sans erreur).
 
 2. **Demande rapide (formulaire d'accueil)**
    - Depuis l'ancre "Je cale un RDV rapide", renseigner un service, une date, un nom, un téléphone et des précisions.
@@ -36,11 +36,11 @@ Ce document couvre les tests manuels pour les fonctionnalités déjà livrées (
 
 ## Parcours prestataire
 1. **Connexion**
-   - Depuis le footer ou directement `/providers/connexion/`, saisir les identifiants prestataire valides.
-   - Attendu : redirection vers `/providers/` sans message d'erreur.
+   - Depuis le footer ou directement `/espace_pro/connexion/`, saisir les identifiants prestataire valides.
+   - Attendu : redirection vers `/espace_pro/` sans message d'erreur.
 
 2. **Tableau de bord**
-   - Sur `/providers/`, vérifier l'affichage du tableau des demandes (client, service, date, lieu, statut).
+   - Sur `/espace_pro/`, vérifier l'affichage du tableau des demandes (client, service, date, lieu, statut).
    - Cliquer sur "Se déconnecter" et confirmer le retour à la page d'accueil.
 
 ## Points de non-couverture (vérifier l'absence plutôt que le fonctionnement)

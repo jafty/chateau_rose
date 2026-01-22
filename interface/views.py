@@ -116,7 +116,7 @@ def provider_detail(request, provider_id):
             inspiration_paths = booking_requests.save_inspiration_pictures(
                 form.get_inspiration_files()
             )
-            provider_booking_url_base = request.build_absolute_uri("/providers/demandes/")
+            provider_booking_url_base = request.build_absolute_uri("/espace_pro/demandes/")
             try:
                 booking = request_haircut.execute(
                     provider_id=str(provider.id),

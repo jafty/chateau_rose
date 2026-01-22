@@ -25,7 +25,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("interface.urls")),
     path("booking/", include("booking.urls")),
-    path("providers/", include("providers.urls")),
+    path("espace_pro/", include("providers.urls")),
 ]
 
 if settings.DEBUG:

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 
 from chateaurose.domain.entities.booking import BookingRequest
-from chateaurose.domain.exceptions import InvalidState, PermissionError
+from chateaurose.domain.exceptions import InvalidState, PermissionError, ValidationError
 from chateaurose.domain.tests.stubs.booking_repository import InMemoryBookingRepository
 from chateaurose.domain.tests.stubs.notifier import InMemoryNotifier
 from chateaurose.domain.tests.stubs.provider_catalog import InMemoryProviderCatalog
@@ -177,3 +177,111 @@ def test_provider_can_send_multiple_proposals_before_terminal():
     assert second.proposed_date == "2026-01-12T19:00:00Z"
     # two notifications, one per proposal
     assert len(notifier.messages) == 2
+
+
+def test_provider_can_update_only_price_without_changing_date():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+
+    booking = BookingRequest(
+        id="booking_price_only",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Saint-Cyprien",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        payment_auth_id="auth_price_only",
+        status="SUBMITTED",
+        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+        proposed_date="2026-01-11T18:00:00Z",
+    )
+    repo.add(booking)
+
+    updated = update_proposal.execute(
+        booking_id="booking_price_only",
+        provider_id="provider_1",
+        new_price_cents=9200,
+        new_date=None,
+        booking_repository=repo,
+        notifier=notifier,
+    )
+
+    assert updated.proposed_price_cents == 9200
+    assert updated.proposed_date == "2026-01-11T18:00:00Z"
+
+
+def test_provider_can_update_only_date_without_changing_price():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+
+    booking = BookingRequest(
+        id="booking_date_only",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Saint-Cyprien",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        payment_auth_id="auth_date_only",
+        status="SUBMITTED",
+        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+        proposed_price_cents=9000,
+    )
+    repo.add(booking)
+
+    updated = update_proposal.execute(
+        booking_id="booking_date_only",
+        provider_id="provider_1",
+        new_price_cents=None,
+        new_date="2026-01-13T12:30:00Z",
+        booking_repository=repo,
+        notifier=notifier,
+    )
+
+    assert updated.proposed_price_cents == 9000
+    assert updated.proposed_date == "2026-01-13T12:30:00Z"
+
+
+def test_update_proposal_requires_price_or_date():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+
+    booking = BookingRequest(
+        id="booking_empty",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Saint-Cyprien",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        payment_auth_id="auth_empty",
+        status="SUBMITTED",
+        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+    )
+    repo.add(booking)
+
+    with pytest.raises(ValidationError):
+        update_proposal.execute(
+            booking_id="booking_empty",
+            provider_id="provider_1",
+            new_price_cents=None,
+            new_date=None,
+            booking_repository=repo,
+            notifier=notifier,
+        )
