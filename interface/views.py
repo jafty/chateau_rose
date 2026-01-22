@@ -7,6 +7,7 @@ from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden, 
 from django.shortcuts import get_object_or_404, redirect, render
 from django.conf import settings
 from django.utils import timezone
+from django.urls import reverse
 
 from booking.models import Provider, Service, Zone
 from chateaurose.domain.exceptions import DomainError
@@ -116,7 +117,10 @@ def provider_detail(request, provider_id):
             inspiration_paths = booking_requests.save_inspiration_pictures(
                 form.get_inspiration_files()
             )
-            provider_booking_url_base = request.build_absolute_uri("/espace_pro/demandes/")
+            booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
+            provider_booking_url_base = request.build_absolute_uri(
+                booking_detail_path.replace("BOOKING_ID/", "")
+            )
             try:
                 booking = request_haircut.execute(
                     provider_id=str(provider.id),
