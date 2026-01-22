@@ -80,6 +80,46 @@ class ProviderDashboardTests(TestCase):
         self.assertEqual(booking.proposed_price_cents, 7200)
         self.assertEqual(booking.proposed_date, "2026-02-01T10:00")
 
+    def test_provider_can_propose_only_price(self):
+        booking = self._create_booking()
+        detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
+
+        response = self.client.post(
+            detail_url,
+            {
+                "action": "propose",
+                "proposed_price_euros": "80",
+                "proposed_date": "",
+            },
+            follow=True,
+        )
+
+        booking.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(booking.status, "PENDING_CLIENT_VALIDATION")
+        self.assertEqual(booking.proposed_price_cents, 8000)
+        self.assertIsNone(booking.proposed_date)
+
+    def test_provider_can_propose_only_date(self):
+        booking = self._create_booking()
+        detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
+
+        response = self.client.post(
+            detail_url,
+            {
+                "action": "propose",
+                "proposed_price_euros": "",
+                "proposed_date": "2026-02-05T11:30",
+            },
+            follow=True,
+        )
+
+        booking.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(booking.status, "PENDING_CLIENT_VALIDATION")
+        self.assertIsNone(booking.proposed_price_cents)
+        self.assertEqual(booking.proposed_date, "2026-02-05T11:30")
+
     def test_booking_detail_shows_photos_and_prices_in_euros(self):
         booking = self._create_booking()
         booking.inspiration_pictures = ["/media/inspo1.jpg", "/media/inspo2.jpg"]

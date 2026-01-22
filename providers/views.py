@@ -19,11 +19,13 @@ notifier = EmailNotifier()
 payment_gateway = StripePaymentGateway()
 
 
-def _parse_price_to_cents(raw_value: str) -> int:
+def _parse_price_to_cents(raw_value: str | None) -> int | None:
     if raw_value is None:
-        raise DomainError("Le tarif proposé doit être renseigné.")
+        return None
 
-    normalized = raw_value.replace(",", ".")
+    normalized = raw_value.replace(",", ".").strip()
+    if not normalized:
+        return None
     try:
         euros = Decimal(normalized)
     except (InvalidOperation, TypeError):
@@ -81,7 +83,8 @@ def booking_detail(request, booking_id):
                 price_cents = _parse_price_to_cents(
                     request.POST.get("proposed_price_euros")
                 )
-                proposed_date = request.POST.get("proposed_date")
+                raw_date = request.POST.get("proposed_date", "")
+                proposed_date = raw_date.strip() or None
                 update_proposal.execute(
                     booking_id=booking.booking_id,
                     provider_id=provider.id,

@@ -4,7 +4,7 @@
 
 {% block content %}
 <section class="container page-hero">
-    <div class="paper-card" style="max-width:720px;">
+    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
         <span class="pill">Prestataire</span>
         <h1 style="margin: 12px 0 10px;">Créer ton compte</h1>
         <p class="lead">Renseigne tes coordonnées pour accéder à ton espace et gérer les demandes qui te sont envoyées.</p>
@@ -12,7 +12,7 @@
 </section>
 
 <section class="container" style="padding-bottom:60px;">
-    <div class="paper-card" style="max-width:720px;">
+    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
         <form method="post">
             {% csrf_token %}
             {% for field in form %}

@@ -4,7 +4,7 @@
 
 {% block content %}
 <section class="container page-hero">
-    <div class="paper-card" style="max-width:860px;">
+    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
         <span class="pill">Espace prestataire</span>
         <h1 style="margin: 12px 0 10px;">Bienvenue {{ provider.name }}</h1>
         <p class="lead">Cet espace privé est relié à ton compte : seul(e) toi peux y accéder avec tes identifiants.</p>
@@ -19,7 +19,7 @@
 </section>
 
 <section class="container" style="padding-bottom:60px;">
-    <div class="paper-card">
+    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
         <h3 class="section-title provider-section-title">Dernières demandes reçues</h3>
         {% if bookings %}
             <div class="table-wrapper">

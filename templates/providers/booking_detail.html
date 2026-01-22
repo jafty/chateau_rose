@@ -5,7 +5,7 @@
 
 {% block content %}
 <section class="container page-hero">
-    <div class="paper-card" style="max-width:860px;">
+    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
         <span class="pill">Détail de la demande</span>
         <h1 style="margin: 12px 0 10px;">{{ booking.service.name }} pour {{ booking.client_name }}</h1>
         <p class="lead">ID court : <strong>{{ booking.booking_id }}</strong></p>
@@ -20,7 +20,7 @@
 </section>
 
 <section class="container" style="padding-bottom:60px;">
-    <div class="paper-card">
+    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
         {% if message %}
             <div class="alert success">{{ message }}</div>
         {% endif %}
@@ -34,8 +34,17 @@
             <li><strong>Lieu :</strong> {{ booking.location }}</li>
             <li><strong>Cheveux :</strong> {{ booking.hair_length }} {% if booking.meche %}(avec mèche){% endif %}</li>
             <li><strong>Estimation :</strong> {{ booking.estimated_price_cents|cents_to_euros }}</li>
-            {% if booking.proposed_price_cents %}
-                <li><strong>Proposition en cours :</strong> {{ booking.proposed_price_cents|cents_to_euros }} le {{ booking.proposed_date }}</li>
+            {% if booking.proposed_price_cents or booking.proposed_date %}
+                <li>
+                    <strong>Proposition en cours :</strong>
+                    {% if booking.proposed_price_cents %}
+                        {{ booking.proposed_price_cents|cents_to_euros }}
+                    {% endif %}
+                    {% if booking.proposed_date %}
+                        {% if booking.proposed_price_cents %} le {% endif %}
+                        {{ booking.proposed_date }}
+                    {% endif %}
+                </li>
             {% endif %}
             <li><strong>Client :</strong> {{ booking.client_name }} - {{ booking.client_email }}</li>
         </ul>
@@ -63,16 +72,25 @@
         <div class="card-grid" style="margin-top:20px;">
             <div class="paper-card">
                 <h4>Envoyer une nouvelle proposition</h4>
-                <form method="post">
+                <p class="meta-line">Tu peux ajuster le tarif, la date, ou les deux.</p>
+                <form method="post" class="provider-form-grid">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="propose" />
-                    <div class="form-group">
+                    <div class="form-field">
                         <label for="price">Tarif proposé (€)</label>
-                        <input id="price" type="number" name="proposed_price_euros" min="0" step="0.01" required />
+                        <input id="price" type="number" name="proposed_price_euros" min="0" step="0.01" inputmode="decimal" />
+                        <small class="field-hint">Laisse vide si tu ne modifies pas le tarif.</small>
                     </div>
-                    <div class="form-group">
+                    <div class="form-field">
                         <label for="proposed_date">Date proposée</label>
-                        <input id="proposed_date" type="text" name="proposed_date" placeholder="2026-02-01T10:00" required />
+                        <input
+                            id="proposed_date"
+                            type="datetime-local"
+                            name="proposed_date"
+                            inputmode="numeric"
+                            placeholder="JJ/MM/AAAA HH:MM"
+                        />
+                        <small class="field-hint">Choisis un créneau si tu ne modifies pas le prix.</small>
                     </div>
                     <button class="btn primary" type="submit">Envoyer au client</button>
                 </form>

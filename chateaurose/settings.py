@@ -161,8 +161,8 @@ for key, value in storage_settings.extra_settings.items():
     globals()[key] = value
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-LOGIN_URL = "/providers/connexion/"
-LOGIN_REDIRECT_URL = "/providers/"
+LOGIN_URL = "/espace_pro/connexion/"
+LOGIN_REDIRECT_URL = "/espace_pro/"
 LOGOUT_REDIRECT_URL = "/"
 
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")

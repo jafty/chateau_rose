@@ -62,7 +62,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
         notifier=notifier,
         reminder_gateway=reminder_gateway,
         clock=clock,
-        provider_booking_url_base="https://example.com/providers/demandes/",
+        provider_booking_url_base="https://example.com/espace_pro/demandes/",
     )
 
     assert request.status == request_haircut.SUBMITTED
@@ -96,7 +96,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
                     "Message : Je suis dispo surtout les vendredis soir",
                     "",
                     "Pour répondre et proposer un créneau, ouvre la demande :",
-                    f"https://example.com/providers/demandes/{request.id}/",
+                    f"https://example.com/espace_pro/demandes/{request.id}/",
                 ]
             ),
         },
