@@ -7,7 +7,11 @@ from interface.forms import ProviderBookingRequestForm
 
 class ProviderBookingRequestFormTests(TestCase):
     def setUp(self):
-        self.provider = Provider.objects.create(name="Divine")
+        self.provider = Provider.objects.create(
+            name="Divine",
+            salon_zone="Paris 10e",
+            salon_address="12 rue des Fleurs, 75010 Paris",
+        )
         self.zone = Zone.objects.create(name="Toulouse", slug="toulouse")
 
     def test_invalid_date_format_returns_error(self):
@@ -18,6 +22,7 @@ class ProviderBookingRequestFormTests(TestCase):
                 "client_email": "test@example.com",
                 "location": self.zone.name,
                 "location_preference": "domicile",
+                "client_address": "5 place du Capitole, 31000 Toulouse",
                 "desired_date": "invalid-date",
                 "payment_auth_id": "pi_123",
             },
@@ -60,6 +65,7 @@ class ProviderBookingRequestFormTests(TestCase):
                 "client_name": "Alice",
                 "client_email": "test@example.com",
                 "location_preference": "domicile",
+                "client_address": "5 place du Capitole, 31000 Toulouse",
                 "desired_date": "2026-01-01T12:00",
                 "payment_auth_id": "pi_123",
             },

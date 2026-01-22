@@ -6,20 +6,37 @@ from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.tests.stubs.booking_repository import InMemoryBookingRepository
 from chateaurose.domain.tests.stubs.notifier import InMemoryNotifier
 from chateaurose.domain.tests.stubs.payment_gateway import InMemoryPaymentGateway
+from chateaurose.domain.tests.stubs.provider_directory import InMemoryProviderDirectory
 from chateaurose.domain.use_cases import finalize_booking
+
+
+def _provider_directory():
+    return InMemoryProviderDirectory(
+        {
+            "provider_1": {
+                "name": "Amandine",
+                "email": "amandine@example.com",
+                "phone": "+33601020304",
+                "salon_zone": "Paris 10e",
+                "salon_address": "12 rue des Fleurs, 75010 Paris",
+            }
+        }
+    )
 
 
 def test_provider_confirms_original_captures_and_notifies():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
 
     booking = BookingRequest(
         id="booking_1",
         provider_id="provider_1",
         service_id="service_tresses",
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
-        location="Saint-Cyprien",
+        location="Paris 10e",
+        location_preference="salon",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
         meche=False,
@@ -40,6 +57,7 @@ def test_provider_confirms_original_captures_and_notifies():
         now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc),
         booking_repository=repo,
         payment_gateway=payments,
+        provider_directory=provider_directory,
         notifier=notifier,
     )
 
@@ -49,12 +67,43 @@ def test_provider_confirms_original_captures_and_notifies():
         {
             "recipient": "provider_1",
             "subject": "Rendez-vous confirmé",
-            "body": "Vous avez confirmé le rendez-vous.",
+            "body": "\n".join(
+                [
+                    "Bonjour Amandine,",
+                    "",
+                    "Merci, ton rendez-vous est confirmé.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-10T17:00:00Z",
+                    "- Lieu : Paris 10e",
+                    "- Tarif : 85,00 €",
+                    "",
+                    "La cliente se déplace au salon.",
+                    "",
+                    "Belle journée,",
+                    "L'équipe Château Rose",
+                ]
+            ),
         },
         {
             "recipient": "sarah@example.com",
             "subject": "Rendez-vous confirmé",
-            "body": "Votre rendez-vous est confirmé.",
+            "body": "\n".join(
+                [
+                    "Bonjour Sarah,",
+                    "",
+                    "Bonne nouvelle, ta réservation est confirmée.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-10T17:00:00Z",
+                    "- Lieu : Paris 10e",
+                    "- Tarif : 85,00 €",
+                    "",
+                    "Adresse du salon : 12 rue des Fleurs, 75010 Paris",
+                    "Cette information est partagée uniquement pour organiser le rendez-vous.",
+                    "",
+                    "À très vite,",
+                    "L'équipe Château Rose",
+                ]
+            ),
         },
     ]
 
@@ -63,6 +112,7 @@ def test_provider_rejects_releases_and_notifies():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
 
     booking = BookingRequest(
         id="booking_2",
@@ -70,6 +120,7 @@ def test_provider_rejects_releases_and_notifies():
         service_id="service_tresses",
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location="Saint-Cyprien",
+        location_preference="domicile",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
         meche=False,
@@ -77,6 +128,7 @@ def test_provider_rejects_releases_and_notifies():
         inspiration_pictures=[],
         free_text="",
         estimated_price_cents=8500,
+        client_address="5 place du Capitole, 31000 Toulouse",
         payment_auth_id="auth_2",
         status="SUBMITTED",
         created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
@@ -90,6 +142,7 @@ def test_provider_rejects_releases_and_notifies():
         now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc),
         booking_repository=repo,
         payment_gateway=payments,
+        provider_directory=provider_directory,
         notifier=notifier,
     )
 
@@ -99,12 +152,39 @@ def test_provider_rejects_releases_and_notifies():
         {
             "recipient": "provider_1",
             "subject": "Demande annulée",
-            "body": "Vous avez annulé la demande.",
+            "body": "\n".join(
+                [
+                    "Bonjour Amandine,",
+                    "",
+                    "Tu as bien annulé la demande.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-10T17:00:00Z",
+                    "- Lieu : Saint-Cyprien",
+                    "- Tarif : 85,00 €",
+                    "",
+                    "À bientôt,",
+                    "L'équipe Château Rose",
+                ]
+            ),
         },
         {
             "recipient": "sarah@example.com",
             "subject": "Demande annulée",
-            "body": "Votre demande a été refusée.",
+            "body": "\n".join(
+                [
+                    "Bonjour Sarah,",
+                    "",
+                    "La demande a été refusée par la prestataire.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-10T17:00:00Z",
+                    "- Lieu : Saint-Cyprien",
+                    "- Tarif : 85,00 €",
+                    "",
+                    "Si tu veux, tu peux déposer une nouvelle demande.",
+                    "À bientôt,",
+                    "L'équipe Château Rose",
+                ]
+            ),
         },
     ]
 
@@ -113,6 +193,7 @@ def test_client_accepts_proposal_captures_and_confirms():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
 
     booking = BookingRequest(
         id="booking_3",
@@ -120,6 +201,7 @@ def test_client_accepts_proposal_captures_and_confirms():
         service_id="service_tresses",
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location="Saint-Cyprien",
+        location_preference="domicile",
         desired_date="2026-01-11T18:00:00Z",
         hair_length="long",
         meche=False,
@@ -127,6 +209,7 @@ def test_client_accepts_proposal_captures_and_confirms():
         inspiration_pictures=[],
         free_text="",
         estimated_price_cents=8500,
+        client_address="5 place du Capitole, 31000 Toulouse",
         payment_auth_id="auth_3",
         status="PENDING_CLIENT_VALIDATION",
         created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
@@ -142,17 +225,62 @@ def test_client_accepts_proposal_captures_and_confirms():
         now=datetime(2026, 1, 11, 10, 0, tzinfo=timezone.utc),
         booking_repository=repo,
         payment_gateway=payments,
+        provider_directory=provider_directory,
         notifier=notifier,
     )
 
     assert updated.status == finalize_booking.CONFIRMED
     assert payments.capture_calls == [{"auth_id": "auth_3"}]
+    assert notifier.messages == [
+        {
+            "recipient": "provider_1",
+            "subject": "Rendez-vous confirmé",
+            "body": "\n".join(
+                [
+                    "Bonjour Amandine,",
+                    "",
+                    "La cliente a accepté la proposition.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-11T18:00:00Z",
+                    "- Lieu : Saint-Cyprien",
+                    "- Tarif : 90,00 €",
+                    "",
+                    "Adresse de la cliente : 5 place du Capitole, 31000 Toulouse",
+                    "Adresse transmise uniquement pour ce rendez-vous, merci de la garder confidentielle.",
+                    "",
+                    "Belle journée,",
+                    "L'équipe Château Rose",
+                ]
+            ),
+        },
+        {
+            "recipient": "sarah@example.com",
+            "subject": "Rendez-vous confirmé",
+            "body": "\n".join(
+                [
+                    "Bonjour Sarah,",
+                    "",
+                    "Bonne nouvelle, ta réservation est confirmée.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-11T18:00:00Z",
+                    "- Lieu : Saint-Cyprien",
+                    "- Tarif : 90,00 €",
+                    "",
+                    "La prestataire se déplace jusqu'à toi.",
+                    "",
+                    "À très vite,",
+                    "L'équipe Château Rose",
+                ]
+            ),
+        },
+    ]
 
 
 def test_client_refuses_proposal_releases_and_cancels():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
 
     booking = BookingRequest(
         id="booking_4",
@@ -160,6 +288,7 @@ def test_client_refuses_proposal_releases_and_cancels():
         service_id="service_tresses",
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location="Saint-Cyprien",
+        location_preference="domicile",
         desired_date="2026-01-11T18:00:00Z",
         hair_length="long",
         meche=False,
@@ -167,6 +296,7 @@ def test_client_refuses_proposal_releases_and_cancels():
         inspiration_pictures=[],
         free_text="",
         estimated_price_cents=8500,
+        client_address="5 place du Capitole, 31000 Toulouse",
         payment_auth_id="auth_4",
         status="PENDING_CLIENT_VALIDATION",
         created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
@@ -182,17 +312,58 @@ def test_client_refuses_proposal_releases_and_cancels():
         now=datetime(2026, 1, 11, 10, 0, tzinfo=timezone.utc),
         booking_repository=repo,
         payment_gateway=payments,
+        provider_directory=provider_directory,
         notifier=notifier,
     )
 
     assert updated.status == finalize_booking.CANCELLED
     assert payments.release_calls == [{"auth_id": "auth_4"}]
+    assert notifier.messages == [
+        {
+            "recipient": "provider_1",
+            "subject": "Demande annulée",
+            "body": "\n".join(
+                [
+                    "Bonjour Amandine,",
+                    "",
+                    "La cliente a refusé la proposition.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-11T18:00:00Z",
+                    "- Lieu : Saint-Cyprien",
+                    "- Tarif : 90,00 €",
+                    "",
+                    "À bientôt,",
+                    "L'équipe Château Rose",
+                ]
+            ),
+        },
+        {
+            "recipient": "sarah@example.com",
+            "subject": "Demande annulée",
+            "body": "\n".join(
+                [
+                    "Bonjour Sarah,",
+                    "",
+                    "Tu as refusé la proposition : la demande est annulée.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-11T18:00:00Z",
+                    "- Lieu : Saint-Cyprien",
+                    "- Tarif : 90,00 €",
+                    "",
+                    "Si tu veux, tu peux déposer une nouvelle demande.",
+                    "À bientôt,",
+                    "L'équipe Château Rose",
+                ]
+            ),
+        },
+    ]
 
 
 def test_finalize_booking_rejects_invalid_actor():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
 
     booking = BookingRequest(
         id="booking_invalid_actor",
@@ -200,6 +371,7 @@ def test_finalize_booking_rejects_invalid_actor():
         service_id="service_tresses",
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location="Saint-Cyprien",
+        location_preference="domicile",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
         meche=False,
@@ -207,6 +379,7 @@ def test_finalize_booking_rejects_invalid_actor():
         inspiration_pictures=[],
         free_text="",
         estimated_price_cents=8500,
+        client_address="5 place du Capitole, 31000 Toulouse",
         payment_auth_id="auth_invalid_actor",
         status="SUBMITTED",
         created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
@@ -217,12 +390,13 @@ def test_finalize_booking_rejects_invalid_actor():
         finalize_booking.execute(
             booking_id="booking_invalid_actor",
             actor="hacker",
-        decision="confirm",
-        now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc),
-        booking_repository=repo,
-        payment_gateway=payments,
-        notifier=notifier,
-    )
+            decision="confirm",
+            now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc),
+            booking_repository=repo,
+            payment_gateway=payments,
+            provider_directory=provider_directory,
+            notifier=notifier,
+        )
 
     assert booking.status == "SUBMITTED"
     assert payments.capture_calls == []
@@ -233,6 +407,7 @@ def test_finalize_booking_idempotent_no_double_capture_or_release():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
 
     booking = BookingRequest(
         id="booking_idem",
@@ -240,6 +415,7 @@ def test_finalize_booking_idempotent_no_double_capture_or_release():
         service_id="service_tresses",
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location="Saint-Cyprien",
+        location_preference="domicile",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
         meche=False,
@@ -247,6 +423,7 @@ def test_finalize_booking_idempotent_no_double_capture_or_release():
         inspiration_pictures=[],
         free_text="",
         estimated_price_cents=8500,
+        client_address="5 place du Capitole, 31000 Toulouse",
         payment_auth_id="auth_idem",
         status="SUBMITTED",
         created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
@@ -260,6 +437,7 @@ def test_finalize_booking_idempotent_no_double_capture_or_release():
         now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc),
         booking_repository=repo,
         payment_gateway=payments,
+        provider_directory=provider_directory,
         notifier=notifier,
     )
     second = finalize_booking.execute(
@@ -269,6 +447,7 @@ def test_finalize_booking_idempotent_no_double_capture_or_release():
         now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc),
         booking_repository=repo,
         payment_gateway=payments,
+        provider_directory=provider_directory,
         notifier=notifier,
     )
 
@@ -282,6 +461,7 @@ def test_finalize_booking_rejects_if_expired():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
 
     created_at = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
     booking = BookingRequest(
@@ -290,6 +470,7 @@ def test_finalize_booking_rejects_if_expired():
         service_id="service_tresses",
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location="Saint-Cyprien",
+        location_preference="domicile",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
         meche=False,
@@ -297,6 +478,7 @@ def test_finalize_booking_rejects_if_expired():
         inspiration_pictures=[],
         free_text="",
         estimated_price_cents=8500,
+        client_address="5 place du Capitole, 31000 Toulouse",
         payment_auth_id="auth_expired",
         status="SUBMITTED",
         created_at=created_at,
@@ -311,6 +493,7 @@ def test_finalize_booking_rejects_if_expired():
             now=created_at + timedelta(hours=49),
             booking_repository=repo,
             payment_gateway=payments,
+            provider_directory=provider_directory,
             notifier=notifier,
         )
 

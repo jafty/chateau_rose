@@ -29,6 +29,8 @@ class ProviderResource(resources.ModelResource):
             "description",
             "contact_phone",
             "contact_email",
+            "salon_zone",
+            "salon_address",
             "profile_image_url",
             "location_mode",
             "user",

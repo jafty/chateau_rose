@@ -5,18 +5,21 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.urls import reverse
 
 from booking.models import Booking, Provider
 from chateaurose.domain.exceptions import DomainError
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
 from chateaurose.infrastructure.email_notifier import EmailNotifier
+from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
 from providers.forms import ProviderSignupForm
 
 repo = DjangoBookingRepository()
 notifier = EmailNotifier()
 payment_gateway = StripePaymentGateway()
+provider_directory = DjangoProviderDirectory()
 
 
 def _parse_price_to_cents(raw_value: str | None) -> int | None:
@@ -85,6 +88,9 @@ def booking_detail(request, booking_id):
                 )
                 raw_date = request.POST.get("proposed_date", "")
                 proposed_date = raw_date.strip() or None
+                client_control_url = request.build_absolute_uri(
+                    reverse("interface:client_proposal", args=[booking.booking_id])
+                )
                 update_proposal.execute(
                     booking_id=booking.booking_id,
                     provider_id=provider.id,
@@ -93,6 +99,8 @@ def booking_detail(request, booking_id):
                     now=timezone.now(),
                     booking_repository=repo,
                     notifier=notifier,
+                    provider_directory=provider_directory,
+                    client_control_url=client_control_url,
                 )
                 message = "Proposition envoyée au client."
             elif action in ("confirm", "reject"):
@@ -103,6 +111,7 @@ def booking_detail(request, booking_id):
                     now=timezone.now(),
                     booking_repository=repo,
                     payment_gateway=payment_gateway,
+                    provider_directory=provider_directory,
                     notifier=notifier,
                 )
                 message = "Décision enregistrée."
@@ -135,6 +144,8 @@ def signup(request):
                 contact_email=form.cleaned_data.get("contact_email")
                 or form.cleaned_data.get("email"),
                 contact_phone=form.cleaned_data.get("contact_phone", ""),
+                salon_zone=form.cleaned_data.get("salon_zone", ""),
+                salon_address=form.cleaned_data.get("salon_address", ""),
                 location_mode=form.cleaned_data.get("location_mode", Provider.LOCATION_MODE_HYBRID),
                 user=user,
             )

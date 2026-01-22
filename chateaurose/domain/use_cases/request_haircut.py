@@ -5,6 +5,7 @@ from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import ValidationError
 
 SUBMITTED = "SUBMITTED"
+SALON_LOCATION_LABEL = "Salon"
 
 
 def _generate_id() -> str:
@@ -18,6 +19,8 @@ def execute(
     service_id: str,
     client_contact: dict,
     location: str,
+    location_preference: str | None,
+    client_address: str | None = None,
     desired_date: str,
     hair_length: str,
     meche: bool,
@@ -26,6 +29,7 @@ def execute(
     free_text: str,
     payment_auth_id: str | None = None,
     provider_booking_url_base: str | None = None,
+    provider_salon_zone: str | None = None,
     booking_repository,
     provider_catalog,
     payment_gateway,
@@ -38,7 +42,7 @@ def execute(
         ("service_id", service_id),
         ("client_name", client_contact.get("name")),
         ("client_email", client_contact.get("email")),
-        ("location", location),
+        ("location_preference", location_preference),
         ("desired_date", desired_date),
         ("hair_length", hair_length),
         ("current_hair_picture", current_hair_picture),
@@ -48,11 +52,28 @@ def execute(
     if meche is None:
         raise ValidationError("Missing required field: meche")
 
+    normalized_location_preference = location_preference
+    normalized_location = location
+    if normalized_location_preference == "salon":
+        if not provider_salon_zone:
+            raise ValidationError("Missing required field: provider_salon_zone")
+        normalized_location = provider_salon_zone
+    else:
+        if not normalized_location:
+            raise ValidationError("Missing required field: location")
+        if not client_address:
+            raise ValidationError("Missing required field: client_address")
+
     try:
         service = provider_catalog.get_service(provider_id, service_id)
     except KeyError:
         raise ValidationError("Service not offered by provider")
-    if not provider_catalog.provider_covers_zone(provider_id, location):
+    coverage_location = (
+        SALON_LOCATION_LABEL
+        if normalized_location_preference == "salon"
+        else normalized_location
+    )
+    if not provider_catalog.provider_covers_zone(provider_id, coverage_location):
         raise ValidationError("Provider does not cover this zone")
 
     base_price = service["base_price_cents"]
@@ -77,7 +98,8 @@ def execute(
         provider_id=provider_id,
         service_id=service_id,
         client_contact=client_contact,
-        location=location,
+        location=normalized_location,
+        location_preference=normalized_location_preference,
         desired_date=desired_date,
         hair_length=hair_length,
         meche=meche,
@@ -89,6 +111,7 @@ def execute(
         status=SUBMITTED,
         created_at=created_at,
         updated_at=created_at,
+        client_address=client_address,
     )
 
     booking_repository.add(booking)
@@ -149,7 +172,7 @@ def execute(
             recipient=provider_id,
             send_at=created_at + timedelta(hours=24),
             subject="Rappel: demande en attente",
-            body="Vous avez une demande en attente de réponse.",
+            body="Tu as une demande en attente de réponse.",
         )
         reminder_gateway.schedule(
             recipient=provider_id,
@@ -161,7 +184,7 @@ def execute(
             recipient=client_contact["email"],
             send_at=created_at + timedelta(hours=48),
             subject="Demande expirée",
-            body="Votre demande a expiré faute de confirmation.",
+            body="Ta demande a expiré faute de confirmation.",
         )
 
     return booking

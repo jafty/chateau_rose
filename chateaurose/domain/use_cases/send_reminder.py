@@ -17,6 +17,18 @@ def execute(
         notifier.notify(
             booking.provider_id,
             "Rappel: demande en attente",
-            "Vous avez une demande en attente de réponse.",
+            "\n".join(
+                [
+                    "Bonjour,",
+                    "",
+                    "Tu as une demande en attente de réponse.",
+                    "Récapitulatif :",
+                    f"- Date : {booking.desired_date}",
+                    f"- Lieu : {booking.location}",
+                    "",
+                    "À bientôt,",
+                    "L'équipe Château Rose",
+                ]
+            ),
         )
     return booking

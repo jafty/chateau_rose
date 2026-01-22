@@ -48,12 +48,39 @@ def test_expire_booking_after_48h_releases_and_notifies():
         {
             "recipient": "provider_1",
             "subject": "Demande expirée",
-            "body": "La demande a expiré après 48h sans confirmation.",
+            "body": "\n".join(
+                [
+                    "Bonjour,",
+                    "",
+                    "La demande a expiré faute de confirmation.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-10T17:00:00Z",
+                    "- Lieu : Saint-Cyprien",
+                    "- Tarif : 85,00 €",
+                    "",
+                    "À bientôt,",
+                    "L'équipe Château Rose",
+                ]
+            ),
         },
         {
             "recipient": "sarah@example.com",
             "subject": "Demande expirée",
-            "body": "Votre demande a expiré après 48h sans confirmation.",
+            "body": "\n".join(
+                [
+                    "Bonjour Sarah,",
+                    "",
+                    "La demande a expiré faute de confirmation.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-10T17:00:00Z",
+                    "- Lieu : Saint-Cyprien",
+                    "- Tarif : 85,00 €",
+                    "",
+                    "Si tu veux, tu peux déposer une nouvelle demande.",
+                    "À bientôt,",
+                    "L'équipe Château Rose",
+                ]
+            ),
         },
     ]
 

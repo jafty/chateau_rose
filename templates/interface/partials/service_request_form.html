@@ -35,7 +35,7 @@
         {% if request_form.zone.is_hidden %}
             {{ request_form.zone }}
         {% else %}
-            <div class="form-field">
+            <div class="form-field" data-zone-field>
                 <label for="id_zone">Zone</label>
                 {{ request_form.zone }}
                 {% if request_form.zone.help_text %}
@@ -58,6 +58,11 @@
             <label for="id_client_email">Email <span class="required-mark">*</span></label>
             {{ request_form.client_email }}
         </div>
+        <div class="form-field" data-address-field>
+            <label for="id_client_address">Adresse complète <span class="required-mark">*</span></label>
+            {{ request_form.client_address }}
+            <small class="field-hint">Partagée uniquement après confirmation du rendez-vous.</small>
+        </div>
         <div class="form-field full-width">
             <label for="id_details">Dis-nous en plus</label>
             {{ request_form.details }}
@@ -67,3 +72,29 @@
         </div>
     </form>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.currentScript?.previousElementSibling;
+        const form = container?.querySelector('form');
+        if (!form) return;
+        const zoneField = form.querySelector('[data-zone-field]');
+        const addressField = form.querySelector('[data-address-field]');
+        const preferenceInputs = form.querySelectorAll('input[name="location_preference"]');
+
+        const syncFields = () => {
+            const selected = form.querySelector('input[name="location_preference"]:checked')?.value;
+            const isSalon = selected === 'salon';
+            if (zoneField) zoneField.hidden = isSalon;
+            if (addressField) {
+                addressField.hidden = isSalon;
+                const input = addressField.querySelector('input, textarea');
+                if (input) input.required = !isSalon;
+            }
+        };
+
+        if (preferenceInputs.length) {
+            preferenceInputs.forEach((input) => input.addEventListener('change', syncFields));
+            syncFields();
+        }
+    });
+</script>
