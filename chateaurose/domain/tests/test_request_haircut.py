@@ -50,6 +50,8 @@ def test_request_haircut_submitted_with_auth_and_notification():
         service_id=service_id,
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location=zone,
+        location_preference="domicile",
+        client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
         meche=True,
@@ -69,6 +71,8 @@ def test_request_haircut_submitted_with_auth_and_notification():
     assert request.provider_id == provider_id
     assert request.service_id == service_id
     assert request.location == zone
+    assert request.location_preference == "domicile"
+    assert request.client_address == "5 place du Capitole, 31000 Toulouse"
     assert request.estimated_price_cents == 5000 + 1500 + 2000  # base + hair length adj + mèche bonus
     assert request.payment_auth_id == "auth_1"
     assert request.created_at == now
@@ -157,6 +161,8 @@ def test_request_haircut_generates_readable_id():
         service_id=service_id,
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location=zone,
+        location_preference="domicile",
+        client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
         meche=True,
@@ -203,6 +209,8 @@ def test_request_haircut_rejects_service_not_offered():
             service_id=service_id,
             client_contact={"name": "Sarah", "email": "sarah@example.com"},
             location=zone,
+            location_preference="domicile",
+            client_address="5 place du Capitole, 31000 Toulouse",
             desired_date="2026-01-10T17:00:00Z",
             hair_length="long",
             meche=True,
@@ -258,6 +266,8 @@ def test_request_haircut_estimated_price_defaults_to_base_when_no_adjustments():
         service_id=service_id,
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location=zone,
+        location_preference="domicile",
+        client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="medium",
         meche=False,
@@ -310,6 +320,8 @@ def test_request_haircut_rejects_zone_not_covered():
             service_id=service_id,
             client_contact={"name": "Sarah", "email": "sarah@example.com"},
             location="OutOfZone",
+            location_preference="domicile",
+            client_address="5 place du Capitole, 31000 Toulouse",
             desired_date="2026-01-10T17:00:00Z",
             hair_length="medium",
             meche=True,
@@ -365,7 +377,9 @@ def test_salon_only_provider_allows_salon_location_without_zones():
         provider_id=provider_id,
         service_id=service_id,
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
-        location=InMemoryProviderCatalog.SALON_LOCATION_LABEL,
+        location="Paris 10e",
+        location_preference="salon",
+        provider_salon_zone="Paris 10e",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
         meche=False,
@@ -380,7 +394,61 @@ def test_salon_only_provider_allows_salon_location_without_zones():
         clock=clock,
     )
 
-    assert request.location == InMemoryProviderCatalog.SALON_LOCATION_LABEL
+    assert request.location == "Paris 10e"
+
+
+def test_request_haircut_requires_salon_zone_for_salon_booking():
+    now = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    clock = FixedClock(now)
+
+    provider_id = "provider_1"
+    service_id = "service_tresses"
+
+    services_by_provider = {
+        provider_id: {
+            service_id: {
+                "id": service_id,
+                "name": "Tresses africaines",
+                "base_price_cents": 5000,
+                "hair_length_adjustments": {"long": 0},
+                "meche_bonus_cents": 0,
+            }
+        }
+    }
+    zones_by_provider = {provider_id: set()}
+    location_modes = {provider_id: InMemoryProviderCatalog.LOCATION_MODE_SALON_ONLY}
+
+    provider_catalog = InMemoryProviderCatalog(
+        services_by_provider=services_by_provider,
+        zones_by_provider=zones_by_provider,
+        location_modes=location_modes,
+    )
+    booking_repository = InMemoryBookingRepository()
+    payment_gateway = InMemoryPaymentGateway()
+    notifier = InMemoryNotifier()
+    reminder_gateway = InMemoryReminderGateway()
+
+    with pytest.raises(ValidationError):
+        request_haircut.execute(
+            provider_id=provider_id,
+            service_id=service_id,
+            client_contact={"name": "Sarah", "email": "sarah@example.com"},
+            location="",
+            location_preference="salon",
+            provider_salon_zone="",
+            desired_date="2026-01-10T17:00:00Z",
+            hair_length="long",
+            meche=False,
+            current_hair_picture="s3://bucket/hair.jpg",
+            inspiration_pictures=[],
+            free_text="",
+            booking_repository=booking_repository,
+            provider_catalog=provider_catalog,
+            payment_gateway=payment_gateway,
+            notifier=notifier,
+            reminder_gateway=reminder_gateway,
+            clock=clock,
+        )
 
 
 @pytest.mark.parametrize(
@@ -389,6 +457,7 @@ def test_salon_only_provider_allows_salon_location_without_zones():
         ("client_name", {"client_contact": {"name": "", "email": "sarah@example.com"}}),
         ("client_email", {"client_contact": {"name": "Sarah", "email": ""}}),
         ("location", {"location": ""}),
+        ("client_address", {"client_address": ""}),
         ("desired_date", {"desired_date": ""}),
         ("hair_length", {"hair_length": ""}),
         ("meche", {"meche": None}),
@@ -428,6 +497,8 @@ def test_request_haircut_missing_mandatory_fields(missing_field, payload):
         service_id=service_id,
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
         location=zone,
+        location_preference="domicile",
+        client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="medium",
         meche=False,

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Ta proposition | Château Rose{% endblock %}
+
+{% block content %}
+<section class="page-shell">
+    <div class="paper-card">
+        <h1 class="section-title">Ta proposition mise à jour</h1>
+        <p class="lead">Bonjour {{ booking.client_name }}, voici la proposition de {{ booking.provider.name }}.</p>
+        <div class="meta-line">Demande #{{ booking.booking_id }}</div>
+    </div>
+
+    <div class="paper-card" style="margin-top: 24px;">
+        <h2 class="section-title">Nouveaux détails</h2>
+        <ul class="meta-line" style="margin: 0; padding-left: 18px;">
+            <li>Date proposée : {{ proposed_date }}</li>
+            <li>Tarif proposé : {{ proposed_price }}</li>
+            <li>Prestation : {{ booking.service.name }}</li>
+            <li>Lieu : {{ booking.location }}</li>
+        </ul>
+        <div class="btn-group" style="margin-top: 16px;">
+            <form method="post" action="{% url 'interface:client_action' booking.booking_id %}">
+                {% csrf_token %}
+                <input type="hidden" name="decision" value="accept">
+                <button type="submit" class="btn">Accepter la proposition</button>
+            </form>
+            <form method="post" action="{% url 'interface:client_action' booking.booking_id %}">
+                {% csrf_token %}
+                <input type="hidden" name="decision" value="refuse">
+                <button type="submit" class="btn secondary">Refuser</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="paper-card" style="margin-top: 24px;">
+        <h2 class="section-title">Contacter la prestataire</h2>
+        <p class="meta-line" style="margin: 0;">Téléphone : {{ provider_phone }}</p>
+        <p class="meta-line" style="margin: 6px 0 0;">Email : {{ provider_email }}</p>
+    </div>
+</section>
+{% endblock %}

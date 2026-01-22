@@ -17,6 +17,7 @@ def execute(
     now=None,
     booking_repository,
     payment_gateway,
+    provider_directory,
     notifier,
 ) -> BookingRequest:
     booking = booking_repository.get(booking_id)
@@ -30,19 +31,81 @@ def execute(
     if booking.status in (CONFIRMED, CANCELLED):
         return booking
 
+    provider_contact = provider_directory.get_provider_contact(booking.provider_id)
+    provider_name = provider_contact.get("name") or "La prestataire"
+    salon_address = provider_contact.get("salon_address") or "Adresse à confirmer"
+
+    effective_date = booking.proposed_date or booking.desired_date
+    effective_price_cents = (
+        booking.proposed_price_cents
+        if booking.proposed_price_cents is not None
+        else booking.estimated_price_cents
+    )
+    euros = effective_price_cents / 100
+    formatted_price = f"{euros:.2f}".replace(".", ",")
+    formatted_price = f"{formatted_price} €"
+
+    location_label = booking.location
+    is_salon = booking.location_preference == "salon"
+    client_address = booking.client_address or "Adresse à confirmer"
+    provider_address_note = (
+        "Adresse transmise uniquement pour ce rendez-vous, merci de la garder confidentielle."
+    )
+    client_address_note = "Cette information est partagée uniquement pour organiser le rendez-vous."
+
     if actor == "provider":
         if decision == "confirm" and booking.status == SUBMITTED:
             booking.status = CONFIRMED
             payment_gateway.capture_auth(booking.payment_auth_id)
+            provider_location_lines = (
+                ["La cliente se déplace au salon."]
+                if is_salon
+                else [f"Adresse de la cliente : {client_address}", provider_address_note]
+            )
+            client_location_lines = (
+                [f"Adresse du salon : {salon_address}", client_address_note]
+                if is_salon
+                else ["La prestataire se déplace jusqu'à toi."]
+            )
             notifier.notify(
                 booking.provider_id,
                 "Rendez-vous confirmé",
-                "Vous avez confirmé le rendez-vous.",
+                "\n".join(
+                    [
+                        f"Bonjour {provider_name},",
+                        "",
+                        "Merci, ton rendez-vous est confirmé.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {location_label}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        *provider_location_lines,
+                        "",
+                        "Belle journée,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
             )
             notifier.notify(
                 booking.client_contact["email"],
                 "Rendez-vous confirmé",
-                "Votre rendez-vous est confirmé.",
+                "\n".join(
+                    [
+                        f"Bonjour {booking.client_contact['name']},",
+                        "",
+                        "Bonne nouvelle, ta réservation est confirmée.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {location_label}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        *client_location_lines,
+                        "",
+                        "À très vite,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
             )
         elif decision == "reject" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION):
             booking.status = CANCELLED
@@ -50,12 +113,39 @@ def execute(
             notifier.notify(
                 booking.provider_id,
                 "Demande annulée",
-                "Vous avez annulé la demande.",
+                "\n".join(
+                    [
+                        f"Bonjour {provider_name},",
+                        "",
+                        "Tu as bien annulé la demande.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {location_label}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        "À bientôt,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
             )
             notifier.notify(
                 booking.client_contact["email"],
                 "Demande annulée",
-                "Votre demande a été refusée.",
+                "\n".join(
+                    [
+                        f"Bonjour {booking.client_contact['name']},",
+                        "",
+                        "La demande a été refusée par la prestataire.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {location_label}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        "Si tu veux, tu peux déposer une nouvelle demande.",
+                        "À bientôt,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
             )
         else:
             raise InvalidState("Invalid state for provider decision")
@@ -64,15 +154,55 @@ def execute(
         if decision == "accept" and booking.status == PENDING_CLIENT_VALIDATION:
             booking.status = CONFIRMED
             payment_gateway.capture_auth(booking.payment_auth_id)
+            provider_location_lines = (
+                ["La cliente se déplace au salon."]
+                if is_salon
+                else [f"Adresse de la cliente : {client_address}", provider_address_note]
+            )
+            client_location_lines = (
+                [f"Adresse du salon : {salon_address}", client_address_note]
+                if is_salon
+                else ["La prestataire se déplace jusqu'à toi."]
+            )
             notifier.notify(
                 booking.provider_id,
                 "Rendez-vous confirmé",
-                "La cliente a accepté la proposition.",
+                "\n".join(
+                    [
+                        f"Bonjour {provider_name},",
+                        "",
+                        "La cliente a accepté la proposition.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {location_label}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        *provider_location_lines,
+                        "",
+                        "Belle journée,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
             )
             notifier.notify(
                 booking.client_contact["email"],
                 "Rendez-vous confirmé",
-                "Votre rendez-vous est confirmé.",
+                "\n".join(
+                    [
+                        f"Bonjour {booking.client_contact['name']},",
+                        "",
+                        "Bonne nouvelle, ta réservation est confirmée.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {location_label}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        *client_location_lines,
+                        "",
+                        "À très vite,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
             )
         elif decision == "refuse" and booking.status == PENDING_CLIENT_VALIDATION:
             booking.status = CANCELLED
@@ -80,12 +210,39 @@ def execute(
             notifier.notify(
                 booking.provider_id,
                 "Demande annulée",
-                "La cliente a refusé la proposition.",
+                "\n".join(
+                    [
+                        f"Bonjour {provider_name},",
+                        "",
+                        "La cliente a refusé la proposition.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {location_label}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        "À bientôt,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
             )
             notifier.notify(
                 booking.client_contact["email"],
                 "Demande annulée",
-                "Votre demande a été refusée.",
+                "\n".join(
+                    [
+                        f"Bonjour {booking.client_contact['name']},",
+                        "",
+                        "Tu as refusé la proposition : la demande est annulée.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {location_label}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        "Si tu veux, tu peux déposer une nouvelle demande.",
+                        "À bientôt,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
             )
         else:
             raise InvalidState("Invalid state for client decision")

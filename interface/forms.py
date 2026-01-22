@@ -56,6 +56,7 @@ class ServiceRequestForm(forms.ModelForm):
             "desired_date",
             "client_name",
             "client_email",
+            "client_address",
             "details",
         ]
         widgets = {
@@ -64,6 +65,7 @@ class ServiceRequestForm(forms.ModelForm):
         labels = {
             "client_name": "Ton nom",
             "client_email": "Email",
+            "client_address": "Adresse complète",
             "details": "Détails ou besoin",
         }
 
@@ -78,12 +80,24 @@ class ServiceRequestForm(forms.ModelForm):
             }
         )
 
+    def clean(self):
+        cleaned_data = super().clean()
+        location_preference = cleaned_data.get("location_preference")
+        client_address = (cleaned_data.get("client_address") or "").strip()
+
+        if location_preference == ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME:
+            if not client_address:
+                self.add_error("client_address", "Merci d'indiquer ton adresse complète.")
+        cleaned_data["client_address"] = client_address
+        return cleaned_data
+
 
 class ProviderBookingRequestForm(forms.Form):
     service_id = forms.IntegerField(label="Service souhaité")
     client_name = forms.CharField(label="Ton nom")
     client_email = forms.EmailField(label="Email")
     location = forms.CharField(label="Lieu de prestation", required=False)
+    client_address = forms.CharField(label="Adresse complète", required=False)
     location_preference = forms.ChoiceField(
         choices=(("salon", "En salon / chez la pro"), ("domicile", "À domicile")),
         required=False,
@@ -123,16 +137,17 @@ class ProviderBookingRequestForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         location_choice = (cleaned_data.get("location") or "").strip()
+        client_address = (cleaned_data.get("client_address") or "").strip()
         location_preference = cleaned_data.get("location_preference")
         location = location_choice
 
         if self.provider:
             if self.provider.location_mode == Provider.LOCATION_MODE_SALON_ONLY:
-                location = SALON_LOCATION_LABEL
+                location = self.provider.salon_zone or SALON_LOCATION_LABEL
                 location_preference = "salon"
             elif self.provider.location_mode == Provider.LOCATION_MODE_HYBRID:
                 if location_preference == "salon":
-                    location = SALON_LOCATION_LABEL
+                    location = self.provider.salon_zone or SALON_LOCATION_LABEL
                 elif location_preference == "domicile" or location_choice:
                     location = location_choice
                     location_preference = location_preference or "domicile"
@@ -142,6 +157,18 @@ class ProviderBookingRequestForm(forms.Form):
                     )
             else:
                 location_preference = location_preference or "domicile"
+
+        if location_preference == "salon":
+            if not self.provider or not self.provider.salon_zone:
+                raise forms.ValidationError(
+                    "Le lieu au salon n'est pas encore renseigné par le prestataire."
+                )
+            if not self.provider.salon_address:
+                raise forms.ValidationError(
+                    "L'adresse du salon doit être renseignée pour confirmer un rendez-vous."
+                )
+        elif not client_address:
+            raise forms.ValidationError("Merci d'indiquer ton adresse complète.")
 
         if not location:
             raise forms.ValidationError("Merci de choisir un lieu.")
@@ -156,6 +183,7 @@ class ProviderBookingRequestForm(forms.Form):
 
         cleaned_data["location"] = location
         cleaned_data["location_preference"] = location_preference
+        cleaned_data["client_address"] = client_address
         return cleaned_data
 
     def get_inspiration_files(self):

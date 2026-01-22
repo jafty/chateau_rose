@@ -9,7 +9,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.urls import reverse
 
-from booking.models import Provider, Service, Zone
+from booking.models import Booking, Provider, Service, Zone
 from chateaurose.domain.exceptions import DomainError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
@@ -17,6 +17,7 @@ from chateaurose.domain.use_cases import request_haircut, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
 from chateaurose.infrastructure.email_notifier import EmailNotifier
+from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
 from chateaurose.infrastructure.provider_catalog import (
     DjangoProviderCatalog,
     SALON_LOCATION_LABEL,
@@ -29,6 +30,7 @@ repo = DjangoBookingRepository()
 notifier = EmailNotifier()
 payment_gateway = StripePaymentGateway()
 provider_catalog = DjangoProviderCatalog()
+provider_directory = DjangoProviderDirectory()
 
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
 
@@ -130,6 +132,8 @@ def provider_detail(request, provider_id):
                         "email": form.cleaned_data.get("client_email"),
                     },
                     location=form.cleaned_data.get("location"),
+                    location_preference=form.cleaned_data.get("location_preference"),
+                    client_address=form.cleaned_data.get("client_address"),
                     desired_date=form.cleaned_data.get("desired_date"),
                     hair_length=form.cleaned_data.get("hair_length"),
                     meche=form.cleaned_data.get("meche", False),
@@ -138,6 +142,7 @@ def provider_detail(request, provider_id):
                     free_text=form.cleaned_data.get("free_text", ""),
                     payment_auth_id=form.cleaned_data.get("payment_auth_id"),
                     provider_booking_url_base=provider_booking_url_base,
+                    provider_salon_zone=provider.salon_zone,
                     booking_repository=repo,
                     provider_catalog=provider_catalog,
                     payment_gateway=payment_gateway,
@@ -235,6 +240,7 @@ def provider_action(request, booking_id):
         now=timezone.now(),
         booking_repository=repo,
         payment_gateway=payment_gateway,
+        provider_directory=provider_directory,
         notifier=notifier,
     )
     return redirect("interface:home")
@@ -251,9 +257,66 @@ def client_action(request, booking_id):
         now=timezone.now(),
         booking_repository=repo,
         payment_gateway=payment_gateway,
+        provider_directory=provider_directory,
         notifier=notifier,
     )
-    return redirect("interface:home")
+    return redirect("interface:client_confirmation", booking_id=final_booking.booking_id)
+
+
+def client_confirmation(request, booking_id):
+    booking = get_object_or_404(
+        Booking.objects.select_related("provider", "service"),
+        booking_id=booking_id,
+    )
+    effective_date = booking.proposed_date or booking.desired_date
+    effective_price = (
+        booking_requests.format_price(booking.proposed_price_cents)
+        if booking.proposed_price_cents is not None
+        else booking_requests.format_price(booking.estimated_price_cents)
+    )
+    is_confirmed = booking.status == finalize_booking_uc.CONFIRMED
+    is_cancelled = booking.status == finalize_booking_uc.CANCELLED
+    is_salon = booking.location_preference == "salon"
+    client_moves = is_salon
+    return render(
+        request,
+        "interface/client_confirmation.html",
+        {
+            "booking": booking,
+            "effective_date": effective_date,
+            "effective_price": effective_price,
+            "is_confirmed": is_confirmed,
+            "is_cancelled": is_cancelled,
+            "client_moves": client_moves,
+            "provider_email": booking.provider.contact_email or "Non communiqué",
+            "provider_phone": booking.provider.contact_phone or "Non communiqué",
+            "provider_salon_address": booking.provider.salon_address or "Adresse à confirmer",
+        },
+    )
+
+
+def client_proposal(request, booking_id):
+    booking = get_object_or_404(
+        Booking.objects.select_related("provider", "service"),
+        booking_id=booking_id,
+    )
+    proposed_date = booking.proposed_date or booking.desired_date
+    proposed_price = (
+        booking_requests.format_price(booking.proposed_price_cents)
+        if booking.proposed_price_cents is not None
+        else "À confirmer"
+    )
+    return render(
+        request,
+        "interface/client_proposal.html",
+        {
+            "booking": booking,
+            "proposed_date": proposed_date,
+            "proposed_price": proposed_price,
+            "provider_email": booking.provider.contact_email or "Non communiqué",
+            "provider_phone": booking.provider.contact_phone or "Non communiqué",
+        },
+    )
 
 
 def _get_service_or_404(service_slug: str):

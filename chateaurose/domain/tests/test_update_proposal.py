@@ -6,13 +6,22 @@ from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import InvalidState, PermissionError, ValidationError
 from chateaurose.domain.tests.stubs.booking_repository import InMemoryBookingRepository
 from chateaurose.domain.tests.stubs.notifier import InMemoryNotifier
-from chateaurose.domain.tests.stubs.provider_catalog import InMemoryProviderCatalog
+from chateaurose.domain.tests.stubs.provider_directory import InMemoryProviderDirectory
 from chateaurose.domain.use_cases import update_proposal
 
 
 def test_provider_proposes_update_moves_to_pending_client_validation_and_notifies_client():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
+    provider_directory = InMemoryProviderDirectory(
+        {
+            "provider_1": {
+                "name": "Amandine",
+                "email": "amandine@example.com",
+                "phone": "+33601020304",
+            }
+        }
+    )
 
     provider_id = "provider_1"
     client = {"name": "Sarah", "email": "sarah@example.com"}
@@ -42,6 +51,8 @@ def test_provider_proposes_update_moves_to_pending_client_validation_and_notifie
         new_date="2026-01-11T18:00:00Z",
         booking_repository=repo,
         notifier=notifier,
+        provider_directory=provider_directory,
+        client_control_url="https://example.com/booking/booking_1/",
     )
 
     assert updated.status == update_proposal.PENDING_CLIENT_VALIDATION
@@ -52,7 +63,26 @@ def test_provider_proposes_update_moves_to_pending_client_validation_and_notifie
         {
             "recipient": client["email"],
             "subject": "Proposition de rendez-vous",
-            "body": "Une nouvelle proposition est disponible pour votre demande.",
+            "body": "\n".join(
+                [
+                    "Bonjour Sarah,",
+                    "",
+                    "Amandine a une nouvelle proposition pour ta demande.",
+                    "Voici les nouveaux détails :",
+                    "- Date proposée : 2026-01-11T18:00:00Z",
+                    "- Tarif proposé : 90,00 €",
+                    "",
+                    "Tu peux accepter ou refuser la proposition depuis ton espace de suivi :",
+                    "https://example.com/booking/booking_1/",
+                    "",
+                    "Besoin d'échanger avant de décider ?",
+                    "- Téléphone : +33601020304",
+                    "- Email : amandine@example.com",
+                    "",
+                    "Merci et à très vite,",
+                    "L'équipe Château Rose",
+                ]
+            ),
         }
     ]
 
@@ -60,6 +90,15 @@ def test_provider_proposes_update_moves_to_pending_client_validation_and_notifie
 def test_update_proposal_rejects_wrong_provider():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
+    provider_directory = InMemoryProviderDirectory(
+        {
+            "provider_1": {
+                "name": "Amandine",
+                "email": "amandine@example.com",
+                "phone": "+33601020304",
+            }
+        }
+    )
 
     booking = BookingRequest(
         id="booking_2",
@@ -88,6 +127,8 @@ def test_update_proposal_rejects_wrong_provider():
             new_date="2026-01-11T18:00:00Z",
             booking_repository=repo,
             notifier=notifier,
+            provider_directory=provider_directory,
+            client_control_url="https://example.com/booking/booking_2/",
         )
 
     assert booking.status == "SUBMITTED"
@@ -97,6 +138,15 @@ def test_update_proposal_rejects_wrong_provider():
 def test_update_proposal_rejects_terminal_state():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
+    provider_directory = InMemoryProviderDirectory(
+        {
+            "provider_1": {
+                "name": "Amandine",
+                "email": "amandine@example.com",
+                "phone": "+33601020304",
+            }
+        }
+    )
 
     booking = BookingRequest(
         id="booking_3",
@@ -125,6 +175,8 @@ def test_update_proposal_rejects_terminal_state():
             new_date="2026-01-11T18:00:00Z",
             booking_repository=repo,
             notifier=notifier,
+            provider_directory=provider_directory,
+            client_control_url="https://example.com/booking/booking_3/",
         )
 
     assert notifier.messages == []
@@ -133,6 +185,15 @@ def test_update_proposal_rejects_terminal_state():
 def test_provider_can_send_multiple_proposals_before_terminal():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
+    provider_directory = InMemoryProviderDirectory(
+        {
+            "provider_1": {
+                "name": "Amandine",
+                "email": "amandine@example.com",
+                "phone": "+33601020304",
+            }
+        }
+    )
 
     provider_id = "provider_1"
     client = {"name": "Sarah", "email": "sarah@example.com"}
@@ -162,6 +223,8 @@ def test_provider_can_send_multiple_proposals_before_terminal():
         new_date="2026-01-11T18:00:00Z",
         booking_repository=repo,
         notifier=notifier,
+        provider_directory=provider_directory,
+        client_control_url="https://example.com/booking/booking_multi/",
     )
     second = update_proposal.execute(
         booking_id="booking_multi",
@@ -170,6 +233,8 @@ def test_provider_can_send_multiple_proposals_before_terminal():
         new_date="2026-01-12T19:00:00Z",
         booking_repository=repo,
         notifier=notifier,
+        provider_directory=provider_directory,
+        client_control_url="https://example.com/booking/booking_multi/",
     )
 
     assert second.status == update_proposal.PENDING_CLIENT_VALIDATION
@@ -182,6 +247,15 @@ def test_provider_can_send_multiple_proposals_before_terminal():
 def test_provider_can_update_only_price_without_changing_date():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
+    provider_directory = InMemoryProviderDirectory(
+        {
+            "provider_1": {
+                "name": "Amandine",
+                "email": "amandine@example.com",
+                "phone": "+33601020304",
+            }
+        }
+    )
 
     booking = BookingRequest(
         id="booking_price_only",
@@ -210,6 +284,8 @@ def test_provider_can_update_only_price_without_changing_date():
         new_date=None,
         booking_repository=repo,
         notifier=notifier,
+        provider_directory=provider_directory,
+        client_control_url="https://example.com/booking/booking_price_only/",
     )
 
     assert updated.proposed_price_cents == 9200
@@ -219,6 +295,15 @@ def test_provider_can_update_only_price_without_changing_date():
 def test_provider_can_update_only_date_without_changing_price():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
+    provider_directory = InMemoryProviderDirectory(
+        {
+            "provider_1": {
+                "name": "Amandine",
+                "email": "amandine@example.com",
+                "phone": "+33601020304",
+            }
+        }
+    )
 
     booking = BookingRequest(
         id="booking_date_only",
@@ -247,6 +332,8 @@ def test_provider_can_update_only_date_without_changing_price():
         new_date="2026-01-13T12:30:00Z",
         booking_repository=repo,
         notifier=notifier,
+        provider_directory=provider_directory,
+        client_control_url="https://example.com/booking/booking_date_only/",
     )
 
     assert updated.proposed_price_cents == 9000
@@ -256,6 +343,15 @@ def test_provider_can_update_only_date_without_changing_price():
 def test_update_proposal_requires_price_or_date():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
+    provider_directory = InMemoryProviderDirectory(
+        {
+            "provider_1": {
+                "name": "Amandine",
+                "email": "amandine@example.com",
+                "phone": "+33601020304",
+            }
+        }
+    )
 
     booking = BookingRequest(
         id="booking_empty",
@@ -284,4 +380,6 @@ def test_update_proposal_requires_price_or_date():
             new_date=None,
             booking_repository=repo,
             notifier=notifier,
+            provider_directory=provider_directory,
+            client_control_url="https://example.com/booking/booking_empty/",
         )

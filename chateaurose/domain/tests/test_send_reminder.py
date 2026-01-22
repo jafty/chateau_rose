@@ -43,7 +43,19 @@ def test_send_reminder_only_if_submitted_after_24h():
         {
             "recipient": "provider_1",
             "subject": "Rappel: demande en attente",
-            "body": "Vous avez une demande en attente de réponse.",
+            "body": "\n".join(
+                [
+                    "Bonjour,",
+                    "",
+                    "Tu as une demande en attente de réponse.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-10T17:00:00Z",
+                    "- Lieu : Saint-Cyprien",
+                    "",
+                    "À bientôt,",
+                    "L'équipe Château Rose",
+                ]
+            ),
         }
     ]
 

@@ -44,6 +44,8 @@ class ProviderAdminForm(forms.ModelForm):
             "description",
             "contact_phone",
             "contact_email",
+            "salon_zone",
+            "salon_address",
             "profile_image",
             "location_mode",
             "user",
@@ -87,6 +89,7 @@ class ProviderAdmin(ImportExportModelAdmin):
         "name",
         "contact_phone",
         "contact_email",
+        "salon_zone",
         "location_mode",
         "user",
     )

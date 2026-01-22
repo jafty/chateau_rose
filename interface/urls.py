@@ -22,6 +22,8 @@ urlpatterns = [
     path("zones/recherche/", views.zone_search, name="zone_search"),
     path("bookings/<str:booking_id>/provider-action/", views.provider_action, name="provider_action"),
     path("bookings/<str:booking_id>/client-action/", views.client_action, name="client_action"),
+    path("bookings/<str:booking_id>/confirmation/", views.client_confirmation, name="client_confirmation"),
+    path("bookings/<str:booking_id>/proposition/", views.client_proposal, name="client_proposal"),
     path("services/<slug:service_slug>/", views.service_page, name="service_page"),
     path("services/<slug:service_slug>/<slug:city_slug>/", views.service_city_page, name="service_city_page"),
     path(

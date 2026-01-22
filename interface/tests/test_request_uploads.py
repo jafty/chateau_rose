@@ -8,14 +8,17 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from booking.models import Booking, Provider, ProviderZone, Service, Zone
-from chateaurose.infrastructure.provider_catalog import SALON_LOCATION_LABEL
 
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp())
 class ProviderRequestUploadTests(TestCase):
     def setUp(self):
         self.addCleanup(lambda: shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True))
-        self.provider = Provider.objects.create(name="Divine")
+        self.provider = Provider.objects.create(
+            name="Divine",
+            salon_zone="Paris 10e",
+            salon_address="12 rue des Fleurs, 75010 Paris",
+        )
         self.zone = Zone.objects.create(name="Toulouse", slug="toulouse")
         ProviderZone.objects.create(provider=self.provider, zone=self.zone)
         self.service = Service.objects.create(
@@ -40,6 +43,7 @@ class ProviderRequestUploadTests(TestCase):
                 "client_name": "Alice",
                 "client_email": "test@example.com",
                 "location": self.zone.name,
+                "client_address": "5 place du Capitole, 31000 Toulouse",
                 "desired_date": "2026-01-01",
                 "hair_length": "medium",
                 "meche": "on",
@@ -81,5 +85,5 @@ class ProviderRequestUploadTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         booking = Booking.objects.get()
-        self.assertEqual(booking.location, SALON_LOCATION_LABEL)
+        self.assertEqual(booking.location, "Paris 10e")
         self.assertFalse(booking.meche)

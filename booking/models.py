@@ -38,6 +38,15 @@ class Provider(models.Model):
     description = models.TextField(blank=True)
     contact_phone = models.CharField(max_length=64, blank=True)
     contact_email = models.EmailField(blank=True)
+    salon_zone = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Indique la zone ou le quartier où tu reçois au salon.",
+    )
+    salon_address = models.TextField(
+        blank=True,
+        help_text="Adresse complète du salon (communiquée après confirmation).",
+    )
     profile_image = models.ImageField(upload_to="providers/profile/", blank=True, null=True)
     profile_image_url = models.CharField(
         max_length=500,
@@ -191,6 +200,8 @@ class Booking(models.Model):
     client_name = models.CharField(max_length=255)
     client_email = models.EmailField()
     location = models.CharField(max_length=255)
+    location_preference = models.CharField(max_length=32, blank=True)
+    client_address = models.TextField(blank=True)
     desired_date = models.CharField(max_length=128)
     hair_length = models.CharField(max_length=64)
     meche = models.BooleanField()

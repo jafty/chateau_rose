@@ -143,8 +143,8 @@
                         <div class="form-field">
                             <label for="location">Lieu de prestation <span class="required-mark">*</span></label>
                             {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
-                                <div class="meta-line">{{ provider.location_mode_label }}</div>
-                                <input type="hidden" name="location" value="{{ salon_location_label }}">
+                                <div class="meta-line">Zone du salon : {{ provider.salon_zone|default:"À préciser" }}</div>
+                                <input type="hidden" name="location" value="{{ provider.salon_zone }}">
                                 <input type="hidden" name="location_preference" value="salon">
                             {% else %}
                                 {% if provider.location_mode == provider.LOCATION_MODE_HYBRID %}
@@ -161,26 +161,40 @@
                                 {% else %}
                                     <input type="hidden" name="location_preference" value="domicile">
                                 {% endif %}
-                                <select
-                                    name="location"
-                                    id="location"
-                                    required
-                                    data-zone-search-url="{% url 'interface:zone_search' %}"
-                                    data-zone-value-field="name"
-                                    data-zone-label-field="name"
-                                    data-zone-search-placeholder="Commence à taper ta zone"
-                                >
-                                    <option value="" selected disabled>Choisis un lieu</option>
-                                    {% if provider.location_mode == provider.LOCATION_MODE_HYBRID %}
-                                        <option value="{{ salon_location_label }}">Au salon / chez la pro</option>
-                                    {% endif %}
-                                    {% for zone in zones %}
-                                        <option value="{{ zone.name }}">{{ zone.name }}</option>
-                                    {% empty %}
-                                        <option value="" disabled>Zones en cours d'ajout</option>
-                                    {% endfor %}
-                                </select>
+                                <div data-location-select>
+                                    <select
+                                        name="location"
+                                        id="location"
+                                        required
+                                        data-zone-search-url="{% url 'interface:zone_search' %}"
+                                        data-zone-value-field="name"
+                                        data-zone-label-field="name"
+                                        data-zone-search-placeholder="Commence à taper ta zone"
+                                    >
+                                        <option value="" selected disabled>Choisis un lieu</option>
+                                        {% if provider.salon_zone %}
+                                            <option value="{{ provider.salon_zone }}" data-salon-option hidden disabled>
+                                                Zone du salon : {{ provider.salon_zone }}
+                                            </option>
+                                        {% endif %}
+                                        {% for zone in zones %}
+                                            <option value="{{ zone.name }}">{{ zone.name }}</option>
+                                        {% empty %}
+                                            <option value="" disabled>Zones en cours d'ajout</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% if provider.salon_zone %}
+                                    <div class="meta-line" data-salon-zone hidden>
+                                        Zone du salon : {{ provider.salon_zone }}
+                                    </div>
+                                {% endif %}
                             {% endif %}
+                        </div>
+                        <div class="form-field" data-client-address {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}hidden{% endif %}>
+                            <label for="client_address">Adresse complète <span class="required-mark">*</span></label>
+                            <input type="text" name="client_address" id="client_address" autocomplete="street-address">
+                            <small class="field-hint">Communiquée au prestataire uniquement après confirmation.</small>
                         </div>
                         <div class="form-field">
                             <label for="desired_date">Date souhaitée <span class="required-mark">*</span></label>
@@ -256,6 +270,10 @@
         const zoneToggle = document.querySelector('[data-zone-accordion-trigger]');
         const zoneContent = document.querySelector('[data-zone-accordion-content]');
         const locationSelect = document.getElementById('location');
+        const locationSelectWrapper = document.querySelector('[data-location-select]');
+        const salonZone = document.querySelector('[data-salon-zone]');
+        const salonOption = document.querySelector('[data-salon-option]');
+        const clientAddressField = document.querySelector('[data-client-address]');
         const locationPreferenceRadios = document.querySelectorAll('input[name="location_preference"]');
         const locationChoiceLabels = document.querySelectorAll('[data-location-choice]');
 
@@ -290,10 +308,29 @@
             if (!locationSelect) return;
             const isSalonChoice = selected === 'salon';
 
-            if (isSalonChoice) {
-                locationSelect.value = '';
+            if (locationSelectWrapper) {
+                locationSelectWrapper.hidden = isSalonChoice;
             }
-            locationSelect.disabled = isSalonChoice;
+            if (salonZone) {
+                salonZone.hidden = !isSalonChoice;
+            }
+            if (clientAddressField) {
+                clientAddressField.hidden = isSalonChoice;
+                const input = clientAddressField.querySelector('input');
+                if (input) {
+                    input.required = !isSalonChoice;
+                }
+            }
+
+            if (isSalonChoice && salonOption) {
+                salonOption.disabled = false;
+                salonOption.hidden = false;
+                locationSelect.value = salonOption.value;
+            } else if (salonOption) {
+                salonOption.disabled = true;
+                salonOption.hidden = true;
+            }
+            locationSelect.required = !isSalonChoice;
         };
 
         if (locationPreferenceRadios.length) {
