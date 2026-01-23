@@ -243,6 +243,17 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .btn-group { display: flex; gap: 1rem; flex-wrap: wrap; }
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+    white-space: nowrap;
+}
 
 /* --- HERO BENTO GRID --- */
 .hero-section { padding-bottom: 40px; }
@@ -748,11 +759,23 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     padding: clamp(1.5rem, 5vw, 2.5rem);
     box-shadow: var(--shadow-paper);
 }
+.provider-form-layout {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: minmax(0, 1fr);
+}
+.provider-form-aside { display: flex; }
 .provider-form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
 .provider-form-grid .form-field { display: grid; gap: 6px; }
 .provider-form-grid .field-hint { color: var(--ink-secondary); font-size: 0.85rem; }
 .provider-form-grid .full-width { grid-column: 1 / -1; }
 .provider-form-grid label { font-weight: 700; font-size: 0.95rem; }
+.provider-form-grid .wizard-step {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
 .provider-form-grid input:not([type="checkbox"]),
 .provider-form-grid select,
 .provider-form-grid textarea {
@@ -785,11 +808,18 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .zone-toggle:hover { background: #fff2f6; }
-.location-choice { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.location-choice {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 10px;
+}
 .location-choice .choice-pill {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    justify-content: center;
+    width: 100%;
     padding: 10px 14px;
     border: 1px solid #f3c1da;
     background: #fff9f9;
@@ -807,7 +837,16 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .provider-form-grid .estimation-box .estimate-value { font-weight: 800; font-size: 1.1rem; margin: 0; }
 .provider-form-grid .checkbox-field { grid-column: 1 / -1; }
 .checkbox-field label { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; white-space: nowrap; width: auto; }
-@media (min-width: 720px) { .provider-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+    .location-choice { grid-template-columns: 1fr; }
+}
+@media (min-width: 720px) {
+    .provider-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 960px) {
+    .provider-form-layout { grid-template-columns: minmax(0, 1fr) 260px; align-items: start; }
+    .provider-form-aside { position: sticky; top: 120px; }
+}
 
 .required-mark { color: var(--rose-accent); }
 .table-wrapper { overflow-x: auto; }
@@ -1349,7 +1388,15 @@ footer {
     gap: 1rem;
     padding-top: 1rem;
     border-top: 1px dashed rgba(0,0,0,0.1);
+    align-items: center;
 }
+.wizard-actions .btn {
+    padding: 0.7rem 1.6rem;
+    text-transform: none;
+    letter-spacing: 0.5px;
+}
+.wizard-actions .btn-prev { box-shadow: none; }
+.payment-element { max-width: 100%; }
 
 .btn-prev {
     background: transparent;
@@ -1403,27 +1450,25 @@ footer {
 /* Sticky Price Bar (Mobile friendly) */
 .sticky-price-bar {
     position: sticky;
-    bottom: 20px;
-    background: var(--ink-primary);
-    color: var(--bg-paper);
-    padding: 15px 20px;
-    border-radius: 8px;
-    box-shadow: var(--shadow-lifted);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 100;
-    margin-top: 20px;
-    transform: translateY(0);
-    transition: transform 0.3s ease;
+    top: 120px;
+    background: #fff;
+    color: var(--ink-primary);
+    padding: 16px 18px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-paper);
+    display: grid;
+    gap: 8px;
+    border: 1px solid #f3c1da;
+    width: 100%;
 }
 
 .sticky-price-bar.hidden {
-    transform: translateY(150%);
+    display: none;
 }
 
-.total-label { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-.total-amount { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 700; font-style: italic; }
+.total-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-secondary); }
+.total-amount { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 700; font-style: italic; color: var(--rose-accent); }
+.sticky-price-bar .meta-line { margin: 0; font-size: 0.85rem; }
 
 /* Secure Badge */
 .secure-badge {
