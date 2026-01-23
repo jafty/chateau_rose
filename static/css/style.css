@@ -1273,3 +1273,168 @@ footer {
     .form-grid .form-field { min-width: 0; }
     .provider-profile { padding: 40px 0; }
 }
+
+
+/* --- WIZARD FORM ADDITIONS --- */
+
+/* Masquer les étapes non actives */
+.wizard-step {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.wizard-step.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Barre de progression */
+.step-progress {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    position: relative;
+    max-width: 400px;
+    margin-inline: auto;
+}
+
+.step-progress::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #e5e7eb;
+    z-index: 0;
+}
+
+.step-indicator {
+    width: 30px;
+    height: 30px;
+    background: var(--bg-paper);
+    border: 2px solid #e5e7eb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--ink-secondary);
+    z-index: 1;
+    position: relative;
+    transition: 0.3s ease;
+}
+
+.step-indicator.active {
+    border-color: var(--rose-accent);
+    color: var(--rose-accent);
+    box-shadow: 0 0 0 4px #fff2f6;
+}
+
+.step-indicator.completed {
+    background: var(--rose-accent);
+    border-color: var(--rose-accent);
+    color: white;
+}
+
+/* Navigation Buttons */
+.wizard-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed rgba(0,0,0,0.1);
+}
+
+.btn-prev {
+    background: transparent;
+    border: 1px solid var(--ink-secondary);
+    color: var(--ink-secondary);
+}
+
+/* Custom File Upload */
+.file-upload-wrapper {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    border: 2px dashed #f3c1da;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    padding: 10px;
+}
+
+.file-upload-wrapper:hover {
+    background: #fff2f6;
+    border-color: var(--rose-accent);
+}
+
+.file-upload-wrapper input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-upload-label {
+    color: var(--rose-accent);
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.file-upload-info {
+    font-size: 0.8rem;
+    color: var(--ink-secondary);
+    margin-top: 5px;
+    pointer-events: none;
+}
+
+/* Sticky Price Bar (Mobile friendly) */
+.sticky-price-bar {
+    position: sticky;
+    bottom: 20px;
+    background: var(--ink-primary);
+    color: var(--bg-paper);
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lifted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    margin-top: 20px;
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+}
+
+.sticky-price-bar.hidden {
+    transform: translateY(150%);
+}
+
+.total-label { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+.total-amount { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 700; font-style: italic; }
+
+/* Secure Badge */
+.secure-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #ECFDF3;
+    color: #065F46;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    border: 1px solid #A7F3D0;
+}
