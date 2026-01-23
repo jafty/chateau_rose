@@ -260,7 +260,7 @@ def client_action(request, booking_id):
         provider_directory=provider_directory,
         notifier=notifier,
     )
-    return redirect("interface:client_confirmation", booking_id=final_booking.booking_id)
+    return redirect("interface:client_confirmation", booking_id=final_booking.id)
 
 
 def client_confirmation(request, booking_id):
