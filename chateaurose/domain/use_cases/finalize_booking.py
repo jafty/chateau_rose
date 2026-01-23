@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import InvalidState
@@ -7,6 +7,30 @@ CONFIRMED = "CONFIRMED"
 CANCELLED = "CANCELLED"
 PENDING_CLIENT_VALIDATION = "PENDING_CLIENT_VALIDATION"
 SUBMITTED = "SUBMITTED"
+
+
+def _parse_datetime(value, *, reference_tz):
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    else:
+        return None
+
+    if parsed.tzinfo is None and reference_tz is not None:
+        return parsed.replace(tzinfo=reference_tz)
+    return parsed
+
+
+def _compute_client_reminder_send_at(effective_date, *, reference_time):
+    appointment_at = _parse_datetime(effective_date, reference_tz=reference_time.tzinfo)
+    if appointment_at is None:
+        return None
+    reminder_at = appointment_at - timedelta(hours=48)
+    return reminder_at if reminder_at > reference_time else reference_time
 
 
 def execute(
@@ -19,6 +43,7 @@ def execute(
     payment_gateway,
     provider_directory,
     notifier,
+    reminder_gateway=None,
 ) -> BookingRequest:
     booking = booking_repository.get(booking_id)
 
@@ -107,6 +132,28 @@ def execute(
                     ]
                 ),
             )
+            if reminder_gateway:
+                send_at = _compute_client_reminder_send_at(effective_date, reference_time=effective_now)
+                if send_at:
+                    reminder_gateway.schedule(
+                        recipient=booking.client_contact["email"],
+                        send_at=send_at,
+                        subject="Rappel: rendez-vous confirmé",
+                        body="\n".join(
+                            [
+                                f"Bonjour {booking.client_contact['name']},",
+                                "",
+                                "Petit rappel pour ton rendez-vous confirmé.",
+                                "Récapitulatif :",
+                                f"- Date : {effective_date}",
+                                f"- Lieu : {location_label}",
+                                f"- Tarif : {formatted_price}",
+                                "",
+                                "À très vite,",
+                                "L'équipe Château Rose",
+                            ]
+                        ),
+                    )
         elif decision == "reject" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION):
             booking.status = CANCELLED
             payment_gateway.release_auth(booking.payment_auth_id)
@@ -204,6 +251,28 @@ def execute(
                     ]
                 ),
             )
+            if reminder_gateway:
+                send_at = _compute_client_reminder_send_at(effective_date, reference_time=effective_now)
+                if send_at:
+                    reminder_gateway.schedule(
+                        recipient=booking.client_contact["email"],
+                        send_at=send_at,
+                        subject="Rappel: rendez-vous confirmé",
+                        body="\n".join(
+                            [
+                                f"Bonjour {booking.client_contact['name']},",
+                                "",
+                                "Petit rappel pour ton rendez-vous confirmé.",
+                                "Récapitulatif :",
+                                f"- Date : {effective_date}",
+                                f"- Lieu : {location_label}",
+                                f"- Tarif : {formatted_price}",
+                                "",
+                                "À très vite,",
+                                "L'équipe Château Rose",
+                            ]
+                        ),
+                    )
         elif decision == "refuse" and booking.status == PENDING_CLIENT_VALIDATION:
             booking.status = CANCELLED
             payment_gateway.release_auth(booking.payment_auth_id)
