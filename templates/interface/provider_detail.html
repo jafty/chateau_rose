@@ -103,9 +103,16 @@
             {% if payment_message %}<div class="alert success">{{ payment_message }}</div>{% endif %}
             {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
 
-                <div class="provider-form-card inline-form-card">
-                    <h3 class="section-title provider-section-title">Demander une prestation</h3>
-                    <p class="meta-line">Envoie ta demande détaillée directement à {{ provider.name }}.</p>
+                <div class="provider-form-card inline-form-card" id="booking-wizard">
+                    <h3 class="section-title provider-section-title" style="text-align:center;">Réserver avec {{ provider.name }}</h3>
+
+                    <div class="step-progress">
+                        <div class="step-indicator active" data-step-indicator="1">1</div>
+                        <div class="step-indicator" data-step-indicator="2">2</div>
+                        <div class="step-indicator" data-step-indicator="3">3</div>
+                        <div class="step-indicator" data-step-indicator="4">4</div>
+                    </div>
+
                     <form
                         method="post"
                         enctype="multipart/form-data"
@@ -116,135 +123,186 @@
                         data-stripe-public-key="{{ stripe_public_key }}"
                     >
                         {% csrf_token %}
-                        <div class="form-field">
-                            <label for="service_id">Service souhaité <span class="required-mark">*</span></label>
-                            <select name="service_id" id="service_id" required>
-                                <option value="" selected disabled>Choisis un service</option>
-                                {% for service in services %}
-                                    <option value="{{ service.id }}">{{ service.name }} - {{ service.price_display }}</option>
-                                {% empty %}
-                                    <option value="" disabled>Aucun service publié pour le moment</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-field estimation-box">
-                            <label>Estimation du tarif</label>
-                            <p class="estimate-value" id="price-estimate">
-                                {% if default_starting_price %}À partir de {{ default_starting_price }}{% else %}Sélectionnez un service pour voir une estimation{% endif %}
-                            </p>
-                            <p class="meta-line" id="estimate-details">Les variations se calculent selon la longueur des cheveux et l'ajout de mèches.</p>
-                        </div>
-                        <div class="form-field">
-                            <label for="client_name">Ton nom <span class="required-mark">*</span></label>
-                            <input type="text" name="client_name" id="client_name" required autocomplete="name">
-                        </div>
-                        <div class="form-field">
-                            <label for="client_email">Ton email <span class="required-mark">*</span></label>
-                            <input type="email" name="client_email" id="client_email" required autocomplete="email">
-                        </div>
-                        <div class="form-field">
-                            <label for="location">Lieu de prestation <span class="required-mark">*</span></label>
-                            {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
-                                <div class="meta-line">Zone du salon : {{ provider.salon_zone|default:"À préciser" }}</div>
-                                <input type="hidden" name="location" value="{{ provider.salon_zone }}">
-                                <input type="hidden" name="location_preference" value="salon">
-                            {% else %}
-                                {% if provider.location_mode == provider.LOCATION_MODE_HYBRID %}
-                                    <div class="location-choice" data-location-preference>
-                                        <label class="choice-pill" data-location-choice="salon">
-                                            <input type="radio" name="location_preference" value="salon" checked>
-                                            <span>En salon / chez la pro</span>
-                                        </label>
-                                        <label class="choice-pill" data-location-choice="domicile">
-                                            <input type="radio" name="location_preference" value="domicile">
-                                            <span>À domicile</span>
-                                        </label>
-                                    </div>
-                                {% else %}
-                                    <input type="hidden" name="location_preference" value="domicile">
-                                {% endif %}
-                                <div data-location-select>
-                                    <select
-                                        name="location"
-                                        id="location"
-                                        required
-                                        data-zone-search-url="{% url 'interface:zone_search' %}"
-                                        data-zone-value-field="name"
-                                        data-zone-label-field="name"
-                                        data-zone-search-placeholder="Commence à taper ta zone"
-                                    >
-                                        <option value="" selected disabled>Choisis un lieu</option>
-                                        {% if provider.salon_zone %}
-                                            <option value="{{ provider.salon_zone }}" data-salon-option hidden disabled>
-                                                Zone du salon : {{ provider.salon_zone }}
-                                            </option>
-                                        {% endif %}
-                                        {% for zone in zones %}
-                                            <option value="{{ zone.name }}">{{ zone.name }}</option>
-                                        {% empty %}
-                                            <option value="" disabled>Zones en cours d'ajout</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                {% if provider.salon_zone %}
-                                    <div class="meta-line" data-salon-zone hidden>
-                                        Zone du salon : {{ provider.salon_zone }}
-                                    </div>
-                                {% endif %}
-                            {% endif %}
-                        </div>
-                        <div class="form-field" data-client-address {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}hidden{% endif %}>
-                            <label for="client_address">Adresse complète <span class="required-mark">*</span></label>
-                            <input type="text" name="client_address" id="client_address" autocomplete="street-address">
-                            <small class="field-hint">Communiquée au prestataire uniquement après confirmation.</small>
-                        </div>
-                        <div class="form-field">
-                            <label for="desired_date">Date souhaitée <span class="required-mark">*</span></label>
-                            <input type="datetime-local" name="desired_date" id="desired_date" inputmode="numeric" placeholder="JJ/MM/AAAA HH:MM" required>
-                            <small class="field-hint">Format : JJ/MM/AAAA HH:MM (24h)</small>
-                        </div>
-                        <div class="form-field">
-                            <label for="hair_length">Longueur de cheveux <span class="required-mark">*</span></label>
-                            <select name="hair_length" id="hair_length" required disabled>
-                                <option value="" selected disabled>Choisis un service d'abord</option>
-                            </select>
-                        </div>
-                        <div class="form-field checkbox-field">
-                            <label for="meche"><input type="checkbox" name="meche" id="meche"> <span>Besoin de mèches fournies</span></label>
-                        </div>
-                        <div class="form-field">
-                            <label for="current_hair_picture_file">Photo de tes cheveux <span class="required-mark">*</span></label>
-                            <input type="file" name="current_hair_picture_file" id="current_hair_picture_file" accept="image/*" required>
-                        </div>
-                        <div class="form-field full-width">
-                            <label for="inspiration_pictures">Photos d'inspiration</label>
-                            <input type="file" name="inspiration_pictures" id="inspiration_pictures" accept="image/*" multiple>
-                        </div>
-                        <div class="form-field full-width">
-                            <label for="free_text">Infos complémentaires</label>
-                            <textarea name="free_text" id="free_text" placeholder="Longueur souhaitée, couleurs, contraintes horaires..."></textarea>
-                        </div>
-                        {% if stripe_public_key %}
+
+                        <fieldset class="wizard-step active" data-step="1">
+                            <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Choix de la coiffure</h4>
+
                             <div class="form-field full-width">
-                                <label>Empreinte bancaire <span class="required-mark">*</span></label>
-                                <p class="meta-line">
-                                    Pour sécuriser le créneau, une empreinte bancaire est demandée.
-                                    Aucun débit n'est effectué : la carte n'est prélevée que si vous
-                                    acceptez le rendez-vous avec le prestataire.
-                                </p>
-                                <div id="payment-element" class="payment-element"></div>
-                                <small class="field-hint">
-                                    Tes informations sont traitées de manière sécurisée par Stripe.
-                                </small>
-                                <div class="alert error" id="payment-error" hidden></div>
+                                <label for="service_id">Service souhaité <span class="required-mark">*</span></label>
+                                <select name="service_id" id="service_id" required>
+                                    <option value="" selected disabled>-- Choisis un service --</option>
+                                    {% for service in services %}
+                                        <option value="{{ service.id }}">{{ service.name }} - {{ service.price_display }}</option>
+                                    {% empty %}
+                                        <option value="" disabled>Aucun service disponible</option>
+                                    {% endfor %}
+                                </select>
                             </div>
-                        {% endif %}
+
+                            <div class="form-field full-width">
+                                <label for="hair_length">Longueur souhaitée <span class="required-mark">*</span></label>
+                                <select name="hair_length" id="hair_length" required disabled>
+                                    <option value="" selected disabled>Choisis d'abord un service</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field checkbox-field full-width" style="margin-top: 10px;">
+                                <label for="meche" style="background: white; padding: 10px; border: 1px dashed #ccc; width: 100%;">
+                                    <input type="checkbox" name="meche" id="meche">
+                                    <span>J'ai besoin que les mèches soient fournies</span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="wizard-step" data-step="2">
+                            <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Tes cheveux & inspirations</h4>
+
+                            <div class="form-field full-width">
+                                <label>Photo de tes cheveux actuels <span class="required-mark">*</span></label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" name="current_hair_picture_file" id="current_hair_picture_file" accept="image/*" required onchange="updateFileLabel(this)">
+                                    <span class="file-upload-label">📸 Prendre ou choisir une photo</span>
+                                    <span class="file-upload-info" id="file-label-current">Aucun fichier sélectionné</span>
+                                </div>
+                            </div>
+
+                            <div class="form-field full-width">
+                                <label>Photos d'inspiration (Optionnel)</label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" name="inspiration_pictures" id="inspiration_pictures" accept="image/*" multiple onchange="updateFileLabel(this, 'file-label-inspo')">
+                                    <span class="file-upload-label">✨ Ajouter des modèles</span>
+                                    <span class="file-upload-info" id="file-label-inspo">Aucun fichier sélectionné</span>
+                                </div>
+                            </div>
+
+                            <div class="form-field full-width">
+                                <label for="free_text">Un petit mot pour {{ provider.name }} ?</label>
+                                <textarea name="free_text" id="free_text" placeholder="Ex: J'ai le cuir chevelu sensible, je suis dispo plutôt le matin..."></textarea>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="wizard-step" data-step="3">
+                            <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Infos pratiques</h4>
+
+                            <div class="form-field full-width">
+                                <label for="desired_date">Date & Heure souhaitées <span class="required-mark">*</span></label>
+                                <input type="datetime-local" name="desired_date" id="desired_date" required>
+                            </div>
+
+                            <div class="form-field full-width">
+                                <label>Lieu de rendez-vous <span class="required-mark">*</span></label>
+                                {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
+                                    <div class="meta-line">📍 Au salon : {{ provider.salon_zone|default:"Adresse communiquée après résa" }}</div>
+                                    <input type="hidden" name="location" value="{{ provider.salon_zone }}">
+                                    <input type="hidden" name="location_preference" value="salon">
+                                {% else %}
+                                    {% if provider.location_mode == provider.LOCATION_MODE_HYBRID %}
+                                        <div class="location-choice" data-location-preference>
+                                            <label class="choice-pill" data-location-choice="salon">
+                                                <input type="radio" name="location_preference" value="salon" checked>
+                                                <span>En salon / chez la/le pro</span>
+                                            </label>
+                                            <label class="choice-pill" data-location-choice="domicile">
+                                                <input type="radio" name="location_preference" value="domicile">
+                                                <span>À domicile</span>
+                                            </label>
+                                        </div>
+                                    {% else %}
+                                        <input type="hidden" name="location_preference" value="domicile">
+                                    {% endif %}
+
+                                    <div data-location-select class="full-width" style="margin-top: 10px;">
+                                        <select
+                                            name="location"
+                                            id="location"
+                                            required
+                                            data-zone-search-url="{% url 'interface:zone_search' %}"
+                                            data-zone-value-field="name"
+                                            data-zone-label-field="name"
+                                            data-zone-search-placeholder="Commence à taper ta zone"
+                                        >
+                                            <option value="" selected disabled>Dans quelle zone ?</option>
+                                            {% if provider.salon_zone %}
+                                                <option value="{{ provider.salon_zone }}" data-salon-option hidden disabled>Au salon ({{ provider.salon_zone }})</option>
+                                            {% endif %}
+                                            {% for zone in zones %}
+                                                <option value="{{ zone.name }}">{{ zone.name }}</option>
+                                            {% empty %}
+                                                <option value="" disabled>Zones en cours d'ajout</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    {% if provider.salon_zone %}
+                                        <div class="meta-line" data-salon-zone hidden>
+                                            Zone du salon : {{ provider.salon_zone }}
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+
+                            <div class="form-field full-width" data-client-address {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}hidden{% endif %}>
+                                <label for="client_address">Adresse exacte (si domicile) <span class="required-mark">*</span></label>
+                                <input type="text" name="client_address" id="client_address" autocomplete="street-address" placeholder="414 route de Saint-Simon...">
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;" class="full-width">
+                                <div class="form-field">
+                                    <label>Ton Prénom/Nom <span class="required-mark">*</span></label>
+                                    <input type="text" name="client_name" id="client_name" required autocomplete="name">
+                                </div>
+                                <div class="form-field">
+                                    <label>Ton Email <span class="required-mark">*</span></label>
+                                    <input type="email" name="client_email" id="client_email" required autocomplete="email">
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="wizard-step" data-step="4">
+                            <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Sécuriser le rendez-vous</h4>
+
+                            <div class="secure-badge">
+                                <span style="font-size: 1.5rem;">🔒</span>
+                                <div>
+                                    <strong>Empreinte bancaire uniquement.</strong><br>
+                                    Aucun montant débité maintenant. Tu paieras directement {{ provider.name }} le jour J.
+                                </div>
+                            </div>
+
+                            <div style="background: #fff; padding: 15px; border: 1px solid #eee; margin-bottom: 20px;">
+                                <p><strong>Total estimé :</strong> <span id="final-price-display" style="font-size: 1.2rem; color: var(--rose-accent);">...</span></p>
+                                <p class="meta-line" id="final-details-display" style="font-size: 0.9rem;">...</p>
+                            </div>
+
+                            {% if stripe_public_key %}
+                                <div class="form-field full-width">
+                                    <label>Saisir la carte pour garantir le créneau</label>
+                                    <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
+                                    <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
+                                </div>
+                            {% endif %}
+
+                            <div class="form-field checkbox-field full-width" style="margin-top: 15px;">
+                                <label>
+                                    <input type="checkbox" required>
+                                    <span style="font-size: 0.9rem;">J'accepte que cette empreinte serve de caution en cas d'absence injustifiée (No-show).</span>
+                                </label>
+                            </div>
+                        </fieldset>
+
                         <input type="hidden" name="provider_id" value="{{ provider.id }}">
                         <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
-                        <div class="form-actions full-width">
-                            <button type="submit" class="btn" style="width: 100%; text-align: center;">Envoyer ma demande</button>
+
+                        <div class="wizard-actions">
+                            <button type="button" class="btn btn-prev btn-secondary" id="btn-prev" style="visibility: hidden;">Retour</button>
+                            <button type="button" class="btn" id="btn-next">Continuer</button>
+                            <button type="submit" class="btn" id="btn-submit" hidden>Valider la demande</button>
                         </div>
                     </form>
+
+                    <div class="sticky-price-bar" id="sticky-price-bar">
+                        <span class="total-label">Estimation</span>
+                        <span class="total-amount" id="sticky-price-value">-- €</span>
+                    </div>
                 </div>
             </section>
         </div>
@@ -252,14 +310,40 @@
 </section>
 <script src="https://js.stripe.com/v3"></script>
 <script>
+    const updateFileLabel = (input, labelId = null) => {
+        const displayId = labelId || 'file-label-current';
+        const displayEl = document.getElementById(displayId);
+        if (!displayEl) return;
+        if (input.files && input.files.length > 0) {
+            const count = input.files.length;
+            displayEl.textContent = count === 1 ? input.files[0].name : `${count} fichiers sélectionnés`;
+            displayEl.style.color = 'var(--ink-primary)';
+            displayEl.style.fontWeight = 'bold';
+        } else {
+            displayEl.textContent = 'Aucun fichier sélectionné';
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
         const pricingData = JSON.parse('{{ pricing_data|default:"{}"|escapejs }}');
+        const form = document.getElementById('provider-request-form');
+
+        const steps = document.querySelectorAll('.wizard-step');
+        const indicators = document.querySelectorAll('.step-indicator');
+        const btnNext = document.getElementById('btn-next');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnSubmit = document.getElementById('btn-submit');
+        const stickyBar = document.getElementById('sticky-price-bar');
+        let currentStep = 1;
+
         const serviceSelect = document.getElementById('service_id');
         const hairLengthSelect = document.getElementById('hair_length');
         const mecheCheckbox = document.getElementById('meche');
-        const priceEstimate = document.getElementById('price-estimate');
-        const estimateDetails = document.getElementById('estimate-details');
-        const form = document.getElementById('provider-request-form');
+
+        const stickyPriceValue = document.getElementById('sticky-price-value');
+        const finalPriceDisplay = document.getElementById('final-price-display');
+        const finalDetailsDisplay = document.getElementById('final-details-display');
+
         const paymentElementContainer = document.getElementById('payment-element');
         const paymentError = document.getElementById('payment-error');
         const paymentAuthInput = document.getElementById('payment_auth_id');
@@ -270,6 +354,7 @@
         let elements = null;
         let paymentElement = null;
         let currentClientSecret = null;
+
         const zoneToggle = document.querySelector('[data-zone-accordion-trigger]');
         const zoneContent = document.querySelector('[data-zone-accordion-content]');
         const locationSelect = document.getElementById('location');
@@ -362,33 +447,109 @@
             locationPreferenceRadios.forEach((radio) => radio.addEventListener('change', syncLocationPreference));
         }
 
+        const updateWizardUI = () => {
+            steps.forEach((step) => {
+                step.classList.toggle('active', parseInt(step.dataset.step, 10) === currentStep);
+            });
+
+            indicators.forEach((indicator) => {
+                const stepNum = parseInt(indicator.dataset.stepIndicator, 10);
+                indicator.classList.remove('active', 'completed');
+                if (stepNum === currentStep) indicator.classList.add('active');
+                if (stepNum < currentStep) indicator.classList.add('completed');
+            });
+
+            if (btnPrev) {
+                btnPrev.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+            }
+
+            if (currentStep === 4) {
+                if (btnNext) btnNext.hidden = true;
+                if (btnSubmit) btnSubmit.hidden = false;
+                stickyBar?.classList.add('hidden');
+                mountPaymentElement().catch((error) => showPaymentError(error.message));
+            } else {
+                if (btnNext) btnNext.hidden = false;
+                if (btnSubmit) btnSubmit.hidden = true;
+                stickyBar?.classList.remove('hidden');
+            }
+        };
+
+        const validateCurrentStep = () => {
+            const currentStepEl = document.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+            if (!currentStepEl) return true;
+            const inputs = currentStepEl.querySelectorAll('input, select, textarea');
+            let isValid = true;
+
+            inputs.forEach((input) => {
+                if (!input.checkValidity()) {
+                    isValid = false;
+                    input.reportValidity();
+                    return;
+                }
+            });
+            return isValid;
+        };
+
+        btnNext?.addEventListener('click', () => {
+            if (validateCurrentStep()) {
+                currentStep += 1;
+                updateWizardUI();
+                const wizardTop = document.getElementById('booking-wizard');
+                if (wizardTop) {
+                    window.scrollTo({ top: wizardTop.offsetTop - 100, behavior: 'smooth' });
+                }
+            }
+        });
+
+        btnPrev?.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep -= 1;
+                updateWizardUI();
+            }
+        });
+
         const formatPrice = (cents) => {
-            if (cents === null || cents === undefined) return '';
+            if (cents === null || cents === undefined) return '...';
             const euros = cents / 100;
             return euros % 1 === 0 ? `${euros.toFixed(0)} €` : `${euros.toFixed(2)} €`;
         };
 
         const updateHairLengths = (serviceId) => {
+            if (!hairLengthSelect) return;
             hairLengthSelect.innerHTML = '';
             hairLengthSelect.disabled = true;
+
             if (!serviceId || !pricingData[serviceId]) return;
-            const optionPlaceholder = document.createElement('option');
-            optionPlaceholder.value = '';
-            optionPlaceholder.textContent = 'Choisis une longueur';
-            optionPlaceholder.disabled = true;
-            optionPlaceholder.selected = true;
-            hairLengthSelect.appendChild(optionPlaceholder);
+
+            const placeholder = document.createElement('option');
+            placeholder.textContent = 'Sélectionne ta longueur';
+            placeholder.value = '';
+            placeholder.selected = true;
+            placeholder.disabled = true;
+            hairLengthSelect.appendChild(placeholder);
+
             const lengths = pricingData[serviceId].lengths || {};
-            Object.keys(lengths)
-                .sort()
-                .forEach((lengthKey) => {
-                    const opt = document.createElement('option');
-                    opt.value = lengthKey;
-                    const delta = lengths[lengthKey];
-                    const displayDelta = delta === 0 ? '' : delta > 0 ? ` (+${formatPrice(delta)})` : ` (${formatPrice(delta)})`;
-                    opt.textContent = `${lengthKey}${displayDelta}`;
-                    hairLengthSelect.appendChild(opt);
-                });
+
+            if (Object.keys(lengths).length === 0) {
+                const opt = document.createElement('option');
+                opt.value = 'standard';
+                opt.textContent = 'Standard';
+                hairLengthSelect.appendChild(opt);
+                hairLengthSelect.value = 'standard';
+            } else {
+                Object.keys(lengths)
+                    .sort()
+                    .forEach((lengthKey) => {
+                        const opt = document.createElement('option');
+                        opt.value = lengthKey;
+                        const delta = lengths[lengthKey];
+                        const displayDelta =
+                            delta === 0 ? '' : delta > 0 ? ` (+${formatPrice(delta)})` : ` (${formatPrice(delta)})`;
+                        opt.textContent = `${lengthKey}${displayDelta}`;
+                        hairLengthSelect.appendChild(opt);
+                    });
+            }
             hairLengthSelect.disabled = false;
         };
 
@@ -399,23 +560,29 @@
         };
 
         const refreshEstimate = () => {
+            if (!serviceSelect || !stickyPriceValue || !finalPriceDisplay || !finalDetailsDisplay) return;
             const serviceId = serviceSelect.value;
             if (!serviceId || !pricingData[serviceId]) {
-                priceEstimate.textContent = '{{ default_starting_price|default:"Sélectionne un service pour voir une estimation" }}';
-                estimateDetails.textContent = 'Sélectionnez un service, une longueur et si les mèches doivent être fournies.';
+                stickyPriceValue.textContent = '-- €';
+                finalPriceDisplay.textContent = '...';
+                finalDetailsDisplay.textContent = 'Sélectionne un service pour afficher une estimation.';
                 return;
             }
+
             const pricing = pricingData[serviceId];
             const base = pricing.base;
             const lengths = pricing.lengths || {};
-            const selectedLength = hairLengthSelect.value;
-            const lengthAdj = selectedLength ? lengths[selectedLength] ?? 0 : minAdjustment(lengths);
-            const mecheAdj = mecheCheckbox.checked ? pricing.meche_bonus || 0 : 0;
-            const estimateCents = base + lengthAdj + mecheAdj;
-            priceEstimate.textContent = `À partir de ${formatPrice(estimateCents)}`;
-            const lengthText = selectedLength ? `longueur "${selectedLength}"` : 'longueur la plus courte disponible';
-            const mecheText = mecheCheckbox.checked ? 'avec mèches incluses' : 'sans mèches fournies';
-            estimateDetails.textContent = `Base ${formatPrice(base)}, ajustée pour ${lengthText} (${mecheText}).`;
+            const selectedLength = hairLengthSelect?.value;
+            const lengthAdj = selectedLength && lengths[selectedLength] !== undefined ? lengths[selectedLength] : minAdjustment(lengths);
+            const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
+            const totalCents = base + lengthAdj + mecheAdj;
+            const totalStr = formatPrice(totalCents);
+
+            stickyPriceValue.textContent = totalStr;
+            finalPriceDisplay.textContent = totalStr;
+            const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
+            const mecheText = mecheCheckbox?.checked ? '+ mèches fournies' : 'sans mèches fournies';
+            finalDetailsDisplay.textContent = `${pricing.name} (${lengthText}, ${mecheText}).`;
         };
 
         const getCsrfToken = () => {
@@ -451,12 +618,12 @@
 
         const buildPaymentIntent = async () => {
             if (!stripePublicKey || !paymentIntentUrl) return null;
-            const serviceId = serviceSelect.value;
-            const hairLength = hairLengthSelect.value;
-            const meche = mecheCheckbox.checked;
+            const serviceId = serviceSelect?.value;
+            const hairLength = hairLengthSelect?.value || 'standard';
+            const meche = mecheCheckbox?.checked;
             const providerId = form?.querySelector('input[name="provider_id"]')?.value;
 
-            if (!serviceId || !hairLength || !providerId) {
+            if (!serviceId || !providerId) {
                 return null;
             }
 
@@ -479,6 +646,19 @@
                 throw new Error(data.error || 'Impossible de préparer l’empreinte bancaire.');
             }
             return response.json();
+        };
+
+        const resetPaymentElement = () => {
+            currentClientSecret = null;
+            paymentAuthInput.value = '';
+            if (paymentElement) {
+                paymentElement.unmount();
+                paymentElement = null;
+            }
+            if (paymentElementContainer) {
+                paymentElementContainer.innerHTML = '';
+            }
+            elements = null;
         };
 
         const mountPaymentElement = async () => {
@@ -504,33 +684,49 @@
 
         serviceSelect?.addEventListener('change', (event) => {
             updateHairLengths(event.target.value);
-            mecheCheckbox.checked = false;
+            if (mecheCheckbox) mecheCheckbox.checked = false;
             refreshEstimate();
-            mountPaymentElement().catch((error) => showPaymentError(error.message));
+            resetPaymentElement();
+            if (currentStep === 4) {
+                mountPaymentElement().catch((error) => showPaymentError(error.message));
+            }
         });
 
         hairLengthSelect?.addEventListener('change', () => {
             refreshEstimate();
-            mountPaymentElement().catch((error) => showPaymentError(error.message));
+            resetPaymentElement();
+            if (currentStep === 4) {
+                mountPaymentElement().catch((error) => showPaymentError(error.message));
+            }
         });
 
         mecheCheckbox?.addEventListener('change', () => {
             refreshEstimate();
-            mountPaymentElement().catch((error) => showPaymentError(error.message));
+            resetPaymentElement();
+            if (currentStep === 4) {
+                mountPaymentElement().catch((error) => showPaymentError(error.message));
+            }
         });
 
-        if (serviceSelect.value) {
+        if (serviceSelect?.value) {
             updateHairLengths(serviceSelect.value);
         }
 
         form?.addEventListener('submit', async (event) => {
-            if (!stripe || !elements) {
+            if (!stripePublicKey) {
                 return;
             }
 
             if (paymentAuthInput.value) {
                 return;
             }
+
+            if (!stripe || !elements) {
+                event.preventDefault();
+                showPaymentError("Le système de paiement n'est pas chargé.");
+                return;
+            }
+
             event.preventDefault();
             showPaymentError('');
 
@@ -557,6 +753,9 @@
                 form.submit();
             }
         });
+
+        updateWizardUI();
+        refreshEstimate();
     });
 </script>
 {% endblock %}
