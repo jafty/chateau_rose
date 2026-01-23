@@ -7,6 +7,7 @@ from chateaurose.domain.tests.stubs.booking_repository import InMemoryBookingRep
 from chateaurose.domain.tests.stubs.notifier import InMemoryNotifier
 from chateaurose.domain.tests.stubs.payment_gateway import InMemoryPaymentGateway
 from chateaurose.domain.tests.stubs.provider_directory import InMemoryProviderDirectory
+from chateaurose.domain.tests.stubs.reminder import InMemoryReminderGateway
 from chateaurose.domain.use_cases import finalize_booking
 
 
@@ -499,3 +500,129 @@ def test_finalize_booking_rejects_if_expired():
 
     assert payments.capture_calls == []
     assert payments.release_calls == []
+
+
+def test_confirm_schedules_client_reminder_48h_before():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+    payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
+    reminders = InMemoryReminderGateway()
+
+    booking = BookingRequest(
+        id="booking_reminder_48h",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Paris 10e",
+        location_preference="salon",
+        desired_date="2026-01-12T12:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        payment_auth_id="auth_reminder_48h",
+        status="SUBMITTED",
+        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+    )
+    repo.add(booking)
+
+    now = datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc)
+    finalize_booking.execute(
+        booking_id="booking_reminder_48h",
+        actor="provider",
+        decision="confirm",
+        now=now,
+        booking_repository=repo,
+        payment_gateway=payments,
+        provider_directory=provider_directory,
+        notifier=notifier,
+        reminder_gateway=reminders,
+    )
+
+    assert reminders.reminders == [
+        {
+            "recipient": "sarah@example.com",
+            "send_at": datetime(2026, 1, 10, 12, 0, tzinfo=timezone.utc),
+            "subject": "Rappel: rendez-vous confirmé",
+            "body": "\n".join(
+                [
+                    "Bonjour Sarah,",
+                    "",
+                    "Petit rappel pour ton rendez-vous confirmé.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-12T12:00:00Z",
+                    "- Lieu : Paris 10e",
+                    "- Tarif : 85,00 €",
+                    "",
+                    "À très vite,",
+                    "L'équipe Château Rose",
+                ]
+            ),
+        }
+    ]
+
+
+def test_confirm_schedules_client_reminder_immediately_if_within_48h():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+    payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
+    reminders = InMemoryReminderGateway()
+
+    booking = BookingRequest(
+        id="booking_reminder_soon",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Paris 10e",
+        location_preference="salon",
+        desired_date="2026-01-10T20:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        payment_auth_id="auth_reminder_soon",
+        status="SUBMITTED",
+        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+    )
+    repo.add(booking)
+
+    now = datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc)
+    finalize_booking.execute(
+        booking_id="booking_reminder_soon",
+        actor="provider",
+        decision="confirm",
+        now=now,
+        booking_repository=repo,
+        payment_gateway=payments,
+        provider_directory=provider_directory,
+        notifier=notifier,
+        reminder_gateway=reminders,
+    )
+
+    assert reminders.reminders == [
+        {
+            "recipient": "sarah@example.com",
+            "send_at": now,
+            "subject": "Rappel: rendez-vous confirmé",
+            "body": "\n".join(
+                [
+                    "Bonjour Sarah,",
+                    "",
+                    "Petit rappel pour ton rendez-vous confirmé.",
+                    "Récapitulatif :",
+                    "- Date : 2026-01-10T20:00:00Z",
+                    "- Lieu : Paris 10e",
+                    "- Tarif : 85,00 €",
+                    "",
+                    "À très vite,",
+                    "L'équipe Château Rose",
+                ]
+            ),
+        }
+    ]
