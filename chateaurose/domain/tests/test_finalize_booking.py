@@ -502,7 +502,7 @@ def test_finalize_booking_rejects_if_expired():
     assert payments.release_calls == []
 
 
-def test_confirm_schedules_client_reminder_48h_before():
+def test_confirm_schedules_client_reminder_24h_before():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
@@ -510,7 +510,7 @@ def test_confirm_schedules_client_reminder_48h_before():
     reminders = InMemoryReminderGateway()
 
     booking = BookingRequest(
-        id="booking_reminder_48h",
+        id="booking_reminder_24h",
         provider_id="provider_1",
         service_id="service_tresses",
         client_contact={"name": "Sarah", "email": "sarah@example.com"},
@@ -523,7 +523,7 @@ def test_confirm_schedules_client_reminder_48h_before():
         inspiration_pictures=[],
         free_text="",
         estimated_price_cents=8500,
-        payment_auth_id="auth_reminder_48h",
+        payment_auth_id="auth_reminder_24h",
         status="SUBMITTED",
         created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
     )
@@ -531,7 +531,7 @@ def test_confirm_schedules_client_reminder_48h_before():
 
     now = datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc)
     finalize_booking.execute(
-        booking_id="booking_reminder_48h",
+        booking_id="booking_reminder_24h",
         actor="provider",
         decision="confirm",
         now=now,
@@ -545,7 +545,7 @@ def test_confirm_schedules_client_reminder_48h_before():
     assert reminders.reminders == [
         {
             "recipient": "sarah@example.com",
-            "send_at": datetime(2026, 1, 10, 12, 0, tzinfo=timezone.utc),
+            "send_at": datetime(2026, 1, 11, 12, 0, tzinfo=timezone.utc),
             "subject": "Rappel: rendez-vous confirmé",
             "body": "\n".join(
                 [
@@ -565,7 +565,7 @@ def test_confirm_schedules_client_reminder_48h_before():
     ]
 
 
-def test_confirm_schedules_client_reminder_immediately_if_within_48h():
+def test_confirm_schedules_client_reminder_immediately_if_within_24h():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
