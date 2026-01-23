@@ -38,6 +38,7 @@ class Provider(models.Model):
     description = models.TextField(blank=True)
     contact_phone = models.CharField(max_length=64, blank=True)
     contact_email = models.EmailField(blank=True)
+    pending_reminder_sent_at = models.DateTimeField(null=True, blank=True)
     salon_zone = models.CharField(
         max_length=255,
         blank=True,

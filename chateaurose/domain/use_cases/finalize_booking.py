@@ -29,7 +29,7 @@ def _compute_client_reminder_send_at(effective_date, *, reference_time):
     appointment_at = _parse_datetime(effective_date, reference_tz=reference_time.tzinfo)
     if appointment_at is None:
         return None
-    reminder_at = appointment_at - timedelta(hours=48)
+    reminder_at = appointment_at - timedelta(hours=24)
     return reminder_at if reminder_at > reference_time else reference_time
 
 

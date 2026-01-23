@@ -33,7 +33,8 @@ def test_send_reminder_only_if_submitted_after_24h():
     repo.add(booking)
 
     send_reminder.execute(
-        booking_id="booking_7",
+        provider_id="provider_1",
+        booking_ids=["booking_7"],
         now=now,
         booking_repository=repo,
         notifier=notifier,
@@ -42,15 +43,15 @@ def test_send_reminder_only_if_submitted_after_24h():
     assert notifier.messages == [
         {
             "recipient": "provider_1",
-            "subject": "Rappel: demande en attente",
+            "subject": "Rappel: demandes en attente",
             "body": "\n".join(
                 [
                     "Bonjour,",
                     "",
-                    "Tu as une demande en attente de réponse.",
+                    "Tu as 1 demande(s) en attente de réponse.",
                     "Récapitulatif :",
                     "- Date : 2026-01-10T17:00:00Z",
-                    "- Lieu : Saint-Cyprien",
+                    "  Lieu : Saint-Cyprien",
                     "",
                     "À bientôt,",
                     "L'équipe Château Rose",
@@ -87,7 +88,8 @@ def test_no_reminder_if_not_submitted_or_before_24h():
     repo.add(booking)
 
     send_reminder.execute(
-        booking_id="booking_8",
+        provider_id="provider_1",
+        booking_ids=["booking_8"],
         now=now,
         booking_repository=repo,
         notifier=notifier,
