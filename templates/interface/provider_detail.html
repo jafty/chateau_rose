@@ -299,6 +299,8 @@
 
         const syncLocationPreference = () => {
             const selected = document.querySelector('input[name="location_preference"]:checked')?.value;
+            const zoneSearchInput = locationSelectWrapper?.querySelector('.zone-search__input');
+            const zoneHiddenInput = locationSelectWrapper?.querySelector('input[type="hidden"][name="location"]');
 
             locationChoiceLabels.forEach((label) => {
                 const choice = label.dataset.locationChoice;
@@ -326,9 +328,24 @@
                 salonOption.disabled = false;
                 salonOption.hidden = false;
                 locationSelect.value = salonOption.value;
+                if (zoneHiddenInput) {
+                    zoneHiddenInput.value = salonOption.value;
+                }
+                if (zoneSearchInput) {
+                    zoneSearchInput.value = salonOption.textContent.trim();
+                }
             } else if (salonOption) {
                 salonOption.disabled = true;
                 salonOption.hidden = true;
+                if (locationSelect?.value === salonOption.value) {
+                    locationSelect.value = '';
+                }
+                if (zoneHiddenInput?.value === salonOption.value) {
+                    zoneHiddenInput.value = '';
+                }
+                if (zoneSearchInput) {
+                    zoneSearchInput.value = '';
+                }
             }
             locationSelect.required = !isSalonChoice;
         };

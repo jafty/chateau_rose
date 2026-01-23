@@ -43,8 +43,10 @@ def execute(
     provider_email = provider_contact.get("email") or "Non renseigné"
 
     proposed_date = booking.proposed_date or booking.desired_date or "À confirmer"
-    if booking.proposed_price_cents is None:
-        proposed_price = "À confirmer"
+    if new_price_cents is None:
+        euros = booking.estimated_price_cents / 100
+        proposed_price = f"{euros:.2f}".replace(".", ",")
+        proposed_price = f"{proposed_price} €"
     else:
         euros = booking.proposed_price_cents / 100
         proposed_price = f"{euros:.2f}".replace(".", ",")
