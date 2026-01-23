@@ -104,6 +104,15 @@ def provider_detail(request, provider_id):
     salon_location_label = SALON_LOCATION_LABEL
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
     require_payment_auth = bool(stripe_public_key)
+    prefilled_payment_auth_id = ""
+    payment_message = None
+
+    if request.method == "GET":
+        prefilled_payment_auth_id = request.GET.get("payment_auth_id", "").strip()
+        if prefilled_payment_auth_id:
+            payment_message = (
+                "Empreinte bancaire confirmée. Tu peux finaliser l'envoi de ta demande."
+            )
 
     if request.method == "POST":
         form = ProviderBookingRequestForm(
@@ -171,6 +180,8 @@ def provider_detail(request, provider_id):
             ),
             "salon_location_label": salon_location_label,
             "stripe_public_key": stripe_public_key,
+            "payment_auth_id": prefilled_payment_auth_id,
+            "payment_message": payment_message,
         },
     )
 
@@ -221,6 +232,69 @@ def provider_payment_intent(request):
             "payment_auth_id": intent["id"],
             "amount_cents": estimated_price,
         }
+    )
+
+
+def provider_payment_return(request):
+    provider_id = request.GET.get("provider_id", "").strip()
+    intent_id = request.GET.get("payment_intent", "").strip()
+    redirect_status = request.GET.get("redirect_status", "").strip()
+    status = redirect_status or "unknown"
+    status_checked = False
+
+    if intent_id and settings.STRIPE_SECRET_KEY:
+        try:
+            intent = payment_gateway.retrieve_payment_intent(intent_id)
+            status = intent.get("status") or status
+            status_checked = True
+        except Exception:
+            status_checked = False
+
+    success_statuses = {"succeeded", "requires_capture", "processing"}
+    failure_statuses = {"requires_payment_method", "canceled"}
+
+    if status in success_statuses:
+        headline = "Empreinte bancaire confirmée"
+        tone = "success"
+        message = (
+            "Ton empreinte bancaire a bien été enregistrée. Tu peux maintenant finaliser ta demande."
+        )
+    elif status in failure_statuses:
+        headline = "Empreinte bancaire refusée"
+        tone = "error"
+        message = "La banque a refusé la carte. Tu peux réessayer avec un autre moyen."
+    else:
+        headline = "Empreinte bancaire en attente"
+        tone = "warning"
+        message = (
+            "Nous n'avons pas pu confirmer immédiatement l'empreinte bancaire. "
+            "Tu peux retourner au formulaire pour réessayer."
+        )
+
+    action_label = "Retourner au formulaire"
+    action_url = reverse("interface:home")
+    if provider_id:
+        try:
+            Provider.objects.only("id").get(id=provider_id)
+        except Provider.DoesNotExist:
+            action_url = reverse("interface:home")
+        else:
+            action_url = reverse("interface:provider_detail", args=[provider_id])
+            if status in success_statuses and intent_id:
+                action_url = f"{action_url}?payment_auth_id={intent_id}"
+
+    return render(
+        request,
+        "interface/provider_payment_return.html",
+        {
+            "headline": headline,
+            "tone": tone,
+            "message": message,
+            "action_label": action_label,
+            "action_url": action_url,
+            "status": status,
+            "status_checked": status_checked,
+        },
     )
 
 

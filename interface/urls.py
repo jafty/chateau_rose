@@ -18,6 +18,11 @@ urlpatterns = [
         views.provider_payment_intent,
         name="provider_payment_intent",
     ),
+    path(
+        "prestataires/payment-return/",
+        views.provider_payment_return,
+        name="provider_payment_return",
+    ),
     path("mentions-legales-rgpd/", views.legal, name="legal"),
     path("zones/recherche/", views.zone_search, name="zone_search"),
     path("bookings/<str:booking_id>/provider-action/", views.provider_action, name="provider_action"),

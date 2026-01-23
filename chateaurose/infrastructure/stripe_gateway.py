@@ -24,6 +24,10 @@ class StripePaymentGateway:
         )
         return {"id": intent.id, "client_secret": intent.client_secret}
 
+    def retrieve_payment_intent(self, intent_id: str) -> dict:
+        intent = stripe.PaymentIntent.retrieve(intent_id)
+        return {"id": intent.id, "status": intent.status}
+
     def capture_auth(self, auth_id: str) -> None:
         stripe.PaymentIntent.capture(auth_id)
 
