@@ -226,6 +226,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     letter-spacing: 1px;
     transition: all 0.2s ease;
     box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+    cursor: pointer;
 }
 
 .btn:hover {
