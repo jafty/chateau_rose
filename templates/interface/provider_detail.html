@@ -153,6 +153,10 @@
                                         <span>J'ai besoin que les mèches soient fournies</span>
                                     </label>
                                 </div>
+
+                                <div class="wizard-actions full-width">
+                                    <button type="button" class="btn btn-next">Continuer</button>
+                                </div>
                             </fieldset>
 
                             <fieldset class="wizard-step" data-step="2">
@@ -179,6 +183,11 @@
                                 <div class="form-field full-width">
                                     <label for="free_text">Un petit mot pour {{ provider.name }} ?</label>
                                     <textarea name="free_text" id="free_text" placeholder="Ex: J'ai le cuir chevelu sensible, je suis dispo plutôt le matin..."></textarea>
+                                </div>
+
+                                <div class="wizard-actions full-width">
+                                    <button type="button" class="btn btn-prev btn-secondary">Retour</button>
+                                    <button type="button" class="btn btn-next">Continuer</button>
                                 </div>
                             </fieldset>
 
@@ -254,6 +263,11 @@
                                     <label>Ton Email <span class="required-mark">*</span></label>
                                     <input type="email" name="client_email" id="client_email" required autocomplete="email">
                                 </div>
+
+                                <div class="wizard-actions full-width">
+                                    <button type="button" class="btn btn-prev btn-secondary">Retour</button>
+                                    <button type="button" class="btn btn-next">Continuer</button>
+                                </div>
                             </fieldset>
 
                             <fieldset class="wizard-step" data-step="4">
@@ -281,16 +295,15 @@
                                         <span style="font-size: 0.9rem;">J'accepte que cette empreinte serve de caution en cas d'absence injustifiée (No-show).</span>
                                     </label>
                                 </div>
+
+                                <div class="wizard-actions full-width">
+                                    <button type="button" class="btn btn-prev btn-secondary">Retour</button>
+                                    <button type="submit" class="btn">Valider</button>
+                                </div>
                             </fieldset>
 
                             <input type="hidden" name="provider_id" value="{{ provider.id }}">
                             <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
-
-                            <div class="wizard-actions full-width">
-                                <button type="button" class="btn btn-prev btn-secondary" id="btn-prev" style="visibility: hidden;">Retour</button>
-                                <button type="button" class="btn" id="btn-next">Continuer</button>
-                                <button type="submit" class="btn" id="btn-submit" hidden>Valider</button>
-                            </div>
                         </form>
 
                         <aside class="provider-form-aside">
@@ -329,9 +342,8 @@
 
         const steps = document.querySelectorAll('.wizard-step');
         const indicators = document.querySelectorAll('.step-indicator');
-        const btnNext = document.getElementById('btn-next');
-        const btnPrev = document.getElementById('btn-prev');
-        const btnSubmit = document.getElementById('btn-submit');
+        const nextButtons = document.querySelectorAll('.btn-next');
+        const prevButtons = document.querySelectorAll('.btn-prev');
         const stickyBar = document.getElementById('sticky-price-bar');
         let currentStep = 1;
         const totalSteps = steps.length;
@@ -459,18 +471,8 @@
                 if (stepNum < currentStep) indicator.classList.add('completed');
             });
 
-            if (btnPrev) {
-                btnPrev.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
-            }
-
-            const isLastStep = currentStep === totalSteps;
-            if (isLastStep) {
-                if (btnNext) btnNext.hidden = true;
-                if (btnSubmit) btnSubmit.hidden = false;
+            if (currentStep === totalSteps) {
                 mountPaymentElement().catch((error) => showPaymentError(error.message));
-            } else {
-                if (btnNext) btnNext.hidden = false;
-                if (btnSubmit) btnSubmit.hidden = true;
             }
         };
 
@@ -490,22 +492,26 @@
             return isValid;
         };
 
-        btnNext?.addEventListener('click', () => {
-            if (validateCurrentStep() && currentStep < totalSteps) {
-                currentStep += 1;
-                updateWizardUI();
-                const wizardTop = document.getElementById('booking-wizard');
-                if (wizardTop) {
-                    window.scrollTo({ top: wizardTop.offsetTop - 100, behavior: 'smooth' });
+        nextButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                if (validateCurrentStep() && currentStep < totalSteps) {
+                    currentStep += 1;
+                    updateWizardUI();
+                    const wizardTop = document.getElementById('booking-wizard');
+                    if (wizardTop) {
+                        window.scrollTo({ top: wizardTop.offsetTop - 100, behavior: 'smooth' });
+                    }
                 }
-            }
+            });
         });
 
-        btnPrev?.addEventListener('click', () => {
-            if (currentStep > 1) {
-                currentStep -= 1;
-                updateWizardUI();
-            }
+        prevButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep -= 1;
+                    updateWizardUI();
+                }
+            });
         });
 
         updateWizardUI();
