@@ -763,9 +763,10 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     display: grid;
     gap: 24px;
     grid-template-columns: minmax(0, 1fr);
+    width: 100%;
 }
 .provider-form-aside { display: flex; }
-.provider-form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.provider-form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; width: 100%; align-items: start; }
 .provider-form-grid .form-field { display: grid; gap: 6px; min-width: 0; }
 .provider-form-grid .field-hint { color: var(--ink-secondary); font-size: 0.85rem; }
 .provider-form-grid .full-width { grid-column: 1 / -1; }
@@ -774,7 +775,8 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     border: 0;
     padding: 0;
     margin: 0;
-    min-width: 0;
+    grid-column: 1 / -1;
+    width: 100%;
 }
 .provider-form-grid input:not([type="checkbox"]),
 .provider-form-grid select,
@@ -838,7 +840,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .provider-form-grid .estimation-box { grid-column: 1 / -1; background: #fff5fb; border: 1px solid #f3c1da; border-radius: 0; padding: 12px; }
 .provider-form-grid .estimation-box .estimate-value { font-weight: 800; font-size: 1.1rem; margin: 0; }
 .provider-form-grid .checkbox-field { grid-column: 1 / -1; }
-.checkbox-field label { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; white-space: nowrap; width: auto; }
+.checkbox-field label { display: inline-flex; gap: 8px; align-items: flex-start; font-weight: 700; white-space: normal; width: 100%; }
 @media (max-width: 640px) {
     .location-choice { grid-template-columns: 1fr; }
 }
@@ -1331,7 +1333,8 @@ footer {
 }
 
 .wizard-step.active {
-    display: block;
+    display: grid;
+    gap: 18px;
 }
 
 @keyframes fadeIn {
