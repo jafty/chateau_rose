@@ -289,7 +289,7 @@
                             <div class="wizard-actions full-width">
                                 <button type="button" class="btn btn-prev btn-secondary" id="btn-prev" style="visibility: hidden;">Retour</button>
                                 <button type="button" class="btn" id="btn-next">Continuer</button>
-                                <button type="submit" class="btn" id="btn-submit" hidden>Valider la demande</button>
+                                <button type="submit" class="btn" id="btn-submit" hidden>Valider</button>
                             </div>
                         </form>
 
@@ -574,12 +574,17 @@
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
             const totalCents = base + lengthAdj + mecheAdj;
             const totalStr = formatPrice(totalCents);
+            const selectedOption = serviceSelect?.selectedOptions?.[0];
+            const serviceName =
+                pricing.name ||
+                (selectedOption ? selectedOption.textContent.split(' - ')[0].trim() : null) ||
+                'Service';
 
             stickyPriceValue.textContent = totalStr;
             finalPriceDisplay.textContent = totalStr;
             const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
             const mecheText = mecheCheckbox?.checked ? '+ mèches fournies' : 'sans mèches fournies';
-            finalDetailsDisplay.textContent = `${pricing.name} (${lengthText}, ${mecheText}).`;
+            finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}).`;
         };
 
         const getCsrfToken = () => {
