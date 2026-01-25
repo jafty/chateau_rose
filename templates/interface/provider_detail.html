@@ -464,13 +464,16 @@
             }
 
             const isLastStep = currentStep === totalSteps;
+            if (btnNext) {
+                btnNext.hidden = isLastStep;
+                btnNext.disabled = isLastStep;
+            }
+            if (btnSubmit) {
+                btnSubmit.hidden = !isLastStep;
+                btnSubmit.disabled = !isLastStep;
+            }
             if (isLastStep) {
-                if (btnNext) btnNext.hidden = true;
-                if (btnSubmit) btnSubmit.hidden = false;
                 mountPaymentElement().catch((error) => showPaymentError(error.message));
-            } else {
-                if (btnNext) btnNext.hidden = false;
-                if (btnSubmit) btnSubmit.hidden = true;
             }
         };
 
