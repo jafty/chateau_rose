@@ -216,6 +216,7 @@ class Booking(models.Model):
     proposed_date = models.CharField(max_length=128, null=True, blank=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField(null=True, blank=True)
+    client_reminder_sent_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.booking_id} - {self.status}"
