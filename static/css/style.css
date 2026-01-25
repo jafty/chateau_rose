@@ -765,8 +765,9 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     grid-template-columns: minmax(0, 1fr);
     width: 100%;
 }
+.provider-form-layout > * { min-width: 0; }
 .provider-form-aside { display: flex; }
-.provider-form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; width: 100%; align-items: start; }
+.provider-form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; width: 100%; align-items: start; min-width: 0; }
 .provider-form-grid .form-field { display: grid; gap: 6px; min-width: 0; }
 .provider-form-grid .field-hint { color: var(--ink-secondary); font-size: 0.85rem; }
 .provider-form-grid .full-width { grid-column: 1 / -1; }
@@ -1400,6 +1401,8 @@ footer {
     padding-top: 1rem;
     border-top: 1px dashed rgba(0,0,0,0.1);
     align-items: center;
+    width: 100%;
+    flex-wrap: wrap;
 }
 .wizard-actions .btn {
     padding: 0.7rem 1.6rem;
@@ -1413,6 +1416,17 @@ footer {
     background: transparent;
     border: 1px solid var(--ink-secondary);
     color: var(--ink-secondary);
+}
+
+@media (max-width: 640px) {
+    .wizard-actions {
+        justify-content: center;
+        align-items: stretch;
+    }
+    .wizard-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
 }
 
 /* Custom File Upload */
