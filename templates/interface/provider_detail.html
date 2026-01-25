@@ -334,6 +334,7 @@
         const btnSubmit = document.getElementById('btn-submit');
         const stickyBar = document.getElementById('sticky-price-bar');
         let currentStep = 1;
+        const totalSteps = steps.length;
 
         const serviceSelect = document.getElementById('service_id');
         const hairLengthSelect = document.getElementById('hair_length');
@@ -462,7 +463,8 @@
                 btnPrev.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
             }
 
-            if (currentStep === 4) {
+            const isLastStep = currentStep === totalSteps;
+            if (isLastStep) {
                 if (btnNext) btnNext.hidden = true;
                 if (btnSubmit) btnSubmit.hidden = false;
                 mountPaymentElement().catch((error) => showPaymentError(error.message));
@@ -489,7 +491,7 @@
         };
 
         btnNext?.addEventListener('click', () => {
-            if (validateCurrentStep()) {
+            if (validateCurrentStep() && currentStep < totalSteps) {
                 currentStep += 1;
                 updateWizardUI();
                 const wizardTop = document.getElementById('booking-wizard');
@@ -505,6 +507,8 @@
                 updateWizardUI();
             }
         });
+
+        updateWizardUI();
 
         const formatPrice = (cents) => {
             if (cents === null || cents === undefined) return '...';
