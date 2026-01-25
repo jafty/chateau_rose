@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -10,7 +10,28 @@ from chateaurose.infrastructure.email_notifier import EmailNotifier
 
 
 class Command(BaseCommand):
-    help = "Send reminder notifications for pending bookings."
+    help = "Send reminder notifications for pending and confirmed bookings."
+
+    @staticmethod
+    def _parse_datetime(value, *, reference_tz):
+        if isinstance(value, datetime):
+            parsed = value
+        elif isinstance(value, str):
+            try:
+                parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError:
+                return None
+        else:
+            return None
+
+        if parsed.tzinfo is None and reference_tz is not None:
+            return parsed.replace(tzinfo=reference_tz)
+        return parsed
+
+    @staticmethod
+    def _format_price(cents: int) -> str:
+        euros = cents / 100
+        return f"{euros:.2f}".replace(".", ",") + " €"
 
     def handle(self, *args, **options):
         now = timezone.now()
@@ -46,3 +67,44 @@ class Command(BaseCommand):
             if eligible:
                 provider.pending_reminder_sent_at = now
                 provider.save(update_fields=["pending_reminder_sent_at"])
+
+        confirmed_bookings = Booking.objects.filter(
+            status="CONFIRMED", client_reminder_sent_at__isnull=True
+        )
+        for booking in confirmed_bookings.iterator():
+            effective_date = booking.proposed_date or booking.desired_date
+            appointment_at = self._parse_datetime(
+                effective_date, reference_tz=timezone.get_current_timezone()
+            )
+            if not appointment_at:
+                continue
+            reminder_at = appointment_at - timedelta(hours=24)
+            if not (reminder_at <= now <= appointment_at):
+                continue
+
+            effective_price_cents = (
+                booking.proposed_price_cents
+                if booking.proposed_price_cents is not None
+                else booking.estimated_price_cents
+            )
+            formatted_price = self._format_price(effective_price_cents)
+            notifier.notify(
+                booking.client_email,
+                "Rappel: rendez-vous confirmé",
+                "\n".join(
+                    [
+                        f"Bonjour {booking.client_name},",
+                        "",
+                        "Petit rappel pour ton rendez-vous confirmé.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {booking.location}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        "À très vite,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
+            )
+            booking.client_reminder_sent_at = now
+            booking.save(update_fields=["client_reminder_sent_at"])
