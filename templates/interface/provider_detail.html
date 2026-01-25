@@ -363,6 +363,7 @@
         const salonOption = document.querySelector('[data-salon-option]');
         const clientAddressField = document.querySelector('[data-client-address]');
         const locationPreferenceRadios = document.querySelectorAll('input[name="location_preference"]');
+        const locationPreferenceInput = document.querySelector('input[name="location_preference"]');
         const locationChoiceLabels = document.querySelectorAll('[data-location-choice]');
 
         const setZoneState = (isOpen) => {
@@ -386,7 +387,10 @@
         }
 
         const syncLocationPreference = () => {
-            const selected = document.querySelector('input[name="location_preference"]:checked')?.value;
+            let selected = document.querySelector('input[name="location_preference"]:checked')?.value;
+            if (!selected && locationPreferenceInput) {
+                selected = locationPreferenceInput.value;
+            }
             const zoneSearchInput = locationSelectWrapper?.querySelector('.zone-search__input');
             const zoneHiddenInput = locationSelectWrapper?.querySelector('input[type="hidden"][name="location"]');
 
@@ -442,9 +446,13 @@
             }
         };
 
-        if (locationPreferenceRadios.length) {
+        if (locationPreferenceInput) {
             syncLocationPreference();
-            locationPreferenceRadios.forEach((radio) => radio.addEventListener('change', syncLocationPreference));
+            if (locationPreferenceRadios.length) {
+                locationPreferenceRadios.forEach((radio) =>
+                    radio.addEventListener('change', syncLocationPreference)
+                );
+            }
         }
 
         const updateWizardUI = () => {
