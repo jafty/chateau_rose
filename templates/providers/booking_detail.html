@@ -72,8 +72,19 @@
                         <span class="booking-spec-sub">{% if booking.meche %}Avec mèche{% else %}Sans mèche{% endif %}</span>
                     </div>
                     <div class="booking-spec-item">
-                        <span class="booking-spec-label">Estimation</span>
-                        <span class="booking-spec-value booking-price">{{ booking.estimated_price_cents|cents_to_euros }}</span>
+                        {% if booking.status == "CONFIRMED" %}
+                            <span class="booking-spec-label">Tarif</span>
+                            <span class="booking-spec-value booking-price">
+                                {% if booking.proposed_price_cents != None %}
+                                    {{ booking.proposed_price_cents|cents_to_euros }}
+                                {% else %}
+                                    {{ booking.estimated_price_cents|cents_to_euros }}
+                                {% endif %}
+                            </span>
+                        {% else %}
+                            <span class="booking-spec-label">Estimation</span>
+                            <span class="booking-spec-value booking-price">{{ booking.estimated_price_cents|cents_to_euros }}</span>
+                        {% endif %}
                     </div>
                 </div>
 

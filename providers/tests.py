@@ -159,6 +159,19 @@ class ProviderDashboardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(booking.status, "CONFIRMED")
 
+    def test_booking_detail_shows_confirmed_price(self):
+        booking = self._create_booking(status="CONFIRMED")
+        booking.estimated_price_cents = 5000
+        booking.proposed_price_cents = 6000
+        booking.save()
+
+        detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
+        response = self.client.get(detail_url)
+
+        self.assertContains(response, "Tarif")
+        self.assertContains(response, "60,00 €")
+        self.assertNotContains(response, "50,00 €")
+
     def test_logout_via_post_logs_out_and_redirects(self):
         response = self.client.post(reverse("providers:logout"), follow=True)
 
