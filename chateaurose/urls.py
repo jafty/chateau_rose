@@ -19,13 +19,19 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
+
+from interface.sitemaps import sitemaps
+from interface import views as interface_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("interface.urls")),
     path("booking/", include("booking.urls")),
     path("espace_pro/", include("providers.urls")),
+    path("robots.txt", interface_views.robots_txt, name="robots_txt"),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps()}),
 ]
 
 if settings.DEBUG:
