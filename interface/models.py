@@ -130,7 +130,7 @@ class ServiceRequest(models.Model):
     LOCATION_PREFERENCE_SALON = "salon"
     LOCATION_PREFERENCE_CHOICES = (
         (LOCATION_PREFERENCE_CLIENT_HOME, "À domicile"),
-        (LOCATION_PREFERENCE_SALON, "En salon / chez le prestataire"),
+        (LOCATION_PREFERENCE_SALON, "En salon / chez la prestataire ou le prestataire"),
     )
 
     marketing_service = models.ForeignKey(

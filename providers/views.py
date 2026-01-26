@@ -102,7 +102,7 @@ def booking_detail(request, booking_id):
                     provider_directory=provider_directory,
                     client_control_url=client_control_url,
                 )
-                message = "Proposition envoyée au client."
+                message = "Proposition envoyée à la cliente ou au client."
             elif action in ("confirm", "reject"):
                 finalize_booking_uc.execute(
                     booking_id=booking.booking_id,

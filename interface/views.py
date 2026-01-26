@@ -633,19 +633,19 @@ def about(request):
     faq_items = [
         {
             "question": "Combien de temps pour obtenir une réponse ?",
-            "answer": "Le prestataire qui correspond à ta demande te répond généralement en quelques heures avec un créneau clair.",
+            "answer": "La prestataire ou le prestataire qui correspond à ta demande te répond généralement en quelques heures avec un créneau clair.",
         },
         {
             "question": "Travaillez-vous à domicile ou en salon ?",
-            "answer": "Les deux : déplacement à domicile possible, ou accueil chez le prestataire / en salon partenaire selon la prestation.",
+            "answer": "Les deux : déplacement à domicile possible, ou accueil chez la prestataire ou le prestataire / en salon partenaire selon la prestation.",
         },
         {
             "question": "Comment préparer ma demande ?",
-            "answer": "Suis simplement les indications du formulaire, pensées pour aider le prestataire à bien comprendre ton besoin.",
+            "answer": "Suis simplement les indications du formulaire, pensées pour aider la prestataire ou le prestataire à bien comprendre ton besoin.",
         },
         {
             "question": "Comment se passe le paiement ?",
-            "answer": "Une empreinte bancaire est prise : l'acompte n'est validé qu'après accord commun avec le prestataire, puis le reste se règle directement avec lui (cash, Lydia...).",
+            "answer": "Une empreinte bancaire est prise : l'acompte n'est validé qu'après accord commun avec la prestataire ou le prestataire, puis le reste se règle directement avec elle ou lui (cash, Lydia...).",
         },
     ]
 
