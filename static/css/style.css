@@ -1070,31 +1070,79 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .zone-toggle:hover { background: #fff2f6; }
+/* --- AMÉLIORATION WIDGET LOCATION --- */
 .location-choice {
     display: grid;
-    gap: 10px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin-bottom: 10px;
+    /* Responsive : 2 colonnes minimum, passe en 1 si trop petit */
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
 }
+
 .location-choice .choice-pill {
+    position: relative;
     display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: flex-start;
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #f3c1da;
-    background: #fff9f9;
+    align-items: center; /* Aligne le rond et le texte verticalement */
+    gap: 12px;
+    padding: 16px;
+    background: #fff;
+    border: 2px solid #E5E7EB; /* Gris clair par défaut */
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: 700;
-    color: var(--ink-secondary);
-    border-radius: 10px;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
-    text-align: left;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    width: 100%;
 }
-.location-choice .choice-pill.is-selected { border-color: var(--rose-accent); background: #fff2f6; color: var(--rose-accent); }
-.location-choice input[type="radio"] { margin: 0; flex-shrink: 0; }
-.location-choice .choice-pill span { flex: 0 1 auto; line-height: 1.35; white-space: normal; }
+
+/* Effet au survol */
+.location-choice .choice-pill:hover {
+    border-color: #f3c1da; /* Rose pâle */
+    background: #FFF9F9;
+    transform: translateY(-2px); /* Petit effet de levier sympa */
+}
+
+/* L'input radio réel est caché mais reste là pour la logique */
+.location-choice input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 50%;
+    margin: 0;
+    flex-shrink: 0; /* Empêche le rond de s'écraser */
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+/* Le texte à côté */
+.location-choice .choice-pill span {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--ink-secondary);
+    line-height: 1.3;
+}
+
+/* --- ÉTATS SÉLECTIONNÉS (La magie opère ici) --- */
+
+/* Quand l'input est checked, on change le style du rond radio */
+.location-choice input[type="radio"]:checked {
+    border-color: var(--rose-accent);
+    background-color: var(--rose-accent);
+    box-shadow: inset 0 0 0 3px #fff; /* Crée le point blanc au centre */
+}
+
+/* Quand l'input est checked, on change le style de la carte parente (via JS class ou CSS moderne) */
+.location-choice .choice-pill.is-selected {
+    border-color: var(--rose-accent);
+    background-color: #fff2f6; /* Fond rose très léger */
+    box-shadow: 0 4px 12px rgba(209, 77, 114, 0.15); /* Ombre portée rose */
+}
+
+.location-choice .choice-pill.is-selected span {
+    color: var(--ink-primary); /* Texte plus foncé pour confirmer */
+}
 .checkbox-field input[type="checkbox"] { width: auto; }
 .provider-form-grid textarea { min-height: 140px; }
 .provider-form-grid .estimation-box { grid-column: 1 / -1; background: #fff5fb; border: 1px solid #f3c1da; border-radius: 12px; padding: 12px; }
