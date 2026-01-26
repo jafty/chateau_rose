@@ -3,6 +3,11 @@
 
 {% block title %}À propos de Château Rose | Réservation coiffure afro{% endblock %}
 
+{% block extra_head %}
+{{ block.super }}
+<script type="application/ld+json">{{ faq_schema_json|safe }}</script>
+{% endblock %}
+
 {% block content %}
 <section class="container page-hero">
     <div class="paper-card">

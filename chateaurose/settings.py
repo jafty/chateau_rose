@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
     "storages",
     "import_export",
     "interface",
@@ -135,7 +136,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "fr-fr"
 
 TIME_ZONE = "Europe/Paris"
 
@@ -169,6 +170,18 @@ STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "")
 STRIPE_PAYMENT_CURRENCY = os.environ.get("STRIPE_PAYMENT_CURRENCY", "EUR")
 STRIPE_CAPTURE_METHOD = os.environ.get("STRIPE_CAPTURE_METHOD", "manual")
+
+BUSINESS_NAME = os.environ.get("BUSINESS_NAME", "Chateau Rose")
+BUSINESS_STREET_ADDRESS = os.environ.get(
+    "BUSINESS_STREET_ADDRESS", "414 route de Saint Simon"
+)
+BUSINESS_POSTAL_CODE = os.environ.get("BUSINESS_POSTAL_CODE", "31100")
+BUSINESS_CITY = os.environ.get("BUSINESS_CITY", "Toulouse")
+BUSINESS_COUNTRY = os.environ.get("BUSINESS_COUNTRY", "FR")
+BUSINESS_PHONE = os.environ.get("BUSINESS_PHONE", "+33 6 49 49 14 49")
+DEFAULT_OG_IMAGE_PATH = os.environ.get(
+    "DEFAULT_OG_IMAGE_PATH", "/static/assets/favico.jpg"
+)
 
 EMAIL_BACKEND = os.environ.get(
     "DJANGO_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"

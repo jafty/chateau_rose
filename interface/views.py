@@ -3,7 +3,13 @@ import uuid
 
 from django import forms
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.conf import settings
 from django.utils import timezone
@@ -25,6 +31,7 @@ from chateaurose.infrastructure.provider_catalog import (
 from interface.forms import ProviderBookingRequestForm, ServiceRequestForm
 from interface.models import MarketingService, MarketingZone
 from interface.services import booking_requests
+from chateaurose.seo import build_base_url
 
 repo = DjangoBookingRepository()
 notifier = EmailNotifier()
@@ -517,6 +524,18 @@ def _apply_zone_marketing(service_meta: MarketingService, marketing_zone: Market
     )
 
 
+def _build_service_schema(request, service_name: str, zone_name: str | None):
+    base_url = build_base_url(request)
+    area_name = zone_name or "Toulouse"
+    return {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "serviceType": service_name,
+        "areaServed": {"@type": "City", "name": area_name},
+        "provider": {"@id": f"{base_url}#business"},
+    }
+
+
 def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
     providers = list(
@@ -534,6 +553,7 @@ def service_page(request, service_slug: str):
     highlights = marketing_content.highlights
     meta_description = marketing_content.meta_description
 
+    service_schema = _build_service_schema(request, service_meta.name, None)
     return render(
         request,
         "interface/service_page.html",
@@ -548,6 +568,7 @@ def service_page(request, service_slug: str):
             "hero_image": hero_image,
             "gallery_images": gallery_images,
             "meta_description": meta_description,
+            "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
             "request_form": request_form,
             "request_success": request_success,
         },
@@ -580,6 +601,7 @@ def service_city_page(request, service_slug: str, city_slug: str):
     hero_image = marketing_content.hero_image
     meta_description = marketing_content.meta_description
 
+    service_schema = _build_service_schema(request, service_meta.name, zone.name)
     return render(
         request,
         "interface/service_page.html",
@@ -595,6 +617,7 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "hero_image": hero_image,
             "gallery_images": gallery_images,
             "meta_description": meta_description,
+            "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
             "request_form": request_form,
             "request_success": request_success,
         },
@@ -627,6 +650,7 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     hero_image = marketing_content.hero_image or service_meta.resolved_main_image
     meta_description = marketing_content.meta_description
 
+    service_schema = _build_service_schema(request, service_meta.name, zone.name)
     return render(
         request,
         "interface/service_page.html",
@@ -642,6 +666,7 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             "hero_image": hero_image,
             "gallery_images": gallery_images,
             "meta_description": meta_description,
+            "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
             "request_form": request_form,
             "request_success": request_success,
         },
@@ -672,11 +697,24 @@ def about(request):
         },
     ]
 
+    faq_schema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": item["question"],
+                "acceptedAnswer": {"@type": "Answer", "text": item["answer"]},
+            }
+            for item in faq_items
+        ],
+    }
     return render(
         request,
         "interface/about.html",
         {
             "faq_items": faq_items,
+            "faq_schema_json": json.dumps(faq_schema, ensure_ascii=False),
             "services": list(MarketingService.objects.all()),
         },
     )
@@ -696,3 +734,15 @@ def terms_of_use(request):
 
 def privacy_policy(request):
     return render(request, "interface/privacy_policy.html")
+
+
+def robots_txt(request):
+    base_url = build_base_url(request)
+    content = "\n".join(
+        [
+            "User-agent: *",
+            "Allow: /",
+            f"Sitemap: {base_url}/sitemap.xml",
+        ]
+    )
+    return HttpResponse(content, content_type="text/plain")
