@@ -1,8 +1,11 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm
+from django.conf import settings
+from django.contrib.auth.forms import PasswordResetForm, UserCreationForm
+from django.template import loader
 
 from booking.models import Provider
+from chateaurose.infrastructure.email_notifier import EmailNotifier
 
 
 class ProviderSignupForm(UserCreationForm):
@@ -60,3 +63,30 @@ class ProviderSignupForm(UserCreationForm):
         cleaned_data["salon_zone"] = salon_zone
         cleaned_data["salon_address"] = salon_address
         return cleaned_data
+
+
+class ProviderPasswordResetForm(PasswordResetForm):
+    def send_mail(
+        self,
+        subject_template_name,
+        email_template_name,
+        context,
+        from_email,
+        to_email,
+        html_email_template_name=None,
+    ):
+        if settings.BREVO_API_KEY:
+            subject = loader.render_to_string(subject_template_name, context)
+            subject = "".join(subject.splitlines())
+            body = loader.render_to_string(email_template_name, context)
+            notifier = EmailNotifier()
+            notifier.notify(recipient=to_email, subject=subject, body=body)
+            return
+        super().send_mail(
+            subject_template_name,
+            email_template_name,
+            context,
+            from_email,
+            to_email,
+            html_email_template_name=html_email_template_name,
+        )
