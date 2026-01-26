@@ -761,12 +761,13 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 /* --- PROVIDER BOOKING DETAIL --- */
-.booking-detail-hero { padding-bottom: 20px; }
 .booking-detail-header {
-    max-width: 980px;
-    margin: 0 auto;
     display: grid;
     gap: 16px;
+    padding: 1.6rem;
+}
+.booking-detail-header-card {
+    grid-column: 1 / -1;
 }
 .booking-detail-header-top {
     display: flex;
@@ -781,16 +782,33 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     gap: 10px;
     align-items: flex-start;
 }
+.booking-header-back {
+    font-size: 0.8rem;
+    padding: 0.6rem 1.1rem;
+    text-transform: none;
+    letter-spacing: 0.5px;
+}
+.booking-header-logout {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: var(--ink-secondary);
+    font-size: 0.75rem;
+    text-decoration: underline;
+    cursor: pointer;
+}
 
 .booking-detail-page {
     padding-bottom: 80px;
 }
 .booking-detail-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
     gap: 2rem;
     align-items: start;
+    width: 100%;
 }
+.booking-detail-grid > * { min-width: 0; }
 @media (max-width: 980px) {
     .booking-detail-grid { grid-template-columns: 1fr; }
 }
@@ -846,6 +864,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     gap: 12px;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid rgba(0,0,0,0.05);
+    flex-wrap: wrap;
 }
 .booking-avatar {
     width: 48px;
@@ -865,8 +884,9 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 .booking-spec-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 1.8rem;
+    min-width: 0;
 }
 .booking-spec-item { display: flex; flex-direction: column; gap: 6px; }
 .booking-spec-label {
@@ -912,7 +932,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     box-shadow: var(--shadow-paper);
     transform: rotate(2deg);
     transition: 0.3s ease;
-    width: 240px;
+    width: min(240px, 100%);
     position: relative;
 }
 .booking-polaroid img {
