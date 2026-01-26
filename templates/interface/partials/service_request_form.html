@@ -30,8 +30,8 @@
                     {{ request_form.marketing_service }}
                 </div>
             {% endif %}
-            <div class="form-field">
-                <label for="id_location_preference">Lieu préféré</label>
+            <fieldset class="form-field form-fieldset">
+                <legend>Lieu préféré</legend>
                 <div class="choice-toggle-group" role="radiogroup" aria-label="Lieu préféré">
                     {% for option in request_form.location_preference %}
                         <label class="choice-toggle">
@@ -40,7 +40,7 @@
                         </label>
                     {% endfor %}
                 </div>
-            </div>
+            </fieldset>
             {% if request_form.zone.is_hidden %}
                 {{ request_form.zone }}
             {% else %}
@@ -104,93 +104,93 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const container = document.currentScript?.previousElementSibling;
-        const form = container?.querySelector('form');
-        if (!form) return;
-        const zoneField = form.querySelector('[data-zone-field]');
-        const addressField = form.querySelector('[data-address-field]');
-        const preferenceInputs = form.querySelectorAll('input[name="location_preference"]');
+        const forms = document.querySelectorAll('.request-card .request-wizard-form');
+        if (!forms.length) return;
 
-        const steps = container.querySelectorAll('.wizard-step');
-        const indicators = container.querySelectorAll('.step-indicator');
-        const nextButtons = container.querySelectorAll('.btn-next');
-        const prevButtons = container.querySelectorAll('.btn-prev');
-        let currentStep = 1;
-        const totalSteps = steps.length;
+        forms.forEach((form) => {
+            const container = form.closest('.request-card');
+            if (!container) return;
+            const zoneField = form.querySelector('[data-zone-field]');
+            const addressField = form.querySelector('[data-address-field]');
+            const preferenceInputs = form.querySelectorAll('input[name="location_preference"]');
 
-        const syncFields = () => {
-            const selected = form.querySelector('input[name="location_preference"]:checked')?.value;
-            const isSalon = selected === 'salon';
-            if (zoneField) {
-                zoneField.hidden = isSalon;
-                const input = zoneField.querySelector('input, select, textarea');
-                if (input) input.required = !isSalon;
-            }
-            if (addressField) {
-                addressField.hidden = isSalon;
-                const input = addressField.querySelector('input, textarea');
-                if (input) input.required = !isSalon;
-            }
-        };
+            const steps = container.querySelectorAll('.wizard-step');
+            const indicators = container.querySelectorAll('.step-indicator');
+            const nextButtons = container.querySelectorAll('.btn-next');
+            const prevButtons = container.querySelectorAll('.btn-prev');
+            let currentStep = 1;
+            const totalSteps = steps.length;
 
-        const updateWizardUI = () => {
-            steps.forEach((step) => {
-                step.classList.toggle('active', parseInt(step.dataset.step, 10) === currentStep);
-            });
-
-            indicators.forEach((indicator) => {
-                const stepNum = parseInt(indicator.dataset.stepIndicator, 10);
-                indicator.classList.remove('active', 'completed');
-                if (stepNum === currentStep) indicator.classList.add('active');
-                if (stepNum < currentStep) indicator.classList.add('completed');
-            });
-        };
-
-        const validateCurrentStep = () => {
-            const currentStepEl = container.querySelector(`.wizard-step[data-step="${currentStep}"]`);
-            if (!currentStepEl) return true;
-            const inputs = currentStepEl.querySelectorAll('input, select, textarea');
-            let isValid = true;
-
-            inputs.forEach((input) => {
-                if (!input.checkValidity()) {
-                    isValid = false;
-                    input.reportValidity();
-                    return;
+            const syncFields = () => {
+                const selected = form.querySelector('input[name="location_preference"]:checked')?.value;
+                const isSalon = selected === 'salon';
+                if (zoneField) {
+                    zoneField.hidden = isSalon;
+                    const input = zoneField.querySelector('input, select, textarea');
+                    if (input) input.required = !isSalon;
                 }
-            });
-            return isValid;
-        };
+                if (addressField) {
+                    addressField.hidden = isSalon;
+                    const input = addressField.querySelector('input, textarea');
+                    if (input) input.required = !isSalon;
+                }
+            };
 
-        nextButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                if (validateCurrentStep() && currentStep < totalSteps) {
-                    currentStep += 1;
-                    updateWizardUI();
-                    if (container) {
+            const updateWizardUI = () => {
+                steps.forEach((step) => {
+                    step.classList.toggle('active', parseInt(step.dataset.step, 10) === currentStep);
+                });
+
+                indicators.forEach((indicator) => {
+                    const stepNum = parseInt(indicator.dataset.stepIndicator, 10);
+                    indicator.classList.remove('active', 'completed');
+                    if (stepNum === currentStep) indicator.classList.add('active');
+                    if (stepNum < currentStep) indicator.classList.add('completed');
+                });
+            };
+
+            const validateCurrentStep = () => {
+                const currentStepEl = container.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+                if (!currentStepEl) return true;
+                const inputs = currentStepEl.querySelectorAll('input, select, textarea');
+                let isValid = true;
+
+                inputs.forEach((input) => {
+                    if (!input.checkValidity()) {
+                        isValid = false;
+                        input.reportValidity();
+                        return;
+                    }
+                });
+                return isValid;
+            };
+
+            nextButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    if (validateCurrentStep() && currentStep < totalSteps) {
+                        currentStep += 1;
+                        updateWizardUI();
                         window.scrollTo({ top: container.offsetTop - 80, behavior: 'smooth' });
                     }
-                }
+                });
             });
-        });
 
-        prevButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                if (currentStep > 1) {
-                    currentStep -= 1;
-                    updateWizardUI();
-                    if (container) {
+            prevButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    if (currentStep > 1) {
+                        currentStep -= 1;
+                        updateWizardUI();
                         window.scrollTo({ top: container.offsetTop - 80, behavior: 'smooth' });
                     }
-                }
+                });
             });
+
+            if (preferenceInputs.length) {
+                preferenceInputs.forEach((input) => input.addEventListener('change', syncFields));
+                syncFields();
+            }
+
+            updateWizardUI();
         });
-
-        if (preferenceInputs.length) {
-            preferenceInputs.forEach((input) => input.addEventListener('change', syncFields));
-            syncFields();
-        }
-
-        updateWizardUI();
     });
 </script>
