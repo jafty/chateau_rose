@@ -1,11 +1,14 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
-from django.contrib.auth import login
+import logging
+
+from django.contrib.auth import login, views as auth_views
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.urls import reverse
+from django.urls import reverse_lazy
 
 from booking.models import Booking, Provider
 from chateaurose.domain.exceptions import DomainError
@@ -20,6 +23,18 @@ repo = DjangoBookingRepository()
 notifier = EmailNotifier()
 payment_gateway = StripePaymentGateway()
 provider_directory = DjangoProviderDirectory()
+logger = logging.getLogger(__name__)
+
+
+class ProviderPasswordResetView(auth_views.PasswordResetView):
+    success_url = reverse_lazy("providers:password_reset_done")
+
+    def form_valid(self, form):
+        try:
+            return super().form_valid(form)
+        except Exception:
+            logger.exception("Failed to send provider password reset email.")
+            return HttpResponseRedirect(self.get_success_url())
 
 
 def _parse_price_to_cents(raw_value: str | None) -> int | None:
