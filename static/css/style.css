@@ -1079,10 +1079,10 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .location-choice .choice-pill {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     justify-content: flex-start;
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 12px;
     border: 1px solid #f3c1da;
     background: #fff9f9;
     cursor: pointer;
@@ -1094,7 +1094,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 .location-choice .choice-pill.is-selected { border-color: var(--rose-accent); background: #fff2f6; color: var(--rose-accent); }
 .location-choice input[type="radio"] { margin: 0; flex-shrink: 0; }
-.location-choice .choice-pill span { flex: 1; line-height: 1.35; }
+.location-choice .choice-pill span { flex: 0 1 auto; line-height: 1.35; white-space: normal; }
 .checkbox-field input[type="checkbox"] { width: auto; }
 .provider-form-grid textarea { min-height: 140px; }
 .provider-form-grid .estimation-box { grid-column: 1 / -1; background: #fff5fb; border: 1px solid #f3c1da; border-radius: 12px; padding: 12px; }
