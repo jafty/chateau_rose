@@ -24,7 +24,7 @@ class ServiceRequestForm(forms.ModelForm):
         label="Zone",
         help_text=(
             "Indique ton quartier si tu veux une prestation à domicile,"
-            " pour être mis(e) en relation avec un prestataire proche."
+            " pour être mis(e) en relation avec une prestataire ou un prestataire proche."
         ),
     )
     location_preference = forms.ChoiceField(
@@ -161,7 +161,7 @@ class ProviderBookingRequestForm(forms.Form):
         if location_preference == "salon":
             if not self.provider or not self.provider.salon_zone:
                 raise forms.ValidationError(
-                    "Le lieu au salon n'est pas encore renseigné par le prestataire."
+                    "Le lieu au salon n'est pas encore renseigné par la prestataire ou le prestataire."
                 )
             if not self.provider.salon_address:
                 raise forms.ValidationError(

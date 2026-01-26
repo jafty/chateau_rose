@@ -57,7 +57,7 @@ def execute(
         return booking
 
     provider_contact = provider_directory.get_provider_contact(booking.provider_id)
-    provider_name = provider_contact.get("name") or "La prestataire"
+    provider_name = provider_contact.get("name") or "La prestataire ou le prestataire"
     salon_address = provider_contact.get("salon_address") or "Adresse à confirmer"
 
     effective_date = booking.proposed_date or booking.desired_date
@@ -83,14 +83,14 @@ def execute(
             booking.status = CONFIRMED
             payment_gateway.capture_auth(booking.payment_auth_id)
             provider_location_lines = (
-                ["La cliente se déplace au salon."]
+                ["La cliente ou le client se déplace au salon."]
                 if is_salon
-                else [f"Adresse de la cliente : {client_address}", provider_address_note]
+                else [f"Adresse de la cliente ou du client : {client_address}", provider_address_note]
             )
             client_location_lines = (
                 [f"Adresse du salon : {salon_address}", client_address_note]
                 if is_salon
-                else ["La prestataire se déplace jusqu'à toi."]
+                else ["La prestataire ou le prestataire se déplace jusqu'à toi."]
             )
             notifier.notify(
                 booking.provider_id,
@@ -182,7 +182,7 @@ def execute(
                     [
                         f"Bonjour {booking.client_contact['name']},",
                         "",
-                        "La demande a été refusée par la prestataire.",
+                        "La demande a été refusée par la prestataire ou le prestataire.",
                         "Récapitulatif :",
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
@@ -202,14 +202,14 @@ def execute(
             booking.status = CONFIRMED
             payment_gateway.capture_auth(booking.payment_auth_id)
             provider_location_lines = (
-                ["La cliente se déplace au salon."]
+                ["La cliente ou le client se déplace au salon."]
                 if is_salon
-                else [f"Adresse de la cliente : {client_address}", provider_address_note]
+                else [f"Adresse de la cliente ou du client : {client_address}", provider_address_note]
             )
             client_location_lines = (
                 [f"Adresse du salon : {salon_address}", client_address_note]
                 if is_salon
-                else ["La prestataire se déplace jusqu'à toi."]
+                else ["La prestataire ou le prestataire se déplace jusqu'à toi."]
             )
             notifier.notify(
                 booking.provider_id,
@@ -218,7 +218,7 @@ def execute(
                     [
                         f"Bonjour {provider_name},",
                         "",
-                        "La cliente a accepté la proposition.",
+                        "La cliente ou le client a accepté la proposition.",
                         "Récapitulatif :",
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
@@ -283,7 +283,7 @@ def execute(
                     [
                         f"Bonjour {provider_name},",
                         "",
-                        "La cliente a refusé la proposition.",
+                        "La cliente ou le client a refusé la proposition.",
                         "Récapitulatif :",
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",

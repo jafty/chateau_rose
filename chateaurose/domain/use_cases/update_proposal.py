@@ -38,7 +38,7 @@ def execute(
     booking_repository.update(booking)
 
     provider_contact = provider_directory.get_provider_contact(provider_id)
-    provider_name = provider_contact.get("name") or "La prestataire"
+    provider_name = provider_contact.get("name") or "La prestataire ou le prestataire"
     provider_phone = provider_contact.get("phone") or "Non renseigné"
     provider_email = provider_contact.get("email") or "Non renseigné"
 
