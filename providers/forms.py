@@ -6,7 +6,7 @@ from booking.models import Provider
 
 
 class ProviderSignupForm(UserCreationForm):
-    name = forms.CharField(label="Nom du prestataire", max_length=255)
+    name = forms.CharField(label="Nom de la prestataire ou du prestataire", max_length=255)
     contact_email = forms.EmailField(label="Email de contact")
     contact_phone = forms.CharField(label="Téléphone", max_length=64)
     location_mode = forms.ChoiceField(
@@ -19,7 +19,7 @@ class ProviderSignupForm(UserCreationForm):
     salon_zone = forms.CharField(
         label="Zone du salon",
         required=False,
-        help_text="Quartier ou zone où tu accueilles tes clientes.",
+        help_text="Quartier ou zone où tu accueilles ta clientèle.",
     )
     salon_address = forms.CharField(
         label="Adresse du salon",
