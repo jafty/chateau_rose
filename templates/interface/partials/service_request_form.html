@@ -10,66 +10,96 @@
             Demande enregistrée, nous te recontactons au plus vite.
         </div>
     {% endif %}
-    <form method="post" action="{{ form_action|default:'' }}" class="form-grid">
+    <div class="step-progress">
+        <div class="step-indicator active" data-step-indicator="1">1</div>
+        <div class="step-indicator" data-step-indicator="2">2</div>
+        <div class="step-indicator" data-step-indicator="3">3</div>
+    </div>
+    <form method="post" action="{{ form_action|default:'' }}" class="request-wizard-form">
         {% csrf_token %}
         <input type="hidden" name="request_service" value="1" />
-        {% if request_form.marketing_service.is_hidden %}
-            {{ request_form.marketing_service }}
-        {% else %}
-            <div class="form-field">
-                <label for="id_marketing_service">Service souhaité <span class="required-mark">*</span></label>
+        <fieldset class="wizard-step form-grid active" data-step="1">
+            <h4 style="margin-bottom: 0.5rem; color: var(--rose-accent);" class="full-width">
+                Ta demande
+            </h4>
+            {% if request_form.marketing_service.is_hidden %}
                 {{ request_form.marketing_service }}
+            {% else %}
+                <div class="form-field">
+                    <label for="id_marketing_service">Service souhaité <span class="required-mark">*</span></label>
+                    {{ request_form.marketing_service }}
+                </div>
+            {% endif %}
+            <div class="form-field">
+                <label for="id_location_preference">Lieu préféré</label>
+                <div class="choice-toggle-group" role="radiogroup" aria-label="Lieu préféré">
+                    {% for option in request_form.location_preference %}
+                        <label class="choice-toggle">
+                            {{ option.tag }}
+                            <span>{{ option.choice_label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
             </div>
-        {% endif %}
-        <div class="form-field">
-            <label for="id_location_preference">Lieu préféré</label>
-            <div class="choice-toggle-group" role="radiogroup" aria-label="Lieu préféré">
-                {% for option in request_form.location_preference %}
-                    <label class="choice-toggle">
-                        {{ option.tag }}
-                        <span>{{ option.choice_label }}</span>
-                    </label>
-                {% endfor %}
-            </div>
-        </div>
-        {% if request_form.zone.is_hidden %}
-            {{ request_form.zone }}
-        {% else %}
-            <div class="form-field" data-zone-field>
-                <label for="id_zone">Zone</label>
+            {% if request_form.zone.is_hidden %}
                 {{ request_form.zone }}
-                {% if request_form.zone.help_text %}
-                    <small class="field-hint">{{ request_form.zone.help_text }}</small>
+            {% else %}
+                <div class="form-field" data-zone-field>
+                    <label for="id_zone">Zone</label>
+                    {{ request_form.zone }}
+                    {% if request_form.zone.help_text %}
+                        <small class="field-hint">{{ request_form.zone.help_text }}</small>
+                    {% endif %}
+                </div>
+            {% endif %}
+            <div class="wizard-actions full-width">
+                <button type="button" class="btn btn-next">Continuer</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="wizard-step form-grid" data-step="2">
+            <h4 style="margin-bottom: 0.5rem; color: var(--rose-accent);" class="full-width">
+                Tes disponibilités
+            </h4>
+            <div class="form-field">
+                <label for="id_desired_date">Date souhaitée <span class="required-mark">*</span></label>
+                {{ request_form.desired_date }}
+                {% if request_form.desired_date.help_text %}
+                    <small class="field-hint">{{ request_form.desired_date.help_text }}</small>
                 {% endif %}
             </div>
-        {% endif %}
-        <div class="form-field">
-            <label for="id_desired_date">Date souhaitée <span class="required-mark">*</span></label>
-            {{ request_form.desired_date }}
-            {% if request_form.desired_date.help_text %}
-                <small class="field-hint">{{ request_form.desired_date.help_text }}</small>
-            {% endif %}
-        </div>
-        <div class="form-field">
-            <label for="id_client_name">Ton nom <span class="required-mark">*</span></label>
-            {{ request_form.client_name }}
-        </div>
-        <div class="form-field">
-            <label for="id_client_email">Email <span class="required-mark">*</span></label>
-            {{ request_form.client_email }}
-        </div>
-        <div class="form-field" data-address-field>
-            <label for="id_client_address">Adresse complète <span class="required-mark">*</span></label>
-            {{ request_form.client_address }}
-            <small class="field-hint">Partagée uniquement après confirmation du rendez-vous.</small>
-        </div>
-        <div class="form-field full-width">
-            <label for="id_details">Dis-nous en plus</label>
-            {{ request_form.details }}
-        </div>
-        <div class="form-actions full-width">
-            <button type="submit" class="btn">Envoyer ma demande</button>
-        </div>
+            <div class="form-field">
+                <label for="id_client_name">Ton nom <span class="required-mark">*</span></label>
+                {{ request_form.client_name }}
+            </div>
+            <div class="form-field">
+                <label for="id_client_email">Email <span class="required-mark">*</span></label>
+                {{ request_form.client_email }}
+            </div>
+            <div class="wizard-actions full-width">
+                <button type="button" class="btn btn-prev btn-secondary">Retour</button>
+                <button type="button" class="btn btn-next">Continuer</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="wizard-step form-grid" data-step="3">
+            <h4 style="margin-bottom: 0.5rem; color: var(--rose-accent);" class="full-width">
+                Derniers détails
+            </h4>
+            <div class="form-field" data-address-field>
+                <label for="id_client_address">Adresse complète <span class="required-mark">*</span></label>
+                {{ request_form.client_address }}
+                <small class="field-hint">Partagée uniquement après confirmation du rendez-vous.</small>
+            </div>
+            <div class="form-field full-width">
+                <label for="id_details">Dis-nous en plus</label>
+                {{ request_form.details }}
+            </div>
+            <div class="wizard-actions full-width">
+                <button type="button" class="btn btn-prev btn-secondary">Retour</button>
+                <button type="submit" class="btn">Envoyer ma demande</button>
+            </div>
+        </fieldset>
     </form>
 </div>
 <script>
@@ -81,10 +111,21 @@
         const addressField = form.querySelector('[data-address-field]');
         const preferenceInputs = form.querySelectorAll('input[name="location_preference"]');
 
+        const steps = container.querySelectorAll('.wizard-step');
+        const indicators = container.querySelectorAll('.step-indicator');
+        const nextButtons = container.querySelectorAll('.btn-next');
+        const prevButtons = container.querySelectorAll('.btn-prev');
+        let currentStep = 1;
+        const totalSteps = steps.length;
+
         const syncFields = () => {
             const selected = form.querySelector('input[name="location_preference"]:checked')?.value;
             const isSalon = selected === 'salon';
-            if (zoneField) zoneField.hidden = isSalon;
+            if (zoneField) {
+                zoneField.hidden = isSalon;
+                const input = zoneField.querySelector('input, select, textarea');
+                if (input) input.required = !isSalon;
+            }
             if (addressField) {
                 addressField.hidden = isSalon;
                 const input = addressField.querySelector('input, textarea');
@@ -92,9 +133,64 @@
             }
         };
 
+        const updateWizardUI = () => {
+            steps.forEach((step) => {
+                step.classList.toggle('active', parseInt(step.dataset.step, 10) === currentStep);
+            });
+
+            indicators.forEach((indicator) => {
+                const stepNum = parseInt(indicator.dataset.stepIndicator, 10);
+                indicator.classList.remove('active', 'completed');
+                if (stepNum === currentStep) indicator.classList.add('active');
+                if (stepNum < currentStep) indicator.classList.add('completed');
+            });
+        };
+
+        const validateCurrentStep = () => {
+            const currentStepEl = container.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+            if (!currentStepEl) return true;
+            const inputs = currentStepEl.querySelectorAll('input, select, textarea');
+            let isValid = true;
+
+            inputs.forEach((input) => {
+                if (!input.checkValidity()) {
+                    isValid = false;
+                    input.reportValidity();
+                    return;
+                }
+            });
+            return isValid;
+        };
+
+        nextButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                if (validateCurrentStep() && currentStep < totalSteps) {
+                    currentStep += 1;
+                    updateWizardUI();
+                    if (container) {
+                        window.scrollTo({ top: container.offsetTop - 80, behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+
+        prevButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep -= 1;
+                    updateWizardUI();
+                    if (container) {
+                        window.scrollTo({ top: container.offsetTop - 80, behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+
         if (preferenceInputs.length) {
             preferenceInputs.forEach((input) => input.addEventListener('change', syncFields));
             syncFields();
         }
+
+        updateWizardUI();
     });
 </script>
