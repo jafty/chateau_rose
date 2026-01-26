@@ -1090,6 +1090,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     color: var(--ink-secondary);
     border-radius: 10px;
     transition: border-color 0.2s ease, background-color 0.2s ease;
+    text-align: left;
 }
 .location-choice .choice-pill.is-selected { border-color: var(--rose-accent); background: #fff2f6; color: var(--rose-accent); }
 .location-choice input[type="radio"] { margin: 0; flex-shrink: 0; }
