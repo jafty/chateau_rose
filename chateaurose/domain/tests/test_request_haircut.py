@@ -31,6 +31,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 1500, "medium": 0, "short": -500},
                 "meche_bonus_cents": 2000,
+                "deposit_cents": 2000,
             }
         }
     }
@@ -77,9 +78,9 @@ def test_request_haircut_submitted_with_auth_and_notification():
     assert request.payment_auth_id == "auth_1"
     assert request.created_at == now
 
-    # Payment auth created for €85
+    # Payment auth created for €20 deposit
     assert payment_gateway.auth_calls == [
-        {"amount_cents": 8500, "currency": "EUR", "reference": request.id, "id": "auth_1"}
+        {"amount_cents": 2000, "currency": "EUR", "reference": request.id, "id": "auth_1"}
     ]
 
     # Provider and client notified immediately
@@ -142,6 +143,7 @@ def test_request_haircut_generates_readable_id():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 1500, "medium": 0, "short": -500},
                 "meche_bonus_cents": 2000,
+                "deposit_cents": 2000,
             }
         }
     }
@@ -247,6 +249,7 @@ def test_request_haircut_estimated_price_defaults_to_base_when_no_adjustments():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 1500, "medium": 0},
                 "meche_bonus_cents": 2000,
+                "deposit_cents": 2000,
             }
         }
     }
@@ -300,6 +303,7 @@ def test_request_haircut_rejects_zone_not_covered():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"medium": 0},
                 "meche_bonus_cents": 0,
+                "deposit_cents": 2000,
             }
         }
     }
@@ -357,6 +361,7 @@ def test_salon_only_provider_allows_salon_location_without_zones():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 1500, "medium": 0, "short": -500},
                 "meche_bonus_cents": 2000,
+                "deposit_cents": 2000,
             }
         }
     }
@@ -412,6 +417,7 @@ def test_request_haircut_requires_salon_zone_for_salon_booking():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 0},
                 "meche_bonus_cents": 0,
+                "deposit_cents": 2000,
             }
         }
     }
@@ -478,6 +484,7 @@ def test_request_haircut_missing_mandatory_fields(missing_field, payload):
                 "id": service_id,
                 "name": "Tresses africaines",
                 "base_price_cents": 5000,
+                "deposit_cents": 2000,
             }
         }
     }

@@ -83,11 +83,14 @@ def execute(
     length_adj = length_adjustments[hair_length]
     meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
     estimated_price = base_price + length_adj + meche_bonus
+    deposit_cents = service.get("deposit_cents")
+    if deposit_cents is None:
+        raise ValidationError("Missing required field: deposit_cents")
 
     booking_id = _generate_id()
     if not payment_auth_id:
         payment_auth_id = payment_gateway.create_auth(
-            amount_cents=estimated_price,
+            amount_cents=deposit_cents,
             currency="EUR",
             reference=booking_id,
         )
