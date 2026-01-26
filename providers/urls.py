@@ -1,5 +1,3 @@
-from django.urls import path
-
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
@@ -18,7 +16,7 @@ urlpatterns = [
     ),
     path(
         "mot-de-passe/",
-        auth_views.PasswordResetView.as_view(
+        views.ProviderPasswordResetView.as_view(
             template_name="providers/password_reset.html",
             email_template_name="providers/password_reset_email.html",
             subject_template_name="providers/password_reset_subject.txt",
