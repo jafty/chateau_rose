@@ -27,6 +27,7 @@ def build_pricing_data(services):
             "lengths": adjustments,
             "meche_bonus": service.meche_bonus_cents,
             "starting_from": starting_price,
+            "deposit_cents": service.provider.deposit_cents,
         }
     return pricing_data, starting_prices
 
