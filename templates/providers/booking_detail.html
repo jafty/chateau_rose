@@ -4,28 +4,6 @@
 {% block title %}Demande {{ booking.booking_id }}{% endblock %}
 
 {% block content %}
-<section class="container page-hero booking-detail-hero">
-    <div class="paper-card booking-detail-header">
-        <div class="booking-detail-header-top">
-            <div class="booking-detail-header-copy">
-                <span class="pill">Demande de RDV</span>
-                <h1>{{ booking.service.name }} pour {{ booking.client_name }}</h1>
-                <p class="lead">
-                    Reçue le {{ booking.created_at|date:"d F Y à H\\hi" }}
-                </p>
-                <p class="meta-line">ID court : <strong>{{ booking.booking_id }}</strong></p>
-            </div>
-            <div class="booking-detail-header-actions">
-                <a class="btn secondary" href="{% url 'providers:providers_index' %}">← Retour aux demandes</a>
-                <form method="post" action="{% url 'providers:logout' %}">
-                    {% csrf_token %}
-                    <button class="btn secondary" type="submit">Se déconnecter</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</section>
-
 <section class="container booking-detail-page">
     {% if message %}
         <div class="alert success">{{ message }}</div>
@@ -35,6 +13,27 @@
     {% endif %}
 
     <div class="booking-detail-grid">
+        <div class="paper-card booking-detail-header booking-detail-header-card">
+            <div class="booking-detail-header-top">
+                <div class="booking-detail-header-copy">
+                    <span class="pill">Demande de RDV</span>
+                    <h1>{{ booking.service.name }} pour {{ booking.client_name }}</h1>
+                    <p class="lead">
+                        Reçue le {{ booking.created_at|date:"d F Y à H\\hi" }}
+                    </p>
+                    <p class="meta-line">ID court : <strong>{{ booking.booking_id }}</strong></p>
+                </div>
+                <div class="booking-detail-header-actions">
+                    <a class="btn secondary booking-header-back" href="{% url 'providers:providers_index' %}">
+                        ← Retour aux demandes
+                    </a>
+                    <form method="post" action="{% url 'providers:logout' %}">
+                        {% csrf_token %}
+                        <button class="booking-header-logout" type="submit">Se déconnecter</button>
+                    </form>
+                </div>
+            </div>
+        </div>
         <div class="booking-ticket">
             <div class="booking-ticket-header">
                 <div>
@@ -42,7 +41,7 @@
                     <h2>{{ booking.client_name }}</h2>
                 </div>
                 <div class="booking-status-stamp" data-status="{{ booking.status|lower }}">
-                    {{ booking.status|lower|capfirst }}
+                    {{ booking.status|booking_status_label }}
                 </div>
             </div>
             <div class="booking-ticket-body">
@@ -58,7 +57,7 @@
                 <div class="booking-spec-grid">
                     <div class="booking-spec-item">
                         <span class="booking-spec-label">Date souhaitée</span>
-                        <span class="booking-spec-value">{{ booking.desired_date }}</span>
+                        <span class="booking-spec-value">{{ booking.desired_date|format_french_datetime }}</span>
                     </div>
                     <div class="booking-spec-item">
                         <span class="booking-spec-label">Lieu</span>
@@ -86,7 +85,7 @@
                         {% endif %}
                         {% if booking.proposed_date %}
                             {% if booking.proposed_price_cents %} le {% endif %}
-                            {{ booking.proposed_date }}
+                            {{ booking.proposed_date|format_french_datetime }}
                         {% endif %}
                     </div>
                 {% endif %}
@@ -121,70 +120,93 @@
         </div>
 
         <aside class="booking-action-column">
-            <div class="booking-action-card">
-                <h3>Console de décision</h3>
-                <p class="booking-action-lead">
-                    Confirme le créneau et le tarif, ou propose un ajustement au client.
-                </p>
+            {% if booking.status == "SUBMITTED" %}
+                <div class="booking-action-card">
+                    <h3>Réponse à la demande</h3>
+                    <p class="booking-action-lead">
+                        Confirme le créneau et le tarif, ou propose un ajustement au client.
+                    </p>
 
-                <div class="booking-decision-flow">
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="confirm" />
-                        <button class="btn full-width" type="submit">✔ Confirmer le RDV</button>
-                    </form>
-
-                    <div class="booking-or-divider">
-                        <span>ou</span>
-                    </div>
-
-                    <button
-                        type="button"
-                        class="booking-toggle-negotiation"
-                        data-target="booking-negotiation-panel"
-                        aria-expanded="false"
-                    >
-                        Faire une contre-proposition (Prix/Date)
-                    </button>
-
-                    <div class="booking-negotiation-panel" id="booking-negotiation-panel">
-                        <form method="post" class="booking-negotiation-form">
+                    <div class="booking-decision-flow">
+                        <form method="post">
                             {% csrf_token %}
-                            <input type="hidden" name="action" value="propose" />
-                            <div class="form-field">
-                                <label for="price">Nouveau tarif (€)</label>
-                                <input id="price" type="number" name="proposed_price_euros" min="0" step="0.01" inputmode="decimal" />
-                                <small class="field-hint">Laisse vide si tu ne modifies pas le tarif.</small>
-                            </div>
-                            <div class="form-field">
-                                <label for="proposed_date">Nouvelle date</label>
-                                <input
-                                    id="proposed_date"
-                                    type="datetime-local"
-                                    name="proposed_date"
-                                    inputmode="numeric"
-                                    placeholder="JJ/MM/AAAA HH:MM"
-                                />
-                                <small class="field-hint">Choisis un créneau si tu ne modifies pas le prix.</small>
-                            </div>
-                            <button class="btn secondary full-width" type="submit">Envoyer la proposition</button>
+                            <input type="hidden" name="action" value="confirm" />
+                            <button class="btn full-width" type="submit">✔ Confirmer le RDV</button>
                         </form>
+
+                        <div class="booking-or-divider">
+                            <span>ou</span>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="booking-toggle-negotiation"
+                            data-target="booking-negotiation-panel"
+                            aria-expanded="false"
+                        >
+                            Faire une contre-proposition (Prix/Date)
+                        </button>
+
+                        <div class="booking-negotiation-panel" id="booking-negotiation-panel">
+                            <form method="post" class="booking-negotiation-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="propose" />
+                                <div class="form-field">
+                                    <label for="price">Nouveau tarif (€)</label>
+                                    <input id="price" type="number" name="proposed_price_euros" min="0" step="0.01" inputmode="decimal" />
+                                    <small class="field-hint">Laisse vide si tu ne modifies pas le tarif.</small>
+                                </div>
+                                <div class="form-field">
+                                    <label for="proposed_date">Nouvelle date</label>
+                                    <input
+                                        id="proposed_date"
+                                        type="datetime-local"
+                                        name="proposed_date"
+                                        inputmode="numeric"
+                                        placeholder="JJ/MM/AAAA HH:MM"
+                                    />
+                                    <small class="field-hint">Choisis un créneau si tu ne modifies pas le prix.</small>
+                                </div>
+                                <button class="btn secondary full-width" type="submit">Envoyer la proposition</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="paper-card booking-danger-zone">
-                <p class="meta-line">Ce créneau ne te convient pas ?</p>
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="reject" />
-                    <button class="btn danger" type="submit">Refuser la demande</button>
-                </form>
-            </div>
+                <div class="paper-card booking-danger-zone">
+                    <p class="meta-line">Ce créneau ne te convient pas ?</p>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reject" />
+                        <button class="btn danger" type="submit">Refuser la demande</button>
+                    </form>
+                </div>
+            {% elif booking.status == "PENDING_CLIENT_VALIDATION" %}
+                <div class="booking-action-card booking-status-info">
+                    <h3>En attente de validation</h3>
+                    <p class="booking-action-lead">
+                        La cliente ou le client doit valider ta proposition avant confirmation.
+                    </p>
+                </div>
+            {% elif booking.status == "CONFIRMED" %}
+                <div class="booking-action-card booking-status-info">
+                    <h3>Rendez-vous confirmé</h3>
+                    <p class="booking-action-lead">
+                        Le rendez-vous est confirmé. Aucune action supplémentaire n'est requise ici.
+                    </p>
+                </div>
+            {% else %}
+                <div class="booking-action-card booking-status-info">
+                    <h3>Demande annulée</h3>
+                    <p class="booking-action-lead">
+                        Cette demande est annulée.
+                    </p>
+                </div>
+            {% endif %}
 
             <div class="booking-help-box">
                 <strong>Besoin d'aide ?</strong><br />
-                Le client a déjà payé un acompte. En acceptant, le montant total est verrouillé.
+                Une empreinte bancaire a été réalisée côté client. En confirmant, l'acompte est capturé.
             </div>
         </aside>
     </div>
