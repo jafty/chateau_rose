@@ -17,7 +17,7 @@ from chateaurose.infrastructure.booking_repository import DjangoBookingRepositor
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
-from providers.forms import ProviderSignupForm
+from providers.forms import ProviderPasswordResetForm, ProviderSignupForm
 
 repo = DjangoBookingRepository()
 notifier = EmailNotifier()
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 class ProviderPasswordResetView(auth_views.PasswordResetView):
     success_url = reverse_lazy("providers:password_reset_done")
+    form_class = ProviderPasswordResetForm
 
     def form_valid(self, form):
         try:
