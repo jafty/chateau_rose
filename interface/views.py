@@ -411,9 +411,27 @@ def _zone_options(active_zone=None):
     return zones
 
 
+def _notify_service_request(record) -> None:
+    desired_date = timezone.localtime(record.desired_date).strftime("%d/%m/%Y %H:%M")
+    zone_name = record.zone.name if record.zone else "Non précisé"
+    location_preference = record.get_location_preference_display()
+    subject = f"Nouvelle demande rapide - {record.marketing_service.name}"
+    body_lines = [
+        f"Service : {record.marketing_service.name}",
+        f"Client·e : {record.client_name} ({record.client_email})",
+        f"Date souhaitée : {desired_date}",
+        f"Lieu préféré : {location_preference}",
+        f"Zone : {zone_name}",
+        f"Adresse : {record.client_address or 'Non communiquée'}",
+        "Détails :",
+        record.details or "Aucun détail supplémentaire.",
+    ]
+    notifier.notify("japhet.situmonana@gmail.com", subject, "\n".join(body_lines))
+
+
 def _build_service_request_form(request, service_meta: MarketingService | None, zone):
     form = ServiceRequestForm(request.POST or None)
-    request_success = False
+    request_success = request.session.pop("service_request_success", False)
 
     if service_meta:
         form.fields["marketing_service"].initial = service_meta
@@ -431,7 +449,9 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
             if zone:
                 record.zone = zone
             record.save()
+            _notify_service_request(record)
             request_success = True
+            request.session["service_request_success"] = True
             form = ServiceRequestForm()
             if service_meta:
                 form.fields["marketing_service"].initial = service_meta
