@@ -1326,8 +1326,10 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 /* --- FORMULAIRE DE DEMANDE RAPIDE (INLINE) --- */
 .inline-form-card {
     background: #FFF9F9;
-    border: 2px dashed #f3c1da;
+    border: 1px solid #f2d6e2;
+    box-shadow: 0 12px 30px rgba(233, 30, 99, 0.08);
     padding: clamp(1.5rem, 5vw, 2.5rem);
+    border-radius: 18px;
 }
 
 .request-form-wrapper {
@@ -1356,9 +1358,17 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     grid-template-columns: minmax(0, 1fr);
 }
 
+.request-card .form-grid {
+    gap: 20px;
+}
+
 @media (min-width: 640px) {
     .form-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .request-card .form-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     }
 }
 
@@ -1377,6 +1387,21 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     color: var(--ink-primary);
 }
 
+.form-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.form-fieldset legend {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ink-primary);
+    margin-bottom: 6px;
+}
+
 .form-field.full-width {
     grid-column: 1 / -1;
 }
@@ -1387,13 +1412,22 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .inline-form-card textarea {
     width: 100%;
     padding: 12px;
-    border: 1px solid #E5E7EB;
+    border: 1px solid #f2d6e2;
     background: #fff;
     font-family: inherit;
     font-size: 0.95rem;
-    border-radius: 0;
+    border-radius: 12px;
     max-width: 100%;
     min-width: 0;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inline-form-card input:focus,
+.inline-form-card select:focus,
+.inline-form-card textarea:focus {
+    border-color: var(--rose-accent);
+    box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.12);
+    outline: none;
 }
 
 .inline-form-card textarea {
@@ -1458,7 +1492,9 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .info-card.basic { border: 1px solid rgba(0,0,0,0.05); }
 .request-card {
     background: #FFF9F9;
-    border: 2px dashed #f3c1da;
+    border: 1px solid #f2d6e2;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(233, 30, 99, 0.08);
     transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
 
@@ -1484,11 +1520,15 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .zone-search__option { padding: 10px 12px; text-align: left; background: white; border: none; border-bottom: 1px solid #F3F4F6; cursor: pointer; font-size: 0.95rem; }
 .zone-search__option:last-child { border-bottom: none; }
 .zone-search__option:hover, .zone-search__option:focus { background: #FFF4F8; outline: none; }
-.choice-toggle-group { display: flex; gap: 10px; flex-wrap: wrap; }
-.choice-toggle { display: inline-flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #E5E7EB; background: #fff; cursor: pointer; border-radius: 12px; font-weight: 700; color: var(--ink-secondary); flex: 1 1 160px; max-width: 100%; min-width: 0; white-space: normal; }
+.choice-toggle-group { display: grid; gap: 12px; grid-template-columns: 1fr; }
+.choice-toggle { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid #f2d6e2; background: #fff; cursor: pointer; border-radius: 16px; font-weight: 700; color: var(--ink-secondary); width: 100%; min-width: 0; white-space: normal; transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease; }
 .choice-toggle input[type="radio"] { margin: 0; accent-color: var(--rose-accent); transform: scale(1.1); }
 .choice-toggle input[type="radio"]:focus-visible + span { outline: 2px solid var(--rose-accent); outline-offset: 2px; }
-.choice-toggle:hover { border-color: var(--rose-accent); color: var(--ink-primary); }
+.choice-toggle:hover { border-color: var(--rose-accent); color: var(--ink-primary); box-shadow: 0 8px 18px rgba(233, 30, 99, 0.08); }
+
+@media (min-width: 640px) {
+    .choice-toggle-group { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 .service-links { padding: 50px 0; text-align: center; }
 .service-links .chips { justify-content: center; }
@@ -1656,7 +1696,7 @@ footer {
     margin-top: 2rem;
     gap: 1rem;
     padding-top: 1rem;
-    border-top: 1px dashed rgba(0,0,0,0.1);
+    border-top: 1px solid rgba(233, 30, 99, 0.15);
     align-items: center;
     width: 100%;
     flex-wrap: wrap;
