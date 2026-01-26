@@ -82,12 +82,7 @@ class ServiceRequestForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        location_preference = cleaned_data.get("location_preference")
         client_address = (cleaned_data.get("client_address") or "").strip()
-
-        if location_preference == ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME:
-            if not client_address:
-                self.add_error("client_address", "Merci d'indiquer ton adresse complète.")
         cleaned_data["client_address"] = client_address
         return cleaned_data
 
