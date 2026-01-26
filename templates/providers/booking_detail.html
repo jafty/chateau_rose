@@ -4,111 +4,208 @@
 {% block title %}Demande {{ booking.booking_id }}{% endblock %}
 
 {% block content %}
-<section class="container page-hero">
-    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
-        <span class="pill">Détail de la demande</span>
-        <h1 style="margin: 12px 0 10px;">{{ booking.service.name }} pour {{ booking.client_name }}</h1>
-        <p class="lead">ID court : <strong>{{ booking.booking_id }}</strong></p>
-        <div class="btn-group" style="margin-top:10px;">
-            <a class="btn secondary" href="{% url 'providers:providers_index' %}">← Retour aux demandes</a>
-            <form method="post" action="{% url 'providers:logout' %}">
-                {% csrf_token %}
-                <button class="btn secondary" type="submit">Se déconnecter</button>
-            </form>
+<section class="container page-hero booking-detail-hero">
+    <div class="paper-card booking-detail-header">
+        <div class="booking-detail-header-top">
+            <div class="booking-detail-header-copy">
+                <span class="pill">Demande de RDV</span>
+                <h1>{{ booking.service.name }} pour {{ booking.client_name }}</h1>
+                <p class="lead">
+                    Reçue le {{ booking.created_at|date:"d F Y à H\\hi" }}
+                </p>
+                <p class="meta-line">ID court : <strong>{{ booking.booking_id }}</strong></p>
+            </div>
+            <div class="booking-detail-header-actions">
+                <a class="btn secondary" href="{% url 'providers:providers_index' %}">← Retour aux demandes</a>
+                <form method="post" action="{% url 'providers:logout' %}">
+                    {% csrf_token %}
+                    <button class="btn secondary" type="submit">Se déconnecter</button>
+                </form>
+            </div>
         </div>
     </div>
 </section>
 
-<section class="container" style="padding-bottom:60px;">
-    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
-        {% if message %}
-            <div class="alert success">{{ message }}</div>
-        {% endif %}
-        {% if error %}
-            <div class="alert danger">{{ error }}</div>
-        {% endif %}
-        <h3 class="section-title provider-section-title">Informations</h3>
-        <ul class="meta-list">
-            <li><strong>Statut :</strong> <span class="status-pill">{{ booking.status }}</span></li>
-            <li><strong>Date souhaitée :</strong> {{ booking.desired_date }}</li>
-            <li><strong>Lieu :</strong> {{ booking.location }}</li>
-            <li><strong>Cheveux :</strong> {{ booking.hair_length }} {% if booking.meche %}(avec mèche){% endif %}</li>
-            <li><strong>Estimation :</strong> {{ booking.estimated_price_cents|cents_to_euros }}</li>
-            {% if booking.proposed_price_cents or booking.proposed_date %}
-                <li>
-                    <strong>Proposition en cours :</strong>
-                    {% if booking.proposed_price_cents %}
-                        {{ booking.proposed_price_cents|cents_to_euros }}
-                    {% endif %}
-                    {% if booking.proposed_date %}
-                        {% if booking.proposed_price_cents %} le {% endif %}
-                        {{ booking.proposed_date }}
-                    {% endif %}
-                </li>
-            {% endif %}
-            <li><strong>Client :</strong> {{ booking.client_name }} - {{ booking.client_email }}</li>
-        </ul>
+<section class="container booking-detail-page">
+    {% if message %}
+        <div class="alert success">{{ message }}</div>
+    {% endif %}
+    {% if error %}
+        <div class="alert danger">{{ error }}</div>
+    {% endif %}
 
-        <div class="card-grid" style="margin-top:20px;">
-            <div class="paper-card">
-                <h4>Photos envoyées</h4>
-                <div class="photo-grid">
-                    {% if booking.resolved_current_hair_picture %}
-                        <div class="profile-photo-frame" style="min-height:200px;">
-                            <img src="{{ booking.resolved_current_hair_picture }}" alt="Cheveux actuels" loading="lazy" decoding="async" />
-                        </div>
-                    {% endif %}
-                    {% for picture in booking.resolved_inspiration_pictures %}
-                        <div class="profile-photo-frame" style="min-height:200px;">
-                            <img src="{{ picture }}" alt="Inspiration coiffure" loading="lazy" decoding="async" />
-                        </div>
-                    {% empty %}
-                        <p class="meta-line">Pas d'inspiration fournie.</p>
-                    {% endfor %}
+    <div class="booking-detail-grid">
+        <div class="booking-ticket">
+            <div class="booking-ticket-header">
+                <div>
+                    <div class="ticket-id">ID : #{{ booking.booking_id }}</div>
+                    <h2>{{ booking.client_name }}</h2>
+                </div>
+                <div class="booking-status-stamp" data-status="{{ booking.status|lower }}">
+                    {{ booking.status|lower|capfirst }}
+                </div>
+            </div>
+            <div class="booking-ticket-body">
+                <div class="booking-client-mini">
+                    <div class="booking-avatar">{{ booking.client_name|slice:":1" }}</div>
+                    <div>
+                        <div class="booking-client-name">{{ booking.client_name }}</div>
+                        <div class="booking-client-meta">{{ booking.client_email }}</div>
+                    </div>
+                    <a href="mailto:{{ booking.client_email }}" class="btn secondary booking-client-contact">Contacter</a>
+                </div>
+
+                <div class="booking-spec-grid">
+                    <div class="booking-spec-item">
+                        <span class="booking-spec-label">Date souhaitée</span>
+                        <span class="booking-spec-value">{{ booking.desired_date }}</span>
+                    </div>
+                    <div class="booking-spec-item">
+                        <span class="booking-spec-label">Lieu</span>
+                        <span class="booking-spec-value">{{ booking.location }}</span>
+                        {% if booking.location_preference %}
+                            <span class="booking-spec-sub">{{ booking.location_preference }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="booking-spec-item">
+                        <span class="booking-spec-label">Cheveux</span>
+                        <span class="booking-spec-value">{{ booking.hair_length }}</span>
+                        <span class="booking-spec-sub">{% if booking.meche %}Avec mèche{% else %}Sans mèche{% endif %}</span>
+                    </div>
+                    <div class="booking-spec-item">
+                        <span class="booking-spec-label">Estimation</span>
+                        <span class="booking-spec-value booking-price">{{ booking.estimated_price_cents|cents_to_euros }}</span>
+                    </div>
+                </div>
+
+                {% if booking.proposed_price_cents or booking.proposed_date %}
+                    <div class="booking-proposal-callout">
+                        <strong>Proposition en cours :</strong>
+                        {% if booking.proposed_price_cents %}
+                            {{ booking.proposed_price_cents|cents_to_euros }}
+                        {% endif %}
+                        {% if booking.proposed_date %}
+                            {% if booking.proposed_price_cents %} le {% endif %}
+                            {{ booking.proposed_date }}
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if booking.free_text %}
+                    <div class="booking-notes">
+                        <h3>Notes du client</h3>
+                        <p>{{ booking.free_text }}</p>
+                    </div>
+                {% endif %}
+
+                <div class="booking-visuals">
+                    <h3>Analyse visuelle</h3>
+                    <div class="booking-polaroid-container">
+                        {% if booking.resolved_current_hair_picture %}
+                            <div class="booking-polaroid">
+                                <img src="{{ booking.resolved_current_hair_picture }}" alt="Cheveux actuels" loading="lazy" decoding="async" />
+                                <span>Cheveux actuels</span>
+                            </div>
+                        {% endif %}
+                        {% for picture in booking.resolved_inspiration_pictures %}
+                            <div class="booking-polaroid booking-polaroid-inspiration">
+                                <img src="{{ picture }}" alt="Inspiration coiffure" loading="lazy" decoding="async" />
+                                <span>Inspiration</span>
+                            </div>
+                        {% empty %}
+                            <p class="meta-line">Pas d'inspiration fournie.</p>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card-grid" style="margin-top:20px;">
-            <div class="paper-card">
-                <h4>Envoyer une nouvelle proposition</h4>
-                <p class="meta-line">Tu peux ajuster le tarif, la date, ou les deux.</p>
-                <form method="post" class="provider-form-grid">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="propose" />
-                    <div class="form-field">
-                        <label for="price">Tarif proposé (€)</label>
-                        <input id="price" type="number" name="proposed_price_euros" min="0" step="0.01" inputmode="decimal" />
-                        <small class="field-hint">Laisse vide si tu ne modifies pas le tarif.</small>
+        <aside class="booking-action-column">
+            <div class="booking-action-card">
+                <h3>Console de décision</h3>
+                <p class="booking-action-lead">
+                    Confirme le créneau et le tarif, ou propose un ajustement au client.
+                </p>
+
+                <div class="booking-decision-flow">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="confirm" />
+                        <button class="btn full-width" type="submit">✔ Confirmer le RDV</button>
+                    </form>
+
+                    <div class="booking-or-divider">
+                        <span>ou</span>
                     </div>
-                    <div class="form-field">
-                        <label for="proposed_date">Date proposée</label>
-                        <input
-                            id="proposed_date"
-                            type="datetime-local"
-                            name="proposed_date"
-                            inputmode="numeric"
-                            placeholder="JJ/MM/AAAA HH:MM"
-                        />
-                        <small class="field-hint">Choisis un créneau si tu ne modifies pas le prix.</small>
+
+                    <button
+                        type="button"
+                        class="booking-toggle-negotiation"
+                        data-target="booking-negotiation-panel"
+                        aria-expanded="false"
+                    >
+                        Faire une contre-proposition (Prix/Date)
+                    </button>
+
+                    <div class="booking-negotiation-panel" id="booking-negotiation-panel">
+                        <form method="post" class="booking-negotiation-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="propose" />
+                            <div class="form-field">
+                                <label for="price">Nouveau tarif (€)</label>
+                                <input id="price" type="number" name="proposed_price_euros" min="0" step="0.01" inputmode="decimal" />
+                                <small class="field-hint">Laisse vide si tu ne modifies pas le tarif.</small>
+                            </div>
+                            <div class="form-field">
+                                <label for="proposed_date">Nouvelle date</label>
+                                <input
+                                    id="proposed_date"
+                                    type="datetime-local"
+                                    name="proposed_date"
+                                    inputmode="numeric"
+                                    placeholder="JJ/MM/AAAA HH:MM"
+                                />
+                                <small class="field-hint">Choisis un créneau si tu ne modifies pas le prix.</small>
+                            </div>
+                            <button class="btn secondary full-width" type="submit">Envoyer la proposition</button>
+                        </form>
                     </div>
-                    <button class="btn primary" type="submit">Envoyer au client</button>
-                </form>
+                </div>
             </div>
-            <div class="paper-card">
-                <h4>Confirmer ou refuser</h4>
-                <form method="post" style="margin-bottom:10px;">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="confirm" />
-                    <button class="btn primary" type="submit">Confirmer la demande</button>
-                </form>
+
+            <div class="paper-card booking-danger-zone">
+                <p class="meta-line">Ce créneau ne te convient pas ?</p>
                 <form method="post">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="reject" />
-                    <button class="btn danger" type="submit">Refuser</button>
+                    <button class="btn danger" type="submit">Refuser la demande</button>
                 </form>
             </div>
-        </div>
+
+            <div class="booking-help-box">
+                <strong>Besoin d'aide ?</strong><br />
+                Le client a déjà payé un acompte. En acceptant, le montant total est verrouillé.
+            </div>
+        </aside>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const toggleBtn = document.querySelector('.booking-toggle-negotiation');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            const panel = document.getElementById(toggleBtn.dataset.target);
+            if (!panel) return;
+            panel.classList.toggle('is-open');
+            const expanded = panel.classList.contains('is-open');
+            toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            toggleBtn.textContent = expanded
+                ? 'Masquer la contre-proposition'
+                : 'Faire une contre-proposition (Prix/Date)';
+        });
+    }
+</script>
+{{ block.super }}
 {% endblock %}
