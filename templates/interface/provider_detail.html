@@ -276,14 +276,16 @@
                                 <div class="secure-badge">
                                     <span style="font-size: 1.5rem;">🔒</span>
                                     <div>
-                                        <strong>Empreinte bancaire uniquement.</strong><br>
-                                        Aucun montant débité maintenant. Tu paieras directement {{ provider.name }} le jour J.
+                                        <strong>Empreinte bancaire pour un acompte de <span id="deposit-amount-inline">-- €</span>.</strong><br>
+                                        Aucun débit immédiat : l'acompte est prélevé uniquement après confirmation du rendez-vous.<br>
+                                        Le solde est réglé directement à {{ provider.name }} le jour J.
                                     </div>
                                 </div>
 
                                 {% if stripe_public_key %}
                                     <div class="form-field full-width">
                                         <label>Saisir la carte pour garantir le créneau</label>
+                                        <p class="field-hint" id="deposit-payment-hint">Montant de l'acompte : -- € (empreinte bancaire).</p>
                                         <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
                                         <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
                                     </div>
@@ -308,9 +310,14 @@
 
                         <aside class="provider-form-aside">
                             <div class="sticky-price-bar" id="sticky-price-bar">
-                                <span class="total-label">Estimation</span>
+                                <span class="total-label">Estimation totale</span>
                                 <span class="total-amount" id="final-price-display">...</span>
-                                <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher une estimation.</p>
+                                <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher l'estimation à régler le jour J.</p>
+                                <div class="deposit-summary">
+                                    <span class="deposit-label">Acompte à confirmer</span>
+                                    <span class="deposit-amount" id="deposit-amount-display">-- €</span>
+                                    <p class="meta-line" id="deposit-details-display">Empreinte bancaire, aucun débit immédiat.</p>
+                                </div>
                                 <span class="sr-only" id="sticky-price-value">-- €</span>
                             </div>
                         </aside>
@@ -355,6 +362,10 @@
         const stickyPriceValue = document.getElementById('sticky-price-value');
         const finalPriceDisplay = document.getElementById('final-price-display');
         const finalDetailsDisplay = document.getElementById('final-details-display');
+        const depositAmountDisplay = document.getElementById('deposit-amount-display');
+        const depositDetailsDisplay = document.getElementById('deposit-details-display');
+        const depositInlineDisplay = document.getElementById('deposit-amount-inline');
+        const depositPaymentHint = document.getElementById('deposit-payment-hint');
 
         const paymentElementContainer = document.getElementById('payment-element');
         const paymentError = document.getElementById('payment-error');
@@ -580,7 +591,19 @@
             if (!serviceId || !pricingData[serviceId]) {
                 stickyPriceValue.textContent = '-- €';
                 finalPriceDisplay.textContent = '...';
-                finalDetailsDisplay.textContent = 'Sélectionne un service pour afficher une estimation.';
+                finalDetailsDisplay.textContent = "Sélectionne un service pour afficher l'estimation à régler le jour J.";
+                if (depositAmountDisplay) {
+                    depositAmountDisplay.textContent = '-- €';
+                }
+                if (depositDetailsDisplay) {
+                    depositDetailsDisplay.textContent = "Sélectionne un service pour afficher l'acompte.";
+                }
+                if (depositInlineDisplay) {
+                    depositInlineDisplay.textContent = '-- €';
+                }
+                if (depositPaymentHint) {
+                    depositPaymentHint.textContent = "Montant de l'acompte : -- € (empreinte bancaire).";
+                }
                 return;
             }
 
@@ -592,6 +615,8 @@
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
             const totalCents = base + lengthAdj + mecheAdj;
             const totalStr = formatPrice(totalCents);
+            const depositCents = pricing.deposit_cents ?? 0;
+            const depositStr = formatPrice(depositCents);
             const selectedOption = serviceSelect?.selectedOptions?.[0];
             const serviceName =
                 pricing.name ||
@@ -602,7 +627,20 @@
             finalPriceDisplay.textContent = totalStr;
             const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
             const mecheText = mecheCheckbox?.checked ? '+ mèches fournies' : 'sans mèches fournies';
-            finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}).`;
+            finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}). Total à régler le jour J.`;
+            if (depositAmountDisplay) {
+                depositAmountDisplay.textContent = depositStr;
+            }
+            if (depositInlineDisplay) {
+                depositInlineDisplay.textContent = depositStr;
+            }
+            if (depositPaymentHint) {
+                depositPaymentHint.textContent = `Montant de l'acompte : ${depositStr} (empreinte bancaire).`;
+            }
+            if (depositDetailsDisplay) {
+                depositDetailsDisplay.textContent =
+                    "Acompte fixe, prélevé uniquement après confirmation du rendez-vous.";
+            }
         };
 
         const getCsrfToken = () => {

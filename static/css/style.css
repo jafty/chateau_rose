@@ -1791,6 +1791,9 @@ footer {
 .total-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-secondary); }
 .total-amount { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 700; font-style: italic; color: var(--rose-accent); }
 .sticky-price-bar .meta-line { margin: 0; font-size: 0.85rem; }
+.deposit-summary { border-top: 1px dashed #f3c1da; padding-top: 8px; display: grid; gap: 4px; }
+.deposit-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-secondary); }
+.deposit-amount { font-weight: 700; color: var(--ink-primary); }
 
 /* Secure Badge */
 .secure-badge {

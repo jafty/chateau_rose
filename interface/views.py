@@ -219,9 +219,12 @@ def provider_payment_intent(request):
     length_adj = length_adjustments[hair_length]
     meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
     estimated_price = base_price + length_adj + meche_bonus
+    deposit_cents = service.get("deposit_cents")
+    if deposit_cents is None:
+        return JsonResponse({"error": "Acompte non défini."}, status=400)
 
     intent = payment_gateway.create_payment_intent(
-        amount_cents=estimated_price,
+        amount_cents=deposit_cents,
         currency="EUR",
         reference=f"estimate-{uuid.uuid4().hex[:10]}",
     )
@@ -230,7 +233,7 @@ def provider_payment_intent(request):
         {
             "client_secret": intent["client_secret"],
             "payment_auth_id": intent["id"],
-            "amount_cents": estimated_price,
+            "amount_cents": deposit_cents,
         }
     )
 
