@@ -2,7 +2,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 import logging
 
-from django.contrib.auth import login, views as auth_views
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
@@ -17,7 +17,7 @@ from chateaurose.infrastructure.booking_repository import DjangoBookingRepositor
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
-from providers.forms import ProviderPasswordResetForm, ProviderSignupForm
+from providers.forms import ProviderPartnershipRequestForm, ProviderPasswordResetForm
 
 repo = DjangoBookingRepository()
 notifier = EmailNotifier()
@@ -151,23 +151,35 @@ def booking_detail(request, booking_id):
 
 
 def signup(request):
+    request_sent = request.GET.get("sent") == "1"
     if request.method == "POST":
-        form = ProviderSignupForm(request.POST)
+        form = ProviderPartnershipRequestForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            Provider.objects.create(
-                name=form.cleaned_data["name"],
-                contact_email=form.cleaned_data.get("contact_email")
-                or form.cleaned_data.get("email"),
-                contact_phone=form.cleaned_data.get("contact_phone", ""),
-                salon_zone=form.cleaned_data.get("salon_zone", ""),
-                salon_address=form.cleaned_data.get("salon_address", ""),
-                location_mode=form.cleaned_data.get("location_mode", Provider.LOCATION_MODE_HYBRID),
-                user=user,
+            cleaned = form.cleaned_data
+            subject = "Nouvelle demande de partenariat"
+            body = "\n".join(
+                [
+                    "Une nouvelle demande de partenariat a été envoyée.",
+                    "",
+                    f"Nom : {cleaned['name']}",
+                    f"Email : {cleaned['email']}",
+                    f"Instagram / réseau social : {cleaned.get('social') or 'Non renseigné'}",
+                    "",
+                    "Message :",
+                    cleaned["message"],
+                ]
             )
-            login(request, user)
-            return redirect("providers:providers_index")
+            notifier.notify(
+                recipient="japhet.situmonana@gmail.com",
+                subject=subject,
+                body=body,
+            )
+            return redirect(f"{reverse('providers:signup')}?sent=1")
     else:
-        form = ProviderSignupForm()
+        form = ProviderPartnershipRequestForm()
 
-    return render(request, "providers/signup.html", {"form": form})
+    return render(
+        request,
+        "providers/signup.html",
+        {"form": form, "request_sent": request_sent},
+    )

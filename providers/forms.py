@@ -8,6 +8,24 @@ from booking.models import Provider
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 
 
+class ProviderPartnershipRequestForm(forms.Form):
+    name = forms.CharField(
+        label="Nom et prénom",
+        max_length=255,
+    )
+    email = forms.EmailField(label="Email", required=True)
+    social = forms.CharField(
+        label="Instagram ou réseau social",
+        required=False,
+        max_length=255,
+    )
+    message = forms.CharField(
+        label="Parle-nous de tes prestations",
+        widget=forms.Textarea(attrs={"rows": 5}),
+        help_text="Décris tes spécialités, zones, disponibilités, etc.",
+    )
+
+
 class ProviderSignupForm(UserCreationForm):
     name = forms.CharField(label="Nom de la prestataire ou du prestataire", max_length=255)
     contact_email = forms.EmailField(label="Email de contact")
