@@ -92,6 +92,57 @@ class MarketingZone(models.Model):
         return None
 
 
+class MarketingServiceZone(models.Model):
+    service = models.ForeignKey(
+        MarketingService,
+        on_delete=models.CASCADE,
+        related_name="zone_overrides",
+    )
+    zone = models.ForeignKey(
+        "booking.Zone",
+        on_delete=models.CASCADE,
+        related_name="service_overrides",
+    )
+    intro = models.TextField(blank=True)
+    highlights = models.JSONField(default=list, blank=True)
+    hero_image = models.ImageField(upload_to="marketing/service_zones/main/", blank=True, null=True)
+    hero_image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text=(
+            "Upload an image or provide an absolute URL, /root-relative path, "
+            "or relative static asset path."
+        ),
+    )
+    meta_description = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ("service__name", "zone__name")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("service", "zone"),
+                name="unique_marketing_service_zone",
+            )
+        ]
+
+    def __str__(self):
+        return f"Marketing {self.service.name} - {self.zone.name}"
+
+    @property
+    def resolved_hero_image(self):
+        if self.hero_image:
+            return self.hero_image.url
+        if self.hero_image_url:
+            return self.hero_image_url
+        return None
+
+    def save(self, *args, **kwargs):
+        if _should_compress_image(self, "hero_image"):
+            compress_image_field(self.hero_image, max_px=1200, quality=80)
+        return super().save(*args, **kwargs)
+
+
 class MarketingServiceImage(models.Model):
     service = models.ForeignKey(MarketingService, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to="marketing/services/gallery/", blank=True)
