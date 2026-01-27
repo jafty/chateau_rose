@@ -3,7 +3,7 @@ from import_export.widgets import ForeignKeyWidget, JSONWidget
 
 from booking.models import Zone
 
-from .models import MarketingService, MarketingServiceImage, MarketingZone
+from .models import MarketingService, MarketingServiceImage, MarketingServiceZone, MarketingZone
 
 
 class MarketingServiceResource(resources.ModelResource):
@@ -67,5 +67,36 @@ class MarketingServiceImageResource(resources.ModelResource):
             "image_url",
             "caption",
             "order",
+        )
+        export_order = fields
+
+
+class MarketingServiceZoneResource(resources.ModelResource):
+    service = fields.Field(
+        column_name="service_slug",
+        attribute="service",
+        widget=ForeignKeyWidget(MarketingService, "slug"),
+    )
+    zone = fields.Field(
+        column_name="zone_slug",
+        attribute="zone",
+        widget=ForeignKeyWidget(Zone, "slug"),
+    )
+    highlights = fields.Field(
+        column_name="highlights",
+        attribute="highlights",
+        widget=JSONWidget(),
+    )
+
+    class Meta:
+        model = MarketingServiceZone
+        fields = (
+            "id",
+            "service",
+            "zone",
+            "intro",
+            "highlights",
+            "hero_image_url",
+            "meta_description",
         )
         export_order = fields

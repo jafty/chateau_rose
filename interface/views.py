@@ -29,7 +29,7 @@ from chateaurose.infrastructure.provider_catalog import (
     SALON_LOCATION_LABEL,
 )
 from interface.forms import ProviderBookingRequestForm, ServiceRequestForm
-from interface.models import MarketingService, MarketingZone
+from interface.models import MarketingService, MarketingServiceZone, MarketingZone
 from interface.services import booking_requests
 from chateaurose.seo import build_base_url
 
@@ -493,34 +493,50 @@ def _to_service_content(service_meta: MarketingService) -> ServiceContent:
     )
 
 
-def _apply_zone_marketing(service_meta: MarketingService, marketing_zone: MarketingZone):
+def _apply_zone_marketing(
+    service_meta: MarketingService,
+    marketing_zone: MarketingZone | None,
+    service_zone: MarketingServiceZone | None = None,
+):
     if not marketing_zone:
-        return _to_service_content(service_meta)
+        base_content = _to_service_content(service_meta)
+    else:
+        intro_parts = [service_meta.intro]
+        if marketing_zone.intro:
+            intro_parts.append(marketing_zone.intro)
 
-    intro_parts = [service_meta.intro]
-    if marketing_zone.intro:
-        intro_parts.append(marketing_zone.intro)
+        merged_highlights = list(service_meta.highlights)
+        if marketing_zone.highlights:
+            for highlight in marketing_zone.highlights:
+                if highlight and highlight not in merged_highlights:
+                    merged_highlights.append(highlight)
 
-    merged_highlights = list(service_meta.highlights)
-    if marketing_zone.highlights:
-        for highlight in marketing_zone.highlights:
-            if highlight and highlight not in merged_highlights:
-                merged_highlights.append(highlight)
+        meta_description = service_meta.meta_description or ""
+        if marketing_zone.meta_description:
+            if meta_description:
+                meta_description = f"{meta_description} {marketing_zone.meta_description}".strip()
+            else:
+                meta_description = marketing_zone.meta_description
 
-    meta_description = service_meta.meta_description or ""
-    if marketing_zone.meta_description:
-        if meta_description:
-            meta_description = f"{meta_description} {marketing_zone.meta_description}".strip()
-        else:
-            meta_description = marketing_zone.meta_description
+        base_content = ServiceContent(
+            name=service_meta.name,
+            intro=" ".join([part for part in intro_parts if part]),
+            highlights=merged_highlights,
+            main_image=marketing_zone.resolved_hero_image or service_meta.resolved_main_image,
+            gallery=_gallery_from_service(service_meta),
+            meta_description=meta_description,
+        )
+
+    if not service_zone:
+        return base_content
 
     return ServiceContent(
         name=service_meta.name,
-        intro=" ".join([part for part in intro_parts if part]),
-        highlights=merged_highlights,
-        main_image=marketing_zone.resolved_hero_image or service_meta.resolved_main_image,
-        gallery=_gallery_from_service(service_meta),
-        meta_description=meta_description,
+        intro=service_zone.intro or base_content.intro,
+        highlights=service_zone.highlights or base_content.highlights,
+        main_image=service_zone.resolved_hero_image or base_content.main_image,
+        gallery=base_content.gallery,
+        meta_description=service_zone.meta_description or base_content.meta_description,
     )
 
 
@@ -579,8 +595,9 @@ def service_city_page(request, service_slug: str, city_slug: str):
     service_meta = _get_service_or_404(service_slug)
     zone = _get_zone_or_404(city_slug)
     marketing_zone = MarketingZone.objects.filter(zone=zone).first()
+    service_zone = MarketingServiceZone.objects.filter(service=service_meta, zone=zone).first()
     marketing_content = build_marketing_content(
-        service=_apply_zone_marketing(service_meta, marketing_zone),
+        service=_apply_zone_marketing(service_meta, marketing_zone, service_zone),
         location_name=zone.name,
     )
     intro = marketing_content.intro
@@ -628,8 +645,9 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     service_meta = _get_service_or_404(service_slug)
     zone = _get_zone_or_404(district_slug)
     marketing_zone = MarketingZone.objects.filter(zone=zone).first()
+    service_zone = MarketingServiceZone.objects.filter(service=service_meta, zone=zone).first()
     marketing_content = build_marketing_content(
-        service=_apply_zone_marketing(service_meta, marketing_zone),
+        service=_apply_zone_marketing(service_meta, marketing_zone, service_zone),
         location_name=zone.name,
     )
     intro = marketing_content.intro
