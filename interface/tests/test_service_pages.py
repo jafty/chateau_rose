@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from booking.models import Provider, ProviderMarketingService, ProviderZone, Zone
-from interface.models import MarketingService, MarketingZone, ServiceRequest
+from interface.models import MarketingService, MarketingServiceZone, MarketingZone, ServiceRequest
 
 
 class ServicePagesTests(TestCase):
@@ -163,3 +163,32 @@ class ServicePagesTests(TestCase):
         self.assertIn("Rapide", content)
         self.assertIn("Capitole highlight", content)
         self.assertIn(marketing_zone.hero_image_url, content)
+
+    def test_service_zone_marketing_overrides_are_used(self):
+        MarketingZone.objects.create(
+            zone=self.capitole,
+            intro="Focus Capitole",
+            highlights=["Capitole highlight"],
+            hero_image_url="https://cdn.example.com/capitole.jpg",
+            meta_description="Meta Capitole",
+        )
+        service_zone = MarketingServiceZone.objects.create(
+            service=self.marketing_service,
+            zone=self.capitole,
+            intro="Intro personnalisée Capitole",
+            highlights=["Highlight personnalisé"],
+            hero_image_url="https://cdn.example.com/tresses-capitole.jpg",
+            meta_description="Meta personnalisée",
+        )
+
+        url = reverse(
+            "interface:service_city_district_page", args=["tresses", "toulouse", "capitole"]
+        )
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(service_zone.intro, content)
+        self.assertIn("Highlight personnalisé", content)
+        self.assertIn(service_zone.hero_image_url, content)
+        self.assertNotIn("Capitole highlight", content)

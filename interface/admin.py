@@ -5,12 +5,14 @@ from import_export.admin import ImportExportModelAdmin
 from interface.resources import (
     MarketingServiceImageResource,
     MarketingServiceResource,
+    MarketingServiceZoneResource,
     MarketingZoneResource,
 )
 
 from interface.models import (
     MarketingService,
     MarketingServiceImage,
+    MarketingServiceZone,
     MarketingZone,
     ServiceRequest,
 )
@@ -45,6 +47,18 @@ class MarketingZoneAdmin(ImportExportModelAdmin):
         ("Image", {"fields": ("hero_image",)}),
     )
     resource_class = MarketingZoneResource
+
+
+@admin.register(MarketingServiceZone)
+class MarketingServiceZoneAdmin(ImportExportModelAdmin):
+    list_display = ("service", "zone")
+    search_fields = ("service__name", "service__slug", "zone__name", "zone__slug")
+    autocomplete_fields = ("service", "zone")
+    fieldsets = (
+        (None, {"fields": ("service", "zone", "intro", "highlights", "meta_description")}),
+        ("Image", {"fields": ("hero_image",)}),
+    )
+    resource_class = MarketingServiceZoneResource
 
 
 @admin.register(ServiceRequest)
