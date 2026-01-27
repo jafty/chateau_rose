@@ -1,18 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}Créer un compte prestataire{% endblock %}
+{% block title %}Devenir partenaire{% endblock %}
 
 {% block content %}
 <section class="container page-hero">
     <div class="paper-card" style="max-width:760px; margin: 0 auto;">
         <span class="pill">Prestataire</span>
-        <h1 style="margin: 12px 0 10px;">Créer ton compte</h1>
-        <p class="lead">Renseigne tes coordonnées pour accéder à ton espace et gérer les demandes qui te sont envoyées.</p>
+        <h1 style="margin: 12px 0 10px;">Devenir partenaire</h1>
+        <p class="lead">Parle-nous de ton activité et on revient vers toi rapidement. La création du compte se fait après validation.</p>
     </div>
 </section>
 
 <section class="container" style="padding-bottom:60px;">
     <div class="paper-card" style="max-width:760px; margin: 0 auto;">
+        {% if request_sent %}
+            <div class="alert success" role="status" style="margin-bottom: 18px;">
+                <strong>Merci !</strong> Ta demande a bien été envoyée. Nous revenons vers toi très vite.
+            </div>
+        {% endif %}
         <form method="post">
             {% csrf_token %}
             {% for field in form %}
@@ -30,7 +35,7 @@
                     <div class="alert danger">{{ error }}</div>
                 {% endfor %}
             {% endif %}
-            <button class="btn primary" type="submit">Créer mon espace</button>
+            <button class="btn primary" type="submit">Envoyer ma demande</button>
             <a class="btn secondary" href="{% url 'providers:login' %}">J'ai déjà un compte</a>
         </form>
     </div>
