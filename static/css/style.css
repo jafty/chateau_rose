@@ -667,6 +667,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     border: 1px solid rgba(0,0,0,0.05);
     box-shadow: var(--shadow-paper);
 }
+.cta-banner .highlight-list { margin-top: 12px; }
 
 @media (max-width: 960px) {
     .nav-wrapper {
