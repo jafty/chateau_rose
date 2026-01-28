@@ -740,7 +740,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 .profile-photo-frame img { width: 100%; height: 100%; object-fit: cover; min-height: 260px; filter: grayscale(10%); }
 .provider-tag-cloud { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 12px; }
-.provider-sidebar-card { text-align: center; }
+.provider-sidebar-card { text-align: left; }
 .provider-note { font-size: 0.95rem; color: var(--ink-secondary); }
 
 .provider-main { display: grid; gap: 1.8rem; }
