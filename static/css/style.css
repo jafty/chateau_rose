@@ -1640,7 +1640,7 @@ footer {
 .footer-col ul li a { color: #b8b0b1; font-size: 0.95rem; }
 .footer-col ul li a:hover { color: white; }
 .footer-provider-link {
-    color: var(--bg-paper);
+    color: var(--rose-accent);
     font-weight: 700;
     font-size: 1.05rem;
     display: inline-block;
