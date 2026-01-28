@@ -13,6 +13,28 @@ class MultiFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
 
 
+class MultipleFileField(forms.FileField):
+    widget = MultiFileInput
+
+    def clean(self, data, initial=None):
+        if not data:
+            return []
+        if not isinstance(data, (list, tuple)):
+            return [super().clean(data, initial)]
+
+        errors = []
+        cleaned_files = []
+        for item in data:
+            try:
+                cleaned_files.append(super().clean(item, initial))
+            except forms.ValidationError as exc:
+                errors.extend(exc.error_list)
+
+        if errors:
+            raise forms.ValidationError(errors)
+        return cleaned_files
+
+
 class ServiceRequestForm(forms.ModelForm):
     marketing_service = forms.ModelChoiceField(
         queryset=MarketingService.objects.all(),
@@ -101,7 +123,7 @@ class ProviderBookingRequestForm(forms.Form):
     hair_length = forms.CharField(label="Longueur de cheveux", required=False)
     meche = forms.BooleanField(label="Besoin de mèches fournies", required=False)
     current_hair_picture_file = forms.FileField(label="Photo de tes cheveux", required=False)
-    inspiration_pictures = forms.FileField(
+    inspiration_pictures = MultipleFileField(
         label="Photos d'inspiration",
         required=False,
         widget=MultiFileInput(attrs={"multiple": True}),
