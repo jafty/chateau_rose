@@ -21,7 +21,7 @@ def build_pricing_data(services):
         adjustments = service.hair_length_adjustments or {}
         general_adjustments = service.general_adjustments or {}
         min_adj = min(adjustments.values()) if adjustments else 0
-        starting_price = service.base_price_cents + min_adj
+        starting_price = service.base_price_cents + min_adj + general_adj_total
         starting_prices.append(starting_price)
         pricing_data[str(service.id)] = {
             "base": service.base_price_cents,
