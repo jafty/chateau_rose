@@ -142,6 +142,10 @@
     <div class="all-services-grid">
         {% for service in services %}
             <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
+                {% if forloop.counter <= 8 %}
+                    {% cycle 'top-left' 'bottom-right' 'top-right' 'side-left' as tape_position %}
+                    <span class="tape {{ tape_position }}" aria-hidden="true"></span>
+                {% endif %}
                 {% if service.resolved_main_image %}
                     <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" width="320" height="320" loading="lazy" decoding="async">
                 {% else %}
