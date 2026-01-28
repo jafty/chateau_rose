@@ -410,7 +410,7 @@ def client_proposal(request, booking_id):
     proposed_price = (
         booking_requests.format_price(booking.proposed_price_cents)
         if booking.proposed_price_cents is not None
-        else "À confirmer"
+        else booking_requests.format_price(booking.estimated_price_cents)
     )
     return render(
         request,
