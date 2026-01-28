@@ -152,7 +152,7 @@
                                     </select>
                                 </div>
 
-                                <div class="form-field full-width">
+                                <div class="form-field full-width" data-hair-length-field hidden>
                                     <label for="hair_length">Longueur souhaitée <span class="required-mark">*</span></label>
                                     <select name="hair_length" id="hair_length" required disabled>
                                         <option value="" selected disabled>Choisis d'abord un service</option>
@@ -386,6 +386,7 @@
         const serviceSelect = document.getElementById('service_id');
         const hairLengthSelect = document.getElementById('hair_length');
         const generalAdjustmentSelect = document.getElementById('general_adjustment');
+        const hairLengthField = document.querySelector('[data-hair-length-field]');
         const generalAdjustmentField = document.querySelector('[data-general-adjustment-field]');
         const mecheCheckbox = document.getElementById('meche');
 
@@ -572,29 +573,45 @@
             return euros % 1 === 0 ? `${euros.toFixed(0)} €` : `${euros.toFixed(2)} €`;
         };
 
+        const toggleHairLengthField = (isVisible) => {
+            if (hairLengthField) {
+                hairLengthField.hidden = !isVisible;
+            }
+            if (hairLengthSelect) {
+                hairLengthSelect.required = isVisible;
+            }
+        };
+
         const updateHairLengths = (serviceId) => {
             if (!hairLengthSelect) return;
             hairLengthSelect.innerHTML = '';
             hairLengthSelect.disabled = true;
+            toggleHairLengthField(false);
 
             if (!serviceId || !pricingData[serviceId]) return;
 
-            const placeholder = document.createElement('option');
-            placeholder.textContent = 'Sélectionne ta longueur';
-            placeholder.value = '';
-            placeholder.selected = true;
-            placeholder.disabled = true;
-            hairLengthSelect.appendChild(placeholder);
-
             const lengths = pricingData[serviceId].lengths || {};
+            const lengthKeys = Object.keys(lengths);
 
-            if (Object.keys(lengths).length === 0) {
+            if (lengthKeys.length <= 1) {
+                const defaultKey = lengthKeys[0] || 'standard';
+                const delta = lengthKeys.length ? lengths[defaultKey] : 0;
                 const opt = document.createElement('option');
-                opt.value = 'standard';
-                opt.textContent = 'Standard';
+                opt.value = defaultKey;
+                const displayDelta =
+                    delta === 0 ? '' : delta > 0 ? ` (+${formatPrice(delta)})` : ` (${formatPrice(delta)})`;
+                opt.textContent = `${defaultKey}${displayDelta}`;
                 hairLengthSelect.appendChild(opt);
-                hairLengthSelect.value = 'standard';
+                hairLengthSelect.value = defaultKey;
+                hairLengthSelect.disabled = true;
+                toggleHairLengthField(false);
             } else {
+                const placeholder = document.createElement('option');
+                placeholder.textContent = 'Sélectionne ta longueur';
+                placeholder.value = '';
+                placeholder.selected = true;
+                placeholder.disabled = true;
+                hairLengthSelect.appendChild(placeholder);
                 Object.keys(lengths)
                     .sort()
                     .forEach((lengthKey) => {
@@ -606,8 +623,9 @@
                         opt.textContent = `${lengthKey}${displayDelta}`;
                         hairLengthSelect.appendChild(opt);
                     });
+                toggleHairLengthField(true);
+                hairLengthSelect.disabled = false;
             }
-            hairLengthSelect.disabled = false;
         };
 
         const updateGeneralAdjustments = (serviceId) => {
