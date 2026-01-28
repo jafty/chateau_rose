@@ -36,6 +36,14 @@ class Provider(models.Model):
 
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    availabilities = models.TextField(
+        blank=True,
+        help_text="Disponibilités proposées pour la clientèle.",
+    )
+    additional_info = models.TextField(
+        blank=True,
+        help_text="Règles, conditions, informations complémentaires.",
+    )
     contact_phone = models.CharField(max_length=64, blank=True)
     contact_email = models.EmailField(blank=True)
     deposit_cents = models.IntegerField(
@@ -51,6 +59,10 @@ class Provider(models.Model):
     salon_address = models.TextField(
         blank=True,
         help_text="Adresse complète du salon (communiquée après confirmation).",
+    )
+    provides_meche = models.BooleanField(
+        default=True,
+        help_text="Active si la prestataire fournit les mèches.",
     )
     profile_image = models.ImageField(upload_to="providers/profile/", blank=True, null=True)
     profile_image_url = models.CharField(

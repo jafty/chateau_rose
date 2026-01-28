@@ -42,12 +42,15 @@ class ProviderAdminForm(forms.ModelForm):
         fields = (
             "name",
             "description",
+            "availabilities",
+            "additional_info",
             "contact_phone",
             "contact_email",
             "deposit_cents",
             "salon_zone",
             "salon_address",
             "profile_image",
+            "provides_meche",
             "location_mode",
             "user",
             "zones",
@@ -92,6 +95,7 @@ class ProviderAdmin(ImportExportModelAdmin):
         "contact_email",
         "deposit_cents",
         "salon_zone",
+        "provides_meche",
         "location_mode",
         "user",
     )

@@ -11,7 +11,7 @@
         <form method="post" class="login-form">
             {% csrf_token %}
             {{ form.non_field_errors }}
-            <label for="id_username">Adresse e-mail</label>
+            <label for="id_username">Adresse e-mail ou pseudo</label>
             {{ form.username }}
             <label for="id_password">Mot de passe</label>
             {{ form.password }}
