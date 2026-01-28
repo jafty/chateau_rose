@@ -33,6 +33,7 @@ class ProviderResource(resources.ModelResource):
             "salon_zone",
             "salon_address",
             "profile_image_url",
+            "provides_meche",
             "location_mode",
             "user",
         )
