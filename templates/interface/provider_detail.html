@@ -313,6 +313,7 @@
                                 <span class="total-label">Estimation totale</span>
                                 <span class="total-amount" id="final-price-display">...</span>
                                 <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher l'estimation à régler le jour J.</p>
+                                <p class="meta-line" id="general-adjustments-display" hidden></p>
                                 <div class="deposit-summary">
                                     <span class="deposit-label">Acompte à confirmer</span>
                                     <span class="deposit-amount" id="deposit-amount-display">-- €</span>
@@ -362,6 +363,7 @@
         const stickyPriceValue = document.getElementById('sticky-price-value');
         const finalPriceDisplay = document.getElementById('final-price-display');
         const finalDetailsDisplay = document.getElementById('final-details-display');
+        const generalAdjustmentsDisplay = document.getElementById('general-adjustments-display');
         const depositAmountDisplay = document.getElementById('deposit-amount-display');
         const depositDetailsDisplay = document.getElementById('deposit-details-display');
         const depositInlineDisplay = document.getElementById('deposit-amount-inline');
@@ -585,6 +587,18 @@
             return Math.min(...values);
         };
 
+        const formatAdjustments = (adjustments) => {
+            if (!adjustments) return '';
+            const entries = Object.entries(adjustments)
+                .filter(([, value]) => typeof value === 'number' && value !== 0)
+                .map(([label, value]) => {
+                    const sign = value > 0 ? '+' : '';
+                    return `${label} (${sign}${formatPrice(value)})`;
+                });
+            if (!entries.length) return '';
+            return `Suppléments : ${entries.join(', ')}`;
+        };
+
         const refreshEstimate = () => {
             if (!serviceSelect || !stickyPriceValue || !finalPriceDisplay || !finalDetailsDisplay) return;
             const serviceId = serviceSelect.value;
@@ -604,16 +618,22 @@
                 if (depositPaymentHint) {
                     depositPaymentHint.textContent = "Montant de l'acompte : -- € (empreinte bancaire).";
                 }
+                if (generalAdjustmentsDisplay) {
+                    generalAdjustmentsDisplay.textContent = '';
+                    generalAdjustmentsDisplay.hidden = true;
+                }
                 return;
             }
 
             const pricing = pricingData[serviceId];
             const base = pricing.base;
             const lengths = pricing.lengths || {};
+            const adjustments = pricing.general_adjustments || {};
             const selectedLength = hairLengthSelect?.value;
             const lengthAdj = selectedLength && lengths[selectedLength] !== undefined ? lengths[selectedLength] : minAdjustment(lengths);
+            const generalAdj = pricing.general_adjustments_total || 0;
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
-            const totalCents = base + lengthAdj + mecheAdj;
+            const totalCents = base + lengthAdj + generalAdj + mecheAdj;
             const totalStr = formatPrice(totalCents);
             const depositCents = pricing.deposit_cents ?? 0;
             const depositStr = formatPrice(depositCents);
@@ -628,6 +648,11 @@
             const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
             const mecheText = mecheCheckbox?.checked ? '+ mèches fournies' : 'sans mèches fournies';
             finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}). Total à régler le jour J.`;
+            if (generalAdjustmentsDisplay) {
+                const adjustmentsText = formatAdjustments(adjustments);
+                generalAdjustmentsDisplay.textContent = adjustmentsText;
+                generalAdjustmentsDisplay.hidden = !adjustmentsText;
+            }
             if (depositAmountDisplay) {
                 depositAmountDisplay.textContent = depositStr;
             }
