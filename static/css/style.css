@@ -45,7 +45,7 @@ body::before {
 
 img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
-main { padding-bottom: 80px; }
+main { padding-bottom: 0; }
 
 a { text-decoration: none; color: inherit; transition: 0.3s ease; }
 a:hover { color: var(--rose-accent); }
@@ -323,6 +323,14 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     flex-wrap: wrap;
 }
 
+.hero-card {
+    background: var(--bg-paper);
+    padding: 32px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-paper);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
 .hub-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -395,6 +403,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     .hero-actions { justify-content: center; }
     .hub-grid { margin-top: 40px; }
     .hub-card:nth-child(n) { transform: none; }
+    .hero-card { padding: 24px; }
 }
 
 .bento-grid {
@@ -532,6 +541,12 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     -ms-overflow-style: none;
     cursor: grab;
     user-select: none;
+}
+
+.portfolio-strip.is-centered {
+    justify-content: center;
+    overflow-x: hidden;
+    cursor: default;
 }
 
 .portfolio-strip::-webkit-scrollbar { display: none; }
@@ -880,7 +895,10 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     font-weight: 700;
     font-size: 1.3rem;
     color: var(--ink-primary);
+    transition: color 0.3s ease;
 }
+
+.service-polaroid:hover .service-label { color: var(--rose-accent); }
 
 .accent-underline {
     text-decoration: underline;
@@ -946,9 +964,21 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 .providers-scroll::-webkit-scrollbar { display: none; }
 
+@media (max-width: 840px) {
+    .providers-scroll {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        overflow-x: visible;
+        padding-bottom: 0;
+    }
+
+    .provider-card { width: 100%; margin-inline: 0; }
+}
+
 @media (max-width: 720px) {
     .providers-grid { padding-inline: 6px; }
-    .provider-card { margin-inline: 12px; }
+    .providers-grid .provider-card { margin-inline: 12px; }
 }
 
 .provider-card {

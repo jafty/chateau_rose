@@ -6,7 +6,7 @@
 {% block content %}
 <section class="hero">
     <div class="container hero-grid">
-        <div class="hero-content">
+        <div class="hero-content hero-card">
             <h1 class="hero-title">Réserve ta coiffure <span>afro</span> à Toulouse sans galère.</h1>
             <p class="hero-text">En deux minutes tu poses ton rendez-vous, tu échanges directement avec le ou la prestataire et tu reçois une réponse rapide et fiable.</p>
             <div class="hero-actions">
@@ -143,7 +143,7 @@
         {% for service in services %}
             <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
                 {% if forloop.counter <= 8 %}
-                    {% cycle 'top-left' 'bottom-right' 'top-right' 'side-left' as tape_position %}
+                    {% cycle 'top-left' 'bottom-right' 'top-right' 'side-left' as tape_position silent %}
                     <span class="tape {{ tape_position }}" aria-hidden="true"></span>
                 {% endif %}
                 {% if service.resolved_main_image %}
@@ -194,6 +194,11 @@
     document.addEventListener('DOMContentLoaded', () => {
         const slider = document.querySelector('#portfolioScroll');
         if (!slider) return;
+        const polaroids = slider.querySelectorAll('.polaroid-mini');
+        if (polaroids.length <= 3) {
+            slider.classList.add('is-centered');
+            return;
+        }
         let isDown = false;
         let startX;
         let scrollLeft;
