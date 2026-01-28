@@ -105,7 +105,7 @@
                 </div>
                 <div class="footer-col">
                     <h4>Prestataires</h4>
-                    <a class="footer-provider-link" href="{% url 'providers:login' %}">Espace prestataires</a>
+                    <a class="footer-provider-link" href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:login' %}{% endif %}">Espace prestataires</a>
                 </div>
             </div>
         </div>
