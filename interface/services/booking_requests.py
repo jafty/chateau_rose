@@ -29,6 +29,7 @@ def build_pricing_data(services):
         pricing_data[str(service.id)] = {
             "base": service.base_price_cents,
             "lengths": adjustments,
+            "general_adjustments": general_adjustments,
             "general_adjustments_total": general_adj_total,
             "meche_bonus": service.meche_bonus_cents,
             "starting_from": starting_price,
