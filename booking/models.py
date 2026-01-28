@@ -120,6 +120,7 @@ class Service(models.Model):
     slug = models.SlugField(max_length=255, default="", blank=True)
     base_price_cents = models.IntegerField()
     hair_length_adjustments = models.JSONField(default=dict, blank=True)
+    general_adjustments = models.JSONField(default=dict, blank=True)
     meche_bonus_cents = models.IntegerField(default=0)
 
     class Meta:
@@ -209,6 +210,7 @@ class Booking(models.Model):
     client_address = models.TextField(blank=True)
     desired_date = models.CharField(max_length=128)
     hair_length = models.CharField(max_length=64)
+    general_adjustment = models.CharField(max_length=64, blank=True)
     meche = models.BooleanField()
     current_hair_picture = models.CharField(max_length=255)
     inspiration_pictures = models.JSONField(default=list)

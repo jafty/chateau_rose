@@ -147,6 +147,13 @@
                                     </select>
                                 </div>
 
+                                <div class="form-field full-width" data-general-adjustment-field hidden>
+                                    <label for="general_adjustment">Supplément</label>
+                                    <select name="general_adjustment" id="general_adjustment">
+                                        <option value="" selected>Aucun supplément</option>
+                                    </select>
+                                </div>
+
                                 <div class="form-field checkbox-field full-width" style="margin-top: 10px;">
                                     <label for="meche" style="background: white; padding: 10px; border: 1px dashed #ccc; width: 100%;">
                                         <input type="checkbox" name="meche" id="meche">
@@ -313,6 +320,7 @@
                                 <span class="total-label">Estimation totale</span>
                                 <span class="total-amount" id="final-price-display">...</span>
                                 <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher l'estimation à régler le jour J.</p>
+                                <p class="meta-line" id="general-adjustments-display" hidden></p>
                                 <div class="deposit-summary">
                                     <span class="deposit-label">Acompte à confirmer</span>
                                     <span class="deposit-amount" id="deposit-amount-display">-- €</span>
@@ -357,11 +365,14 @@
 
         const serviceSelect = document.getElementById('service_id');
         const hairLengthSelect = document.getElementById('hair_length');
+        const generalAdjustmentSelect = document.getElementById('general_adjustment');
+        const generalAdjustmentField = document.querySelector('[data-general-adjustment-field]');
         const mecheCheckbox = document.getElementById('meche');
 
         const stickyPriceValue = document.getElementById('sticky-price-value');
         const finalPriceDisplay = document.getElementById('final-price-display');
         const finalDetailsDisplay = document.getElementById('final-details-display');
+        const generalAdjustmentsDisplay = document.getElementById('general-adjustments-display');
         const depositAmountDisplay = document.getElementById('deposit-amount-display');
         const depositDetailsDisplay = document.getElementById('deposit-details-display');
         const depositInlineDisplay = document.getElementById('deposit-amount-inline');
@@ -579,10 +590,48 @@
             hairLengthSelect.disabled = false;
         };
 
+        const updateGeneralAdjustments = (serviceId) => {
+            if (!generalAdjustmentSelect || !generalAdjustmentField) return;
+            generalAdjustmentSelect.innerHTML = '';
+            generalAdjustmentField.hidden = true;
+
+            if (!serviceId || !pricingData[serviceId]) return;
+
+            const adjustments = pricingData[serviceId].general_adjustments || {};
+            const keys = Object.keys(adjustments);
+            if (!keys.length) return;
+
+            const noneOption = document.createElement('option');
+            noneOption.value = '';
+            noneOption.textContent = 'Aucun supplément';
+            noneOption.selected = true;
+            generalAdjustmentSelect.appendChild(noneOption);
+
+            keys
+                .sort()
+                .forEach((adjustmentKey) => {
+                    const opt = document.createElement('option');
+                    opt.value = adjustmentKey;
+                    const delta = adjustments[adjustmentKey];
+                    const displayDelta =
+                        delta === 0 ? '' : delta > 0 ? ` (+${formatPrice(delta)})` : ` (${formatPrice(delta)})`;
+                    opt.textContent = `${adjustmentKey}${displayDelta}`;
+                    generalAdjustmentSelect.appendChild(opt);
+                });
+
+            generalAdjustmentField.hidden = false;
+        };
+
         const minAdjustment = (lengths) => {
             const values = Object.values(lengths || {});
             if (!values.length) return 0;
             return Math.min(...values);
+        };
+
+        const formatAdjustment = (label, value) => {
+            if (!label || value === undefined || value === null) return '';
+            const sign = value > 0 ? '+' : '';
+            return `Supplément : ${label} (${sign}${formatPrice(value)})`;
         };
 
         const refreshEstimate = () => {
@@ -604,16 +653,23 @@
                 if (depositPaymentHint) {
                     depositPaymentHint.textContent = "Montant de l'acompte : -- € (empreinte bancaire).";
                 }
+                if (generalAdjustmentsDisplay) {
+                    generalAdjustmentsDisplay.textContent = '';
+                    generalAdjustmentsDisplay.hidden = true;
+                }
                 return;
             }
 
             const pricing = pricingData[serviceId];
             const base = pricing.base;
             const lengths = pricing.lengths || {};
+            const adjustments = pricing.general_adjustments || {};
             const selectedLength = hairLengthSelect?.value;
             const lengthAdj = selectedLength && lengths[selectedLength] !== undefined ? lengths[selectedLength] : minAdjustment(lengths);
+            const selectedAdjustment = generalAdjustmentSelect?.value;
+            const generalAdj = selectedAdjustment && adjustments[selectedAdjustment] !== undefined ? adjustments[selectedAdjustment] : 0;
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
-            const totalCents = base + lengthAdj + mecheAdj;
+            const totalCents = base + lengthAdj + generalAdj + mecheAdj;
             const totalStr = formatPrice(totalCents);
             const depositCents = pricing.deposit_cents ?? 0;
             const depositStr = formatPrice(depositCents);
@@ -628,6 +684,13 @@
             const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
             const mecheText = mecheCheckbox?.checked ? '+ mèches fournies' : 'sans mèches fournies';
             finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}). Total à régler le jour J.`;
+            if (generalAdjustmentsDisplay) {
+                const adjustmentsText = selectedAdjustment
+                    ? formatAdjustment(selectedAdjustment, generalAdj)
+                    : '';
+                generalAdjustmentsDisplay.textContent = adjustmentsText;
+                generalAdjustmentsDisplay.hidden = !adjustmentsText;
+            }
             if (depositAmountDisplay) {
                 depositAmountDisplay.textContent = depositStr;
             }
@@ -678,6 +741,7 @@
             if (!stripePublicKey || !paymentIntentUrl) return null;
             const serviceId = serviceSelect?.value;
             const hairLength = hairLengthSelect?.value || 'standard';
+            const generalAdjustment = generalAdjustmentSelect?.value || '';
             const meche = mecheCheckbox?.checked;
             const providerId = form?.querySelector('input[name="provider_id"]')?.value;
 
@@ -695,6 +759,7 @@
                     provider_id: providerId,
                     service_id: serviceId,
                     hair_length: hairLength,
+                    general_adjustment: generalAdjustment,
                     meche,
                 }),
             });
@@ -742,6 +807,7 @@
 
         serviceSelect?.addEventListener('change', (event) => {
             updateHairLengths(event.target.value);
+            updateGeneralAdjustments(event.target.value);
             if (mecheCheckbox) mecheCheckbox.checked = false;
             refreshEstimate();
             resetPaymentElement();
@@ -751,6 +817,14 @@
         });
 
         hairLengthSelect?.addEventListener('change', () => {
+            refreshEstimate();
+            resetPaymentElement();
+            if (currentStep === 4) {
+                mountPaymentElement().catch((error) => showPaymentError(error.message));
+            }
+        });
+
+        generalAdjustmentSelect?.addEventListener('change', () => {
             refreshEstimate();
             resetPaymentElement();
             if (currentStep === 4) {
@@ -768,6 +842,7 @@
 
         if (serviceSelect?.value) {
             updateHairLengths(serviceSelect.value);
+            updateGeneralAdjustments(serviceSelect.value);
         }
 
         form?.addEventListener('submit', async (event) => {

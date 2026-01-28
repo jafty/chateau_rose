@@ -132,6 +132,10 @@ class ServiceAdmin(ImportExportModelAdmin):
                 required=False,
                 help_text="JSON longueur -> supplément en centimes (ex: {\"court\":0, \"mi-long\":1000, \"long\":2000}).",
             ),
+            "general_adjustments": forms.JSONField(
+                required=False,
+                help_text="JSON motif -> supplément en centimes (ajouté au total, ex: {\"motif\":500}).",
+            ),
             "meche_bonus_cents": forms.IntegerField(
                 required=False,
                 help_text="Supplément en centimes lorsque l'option mèches fournies est cochée.",
@@ -141,7 +145,15 @@ class ServiceAdmin(ImportExportModelAdmin):
                 (),
                 {
                     "model": Service,
-                    "fields": ("provider", "name", "slug", "base_price_cents", "hair_length_adjustments", "meche_bonus_cents"),
+                    "fields": (
+                        "provider",
+                        "name",
+                        "slug",
+                        "base_price_cents",
+                        "hair_length_adjustments",
+                        "general_adjustments",
+                        "meche_bonus_cents",
+                    ),
                 },
             ),
         },

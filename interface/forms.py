@@ -99,6 +99,7 @@ class ProviderBookingRequestForm(forms.Form):
     )
     desired_date = forms.CharField(label="Date souhaitée")
     hair_length = forms.CharField(label="Longueur de cheveux", required=False)
+    general_adjustment = forms.CharField(label="Supplément", required=False)
     meche = forms.BooleanField(label="Besoin de mèches fournies", required=False)
     current_hair_picture_file = forms.FileField(label="Photo de tes cheveux", required=False)
     inspiration_pictures = forms.FileField(

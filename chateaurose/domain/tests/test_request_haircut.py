@@ -30,6 +30,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
                 "name": "Tresses africaines",
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 1500, "medium": 0, "short": -500},
+                "general_adjustments": {"motif": 500},
                 "meche_bonus_cents": 2000,
                 "deposit_cents": 2000,
             }
@@ -55,6 +56,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
         client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
+        general_adjustment="motif",
         meche=True,
         current_hair_picture="s3://bucket/hair.jpg",
         inspiration_pictures=["s3://bucket/inspo1.jpg"],
@@ -74,7 +76,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
     assert request.location == zone
     assert request.location_preference == "domicile"
     assert request.client_address == "5 place du Capitole, 31000 Toulouse"
-    assert request.estimated_price_cents == 5000 + 1500 + 2000  # base + hair length adj + mèche bonus
+    assert request.estimated_price_cents == 5000 + 1500 + 500 + 2000  # base + hair length adj + motif + mèche bonus
     assert request.payment_auth_id == "auth_1"
     assert request.created_at == now
 

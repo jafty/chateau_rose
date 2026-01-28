@@ -23,6 +23,7 @@ def execute(
     client_address: str | None = None,
     desired_date: str,
     hair_length: str,
+    general_adjustment: str | None = None,
     meche: bool,
     current_hair_picture: str,
     inspiration_pictures: list,
@@ -81,8 +82,14 @@ def execute(
     if hair_length not in length_adjustments:
         raise ValidationError("Hair length is not supported for this service")
     length_adj = length_adjustments[hair_length]
+    general_adjustments = service.get("general_adjustments", {})
+    general_adj_value = 0
+    if general_adjustment:
+        if general_adjustment not in general_adjustments:
+            raise ValidationError("General adjustment is not supported for this service")
+        general_adj_value = general_adjustments[general_adjustment]
     meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
-    estimated_price = base_price + length_adj + meche_bonus
+    estimated_price = base_price + length_adj + general_adj_value + meche_bonus
     deposit_cents = service.get("deposit_cents")
     if deposit_cents is None:
         raise ValidationError("Missing required field: deposit_cents")
@@ -105,6 +112,7 @@ def execute(
         location_preference=normalized_location_preference,
         desired_date=desired_date,
         hair_length=hair_length,
+        general_adjustment=general_adjustment,
         meche=meche,
         current_hair_picture=current_hair_picture,
         inspiration_pictures=inspiration_pictures,
