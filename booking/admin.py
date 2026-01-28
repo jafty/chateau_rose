@@ -42,6 +42,8 @@ class ProviderAdminForm(forms.ModelForm):
         fields = (
             "name",
             "description",
+            "availabilities",
+            "additional_info",
             "contact_phone",
             "contact_email",
             "deposit_cents",
