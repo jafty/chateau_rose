@@ -45,7 +45,6 @@ def execute(
         ("client_email", client_contact.get("email")),
         ("location_preference", location_preference),
         ("desired_date", desired_date),
-        ("hair_length", hair_length),
         ("current_hair_picture", current_hair_picture),
     ]:
         if not value:
@@ -78,15 +77,30 @@ def execute(
         raise ValidationError("Provider does not cover this zone")
 
     base_price = service["base_price_cents"]
-    length_adjustments = service.get("hair_length_adjustments", {})
+    length_adjustments = service.get("hair_length_adjustments") or {"standard": 0}
+    if not hair_length:
+        if len(length_adjustments) == 1:
+            hair_length = next(iter(length_adjustments))
+        else:
+            raise ValidationError("Missing required field: hair_length")
     if hair_length not in length_adjustments:
         raise ValidationError("Hair length is not supported for this service")
     length_adj = length_adjustments[hair_length]
-    general_adjustments = service.get("general_adjustments", {})
+
+    raw_general_adjustments = service.get("general_adjustments") or {}
+    if raw_general_adjustments:
+        general_adjustments = raw_general_adjustments
+        default_general_adjustment = None
+    else:
+        general_adjustments = {"standard": 0}
+        default_general_adjustment = "standard"
     general_adj_value = 0
     if general_adjustment:
         if general_adjustment not in general_adjustments:
             raise ValidationError("General adjustment is not supported for this service")
+        general_adj_value = general_adjustments[general_adjustment]
+    elif default_general_adjustment:
+        general_adjustment = default_general_adjustment
         general_adj_value = general_adjustments[general_adjustment]
     meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
     estimated_price = base_price + length_adj + general_adj_value + meche_bonus

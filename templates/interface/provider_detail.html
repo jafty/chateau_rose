@@ -279,7 +279,7 @@
 
                                 <div class="form-field full-width" data-client-address {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}hidden{% endif %}>
                                     <label for="client_address">Adresse exacte (si domicile) <span class="required-mark">*</span></label>
-                                    <input type="text" name="client_address" id="client_address" autocomplete="street-address" placeholder="414 route de Saint-Simon...">
+                                    <input type="text" name="client_address" id="client_address" autocomplete="street-address" placeholder="414 route de Saint-Simon..." {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}disabled{% endif %}>
                                 </div>
 
                                 <div class="form-field full-width">
@@ -468,6 +468,10 @@
                 const input = clientAddressField.querySelector('input');
                 if (input) {
                     input.required = !isSalonChoice;
+                    input.disabled = isSalonChoice;
+                    if (isSalonChoice) {
+                        input.value = '';
+                    }
                 }
             }
 
@@ -646,7 +650,17 @@
 
             const adjustments = pricingData[serviceId].general_adjustments || {};
             const keys = Object.keys(adjustments);
-            if (!keys.length) return;
+            if (!keys.length) {
+                const defaultKey = 'standard';
+                const opt = document.createElement('option');
+                opt.value = defaultKey;
+                opt.textContent = defaultKey;
+                generalAdjustmentSelect.appendChild(opt);
+                generalAdjustmentSelect.value = defaultKey;
+                generalAdjustmentSelect.disabled = true;
+                toggleGeneralAdjustmentField(false);
+                return;
+            }
 
             const noneOption = document.createElement('option');
             noneOption.value = '';

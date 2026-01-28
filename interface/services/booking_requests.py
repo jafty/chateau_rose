@@ -19,7 +19,7 @@ def build_pricing_data(services):
     for service in services:
         service.price_display = format_price(service.base_price_cents)
         adjustments = service.hair_length_adjustments or {"standard": 0}
-        general_adjustments = service.general_adjustments or {}
+        general_adjustments = service.general_adjustments or {"standard": 0}
         min_adj = min(adjustments.values()) if adjustments else 0
         general_adj_total = min(general_adjustments.values()) if general_adjustments else 0
         starting_price = service.base_price_cents + min_adj + general_adj_total
