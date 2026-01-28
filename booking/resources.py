@@ -50,6 +50,11 @@ class ServiceResource(resources.ModelResource):
         attribute="hair_length_adjustments",
         widget=JSONWidget(),
     )
+    general_adjustments = fields.Field(
+        column_name="general_adjustments",
+        attribute="general_adjustments",
+        widget=JSONWidget(),
+    )
 
     class Meta:
         model = Service
@@ -60,6 +65,7 @@ class ServiceResource(resources.ModelResource):
             "slug",
             "base_price_cents",
             "hair_length_adjustments",
+            "general_adjustments",
             "meche_bonus_cents",
         )
         export_order = fields

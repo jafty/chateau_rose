@@ -15,6 +15,7 @@ class DjangoProviderCatalog:
             "name": service.name,
             "base_price_cents": service.base_price_cents,
             "hair_length_adjustments": service.hair_length_adjustments or {},
+            "general_adjustments": service.general_adjustments or {},
             "meche_bonus_cents": service.meche_bonus_cents,
             "deposit_cents": service.provider.deposit_cents,
         }
