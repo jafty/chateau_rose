@@ -38,7 +38,7 @@ body::before {
     top: 0; left: 0; right: 0; bottom: 0;
     background-image: url(../assets/cork_background.jpg);
     background-repeat: repeat;
-    opacity: 0.2;
+    opacity: 0.5;
     z-index: -1;   
     pointer-events: none;
 }
