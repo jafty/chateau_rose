@@ -52,6 +52,10 @@ class Provider(models.Model):
         blank=True,
         help_text="Adresse complète du salon (communiquée après confirmation).",
     )
+    provides_meche = models.BooleanField(
+        default=True,
+        help_text="Active si la prestataire fournit les mèches.",
+    )
     profile_image = models.ImageField(upload_to="providers/profile/", blank=True, null=True)
     profile_image_url = models.CharField(
         max_length=500,

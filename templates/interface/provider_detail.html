@@ -147,12 +147,20 @@
                                     </select>
                                 </div>
 
-                                <div class="form-field checkbox-field full-width" style="margin-top: 10px;">
-                                    <label for="meche" style="background: white; padding: 10px; border: 1px dashed #ccc; width: 100%;">
-                                        <input type="checkbox" name="meche" id="meche">
-                                        <span>J'ai besoin que les mèches soient fournies</span>
-                                    </label>
-                                </div>
+                                {% if provider.provides_meche %}
+                                    <div class="form-field checkbox-field full-width" style="margin-top: 10px;">
+                                        <label for="meche" style="background: white; padding: 10px; border: 1px dashed #ccc; width: 100%;">
+                                            <input type="checkbox" name="meche" id="meche">
+                                            <span>J'ai besoin que les mèches soient fournies</span>
+                                        </label>
+                                    </div>
+                                {% else %}
+                                    <div class="form-field full-width" style="margin-top: 10px;">
+                                        <div style="background: #fff3f5; border: 1px dashed #f3b4bf; padding: 12px; border-radius: 6px;">
+                                            ⚠️ {{ provider.name }} ne fournit pas les mèches. Pense à apporter les tiennes si besoin.
+                                        </div>
+                                    </div>
+                                {% endif %}
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-next">Continuer</button>
@@ -627,7 +635,11 @@
             stickyPriceValue.textContent = totalStr;
             finalPriceDisplay.textContent = totalStr;
             const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
-            const mecheText = mecheCheckbox?.checked ? '+ mèches fournies' : 'sans mèches fournies';
+            const mecheText = mecheCheckbox
+                ? mecheCheckbox.checked
+                    ? '+ mèches fournies'
+                    : 'sans mèches fournies'
+                : 'mèches non fournies';
             finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}). Total à régler le jour J.`;
             if (depositAmountDisplay) {
                 depositAmountDisplay.textContent = depositStr;
@@ -679,7 +691,7 @@
             if (!stripePublicKey || !paymentIntentUrl) return null;
             const serviceId = serviceSelect?.value;
             const hairLength = hairLengthSelect?.value || 'standard';
-            const meche = mecheCheckbox?.checked;
+            const meche = mecheCheckbox ? mecheCheckbox.checked : false;
             const providerId = form?.querySelector('input[name="provider_id"]')?.value;
 
             if (!serviceId || !providerId) {

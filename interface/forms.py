@@ -176,6 +176,9 @@ class ProviderBookingRequestForm(forms.Form):
                 "Merci d'ajouter une empreinte bancaire pour sécuriser la demande."
             )
 
+        if self.provider and not self.provider.provides_meche:
+            cleaned_data["meche"] = False
+
         cleaned_data["location"] = location
         cleaned_data["location_preference"] = location_preference
         cleaned_data["client_address"] = client_address
