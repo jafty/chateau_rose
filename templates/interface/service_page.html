@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load marketing_extras %}
 
 {% block title %}{{ service.name }}{% if zone %} à {{ zone.name }}{% else %} à Toulouse{% endif %} | Château Rose{% endblock %}
 {% block meta_description %}{{ meta_description }}{% endblock %}
@@ -144,7 +145,7 @@
                 </span>
             </h1>
 
-            <p class="lead">{{ intro|linebreaksbr }}</p>
+            <p class="lead">{{ intro|sanitize_marketing_html }}</p>
 
             <div class="btn-group">
                 {% if providers %}
@@ -302,13 +303,13 @@
                 {{ service.name }} à {% if zone %}{{ zone.name }}{% else %}Toulouse{% endif %}
             </h4>
             <div style="font-size: 0.9rem; color: var(--ink-secondary); line-height: 1.6;">
-                {{ city_intro|linebreaks }}
+                {{ city_intro|sanitize_marketing_html }}
             </div>
             
             {% if highlights %}
             <ul class="highlight-list" style="margin-top: 15px;">
                 {% for h in highlights %}
-                    <li style="font-size: 0.85rem; color: var(--ink-secondary); margin-bottom: 5px;">• {{ h }}</li>
+                    <li style="font-size: 0.85rem; color: var(--ink-secondary); margin-bottom: 5px;">• {{ h|sanitize_marketing_html }}</li>
                 {% endfor %}
             </ul>
             {% endif %}
