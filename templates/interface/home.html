@@ -4,147 +4,171 @@
 {% block title %}Réserve ta coiffure afro à Toulouse en moins de 2 minutes | Château Rose{% endblock %}
 
 {% block content %}
-<section class="container hero-section">
-    <div class="bento-grid">
-        <div class="hero-main paper-card">
-            <div class="pin"></div>
-            <div class="hero-headings">
-                <h1>Réserve ta coiffure afro à Toulouse sans galère.</h1>
-                <p class="hero-subtitle">En deux minutes tu poses ton rendez-vous, tu échanges directement avec le ou la prestataire et tu reçois une réponse rapide et fiable.</p>
-            </div>
-            <div class="btn-group">
+<section class="hero">
+    <div class="container hero-grid">
+        <div class="hero-content">
+            <h1 class="hero-title">Réserve ta coiffure <span>afro</span> à Toulouse sans galère.</h1>
+            <p class="hero-text">En deux minutes tu poses ton rendez-vous, tu échanges directement avec le ou la prestataire et tu reçois une réponse rapide et fiable.</p>
+            <div class="hero-actions">
                 <a href="{% url 'interface:provider_list' %}" class="btn">Voir les prestataires</a>
                 <a href="#catalogue" class="btn secondary">Choisir ma catégorie</a>
             </div>
         </div>
 
-        <div class="hero-services">
+        <div class="hub-grid">
             {% for service in featured_services %}
-                <a class="polaroid" href="{% url 'interface:service_page' service.slug %}">
-                    {% if service.resolved_main_image %}
-                        {% if forloop.first %}
-                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}" width="320" height="320" loading="eager" fetchpriority="high" decoding="async">
-                        {% else %}
-                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}" width="320" height="320" loading="lazy" decoding="async">
-                        {% endif %}
+                <a class="hub-card" href="{% url 'interface:service_page' service.slug %}">
+                    {% if forloop.counter == 1 %}
+                        <span class="tape top-left" aria-hidden="true"></span>
+                    {% elif forloop.counter == 2 %}
+                        <span class="tape bottom-right" aria-hidden="true"></span>
+                    {% elif forloop.counter == 3 %}
+                        <span class="tape top-right" aria-hidden="true"></span>
                     {% else %}
-                        {% if forloop.first %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}" width="320" height="320" loading="eager" fetchpriority="high" decoding="async">
-                        {% else %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}" width="320" height="320" loading="lazy" decoding="async">
-                        {% endif %}
+                        <span class="tape side-left" aria-hidden="true"></span>
                     {% endif %}
-                    <span class="accent-underline">{{ service.name }}</span>
+                    {% if service.resolved_main_image %}
+                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}" width="320" height="320" loading="lazy" decoding="async">
+                    {% else %}
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}" width="320" height="320" loading="lazy" decoding="async">
+                    {% endif %}
+                    <span class="hub-label">{{ service.name }}</span>
                 </a>
             {% empty %}
-                <div class="polaroid" aria-hidden="true">
+                <div class="hub-card" aria-hidden="true">
+                    <span class="tape top-left" aria-hidden="true"></span>
                     <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure afro" width="320" height="320" loading="lazy" decoding="async">
-                    <span class="accent-underline">Coiffures d'exception</span>
+                    <span class="hub-label">Coiffures d'exception</span>
                 </div>
             {% endfor %}
         </div>
     </div>
 </section>
 
-<section class="info-section">
-    <div class="container info-grid">
-        <article class="info-card manifesto-card">
-            <h2 class="info-title">Dépose ta demande en quelques minutes</h2>
-            <ul class="highlight-list step-list">
-                <li><strong>Trouve rapidement une prestataire ou un prestataire pour ta coiffure afro :</strong> tresses, locks, soins, perruque... N'importe où à Toulouse et ses environs.</li>
-                <li><strong>Bloque ton rendez-vous en 2 minutes :</strong> tu donnes les infos clés, tu vois l'estimation et tu poses un acompte pour confirmer sans attendre.</li>
-                <li><strong>Échange directement avec la bonne personne :</strong> la coiffeuse ou le coiffeur te répond vite, clarifie si besoin et t'envoie une proposition finale (date + tarif) à valider.</li>
-                <li><strong>Fais-toi coiffer sans prise de tête :</strong> le jour J, tu arrives confié·e, tu paies selon ses modalités et tu repars avec la coupe de tes rêves.</li>
-            </ul>
-        </article>
-        <article class="info-card info-why">
-            <h2 class="info-title">Coiffe efficacement tes cheveux afro à Toulouse</h2>
-            <p>Des profils afro vérifiés qui se déplacent, t'accueillent chez eux ou en salon partenaire, avec un brief clair dès le départ et des échanges rapides.</p>
-            <ul class="stat-line">
-                <li><strong>Prestations</strong><span>À domicile, en salon partenaire ou chez la prestataire ou le prestataire selon ce qui t'arrange.</span></li>
-                <li><strong>Suivi simple</strong><span>Un seul formulaire, des messages rapides avec la prestataire ou le prestataire qui te correspond et une confirmation sans chichi.</span></li>
-                <li><strong>Acompte anti no-show</strong><span>Une empreinte bancaire puis un acompte validé seulement après accord commun; le reste se règle directement avec la prestataire ou le prestataire.</span></li>
-            </ul>
-        </article>
+<section class="steps-section" id="about">
+    <div class="container">
+        <h2 class="section-title">Dépose ta demande en quelques minutes</h2>
+        <p class="section-subtitle">Un parcours simple, transparent et rapide pour trouver la bonne prestataire ou le bon prestataire en ville.</p>
+        <div class="step-list" style="margin-top: 50px;">
+            <div class="step-item">
+                <strong>Trouve rapidement</strong>
+                <p>Une prestataire ou un prestataire pour ta coiffure afro : tresses, locks, soins, perruque... N'importe où à Toulouse.</p>
+            </div>
+            <div class="step-item">
+                <strong>Bloque ton rendez-vous</strong>
+                <p>Tu donnes les infos clés, tu vois l'estimation et tu poses un acompte pour confirmer sans attendre.</p>
+            </div>
+            <div class="step-item">
+                <strong>Échange direct</strong>
+                <p>La coiffeuse ou le coiffeur te répond vite, clarifie si besoin et t'envoie une proposition finale à valider.</p>
+            </div>
+            <div class="step-item">
+                <strong>Fais-toi coiffer</strong>
+                <p>Le jour J, tu arrives confié·e, tu paies selon ses modalités et tu repars avec la coupe de tes rêves.</p>
+            </div>
+        </div>
+
+        <div class="value-prop-grid">
+            <div>
+                <h2 class="section-title" style="text-align:left;">Coiffe efficacement tes cheveux afro</h2>
+                <p style="color:var(--ink-secondary); margin-bottom:20px;">Des profils afro vérifiés qui se déplacent, t'accueillent chez eux ou en salon partenaire, avec un brief clair dès le départ.</p>
+                <ul class="prop-list">
+                    <li>
+                        <strong>Prestations</strong>
+                        <span>À domicile, en salon partenaire ou chez le prestataire.</span>
+                    </li>
+                    <li>
+                        <strong>Suivi simple</strong>
+                        <span>Un seul formulaire, des messages rapides et une confirmation sans chichi.</span>
+                    </li>
+                    <li>
+                        <strong>Acompte anti no-show</strong>
+                        <span>Empreinte bancaire sécurisée, acompte validé après accord.</span>
+                    </li>
+                </ul>
+            </div>
+            <div style="position:relative;">
+                <div style="border:10px solid white; box-shadow:var(--shadow-hover); transform:rotate(2deg);">
+                    <img src="{% static 'demo_pictures/pf_afro_robe_jaune.jpg' %}" alt="Coiffeuse afro à Toulouse" loading="lazy" decoding="async">
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
-<section class="container" style="padding: 24px 0;" id="service-request">
-    <div class="request-form-wrapper">
-        {% include "interface/partials/service_request_form.html" with title="Pas le temps de chercher ?" lead="Dis-nous de quoi t'as besoin et on te trouvera la coiffeuse ou le coiffeur idéal selon tes besoins" %}
+<section class="form-section" id="service-request">
+    <div class="container">
+        <div class="paper-form">
+            {% include "interface/partials/service_request_form.html" with title="Pas le temps de chercher ?" lead="Dis-nous de quoi t'as besoin et on te trouvera le coiffeur idéal." %}
+        </div>
     </div>
 </section>
 
-<section class="container providers-section">
-    <h2 class="section-title">Nos As de la coiffure afro à Toulouse</h2>
-    <div class="providers-grid">
-        {% for provider in providers %}
-            <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
-                <div class="provider-header">
-                    {% if provider.resolved_profile_image %}
-                        <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}" width="300" height="320" loading="lazy" decoding="async">
-                    {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro" width="300" height="320" loading="lazy" decoding="async">
-                    {% endif %}
-                </div>
-                <div class="provider-body">
-                    <h3 class="provider-name">{{ provider.name }}</h3>
-                    <p class="provider-loc">Prestations à Toulouse et alentours</p>
-                    <div class="tags">
-                        {% for service in provider.services.all|slice:":3" %}
-                            <span class="tag">{{ service.name }}</span>
-                        {% empty %}
-                            <span class="tag">Coiffure afro</span>
-                        {% endfor %}
+<section class="providers-section" id="providers">
+    <div class="container">
+        <h2 class="section-title">Nos As de la coiffure afro à Toulouse</h2>
+        <div class="providers-scroll">
+            {% for provider in providers %}
+                <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
+                    <div class="provider-img">
+                        {% if provider.resolved_profile_image %}
+                            <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}" width="300" height="320" loading="lazy" decoding="async">
+                        {% else %}
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro" width="300" height="320" loading="lazy" decoding="async">
+                        {% endif %}
                     </div>
-                    <div class="card-actions">
-                        <span class="service-card-link">Voir le profil</span>
+                    <div class="provider-body">
+                        <h3 class="provider-name">{{ provider.name }}</h3>
+                        <div class="provider-loc">Prestations à Toulouse et alentours</div>
+                        <ul class="service-list-mini">
+                            {% for service in provider.services.all|slice:":3" %}
+                                <li><span>{{ service.name }}</span></li>
+                            {% empty %}
+                                <li><span>Coiffure afro</span></li>
+                            {% endfor %}
+                        </ul>
+                        <span class="btn secondary provider-cta">Voir le profil</span>
                     </div>
-                </div>
+                </a>
+            {% empty %}
+                <p class="lead">Les prestataires seront publiés très bientôt.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="container" style="padding: 80px 20px;" id="catalogue">
+    <h2 class="section-title">Des coupes afros pour toutes les envies</h2>
+    <div class="all-services-grid">
+        {% for service in services %}
+            <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
+                {% if service.resolved_main_image %}
+                    <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" width="320" height="320" loading="lazy" decoding="async">
+                {% else %}
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" width="320" height="320" loading="lazy" decoding="async">
+                {% endif %}
+                <span class="service-label">{{ service.name }}</span>
             </a>
-        {% empty %}
-            <p class="lead">Les prestataires seront publiés très bientôt.</p>
         {% endfor %}
     </div>
 </section>
 
-<section class="all-services" id="catalogue">
+<section class="portfolio-section">
     <div class="container">
-        <h2 class="section-title">Des coupes afros pour toutes les envies</h2>
-        <div class="services-grid">
-            {% for service in services %}
-                <article class="service-card-full">
-                    <div class="service-card-img">
-                    {% if service.resolved_main_image %}
-                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" width="300" height="240" loading="lazy" decoding="async">
-                    {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" width="300" height="240" loading="lazy" decoding="async">
-                    {% endif %}
-                    </div>
-                    <div class="service-card-body">
-                        <h3><a href="{% url 'interface:service_page' service.slug %}" class="accent-underline">{{ service.name }}</a></h3>
-                    </div>
-                </article>
-            {% endfor %}
-        </div>
+        <h2 class="section-title">Portfolios du moment</h2>
+        <p class="section-subtitle">Quelques réalisations récentes de nos talents</p>
     </div>
-</section>
-
-<section class="container gallery-section">
-    <h2 class="section-header">Portfolios du moment</h2>
-    <div class="gallery-scroll" id="gallery">
+    <div class="portfolio-strip" id="portfolioScroll">
         {% for provider in providers|slice:":6" %}
             {% with photo=provider.photos.first %}
-                <article class="gallery-item">
-                    <div class="gallery-img">
-                        {% if photo and photo.resolved_url %}
-                            <img src="{{ photo.resolved_url }}" alt="Réalisations de {{ provider.name }}" width="300" height="320" loading="lazy" decoding="async">
-                        {% else %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure afro" width="300" height="320" loading="lazy" decoding="async">
-                        {% endif %}
-                    </div>
-                    <p class="gallery-caption">{{ provider.name }}</p>
-                </article>
+                <div class="polaroid-mini">
+                    {% if photo and photo.resolved_url %}
+                        <img src="{{ photo.resolved_url }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async" draggable="false">
+                    {% else %}
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure afro" loading="lazy" decoding="async" draggable="false">
+                    {% endif %}
+                    <p>{{ provider.name }}</p>
+                </div>
             {% endwith %}
         {% empty %}
             <p class="lead">Les portfolios arrivent bientôt.</p>
@@ -152,47 +176,48 @@
     </div>
 </section>
 
-<section class="container cta-banner">
-    <div>
-        <h3>Tu es coiffeuse ou coiffeur afro à Toulouse ?</h3>
-        <p class="lead">Reçois des demandes claires, sécurise les rendez-vous et garde la main sur tes prix et tes créneaux.</p>
+<section class="cta-pro" id="pro">
+    <div class="container">
+        <h3 style="color:white; font-size: 2rem;">Tu es coiffeuse ou coiffeur afro à Toulouse ?</h3>
+        <p style="margin: 20px 0;">Reçois des demandes claires, sécurise les rendez-vous et garde la main sur tes prix et tes créneaux.</p>
+        <a href="{% url 'providers:signup' %}" class="btn secondary">Créer mon espace pro</a>
     </div>
-    <a class="btn" href="{% url 'providers:signup' %}">Créer mon espace pro</a>
 </section>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const gallery = document.getElementById('gallery');
-        if (!gallery) return;
+        const slider = document.querySelector('#portfolioScroll');
+        if (!slider) return;
         let isDown = false;
         let startX;
         let scrollLeft;
 
-        gallery.addEventListener('mousedown', (e) => {
+        slider.addEventListener('mousedown', (e) => {
             isDown = true;
-            gallery.style.cursor = 'grabbing';
-            startX = e.pageX - gallery.offsetLeft;
-            scrollLeft = gallery.scrollLeft;
+            slider.classList.add('active');
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
         });
 
-        ['mouseleave', 'mouseup'].forEach(evt => {
-            gallery.addEventListener(evt, () => {
-                isDown = false;
-                gallery.style.cursor = 'grab';
-            });
+        slider.addEventListener('mouseleave', () => {
+            isDown = false;
+            slider.classList.remove('active');
         });
 
-        gallery.addEventListener('mousemove', (e) => {
+        slider.addEventListener('mouseup', () => {
+            isDown = false;
+            slider.classList.remove('active');
+        });
+
+        slider.addEventListener('mousemove', (e) => {
             if (!isDown) return;
             e.preventDefault();
-            const x = e.pageX - gallery.offsetLeft;
+            const x = e.pageX - slider.offsetLeft;
             const walk = (x - startX) * 2;
-            gallery.scrollLeft = scrollLeft - walk;
+            slider.scrollLeft = scrollLeft - walk;
         });
-
-        gallery.style.cursor = 'grab';
     });
 </script>
 {% endblock %}
