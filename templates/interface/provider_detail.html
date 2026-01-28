@@ -28,7 +28,10 @@
                 </div>
             </div>
             <div class="paper-card provider-sidebar-card">
-                <p class="provider-note">Partage tes inspirations, ta longueur de cheveux et tes dispos.</p>
+                <h4 class="section-title provider-section-title">Disponibilités</h4>
+                <p class="provider-note">
+                    {{ provider.availabilities|default:"Indique tes créneaux et tes rythmes de réponse pour faciliter la prise de rendez-vous."|sanitize_marketing_html }}
+                </p>
             </div>
             {% if zones %}
                 {% with featured_zones=zones|slice:":8" remainder_zones=zones|slice:"8:" %}
@@ -97,6 +100,15 @@
                     </ul>
                 </div>
             </section>
+
+            {% if provider.additional_info %}
+                <section class="content-section">
+                    <div class="paper-card provider-services-card">
+                        <h3 class="section-title provider-section-title">Informations supplémentaires</h3>
+                        <p class="provider-note">{{ provider.additional_info|sanitize_marketing_html }}</p>
+                    </div>
+                </section>
+            {% endif %}
 
             <section class="content-section">
             {% if message %}<div class="alert success">{{ message }}</div>{% endif %}

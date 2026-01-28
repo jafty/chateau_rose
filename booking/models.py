@@ -36,6 +36,14 @@ class Provider(models.Model):
 
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    availabilities = models.TextField(
+        blank=True,
+        help_text="Disponibilités proposées pour la clientèle.",
+    )
+    additional_info = models.TextField(
+        blank=True,
+        help_text="Règles, conditions, informations complémentaires.",
+    )
     contact_phone = models.CharField(max_length=64, blank=True)
     contact_email = models.EmailField(blank=True)
     deposit_cents = models.IntegerField(
