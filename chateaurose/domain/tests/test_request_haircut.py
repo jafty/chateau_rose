@@ -56,6 +56,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
         client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
+        general_adjustment="motif",
         meche=True,
         current_hair_picture="s3://bucket/hair.jpg",
         inspiration_pictures=["s3://bucket/inspo1.jpg"],
