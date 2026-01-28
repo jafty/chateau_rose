@@ -212,7 +212,7 @@ def provider_payment_intent(request):
     general_adjustment = payload.get("general_adjustment")
     meche = payload.get("meche")
 
-    if not all([provider_id, service_id, hair_length]) or meche is None:
+    if not all([provider_id, service_id]) or meche is None:
         return JsonResponse({"error": "Informations manquantes."}, status=400)
 
     try:
@@ -220,17 +220,31 @@ def provider_payment_intent(request):
     except KeyError:
         return JsonResponse({"error": "Service non disponible."}, status=400)
 
-    length_adjustments = service.get("hair_length_adjustments", {})
+    length_adjustments = service.get("hair_length_adjustments") or {"standard": 0}
+    if not hair_length:
+        if len(length_adjustments) == 1:
+            hair_length = next(iter(length_adjustments))
+        else:
+            return JsonResponse({"error": "Informations manquantes."}, status=400)
     if hair_length not in length_adjustments:
         return JsonResponse({"error": "Longueur de cheveux non supportée."}, status=400)
 
     base_price = service["base_price_cents"]
     length_adj = length_adjustments[hair_length]
-    general_adjustments = service.get("general_adjustments", {})
+    raw_general_adjustments = service.get("general_adjustments") or {}
+    if raw_general_adjustments:
+        general_adjustments = raw_general_adjustments
+        default_general_adjustment = None
+    else:
+        general_adjustments = {"standard": 0}
+        default_general_adjustment = "standard"
     general_adj_value = 0
     if general_adjustment:
         if general_adjustment not in general_adjustments:
             return JsonResponse({"error": "Supplément non supporté."}, status=400)
+        general_adj_value = general_adjustments[general_adjustment]
+    elif default_general_adjustment:
+        general_adjustment = default_general_adjustment
         general_adj_value = general_adjustments[general_adjustment]
     meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
     estimated_price = base_price + length_adj + general_adj_value + meche_bonus

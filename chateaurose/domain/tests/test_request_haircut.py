@@ -467,7 +467,6 @@ def test_request_haircut_requires_salon_zone_for_salon_booking():
         ("location", {"location": ""}),
         ("client_address", {"client_address": ""}),
         ("desired_date", {"desired_date": ""}),
-        ("hair_length", {"hair_length": ""}),
         ("meche", {"meche": None}),
         ("current_hair_picture", {"current_hair_picture": ""}),
     ],
@@ -531,3 +530,117 @@ def test_request_haircut_missing_mandatory_fields(missing_field, payload):
     assert payment_gateway.auth_calls == []
     assert notifier.messages == []
     assert reminder_gateway.reminders == []
+
+
+def test_request_haircut_requires_length_when_multiple_adjustments():
+    now = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    clock = FixedClock(now)
+
+    provider_id = "provider_1"
+    service_id = "service_tresses"
+    zone = "Saint-Cyprien"
+
+    services_by_provider = {
+        provider_id: {
+            service_id: {
+                "id": service_id,
+                "name": "Tresses africaines",
+                "base_price_cents": 5000,
+                "hair_length_adjustments": {"long": 1500, "medium": 0},
+                "deposit_cents": 2000,
+            }
+        }
+    }
+    zones_by_provider = {provider_id: {zone}}
+
+    provider_catalog = InMemoryProviderCatalog(
+        services_by_provider=services_by_provider,
+        zones_by_provider=zones_by_provider,
+    )
+    booking_repository = InMemoryBookingRepository()
+    payment_gateway = InMemoryPaymentGateway()
+    notifier = InMemoryNotifier()
+    reminder_gateway = InMemoryReminderGateway()
+
+    with pytest.raises(ValidationError) as exc:
+        request_haircut.execute(
+            provider_id=provider_id,
+            service_id=service_id,
+            client_contact={"name": "Sarah", "email": "sarah@example.com"},
+            location=zone,
+            location_preference="domicile",
+            client_address="5 place du Capitole, 31000 Toulouse",
+            desired_date="2026-01-10T17:00:00Z",
+            hair_length="",
+            meche=False,
+            current_hair_picture="s3://bucket/hair.jpg",
+            inspiration_pictures=[],
+            free_text="",
+            booking_repository=booking_repository,
+            provider_catalog=provider_catalog,
+            payment_gateway=payment_gateway,
+            notifier=notifier,
+            reminder_gateway=reminder_gateway,
+            clock=clock,
+        )
+
+    assert "hair_length" in str(exc.value)
+    assert booking_repository.saved == {}
+
+
+def test_request_haircut_defaults_length_and_adjustment_when_single_option():
+    now = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    clock = FixedClock(now)
+
+    provider_id = "provider_1"
+    service_id = "service_tresses"
+    zone = "Saint-Cyprien"
+
+    services_by_provider = {
+        provider_id: {
+            service_id: {
+                "id": service_id,
+                "name": "Tresses africaines",
+                "base_price_cents": 5000,
+                "hair_length_adjustments": {},
+                "general_adjustments": {},
+                "deposit_cents": 2000,
+            }
+        }
+    }
+    zones_by_provider = {provider_id: {zone}}
+
+    provider_catalog = InMemoryProviderCatalog(
+        services_by_provider=services_by_provider,
+        zones_by_provider=zones_by_provider,
+    )
+    booking_repository = InMemoryBookingRepository()
+    payment_gateway = InMemoryPaymentGateway()
+    notifier = InMemoryNotifier()
+    reminder_gateway = InMemoryReminderGateway()
+
+    booking = request_haircut.execute(
+        provider_id=provider_id,
+        service_id=service_id,
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location=zone,
+        location_preference="domicile",
+        client_address="5 place du Capitole, 31000 Toulouse",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="",
+        general_adjustment="",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        booking_repository=booking_repository,
+        provider_catalog=provider_catalog,
+        payment_gateway=payment_gateway,
+        notifier=notifier,
+        reminder_gateway=reminder_gateway,
+        clock=clock,
+    )
+
+    assert booking.hair_length == "standard"
+    assert booking.general_adjustment == "standard"
+    assert booking.estimated_price_cents == 5000
