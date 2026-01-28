@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static marketing_extras %}
 
 {% block title %}{{ provider.name }} | Château Rose{% endblock %}
 
@@ -7,7 +7,7 @@
 <section class="page-shell provider-profile">
     <div class="provider-page-header paper-card">
         <h1 class="provider-page-title">{{ provider.name }}</h1>
-        <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés." }}</p>
+        <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p>
         <p class="meta-line">Lieux proposés : {{ provider.location_mode_label }}</p>
     </div>
 
