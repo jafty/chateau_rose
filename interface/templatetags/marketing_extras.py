@@ -1,3 +1,5 @@
+import re
+
 import bleach
 from django import template
 from django.utils.safestring import mark_safe
@@ -19,6 +21,7 @@ ALLOWED_TAGS = [
     "ul",
 ]
 ALLOWED_ATTRIBUTES = {}
+TAG_RE = re.compile(r"<[a-zA-Z][^>]*>")
 
 
 @register.filter
@@ -27,14 +30,15 @@ def sanitize_marketing_html(value: str) -> str:
         return ""
 
     raw_value = str(value)
-    if "<" not in raw_value and ">" not in raw_value:
-        cleaned = bleach.clean(raw_value, tags=[], attributes={}, strip=True)
+    normalized = raw_value.replace("\r\n", "\n").replace("\r", "\n")
+    if not TAG_RE.search(raw_value):
+        cleaned = bleach.clean(normalized, tags=[], attributes={}, strip=True)
         return mark_safe(cleaned.replace("\n", "<br>"))
 
     cleaned = bleach.clean(
-        raw_value,
+        normalized,
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRIBUTES,
         strip=True,
     )
-    return mark_safe(cleaned)
+    return mark_safe(cleaned.replace("\n", "<br>"))
