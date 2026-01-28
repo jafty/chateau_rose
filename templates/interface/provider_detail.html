@@ -612,8 +612,9 @@
             const lengths = pricing.lengths || {};
             const selectedLength = hairLengthSelect?.value;
             const lengthAdj = selectedLength && lengths[selectedLength] !== undefined ? lengths[selectedLength] : minAdjustment(lengths);
+            const generalAdj = pricing.general_adjustments_total || 0;
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
-            const totalCents = base + lengthAdj + mecheAdj;
+            const totalCents = base + lengthAdj + generalAdj + mecheAdj;
             const totalStr = formatPrice(totalCents);
             const depositCents = pricing.deposit_cents ?? 0;
             const depositStr = formatPrice(depositCents);

@@ -224,8 +224,12 @@ def provider_payment_intent(request):
 
     base_price = service["base_price_cents"]
     length_adj = length_adjustments[hair_length]
+    general_adjustments = service.get("general_adjustments", {})
+    general_adj_total = sum(
+        value for value in general_adjustments.values() if isinstance(value, (int, float))
+    )
     meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
-    estimated_price = base_price + length_adj + meche_bonus
+    estimated_price = base_price + length_adj + general_adj_total + meche_bonus
     deposit_cents = service.get("deposit_cents")
     if deposit_cents is None:
         return JsonResponse({"error": "Acompte non défini."}, status=400)
