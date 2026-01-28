@@ -5,6 +5,12 @@ SALON_LOCATION_LABEL = "Salon"
 
 
 class DjangoProviderCatalog:
+    @staticmethod
+    def _normalize_hair_length_adjustments(adjustments):
+        if adjustments:
+            return adjustments
+        return {"standard": 0}
+
     def get_service(self, provider_id: str, service_id: str):
         try:
             service = Service.objects.get(provider_id=provider_id, id=service_id)
@@ -14,7 +20,9 @@ class DjangoProviderCatalog:
             "id": str(service.id),
             "name": service.name,
             "base_price_cents": service.base_price_cents,
-            "hair_length_adjustments": service.hair_length_adjustments or {},
+            "hair_length_adjustments": self._normalize_hair_length_adjustments(
+                service.hair_length_adjustments
+            ),
             "general_adjustments": service.general_adjustments or {},
             "meche_bonus_cents": service.meche_bonus_cents,
             "deposit_cents": service.provider.deposit_cents,
