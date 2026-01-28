@@ -628,10 +628,19 @@
             }
         };
 
+        const toggleGeneralAdjustmentField = (isVisible) => {
+            if (generalAdjustmentField) {
+                generalAdjustmentField.hidden = !isVisible;
+            }
+            if (generalAdjustmentSelect) {
+                generalAdjustmentSelect.disabled = !isVisible;
+            }
+        };
+
         const updateGeneralAdjustments = (serviceId) => {
             if (!generalAdjustmentSelect || !generalAdjustmentField) return;
             generalAdjustmentSelect.innerHTML = '';
-            generalAdjustmentField.hidden = true;
+            toggleGeneralAdjustmentField(false);
 
             if (!serviceId || !pricingData[serviceId]) return;
 
@@ -657,7 +666,7 @@
                     generalAdjustmentSelect.appendChild(opt);
                 });
 
-            generalAdjustmentField.hidden = false;
+            toggleGeneralAdjustmentField(true);
         };
 
         const minAdjustment = (lengths) => {
