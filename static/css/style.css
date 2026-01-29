@@ -505,32 +505,16 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .portfolio-strip {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 30px;
-    overflow-x: auto;
     padding: 40px 24px 60px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    cursor: grab;
-    user-select: none;
-}
-
-.portfolio-strip.is-centered {
-    justify-content: center;
-    overflow-x: hidden;
-    cursor: default;
-}
-
-.portfolio-strip::-webkit-scrollbar { display: none; }
-.portfolio-strip.active { cursor: grabbing; }
-.portfolio-strip.active .polaroid-mini {
-    transform: scale(0.98);
-    pointer-events: none;
+    width: min(1200px, 100%);
+    margin: 0 auto;
 }
 
 .polaroid-mini {
-    flex: 0 0 auto;
-    width: 250px;
+    width: 100%;
     background: white;
     padding: 12px 12px 50px;
     color: var(--ink-primary);
@@ -566,6 +550,12 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .polaroid-mini:hover img { filter: sepia(0%); }
+
+@media (max-width: 640px) {
+    .portfolio-strip {
+        grid-template-columns: 1fr;
+    }
+}
 
 .section-header {
     margin-bottom: 2.5rem;
