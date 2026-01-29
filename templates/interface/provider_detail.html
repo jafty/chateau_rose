@@ -86,18 +86,42 @@
             <section class="content-section">
                 <div class="paper-card provider-services-card">
                     <h3 class="section-title provider-section-title">Services et tarifs</h3>
-                    <ul class="services-list-simple">
-                        {% for service in services %}
-                            <li class="service-line">
-                                <div class="service-name">
-                                    <h4>{{ service.name }}</h4>
-                                </div>
-                                <span class="service-price">{{ service.price_display }}</span>
-                            </li>
-                        {% empty %}
-                            <li class="service-line"><p class="meta-line" style="margin: 0;">Tarifs à confirmer avec la prestataire ou le prestataire.</p></li>
-                        {% endfor %}
-                    </ul>
+                    {% if provider.categorized_services_enabled and service_categories %}
+                        <div class="service-category-accordion">
+                            {% for category in service_categories %}
+                                <details class="service-category-item" {% if forloop.first %}open{% endif %}>
+                                    <summary class="service-category-summary">
+                                        <h4 class="service-category-title">{{ category.name }}</h4>
+                                        <span class="service-category-line"></span>
+                                        <span class="service-category-icon" aria-hidden="true"></span>
+                                    </summary>
+                                    <ul class="services-list-simple">
+                                        {% for service in category.services %}
+                                            <li class="service-line">
+                                                <div class="service-name">
+                                                    <h4>{{ service.name }}</h4>
+                                                </div>
+                                                <span class="service-price">{{ service.price_display }}</span>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </details>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <ul class="services-list-simple">
+                            {% for service in services %}
+                                <li class="service-line">
+                                    <div class="service-name">
+                                        <h4>{{ service.name }}</h4>
+                                    </div>
+                                    <span class="service-price">{{ service.price_display }}</span>
+                                </li>
+                            {% empty %}
+                                <li class="service-line"><p class="meta-line" style="margin: 0;">Tarifs à confirmer avec la prestataire ou le prestataire.</p></li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
             </section>
 
@@ -144,11 +168,21 @@
                                     <label for="service_id">Service souhaité <span class="required-mark">*</span></label>
                                     <select name="service_id" id="service_id" required>
                                         <option value="" selected disabled>-- Choisis un service --</option>
-                                        {% for service in services %}
-                                            <option value="{{ service.id }}">{{ service.name }} - {{ service.price_display }}</option>
-                                        {% empty %}
-                                            <option value="" disabled>Aucun service disponible</option>
-                                        {% endfor %}
+                                        {% if provider.categorized_services_enabled and service_categories %}
+                                            {% for category in service_categories %}
+                                                <optgroup label="{{ category.name }}">
+                                                    {% for service in category.services %}
+                                                        <option value="{{ service.id }}">{{ service.name }} - {{ service.price_display }}</option>
+                                                    {% endfor %}
+                                                </optgroup>
+                                            {% endfor %}
+                                        {% else %}
+                                            {% for service in services %}
+                                                <option value="{{ service.id }}">{{ service.name }} - {{ service.price_display }}</option>
+                                            {% empty %}
+                                                <option value="" disabled>Aucun service disponible</option>
+                                            {% endfor %}
+                                        {% endif %}
                                     </select>
                                 </div>
 

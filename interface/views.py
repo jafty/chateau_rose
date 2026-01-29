@@ -15,7 +15,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.urls import reverse
 
-from booking.models import Booking, Provider, Service, Zone
+from booking.models import Booking, Provider, Service, ServiceCategory, Zone
 from chateaurose.domain.exceptions import DomainError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
@@ -103,7 +103,11 @@ def provider_list(request):
 
 def provider_detail(request, provider_id):
     provider = get_object_or_404(Provider, id=provider_id)
-    services = list(Service.objects.filter(provider=provider))
+    services = list(
+        Service.objects.filter(provider=provider)
+        .select_related("category")
+        .order_by("category__order", "category__name", "name")
+    )
     pricing_data, starting_prices = booking_requests.build_pricing_data(services)
     zones = provider.zones.all()
     message = None
@@ -173,12 +177,38 @@ def provider_detail(request, provider_id):
         else:
             error = _first_form_error(form)
 
+    service_categories = []
+    if provider.categorized_services_enabled:
+        categories = list(
+            ServiceCategory.objects.filter(provider=provider).order_by("order", "name")
+        )
+        services_by_category = {category.id: [] for category in categories}
+        unassigned_services = []
+        for service in services:
+            if service.category_id:
+                services_by_category.setdefault(service.category_id, []).append(service)
+            else:
+                unassigned_services.append(service)
+
+        for category in categories:
+            categorized_services = services_by_category.get(category.id, [])
+            if categorized_services:
+                service_categories.append(
+                    {"name": category.name, "services": categorized_services}
+                )
+
+        if unassigned_services:
+            service_categories.append(
+                {"name": "Autres services", "services": unassigned_services}
+            )
+
     return render(
         request,
         "interface/provider_detail.html",
         {
             "provider": provider,
             "services": services,
+            "service_categories": service_categories,
             "zones": zones,
             "message": message,
             "error": error,

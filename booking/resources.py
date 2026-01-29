@@ -4,7 +4,15 @@ from import_export.widgets import ForeignKeyWidget, JSONWidget
 
 from interface.models import MarketingService
 
-from .models import Provider, ProviderMarketingService, ProviderPhoto, ProviderZone, Service, Zone
+from .models import (
+    Provider,
+    ProviderMarketingService,
+    ProviderPhoto,
+    ProviderZone,
+    Service,
+    ServiceCategory,
+    Zone,
+)
 
 
 class ZoneResource(resources.ModelResource):
@@ -37,6 +45,7 @@ class ProviderResource(resources.ModelResource):
             "profile_image_url",
             "provides_meche",
             "location_mode",
+            "categorized_services_enabled",
             "user",
         )
         export_order = fields
@@ -47,6 +56,11 @@ class ServiceResource(resources.ModelResource):
         column_name="provider_id",
         attribute="provider",
         widget=ForeignKeyWidget(Provider, "id"),
+    )
+    category = fields.Field(
+        column_name="category_id",
+        attribute="category",
+        widget=ForeignKeyWidget(ServiceCategory, "id"),
     )
     hair_length_adjustments = fields.Field(
         column_name="hair_length_adjustments",
@@ -64,6 +78,7 @@ class ServiceResource(resources.ModelResource):
         fields = (
             "id",
             "provider",
+            "category",
             "name",
             "slug",
             "base_price_cents",
