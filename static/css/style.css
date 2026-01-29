@@ -337,6 +337,10 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     gap: 40px;
 }
 
+.hero .polaroid-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .hub-grid { align-items: start; }
 
 .hero-polaroid {
