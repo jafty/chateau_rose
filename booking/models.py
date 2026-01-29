@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db import models
 
@@ -98,6 +99,10 @@ class Provider(models.Model):
         related_name="providers",
         blank=True,
     )
+    categorized_services_enabled = models.BooleanField(
+        default=False,
+        help_text="Active la présentation des services par catégories sur la page prestataire.",
+    )
 
     def __str__(self):
         return self.name
@@ -128,6 +133,13 @@ class Zone(models.Model):
 
 class Service(models.Model):
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="services")
+    category = models.ForeignKey(
+        "ServiceCategory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="services",
+    )
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, default="", blank=True)
     base_price_cents = models.IntegerField()
@@ -137,6 +149,28 @@ class Service(models.Model):
 
     class Meta:
         unique_together = (("provider", "name"), ("provider", "slug"))
+
+    def __str__(self):
+        return f"{self.name} ({self.provider})"
+
+    def clean(self):
+        super().clean()
+        if self.category and self.category.provider_id != self.provider_id:
+            raise ValidationError("La catégorie doit appartenir à la même prestataire.")
+
+
+class ServiceCategory(models.Model):
+    provider = models.ForeignKey(
+        Provider,
+        on_delete=models.CASCADE,
+        related_name="service_categories",
+    )
+    name = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ("order", "name")
+        unique_together = ("provider", "name")
 
     def __str__(self):
         return f"{self.name} ({self.provider})"

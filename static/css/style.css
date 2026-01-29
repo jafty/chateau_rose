@@ -1204,6 +1204,31 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .service-line { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: 1px dashed rgba(0,0,0,0.08); }
 .service-line h4 { margin: 0; font-size: 1.1rem; }
 .service-price { font-weight: 700; color: var(--rose-accent); white-space: nowrap; }
+.service-category-accordion { display: grid; gap: 14px; }
+.service-category-item { border-top: 1px solid rgba(0, 0, 0, 0.08); padding-top: 10px; }
+.service-category-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    list-style: none;
+    color: var(--ink-primary);
+}
+.service-category-summary::-webkit-details-marker { display: none; }
+.service-category-title { margin: 0; font-size: 1.2rem; font-weight: 600; }
+.service-category-line { flex: 1; height: 1px; background: var(--ink-primary); opacity: 0.25; }
+.service-category-icon {
+    width: 26px;
+    height: 26px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    transition: transform 0.2s ease;
+}
+.service-category-icon::before { content: "▾"; }
+.service-category-item[open] .service-category-icon { transform: rotate(180deg); }
 
 .provider-form-card {
     display: grid;

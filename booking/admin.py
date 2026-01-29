@@ -20,6 +20,7 @@ from .models import (
     ProviderPhoto,
     ProviderZone,
     Service,
+    ServiceCategory,
     Zone,
 )
 from interface.models import MarketingService
@@ -52,6 +53,7 @@ class ProviderAdminForm(forms.ModelForm):
             "profile_image",
             "provides_meche",
             "location_mode",
+            "categorized_services_enabled",
             "user",
             "zones",
             "marketing_services",
@@ -83,6 +85,16 @@ class ProviderAdminForm(forms.ModelForm):
             for service in selected_services:
                 ProviderMarketingService.objects.get_or_create(provider=provider, service=service)
 
+        if provider.categorized_services_enabled:
+            unassigned_services = provider.services.filter(category__isnull=True)
+            if unassigned_services.exists():
+                fallback_category, _ = ServiceCategory.objects.get_or_create(
+                    provider=provider,
+                    name="Autres services",
+                    defaults={"order": 999},
+                )
+                unassigned_services.update(category=fallback_category)
+
         return provider
 
 
@@ -97,6 +109,7 @@ class ProviderAdmin(ImportExportModelAdmin):
         "salon_zone",
         "provides_meche",
         "location_mode",
+        "categorized_services_enabled",
         "user",
     )
     list_filter = ("location_mode",)
@@ -122,46 +135,117 @@ class ProviderPhotoAdmin(ImportExportModelAdmin):
     resource_class = ProviderPhotoResource
 
 
+class ServiceAdminForm(forms.ModelForm):
+    hair_length_adjustments = forms.JSONField(
+        required=False,
+        help_text="JSON longueur -> supplément en centimes (ex: {\"court\":0, \"mi-long\":1000, \"long\":2000}).",
+    )
+    general_adjustments = forms.JSONField(
+        required=False,
+        help_text="JSON motif -> supplément en centimes (ajouté au total, ex: {\"motif\":500}).",
+    )
+    meche_bonus_cents = forms.IntegerField(
+        required=False,
+        help_text="Supplément en centimes lorsque l'option mèches fournies est cochée.",
+    )
+
+    class Meta:
+        model = Service
+        fields = (
+            "provider",
+            "category",
+            "name",
+            "slug",
+            "base_price_cents",
+            "hair_length_adjustments",
+            "general_adjustments",
+            "meche_bonus_cents",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        provider = None
+        if self.instance and self.instance.pk:
+            provider = self.instance.provider
+        elif self.data.get("provider"):
+            provider = Provider.objects.filter(pk=self.data.get("provider")).first()
+
+        if provider:
+            self.fields["category"].queryset = ServiceCategory.objects.filter(provider=provider)
+            if provider.categorized_services_enabled:
+                self.fields["category"].required = True
+                self.fields["category"].help_text = (
+                    "Obligatoire lorsque les services sont catégorisés pour cette prestataire."
+                )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        provider = cleaned_data.get("provider")
+        category = cleaned_data.get("category")
+        if provider and provider.categorized_services_enabled and not category:
+            raise forms.ValidationError(
+                "Merci d'assigner une catégorie lorsque les services sont catégorisés."
+            )
+        return cleaned_data
+
+
 @admin.register(Service)
 class ServiceAdmin(ImportExportModelAdmin):
-    list_display = ("name", "slug", "provider", "base_price_cents")
-    list_filter = ("provider",)
+    list_display = ("name", "slug", "provider", "category", "base_price_cents")
+    list_filter = ("provider", "category")
     search_fields = ("name", "slug")
     resource_class = ServiceResource
-    form = type(
-        "ServiceAdminForm",
-        (forms.ModelForm,),
-        {
-            "hair_length_adjustments": forms.JSONField(
-                required=False,
-                help_text="JSON longueur -> supplément en centimes (ex: {\"court\":0, \"mi-long\":1000, \"long\":2000}).",
-            ),
-            "general_adjustments": forms.JSONField(
-                required=False,
-                help_text="JSON motif -> supplément en centimes (ajouté au total, ex: {\"motif\":500}).",
-            ),
-            "meche_bonus_cents": forms.IntegerField(
-                required=False,
-                help_text="Supplément en centimes lorsque l'option mèches fournies est cochée.",
-            ),
-            "Meta": type(
-                "Meta",
-                (),
-                {
-                    "model": Service,
-                    "fields": (
-                        "provider",
-                        "name",
-                        "slug",
-                        "base_price_cents",
-                        "hair_length_adjustments",
-                        "general_adjustments",
-                        "meche_bonus_cents",
-                    ),
-                },
-            ),
-        },
+    form = ServiceAdminForm
+
+
+class ServiceCategoryAdminForm(forms.ModelForm):
+    services = forms.ModelMultipleChoiceField(
+        queryset=Service.objects.none(),
+        required=False,
+        widget=FilteredSelectMultiple("services", is_stacked=False),
+        help_text="Sélectionne les services à ranger dans cette catégorie.",
     )
+
+    class Meta:
+        model = ServiceCategory
+        fields = ("provider", "name", "order", "services")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        provider = None
+        if self.instance and self.instance.pk:
+            provider = self.instance.provider
+        elif self.data.get("provider"):
+            provider = Provider.objects.filter(pk=self.data.get("provider")).first()
+
+        queryset = Service.objects.all()
+        if provider:
+            queryset = queryset.filter(provider=provider)
+        self.fields["services"].queryset = queryset
+
+        if self.instance and self.instance.pk:
+            self.fields["services"].initial = self.instance.services.all()
+
+    def save(self, commit=True):
+        category = super().save(commit=commit)
+        if not category.pk:
+            return category
+
+        selected_services = self.cleaned_data.get("services")
+        if selected_services is not None:
+            Service.objects.filter(category=category).exclude(
+                id__in=selected_services
+            ).update(category=None)
+            Service.objects.filter(id__in=selected_services).update(category=category)
+        return category
+
+
+@admin.register(ServiceCategory)
+class ServiceCategoryAdmin(ImportExportModelAdmin):
+    form = ServiceCategoryAdminForm
+    list_display = ("name", "provider", "order")
+    list_filter = ("provider",)
+    search_fields = ("name",)
 
 
 @admin.register(Zone)
