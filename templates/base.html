@@ -57,62 +57,64 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <div class="container footer-content">
+    <footer class="site-footer">
+        <div class="container footer-grid" aria-label="Pied de page">
             <div class="footer-brand">
                 <div class="logo">
                     <span class="chateau">Château</span><span class="rose"> Rose.</span>
                 </div>
                 <p class="footer-copy">Ton partenaire de confiance pour magnifier tes cheveux afro à Toulouse, rapidement et sans prise de tête (sans mauvais jeu mot).</p>
-                <p class="footer-copy">
-                    Contact : <a href="tel:{{ business_phone_tel }}">{{ business_phone }}</a>
-                </p>
-                <p class="footer-copy">
-                    {{ business_name }} · {{ business_street_address }}, {{ business_postal_code }} {{ business_city }}
-                </p>
+                <div class="footer-contact">
+                    <a class="footer-contact-link" href="tel:{{ business_phone_tel }}">Téléphone : {{ business_phone }}</a>
+                    <a class="footer-contact-link" href="mailto:japhet.situmonana@gmail.com">Email : japhet.situmonana@gmail.com</a>
+                    <span class="footer-address">{{ business_name }} · {{ business_street_address }}, {{ business_postal_code }} {{ business_city }}</span>
+                </div>
             </div>
-            <div class="footer-columns">
-                <div class="footer-col">
-                    <h4>Coiffure Afro à Toulouse</h4>
-                    <ul>
-                        <li><a href="{% url 'interface:service_page' 'coloration' %}">Coloration</a></li>
-                        <li><a href="{% url 'interface:service_page' 'coupes-a-la-tondeuse' %}">Coupes à la tondeuse</a></li>
-                        <li><a href="{% url 'interface:service_page' 'lissages-defrisages' %}">Lissages et défrisages</a></li>
-                        <li><a href="{% url 'interface:service_page' 'locks' %}">Locks</a></li>
-                        <li><a href="{% url 'interface:service_page' 'soins-et-shampooings' %}">Soins et shampooings</a></li>
-                        <li><a href="{% url 'interface:service_page' 'tissage' %}">Tissages</a></li>
-                        <li><a href="{% url 'interface:service_page' 'tresses' %}">Tresses</a></li>
-                        <li><a href="{% url 'interface:service_page' 'vanilles' %}">Vanilles</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Réseaux</h4>
-                    <ul>
-                        <li><a href="https://www.instagram.com/" rel="noopener noreferrer" target="_blank">Instagram</a></li>
-                        <li><a href="{% url 'interface:about' %}">À propos</a></li>
-                        <li><a href="mailto:japhet.situmonana@gmail.com">Écrire un email</a></li>
-                        <li><a href="{% url 'providers:signup' %}">Devenir partenaire</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Légal</h4>
-                    <ul>
-                        <li><a href="{% url 'interface:legal_notice' %}">Mentions légales</a></li>
-                        <li><a href="{% url 'interface:terms_of_sale' %}">CGV</a></li>
-                        <li><a href="{% url 'interface:terms_of_use' %}">CGU</a></li>
-                        <li><a href="{% url 'interface:privacy_policy' %}">Confidentialité</a></li>
-                    </ul>
-                </div>
-                <div class="footer-col">
-                    <h4>Prestataires</h4>
-                    <ul>
-                        <li><a href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:login' %}{% endif %}">Espace prestataires</a></li>
-                        <li><a href="{% url 'providers:signup' %}">Devenir partenaire</a></li>
-                    </ul>
-                </div>
+            <div class="footer-section">
+                <h4>Découvrir</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'interface:home' %}">Accueil</a></li>
+                    <li><a href="{% url 'interface:about' %}">À propos</a></li>
+                    <li><a href="{% url 'interface:provider_list' %}">Prestataires</a></li>
+                    <li><a href="{% url 'interface:home' %}#catalogue">Services</a></li>
+                    <li><a href="{% url 'interface:home' %}#service-request">Réserver rapidement</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Services phares</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'interface:service_page' 'tresses' %}">Tresses</a></li>
+                    <li><a href="{% url 'interface:service_page' 'tissage' %}">Tissages</a></li>
+                    <li><a href="{% url 'interface:service_page' 'locks' %}">Locks</a></li>
+                    <li><a href="{% url 'interface:service_page' 'lissages-defrisages' %}">Lissages et défrisages</a></li>
+                    <li><a href="{% url 'interface:service_page' 'soins-et-shampooings' %}">Soins &amp; shampooings</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Prestataires</h4>
+                <ul class="footer-links">
+                    <li><a href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:login' %}{% endif %}">Espace prestataires</a></li>
+                    <li><a href="{% url 'providers:signup' %}">Devenir partenaire</a></li>
+                    <li><a href="{% url 'interface:home' %}#service-request">Recevoir des demandes</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Légal</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'interface:legal_notice' %}">Mentions légales</a></li>
+                    <li><a href="{% url 'interface:terms_of_sale' %}">Conditions de vente</a></li>
+                    <li><a href="{% url 'interface:terms_of_use' %}">Conditions d’utilisation</a></li>
+                    <li><a href="{% url 'interface:privacy_policy' %}">Confidentialité</a></li>
+                </ul>
             </div>
         </div>
-        <div class="container bottom-bar">CHÂTEAU ROSE &copy; 2024 - TOULOUSE</div>
+        <div class="container footer-bottom">
+            <span>CHÂTEAU ROSE &copy; 2024 · Toulouse</span>
+            <div class="footer-social">
+                <a href="https://www.instagram.com/" rel="noopener noreferrer" target="_blank">Instagram</a>
+                <a href="https://www.facebook.com/" rel="noopener noreferrer" target="_blank">Facebook</a>
+            </div>
+        </div>
     </footer>
     <script src="{% static 'js/navigation.js' %}"></script>
     <script src="{% static 'js/zone-search.js' %}"></script>
