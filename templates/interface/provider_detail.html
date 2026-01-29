@@ -66,20 +66,53 @@
                 <h3 class="section-title provider-section-title">Réalisations</h3>
                 <div class="paper-card provider-gallery-card">
                     {% if provider.photos.all %}
-                        <div class="photo-grid">
+                        <div class="photo-grid provider-gallery-grid" data-gallery-grid>
                             {% for photo in provider.photos.all %}
                                 {% if photo.resolved_url %}
-                                    <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="lazy" decoding="async">
+                                    <button
+                                        type="button"
+                                        class="gallery-thumb"
+                                        data-gallery-index="{{ forloop.counter0 }}"
+                                        data-gallery-src="{{ photo.resolved_url }}"
+                                        data-gallery-caption="{{ photo.caption|default:provider.name }}"
+                                    >
+                                        <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="lazy" decoding="async">
+                                        <span class="gallery-thumb__overlay">Zoomer</span>
+                                    </button>
                                 {% endif %}
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="photo-grid">
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Inspiration coiffure afro" loading="lazy" decoding="async">
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses et coiffures afro" loading="lazy" decoding="async">
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure protectrice afro" loading="lazy" decoding="async">
+                        <div class="photo-grid provider-gallery-grid" data-gallery-grid>
+                            <button type="button" class="gallery-thumb" data-gallery-index="0" data-gallery-src="{% static 'demo_pictures/provider-placeholder.svg' %}" data-gallery-caption="Inspiration coiffure afro">
+                                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Inspiration coiffure afro" loading="lazy" decoding="async">
+                                <span class="gallery-thumb__overlay">Zoomer</span>
+                            </button>
+                            <button type="button" class="gallery-thumb" data-gallery-index="1" data-gallery-src="{% static 'demo_pictures/provider-placeholder.svg' %}" data-gallery-caption="Tresses et coiffures afro">
+                                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses et coiffures afro" loading="lazy" decoding="async">
+                                <span class="gallery-thumb__overlay">Zoomer</span>
+                            </button>
+                            <button type="button" class="gallery-thumb" data-gallery-index="2" data-gallery-src="{% static 'demo_pictures/provider-placeholder.svg' %}" data-gallery-caption="Coiffure protectrice afro">
+                                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure protectrice afro" loading="lazy" decoding="async">
+                                <span class="gallery-thumb__overlay">Zoomer</span>
+                            </button>
                         </div>
                     {% endif %}
+                </div>
+                <div class="gallery-modal" data-gallery-modal hidden>
+                    <div class="gallery-modal__backdrop" data-gallery-close></div>
+                    <div class="gallery-modal__dialog" role="dialog" aria-modal="true" aria-label="Galerie des réalisations">
+                        <button type="button" class="gallery-modal__close" data-gallery-close aria-label="Fermer la galerie">✕</button>
+                        <div class="gallery-modal__main">
+                            <button type="button" class="gallery-modal__nav" data-gallery-prev aria-label="Photo précédente">‹</button>
+                            <figure class="gallery-modal__figure">
+                                <img data-gallery-view src="" alt="">
+                                <figcaption class="gallery-modal__caption" data-gallery-caption></figcaption>
+                            </figure>
+                            <button type="button" class="gallery-modal__nav" data-gallery-next aria-label="Photo suivante">›</button>
+                        </div>
+                        <div class="gallery-modal__thumbs" data-gallery-thumbs></div>
+                    </div>
                 </div>
             </section>
 
@@ -951,6 +984,104 @@
                 form.submit();
             }
         });
+
+        const galleryItems = Array.from(document.querySelectorAll('[data-gallery-index]')).map((item) => ({
+            trigger: item,
+            src: item.dataset.gallerySrc,
+            caption: item.dataset.galleryCaption,
+            alt: item.querySelector('img')?.alt || 'Réalisation',
+        }));
+        const galleryModal = document.querySelector('[data-gallery-modal]');
+        if (galleryItems.length && galleryModal) {
+            const galleryView = galleryModal.querySelector('[data-gallery-view]');
+            const galleryCaption = galleryModal.querySelector('[data-gallery-caption]');
+            const galleryThumbs = galleryModal.querySelector('[data-gallery-thumbs]');
+            const galleryPrev = galleryModal.querySelector('[data-gallery-prev]');
+            const galleryNext = galleryModal.querySelector('[data-gallery-next]');
+            const galleryCloseButtons = galleryModal.querySelectorAll('[data-gallery-close]');
+            let galleryIndex = 0;
+            let galleryKeyHandler = null;
+
+            const renderGallery = (index) => {
+                const item = galleryItems[index];
+                if (!item || !galleryView) return;
+                galleryView.src = item.src;
+                galleryView.alt = item.alt;
+                if (galleryCaption) {
+                    galleryCaption.textContent = item.caption || 'Réalisation';
+                }
+                galleryThumbs?.querySelectorAll('button').forEach((thumb, thumbIndex) => {
+                    thumb.classList.toggle('is-active', thumbIndex === index);
+                });
+                galleryIndex = index;
+            };
+
+            const openGallery = (index) => {
+                galleryModal.hidden = false;
+                galleryModal.classList.add('is-open');
+                document.body.classList.add('has-gallery-modal');
+                renderGallery(index);
+                galleryCloseButtons[0]?.focus();
+                galleryKeyHandler = (event) => {
+                    if (event.key === 'Escape') {
+                        closeGallery();
+                    }
+                    if (event.key === 'ArrowRight') {
+                        showNext();
+                    }
+                    if (event.key === 'ArrowLeft') {
+                        showPrev();
+                    }
+                };
+                document.addEventListener('keydown', galleryKeyHandler);
+            };
+
+            const closeGallery = () => {
+                galleryModal.hidden = true;
+                galleryModal.classList.remove('is-open');
+                document.body.classList.remove('has-gallery-modal');
+                if (galleryKeyHandler) {
+                    document.removeEventListener('keydown', galleryKeyHandler);
+                    galleryKeyHandler = null;
+                }
+            };
+
+            const showNext = () => {
+                const nextIndex = (galleryIndex + 1) % galleryItems.length;
+                renderGallery(nextIndex);
+            };
+
+            const showPrev = () => {
+                const prevIndex = (galleryIndex - 1 + galleryItems.length) % galleryItems.length;
+                renderGallery(prevIndex);
+            };
+
+            if (galleryThumbs) {
+                galleryThumbs.innerHTML = '';
+                galleryItems.forEach((item, index) => {
+                    const thumbButton = document.createElement('button');
+                    thumbButton.type = 'button';
+                    thumbButton.setAttribute('aria-label', item.caption || `Réalisation ${index + 1}`);
+                    const thumbImage = document.createElement('img');
+                    thumbImage.src = item.src;
+                    thumbImage.alt = item.alt;
+                    thumbButton.appendChild(thumbImage);
+                    thumbButton.addEventListener('click', () => renderGallery(index));
+                    galleryThumbs.appendChild(thumbButton);
+                });
+            }
+
+            galleryItems.forEach((item, index) => {
+                item.trigger.addEventListener('click', () => openGallery(index));
+            });
+
+            galleryCloseButtons.forEach((button) => {
+                button.addEventListener('click', closeGallery);
+            });
+
+            galleryPrev?.addEventListener('click', showPrev);
+            galleryNext?.addEventListener('click', showNext);
+        }
 
         updateWizardUI();
         refreshEstimate();
