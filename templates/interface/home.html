@@ -15,9 +15,9 @@
             </div>
         </div>
 
-        <div class="hub-grid">
+        <div class="hub-grid polaroid-grid">
             {% for service in featured_services %}
-                <a class="hub-card" href="{% url 'interface:service_page' service.slug %}">
+                <a class="service-polaroid hero-polaroid" href="{% url 'interface:service_page' service.slug %}">
                     {% if forloop.counter == 1 %}
                         <span class="tape top-left" aria-hidden="true"></span>
                     {% elif forloop.counter == 2 %}
@@ -32,13 +32,13 @@
                     {% else %}
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}" width="320" height="320" loading="lazy" decoding="async">
                     {% endif %}
-                    <span class="hub-label">{{ service.name }}</span>
+                    <span class="service-label">{{ service.name }}</span>
                 </a>
             {% empty %}
-                <div class="hub-card" aria-hidden="true">
+                <div class="service-polaroid hero-polaroid" aria-hidden="true">
                     <span class="tape top-left" aria-hidden="true"></span>
                     <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure afro" width="320" height="320" loading="lazy" decoding="async">
-                    <span class="hub-label">Coiffures d'exception</span>
+                    <span class="service-label">Coiffures d'exception</span>
                 </div>
             {% endfor %}
         </div>
@@ -72,20 +72,29 @@
             <div>
                 <h2 class="section-title" style="text-align:left;">Coiffe efficacement tes cheveux afro</h2>
                 <p style="color:var(--ink-secondary); margin-bottom:20px;">Des profils afro vérifiés qui se déplacent, t'accueillent chez eux ou en salon partenaire, avec un brief clair dès le départ.</p>
-                <ul class="prop-list">
-                    <li>
-                        <strong>Prestations</strong>
-                        <span>À domicile, en salon partenaire ou chez le prestataire.</span>
-                    </li>
-                    <li>
-                        <strong>Suivi simple</strong>
-                        <span>Un seul formulaire, des messages rapides et une confirmation sans chichi.</span>
-                    </li>
-                    <li>
-                        <strong>Acompte anti no-show</strong>
-                        <span>Empreinte bancaire sécurisée, acompte validé après accord.</span>
-                    </li>
-                </ul>
+                <div class="benefit-list">
+                    <div class="benefit-card">
+                        <span class="benefit-icon" aria-hidden="true">⚡</span>
+                        <div>
+                            <strong>Réponse rapide</strong>
+                            <span>Une demande claire, des retours en quelques minutes pour réserver sans attendre.</span>
+                        </div>
+                    </div>
+                    <div class="benefit-card">
+                        <span class="benefit-icon" aria-hidden="true">🤝</span>
+                        <div>
+                            <strong>Prestataires fiables</strong>
+                            <span>Des pros sélectionnés, notés et joignables facilement avant le rendez-vous.</span>
+                        </div>
+                    </div>
+                    <div class="benefit-card">
+                        <span class="benefit-icon" aria-hidden="true">🔒</span>
+                        <div>
+                            <strong>Rendez-vous sécurisé</strong>
+                            <span>Acompte encadré et confirmation finale pour éviter les no-show.</span>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div style="position:relative;">
                 <div style="border:10px solid white; box-shadow:var(--shadow-hover); transform:rotate(2deg);">
@@ -139,7 +148,7 @@
 
 <section class="container" style="padding: 80px 20px;" id="catalogue">
     <h2 class="section-title">Des coupes afros pour toutes les envies</h2>
-    <div class="all-services-grid">
+    <div class="all-services-grid polaroid-grid">
         {% for service in services %}
             <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
                 {% if forloop.counter <= 8 %}
