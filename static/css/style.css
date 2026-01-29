@@ -2113,20 +2113,22 @@ footer {
 
 .footer-content {
     display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 2.6fr);
-    gap: 40px;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 2.7fr);
+    gap: 48px;
     align-items: start;
 }
 
 .footer-content > * { min-width: 0; }
 
-.footer-brand { max-width: 320px; display: grid; gap: 12px; }
+.footer-brand { max-width: 360px; display: grid; gap: 12px; }
+.footer-brand .logo { margin-bottom: 8px; }
 .footer-copy { color: #E0D6D1; font-size: 0.95rem; line-height: 1.6; overflow-wrap: anywhere; }
+.footer-copy + .footer-copy { margin-top: 8px; }
 
 .footer-columns {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 32px;
+    gap: 28px;
 }
 
 .footer-col h4 {
@@ -2138,18 +2140,10 @@ footer {
     font-family: 'Cormorant Garamond', serif;
 }
 
-.footer-col ul li { list-style: none; margin-bottom: 10px; }
+.footer-col ul { margin: 0; padding: 0; display: grid; gap: 10px; }
+.footer-col ul li { list-style: none; }
 .footer-col ul li a { color: #EBE5E0; opacity: 0.7; font-size: 0.9rem; overflow-wrap: anywhere; }
 .footer-col ul li a:hover { color: var(--rose-accent); opacity: 1; text-decoration: underline; }
-.footer-provider-link {
-    color: var(--rose-accent);
-    font-weight: 700;
-    font-size: 1.05rem;
-    display: inline-block;
-    padding: 2px 0;
-    overflow-wrap: anywhere;
-}
-.footer-provider-link:hover { color: white; }
 
 .bottom-bar {
     text-align: center;

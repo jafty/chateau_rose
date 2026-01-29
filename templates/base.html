@@ -60,14 +60,14 @@
     <footer>
         <div class="container footer-content">
             <div class="footer-brand">
-                <div class="logo" style="margin-bottom: 14px;">
+                <div class="logo">
                     <span class="chateau">Château</span><span class="rose"> Rose.</span>
                 </div>
                 <p class="footer-copy">Ton partenaire de confiance pour magnifier tes cheveux afro à Toulouse, rapidement et sans prise de tête (sans mauvais jeu mot).</p>
-                <p class="footer-copy" style="margin-top: 12px;">
+                <p class="footer-copy">
                     Contact : <a href="tel:{{ business_phone_tel }}">{{ business_phone }}</a>
                 </p>
-                <p class="footer-copy" style="margin-top: 8px;">
+                <p class="footer-copy">
                     {{ business_name }} · {{ business_street_address }}, {{ business_postal_code }} {{ business_city }}
                 </p>
             </div>
@@ -105,7 +105,10 @@
                 </div>
                 <div class="footer-col">
                     <h4>Prestataires</h4>
-                    <a class="footer-provider-link" href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:login' %}{% endif %}">Espace prestataires</a>
+                    <ul>
+                        <li><a href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:login' %}{% endif %}">Espace prestataires</a></li>
+                        <li><a href="{% url 'providers:signup' %}">Devenir partenaire</a></li>
+                    </ul>
                 </div>
             </div>
         </div>
