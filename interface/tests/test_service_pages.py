@@ -1,3 +1,4 @@
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
@@ -105,8 +106,10 @@ class ServicePagesTests(TestCase):
                 "desired_date": "2026-01-10T17:00",
                 "hair_length": "Épaules",
                 "meche_provided": "on",
-                "inspiration_picture_url": "https://example.com/hair.jpg",
                 "details": "Besoin urgent",
+                "inspiration_pictures": [
+                    SimpleUploadedFile("insp.jpg", b"hair", content_type="image/jpeg")
+                ],
             },
         )
 
@@ -121,7 +124,7 @@ class ServicePagesTests(TestCase):
         self.assertEqual(request_record.desired_date.strftime("%Y-%m-%d"), "2026-01-10")
         self.assertEqual(request_record.hair_length, "Épaules")
         self.assertTrue(request_record.meche_provided)
-        self.assertEqual(request_record.inspiration_picture_url, "https://example.com/hair.jpg")
+        self.assertEqual(len(request_record.inspiration_picture_urls), 1)
 
     def test_home_displays_featured_review(self):
         ClientReview.objects.create(
@@ -144,7 +147,6 @@ class ServicePagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("Service nickel.", content)
-        self.assertNotIn("Super expérience.", content)
 
     def test_salon_only_badge_is_rendered(self):
         self.provider_a.location_mode = Provider.LOCATION_MODE_SALON_ONLY

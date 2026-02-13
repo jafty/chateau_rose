@@ -3,6 +3,32 @@
 
 {% block title %}Réserve ta coiffure afro à Toulouse en moins de 2 minutes | Château Rose{% endblock %}
 
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const carousel = document.querySelector('[data-review-carousel]');
+    if (!carousel) return;
+    const slides = carousel.querySelectorAll('[data-review-slide]');
+    const prev = carousel.querySelector('[data-review-prev]');
+    const next = carousel.querySelector('[data-review-next]');
+    if (!slides.length) return;
+
+    let index = 0;
+    const setActive = (newIndex) => {
+        index = (newIndex + slides.length) % slides.length;
+        slides.forEach((slide, i) => slide.classList.toggle('is-active', i === index));
+    };
+
+    prev?.addEventListener('click', () => setActive(index - 1));
+    next?.addEventListener('click', () => setActive(index + 1));
+
+    if (slides.length > 1) {
+        setInterval(() => setActive(index + 1), 6500);
+    }
+});
+</script>
+{% endblock %}
+
 {% block content %}
 <section class="hero">
     <div class="container hero-grid">
@@ -45,26 +71,34 @@
     </div>
 </section>
 
-{% if homepage_review %}
-<section class="hero-review" aria-label="Avis client">
+{% if homepage_reviews %}
+<section class="hero-review" aria-label="Avis clients">
     <div class="container">
-        <article class="hero-review-card">
-            <div class="hero-review-avatar">
-                {% if homepage_review.resolved_photo %}
-                    <img src="{{ homepage_review.resolved_photo }}" alt="Avis client {{ homepage_review.client_name }}" loading="lazy" decoding="async">
-                {% else %}
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Avis client" loading="lazy" decoding="async">
-                {% endif %}
+        <article class="hero-review-card" data-review-carousel>
+            <button type="button" class="hero-review-nav" data-review-prev aria-label="Avis précédent">←</button>
+            <div class="hero-review-track" aria-live="polite">
+                {% for review in homepage_reviews %}
+                    <div class="hero-review-slide {% if forloop.first %}is-active{% endif %}" data-review-slide>
+                        <div class="hero-review-avatar">
+                            {% if review.resolved_photo %}
+                                <img src="{{ review.resolved_photo }}" alt="Avis client {{ review.client_name }}" loading="lazy" decoding="async">
+                            {% else %}
+                                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Avis client" loading="lazy" decoding="async">
+                            {% endif %}
+                        </div>
+                        <div class="hero-review-content">
+                            <div class="hero-review-stars" aria-hidden="true">
+                                {% for _ in "12345"|make_list %}
+                                    {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                                {% endfor %}
+                            </div>
+                            <p>“{{ review.review_text }}”</p>
+                            <strong>{{ review.client_name }}</strong>
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
-            <div class="hero-review-content">
-                <div class="hero-review-stars" aria-hidden="true">
-                    {% for _ in "12345"|make_list %}
-                        {% if forloop.counter <= homepage_review.rating %}★{% else %}☆{% endif %}
-                    {% endfor %}
-                </div>
-                <p>“{{ homepage_review.review_text }}”</p>
-                <strong>{{ homepage_review.client_name }}</strong>
-            </div>
+            <button type="button" class="hero-review-nav" data-review-next aria-label="Avis suivant">→</button>
         </article>
     </div>
 </section>

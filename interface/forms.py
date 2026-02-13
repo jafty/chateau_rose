@@ -55,6 +55,11 @@ class ServiceRequestForm(forms.ModelForm):
         initial=ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
         widget=forms.RadioSelect,
     )
+    inspiration_pictures = MultipleFileField(
+        label="Ajoute une ou plusieurs photos (inspiration ou cheveux actuels)",
+        required=False,
+        widget=MultiFileInput(attrs={"multiple": True, "accept": "image/*"}),
+    )
     desired_date = forms.DateTimeField(
         label="Date souhaitée",
         input_formats=["%Y-%m-%dT%H:%M"],
@@ -81,7 +86,6 @@ class ServiceRequestForm(forms.ModelForm):
             "client_address",
             "hair_length",
             "meche_provided",
-            "inspiration_picture_url",
             "details",
         ]
         widgets = {
@@ -93,7 +97,6 @@ class ServiceRequestForm(forms.ModelForm):
             "client_address": "Adresse complète",
             "hair_length": "Longueur de cheveux",
             "meche_provided": "Mèches déjà fournies",
-            "inspiration_picture_url": "Lien vers une photo d'inspiration",
             "details": "Détails ou besoin",
         }
 
@@ -107,6 +110,8 @@ class ServiceRequestForm(forms.ModelForm):
                 "data-zone-search-placeholder": "Cherche une zone ou un quartier",
             }
         )
+        self.fields["inspiration_pictures"].widget.attrs.update({"multiple": True, "accept": "image/*"})
+
 
     def clean(self):
         cleaned_data = super().clean()

@@ -72,9 +72,14 @@ class ServiceRequestAdmin(admin.ModelAdmin):
         "hair_length",
         "meche_provided",
         "created_at",
+        "inspiration_pictures_count",
     )
     list_filter = ("marketing_service", "zone")
-    search_fields = ("client_name", "client_email", "details")
+    search_fields = ("client_name", "client_email", "details", "inspiration_picture_urls")
+
+    @admin.display(description="Photos")
+    def inspiration_pictures_count(self, obj):
+        return len(obj.inspiration_picture_urls or [])
 
 
 @admin.register(ClientReview)
