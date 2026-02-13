@@ -10,6 +10,7 @@ from interface.resources import (
 )
 
 from interface.models import (
+    ClientReview,
     MarketingService,
     MarketingServiceImage,
     MarketingServiceZone,
@@ -63,9 +64,24 @@ class MarketingServiceZoneAdmin(ImportExportModelAdmin):
 
 @admin.register(ServiceRequest)
 class ServiceRequestAdmin(admin.ModelAdmin):
-    list_display = ("marketing_service", "zone", "client_name", "client_email", "created_at")
+    list_display = (
+        "marketing_service",
+        "zone",
+        "client_name",
+        "client_email",
+        "hair_length",
+        "meche_provided",
+        "created_at",
+    )
     list_filter = ("marketing_service", "zone")
     search_fields = ("client_name", "client_email", "details")
+
+
+@admin.register(ClientReview)
+class ClientReviewAdmin(admin.ModelAdmin):
+    list_display = ("client_name", "rating", "is_featured", "is_active", "created_at")
+    list_filter = ("is_featured", "is_active", "rating")
+    search_fields = ("client_name", "review_text")
 
 
 @admin.register(MarketingServiceImage)

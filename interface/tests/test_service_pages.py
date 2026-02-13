@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from booking.models import Provider, ProviderMarketingService, ProviderZone, Zone
-from interface.models import MarketingService, MarketingServiceZone, MarketingZone, ServiceRequest
+from interface.models import ClientReview, MarketingService, MarketingServiceZone, MarketingZone, ServiceRequest
 
 
 class ServicePagesTests(TestCase):
@@ -103,6 +103,9 @@ class ServicePagesTests(TestCase):
                 "client_email": "test@example.com",
                 "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
                 "desired_date": "2026-01-10T17:00",
+                "hair_length": "Épaules",
+                "meche_provided": "on",
+                "inspiration_picture_url": "https://example.com/hair.jpg",
                 "details": "Besoin urgent",
             },
         )
@@ -115,10 +118,33 @@ class ServicePagesTests(TestCase):
         self.assertEqual(
             request_record.location_preference, ServiceRequest.LOCATION_PREFERENCE_SALON
         )
-        self.assertEqual(
-            request_record.desired_date.strftime("%Y-%m-%dT%H:%M"),
-            "2026-01-10T17:00",
+        self.assertEqual(request_record.desired_date.strftime("%Y-%m-%d"), "2026-01-10")
+        self.assertEqual(request_record.hair_length, "Épaules")
+        self.assertTrue(request_record.meche_provided)
+        self.assertEqual(request_record.inspiration_picture_url, "https://example.com/hair.jpg")
+
+    def test_home_displays_featured_review(self):
+        ClientReview.objects.create(
+            client_name="Awa",
+            review_text="Super expérience.",
+            rating=5,
+            is_featured=False,
+            is_active=True,
         )
+        ClientReview.objects.create(
+            client_name="Mina",
+            review_text="Service nickel.",
+            rating=5,
+            is_featured=True,
+            is_active=True,
+        )
+
+        response = self.client.get(reverse("interface:home"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Service nickel.", content)
+        self.assertNotIn("Super expérience.", content)
 
     def test_salon_only_badge_is_rendered(self):
         self.provider_a.location_mode = Provider.LOCATION_MODE_SALON_ONLY

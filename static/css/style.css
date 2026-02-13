@@ -946,6 +946,53 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 /* --- PROVIDERS --- */
 .providers-section { padding: 80px 0; }
 
+.hero-review {
+    padding: 6px 0 20px;
+}
+
+.hero-review-card {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    background: var(--bg-paper);
+    border: 1px solid #eee;
+    box-shadow: var(--shadow-paper);
+    padding: 14px 18px;
+}
+
+.hero-review-avatar {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.hero-review-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-review-stars {
+    color: #f5a524;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.hero-review-content p {
+    margin: 0 0 6px;
+    color: var(--ink-secondary);
+}
+
+.providers-scroll-hint {
+    display: none;
+    color: var(--ink-secondary);
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+}
+
 .providers-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -953,22 +1000,47 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .providers-scroll {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
     gap: 24px;
+    padding: 4px 2px 12px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rose-accent) transparent;
+}
+
+.providers-scroll::-webkit-scrollbar { height: 6px; }
+.providers-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--rose-accent);
+    border-radius: 10px;
+}
+
+.providers-scroll .provider-card {
+    flex: 0 0 calc((100% - 48px) / 3);
+    scroll-snap-align: start;
 }
 
 @media (max-width: 1100px) {
-    .providers-scroll { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .providers-scroll .provider-card { flex-basis: calc((100% - 24px) / 2); }
 }
 
 @media (max-width: 840px) {
     .providers-scroll {
-        grid-template-columns: 1fr;
         gap: 20px;
+        padding-right: 16px;
     }
 
-    .provider-card { width: 100%; margin-inline: 0; }
+    .providers-scroll-hint { display: block; }
+
+    .providers-scroll .provider-card {
+        flex-basis: min(320px, 84vw);
+        margin-inline: 0;
+    }
+
+    .hero-review-card {
+        align-items: flex-start;
+    }
 }
 
 @media (max-width: 720px) {

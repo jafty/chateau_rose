@@ -205,6 +205,9 @@ class ServiceRequest(models.Model):
     client_email = models.EmailField()
     client_address = models.TextField(blank=True)
     desired_date = models.DateTimeField()
+    hair_length = models.CharField(max_length=120, blank=True)
+    meche_provided = models.BooleanField(default=False)
+    inspiration_picture_url = models.URLField(blank=True)
     details = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -213,3 +216,36 @@ class ServiceRequest(models.Model):
 
     def __str__(self):
         return f"Demande {self.marketing_service.name} ({self.client_name})"
+
+
+class ClientReview(models.Model):
+    client_name = models.CharField(max_length=120)
+    review_text = models.TextField()
+    photo = models.ImageField(upload_to="marketing/reviews/", blank=True, null=True)
+    photo_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+    )
+    rating = models.PositiveSmallIntegerField(default=5)
+    is_featured = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    @property
+    def resolved_photo(self):
+        if self.photo:
+            return self.photo.url
+        return self.photo_url or None
+
+    def save(self, *args, **kwargs):
+        if self.rating < 1:
+            self.rating = 1
+        if self.rating > 5:
+            self.rating = 5
+        if _should_compress_image(self, "photo"):
+            compress_image_field(self.photo, max_px=600, quality=80)
+        super().save(*args, **kwargs)

@@ -79,6 +79,9 @@ class ServiceRequestForm(forms.ModelForm):
             "client_name",
             "client_email",
             "client_address",
+            "hair_length",
+            "meche_provided",
+            "inspiration_picture_url",
             "details",
         ]
         widgets = {
@@ -88,6 +91,9 @@ class ServiceRequestForm(forms.ModelForm):
             "client_name": "Ton nom",
             "client_email": "Email",
             "client_address": "Adresse complète",
+            "hair_length": "Longueur de cheveux",
+            "meche_provided": "Mèches déjà fournies",
+            "inspiration_picture_url": "Lien vers une photo d'inspiration",
             "details": "Détails ou besoin",
         }
 
