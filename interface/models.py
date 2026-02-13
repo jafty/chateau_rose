@@ -207,7 +207,7 @@ class ServiceRequest(models.Model):
     desired_date = models.DateTimeField()
     hair_length = models.CharField(max_length=120, blank=True)
     meche_provided = models.BooleanField(default=False)
-    inspiration_picture_url = models.URLField(blank=True)
+    inspiration_picture_urls = models.JSONField(default=list, blank=True)
     details = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

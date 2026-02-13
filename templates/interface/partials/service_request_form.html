@@ -16,7 +16,7 @@
         <div class="step-indicator" data-step-indicator="2">2</div>
         <div class="step-indicator" data-step-indicator="3">3</div>
     </div>
-    <form method="post" action="{{ form_action|default:'' }}" class="request-wizard-form provider-form-grid">
+    <form method="post" action="{{ form_action|default:'' }}" class="request-wizard-form provider-form-grid" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="request_service" value="1" />
         <fieldset class="wizard-step active" data-step="1">
@@ -99,8 +99,12 @@
                 </label>
             </div>
             <div class="form-field full-width">
-                <label for="id_inspiration_picture_url">Lien photo (inspiration ou cheveux actuels)</label>
-                {{ request_form.inspiration_picture_url }}
+                <label for="id_inspiration_pictures">Photos (inspiration ou cheveux actuels)</label>
+                <div class="file-upload-wrapper">
+                    {{ request_form.inspiration_pictures }}
+                    <label class="file-upload-label" for="id_inspiration_pictures">Choisir des photos</label>
+                    <div class="file-upload-info" id="file-label-inspiration">Aucune photo sélectionnée</div>
+                </div>
             </div>
             <div class="form-field full-width">
                 <label for="id_details">Dis-nous en plus</label>
@@ -131,6 +135,21 @@
             const prevButtons = container.querySelectorAll('.btn-prev');
             let currentStep = 1;
             const totalSteps = steps.length;
+
+            const inspirationInput = form.querySelector('#id_inspiration_pictures');
+            const inspirationLabel = container.querySelector('#file-label-inspiration');
+
+            const updateInspirationLabel = () => {
+                if (!inspirationInput || !inspirationLabel) return;
+                const { files } = inspirationInput;
+                if (!files || !files.length) {
+                    inspirationLabel.textContent = 'Aucune photo sélectionnée';
+                    return;
+                }
+                inspirationLabel.textContent = files.length === 1
+                    ? files[0].name
+                    : `${files.length} photos sélectionnées`;
+            };
 
             const syncFields = () => {
                 const selected = form.querySelector('input[name="location_preference"]:checked')?.value;
@@ -181,7 +200,6 @@
                     if (validateCurrentStep() && currentStep < totalSteps) {
                         currentStep += 1;
                         updateWizardUI();
-                        window.scrollTo({ top: container.offsetTop - 80, behavior: 'smooth' });
                     }
                 });
             });
@@ -191,10 +209,14 @@
                     if (currentStep > 1) {
                         currentStep -= 1;
                         updateWizardUI();
-                        window.scrollTo({ top: container.offsetTop - 80, behavior: 'smooth' });
                     }
                 });
             });
+
+            if (inspirationInput) {
+                inspirationInput.addEventListener('change', updateInspirationLabel);
+                updateInspirationLabel();
+            }
 
             if (preferenceInputs.length) {
                 preferenceInputs.forEach((input) => input.addEventListener('change', syncFields));
