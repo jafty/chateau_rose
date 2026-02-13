@@ -17,6 +17,7 @@ from django.urls import reverse
 
 from booking.models import Booking, Provider, Service, ServiceCategory, Zone
 from chateaurose.domain.exceptions import DomainError
+from chateaurose.domain.services.homepage_reviews import HomepageReview, select_homepage_review
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
 from chateaurose.domain.use_cases import request_haircut, update_proposal
@@ -29,7 +30,7 @@ from chateaurose.infrastructure.provider_catalog import (
     SALON_LOCATION_LABEL,
 )
 from interface.forms import ProviderBookingRequestForm, ServiceRequestForm
-from interface.models import MarketingService, MarketingServiceZone, MarketingZone
+from interface.models import ClientReview, MarketingService, MarketingServiceZone, MarketingZone
 from interface.services import booking_requests
 from chateaurose.seo import build_base_url
 
@@ -67,6 +68,7 @@ def home(request):
             if service not in featured_services and len(featured_services) < 4:
                 featured_services.append(service)
     request_form, request_success = _build_service_request_form(request, service_meta=None, zone=None)
+    homepage_review = _get_homepage_review()
     return render(
         request,
         "interface/home.html",
@@ -77,6 +79,7 @@ def home(request):
             "featured_services": featured_services,
             "request_form": request_form,
             "request_success": request_success,
+            "homepage_review": homepage_review,
         },
     )
 
@@ -482,10 +485,28 @@ def _notify_service_request(record) -> None:
         f"Lieu préféré : {location_preference}",
         f"Zone : {zone_name}",
         f"Adresse : {record.client_address or 'Non communiquée'}",
+        f"Longueur cheveux : {record.hair_length or 'Non précisée'}",
+        f"Mèches déjà fournies : {'Oui' if record.meche_provided else 'Non'}",
+        f"Photo/lien : {record.inspiration_picture_url or 'Non communiqué'}",
         "Détails :",
         record.details or "Aucun détail supplémentaire.",
     ]
     notifier.notify("japhet.situmonana@gmail.com", subject, "\n".join(body_lines))
+
+
+def _get_homepage_review() -> ClientReview | None:
+    reviews = list(
+        ClientReview.objects.filter(is_active=True).only("id", "is_featured", "created_at")
+    )
+    selected = select_homepage_review(
+        [
+            HomepageReview(id=review.id, is_featured=review.is_featured, created_at=review.created_at)
+            for review in reviews
+        ]
+    )
+    if not selected:
+        return None
+    return ClientReview.objects.filter(id=selected.id).first()
 
 
 def _build_service_request_form(request, service_meta: MarketingService | None, zone):

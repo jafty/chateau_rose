@@ -45,6 +45,31 @@
     </div>
 </section>
 
+{% if homepage_review %}
+<section class="hero-review" aria-label="Avis client">
+    <div class="container">
+        <article class="hero-review-card">
+            <div class="hero-review-avatar">
+                {% if homepage_review.resolved_photo %}
+                    <img src="{{ homepage_review.resolved_photo }}" alt="Avis client {{ homepage_review.client_name }}" loading="lazy" decoding="async">
+                {% else %}
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Avis client" loading="lazy" decoding="async">
+                {% endif %}
+            </div>
+            <div class="hero-review-content">
+                <div class="hero-review-stars" aria-hidden="true">
+                    {% for _ in "12345"|make_list %}
+                        {% if forloop.counter <= homepage_review.rating %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                </div>
+                <p>“{{ homepage_review.review_text }}”</p>
+                <strong>{{ homepage_review.client_name }}</strong>
+            </div>
+        </article>
+    </div>
+</section>
+{% endif %}
+
 <section class="steps-section" id="about">
     <div class="container">
         <h2 class="section-title">Dépose ta demande en quelques minutes</h2>
@@ -116,7 +141,8 @@
 <section class="providers-section" id="providers">
     <div class="container">
         <h2 class="section-title">Nos As de la coiffure afro à Toulouse</h2>
-        <div class="providers-scroll">
+        <p class="providers-scroll-hint">Fais défiler pour découvrir plus de profils →</p>
+        <div class="providers-scroll" aria-label="Liste de prestataires, défilable horizontalement">
             {% for provider in providers %}
                 <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                     <div class="provider-img">

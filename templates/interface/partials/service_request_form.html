@@ -88,6 +88,21 @@
                 Derniers détails
             </h4>
             <div class="form-field full-width">
+                <label for="id_hair_length">Longueur de cheveux</label>
+                {{ request_form.hair_length }}
+                <small class="field-hint">Exemple : court, épaules, milieu du dos, très longs.</small>
+            </div>
+            <div class="form-field checkbox-field full-width">
+                <label for="id_meche_provided" style="background: white; padding: 10px; border: 1px dashed #ccc; width: 100%;">
+                    {{ request_form.meche_provided }}
+                    <span>J'ai déjà mes mèches / ajouts.</span>
+                </label>
+            </div>
+            <div class="form-field full-width">
+                <label for="id_inspiration_picture_url">Lien photo (inspiration ou cheveux actuels)</label>
+                {{ request_form.inspiration_picture_url }}
+            </div>
+            <div class="form-field full-width">
                 <label for="id_details">Dis-nous en plus</label>
                 {{ request_form.details }}
             </div>
