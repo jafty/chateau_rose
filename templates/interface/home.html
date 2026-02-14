@@ -262,11 +262,18 @@ document.addEventListener('DOMContentLoaded', () => {
             {% for provider in providers %}
                 <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                     <div class="provider-img">
-                        {% if provider.resolved_profile_image %}
-                            <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}" width="300" height="320" loading="lazy" decoding="async">
+                        {% if provider.resolved_cover_image %}
+                            <img src="{{ provider.resolved_cover_image }}" alt="Réalisations de {{ provider.name }}" width="300" height="320" loading="lazy" decoding="async">
                         {% else %}
                             <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro" width="300" height="320" loading="lazy" decoding="async">
                         {% endif %}
+                        <span class="provider-avatar-badge" aria-hidden="true">
+                            {% if provider.resolved_profile_image %}
+                                <img src="{{ provider.resolved_profile_image }}" alt="" loading="lazy" decoding="async">
+                            {% else %}
+                                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="" loading="lazy" decoding="async">
+                            {% endif %}
+                        </span>
                     </div>
                     <div class="provider-body">
                         <h3 class="provider-name">{{ provider.name }}</h3>

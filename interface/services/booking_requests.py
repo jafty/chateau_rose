@@ -31,7 +31,7 @@ def build_pricing_data(services):
             "meche_bonus": service.meche_bonus_cents,
             "at_home_bonus": service.at_home_bonus_cents,
             "starting_from": starting_price,
-            "deposit_cents": service.provider.deposit_cents,
+            "deposit_percentage": service.provider.deposit_percentage,
         }
     return pricing_data, starting_prices
 
