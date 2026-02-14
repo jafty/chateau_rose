@@ -75,8 +75,14 @@
                                         data-gallery-index="{{ forloop.counter0 }}"
                                         data-gallery-src="{{ photo.resolved_url }}"
                                         data-gallery-caption="{{ photo.caption|default:provider.name }}"
+                                        data-gallery-kind="{% if photo.is_video %}video{% else %}image{% endif %}"
                                     >
-                                        <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="lazy" decoding="async">
+                                        {% if photo.is_video %}
+                                            <video src="{{ photo.resolved_url }}" muted playsinline preload="metadata" aria-label="{{ photo.caption|default:provider.name }}"></video>
+                                            <span class="gallery-thumb__play" aria-hidden="true">▶</span>
+                                        {% else %}
+                                            <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="lazy" decoding="async">
+                                        {% endif %}
                                         <span class="gallery-thumb__overlay">Zoomer</span>
                                     </button>
                                 {% endif %}
@@ -105,8 +111,7 @@
                         <button type="button" class="gallery-modal__close" data-gallery-close aria-label="Fermer la galerie">✕</button>
                         <div class="gallery-modal__main">
                             <button type="button" class="gallery-modal__nav" data-gallery-prev aria-label="Photo précédente">‹</button>
-                            <figure class="gallery-modal__figure">
-                                <img data-gallery-view src="" alt="">
+                            <figure class="gallery-modal__figure" data-gallery-figure>
                                 <figcaption class="gallery-modal__caption" data-gallery-caption></figcaption>
                             </figure>
                             <button type="button" class="gallery-modal__nav" data-gallery-next aria-label="Photo suivante">›</button>
@@ -1031,11 +1036,12 @@
             trigger: item,
             src: item.dataset.gallerySrc,
             caption: item.dataset.galleryCaption,
-            alt: item.querySelector('img')?.alt || 'Réalisation',
+            kind: item.dataset.galleryKind || 'image',
+            alt: item.querySelector('img')?.alt || item.querySelector('video')?.getAttribute('aria-label') || 'Réalisation',
         }));
         const galleryModal = document.querySelector('[data-gallery-modal]');
         if (galleryItems.length && galleryModal) {
-            const galleryView = galleryModal.querySelector('[data-gallery-view]');
+            const galleryFigure = galleryModal.querySelector('[data-gallery-figure]');
             const galleryCaption = galleryModal.querySelector('[data-gallery-caption]');
             const galleryThumbs = galleryModal.querySelector('[data-gallery-thumbs]');
             const galleryPrev = galleryModal.querySelector('[data-gallery-prev]');
@@ -1044,11 +1050,29 @@
             let galleryIndex = 0;
             let galleryKeyHandler = null;
 
+            const createViewer = (item) => {
+                const media = document.createElement(item.kind === 'video' ? 'video' : 'img');
+                media.setAttribute('data-gallery-view', '');
+                media.src = item.src;
+                if (item.kind === 'video') {
+                    media.controls = true;
+                    media.playsInline = true;
+                    media.preload = 'metadata';
+                } else {
+                    media.alt = item.alt;
+                }
+                return media;
+            };
+
             const renderGallery = (index) => {
                 const item = galleryItems[index];
-                if (!item || !galleryView) return;
-                galleryView.src = item.src;
-                galleryView.alt = item.alt;
+                if (!item || !galleryFigure) return;
+                const previousMedia = galleryFigure.querySelector('[data-gallery-view]');
+                if (previousMedia && previousMedia.tagName === 'VIDEO') {
+                    previousMedia.pause();
+                }
+                previousMedia?.remove();
+                galleryFigure.prepend(createViewer(item));
                 if (galleryCaption) {
                     galleryCaption.textContent = item.caption || 'Réalisation';
                 }
@@ -1079,6 +1103,10 @@
             };
 
             const closeGallery = () => {
+                const currentMedia = galleryFigure?.querySelector('[data-gallery-view]');
+                if (currentMedia && currentMedia.tagName === 'VIDEO') {
+                    currentMedia.pause();
+                }
                 galleryModal.hidden = true;
                 galleryModal.classList.remove('is-open');
                 document.body.classList.remove('has-gallery-modal');
@@ -1104,10 +1132,16 @@
                     const thumbButton = document.createElement('button');
                     thumbButton.type = 'button';
                     thumbButton.setAttribute('aria-label', item.caption || `Réalisation ${index + 1}`);
-                    const thumbImage = document.createElement('img');
-                    thumbImage.src = item.src;
-                    thumbImage.alt = item.alt;
-                    thumbButton.appendChild(thumbImage);
+                    const thumbMedia = document.createElement(item.kind === 'video' ? 'video' : 'img');
+                    thumbMedia.src = item.src;
+                    if (item.kind === 'video') {
+                        thumbMedia.muted = true;
+                        thumbMedia.playsInline = true;
+                        thumbMedia.preload = 'metadata';
+                    } else {
+                        thumbMedia.alt = item.alt;
+                    }
+                    thumbButton.appendChild(thumbMedia);
                     thumbButton.addEventListener('click', () => renderGallery(index));
                     galleryThumbs.appendChild(thumbButton);
                 });

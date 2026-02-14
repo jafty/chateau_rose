@@ -120,7 +120,7 @@ class ProviderAdmin(ImportExportModelAdmin):
 class ProviderPhotoInline(admin.TabularInline):
     model = ProviderPhoto
     extra = 1
-    fields = ("image", "caption", "order")
+    fields = ("media_kind", "image", "image_url", "video", "video_url", "caption", "order")
     ordering = ("order",)
 
 
@@ -129,7 +129,7 @@ ProviderAdmin.inlines.append(ProviderPhotoInline)
 
 @admin.register(ProviderPhoto)
 class ProviderPhotoAdmin(ImportExportModelAdmin):
-    list_display = ("provider", "caption", "order")
+    list_display = ("provider", "media_kind", "caption", "order")
     list_filter = ("provider",)
     search_fields = ("caption",)
     resource_class = ProviderPhotoResource

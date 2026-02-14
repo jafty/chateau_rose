@@ -84,9 +84,10 @@ class ServiceRequestAdmin(admin.ModelAdmin):
 
 @admin.register(ClientReview)
 class ClientReviewAdmin(admin.ModelAdmin):
-    list_display = ("client_name", "rating", "is_featured", "is_active", "created_at")
+    list_display = ("client_name", "media_kind", "rating", "is_featured", "is_active", "created_at")
     list_filter = ("is_featured", "is_active", "rating")
     search_fields = ("client_name", "review_text")
+    fields = ("client_name", "review_text", "media_kind", "photo", "photo_url", "video", "video_url", "rating", "is_featured", "is_active")
 
 
 @admin.register(MarketingServiceImage)

@@ -178,6 +178,13 @@ class ServiceCategory(models.Model):
 
 
 class ProviderPhoto(models.Model):
+    MEDIA_IMAGE = "image"
+    MEDIA_VIDEO = "video"
+    MEDIA_KIND_CHOICES = (
+        (MEDIA_IMAGE, "Image"),
+        (MEDIA_VIDEO, "Vidéo"),
+    )
+
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="photos")
     image = models.ImageField(upload_to="providers/gallery/", blank=True)
     image_url = models.CharField(
@@ -188,6 +195,21 @@ class ProviderPhoto(models.Model):
             "Upload an image or provide an absolute URL, /root-relative path, "
             "or relative static asset path."
         ),
+    )
+    video = models.FileField(upload_to="providers/gallery/videos/", blank=True)
+    video_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text=(
+            "Upload a video or provide an absolute URL, /root-relative path, "
+            "or relative static asset path."
+        ),
+    )
+    media_kind = models.CharField(
+        max_length=16,
+        choices=MEDIA_KIND_CHOICES,
+        default=MEDIA_IMAGE,
     )
     caption = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -201,9 +223,17 @@ class ProviderPhoto(models.Model):
 
     @property
     def resolved_url(self):
+        if self.media_kind == self.MEDIA_VIDEO:
+            if self.video:
+                return self.video.url
+            return self.video_url or None
         if self.image:
             return self.image.url
         return self.image_url or None
+
+    @property
+    def is_video(self):
+        return self.media_kind == self.MEDIA_VIDEO
 
     def save(self, *args, **kwargs):
         if _should_compress_image(self, "image"):

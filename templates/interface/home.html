@@ -196,7 +196,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     {% endif %}
                 >
                     {% if review.resolved_photo %}
-                        <img src="{{ review.resolved_photo }}" alt="Story de {{ review.client_name }}" loading="lazy" decoding="async">
+                        {% if review.is_video %}
+                            <video src="{{ review.resolved_photo }}" muted playsinline preload="metadata" aria-label="Story vidéo de {{ review.client_name }}"></video>
+                            <span class="story-media-badge" aria-hidden="true">▶</span>
+                        {% else %}
+                            <img src="{{ review.resolved_photo }}" alt="Story de {{ review.client_name }}" loading="lazy" decoding="async">
+                        {% endif %}
                     {% else %}
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Story cliente" loading="lazy" decoding="async">
                     {% endif %}

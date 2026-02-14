@@ -148,6 +148,25 @@ class ServicePagesTests(TestCase):
         content = response.content.decode()
         self.assertIn("Service nickel.", content)
 
+
+    def test_home_renders_video_review_media(self):
+        ClientReview.objects.create(
+            client_name="Awa",
+            review_text="Super expérience.",
+            media_kind=ClientReview.MEDIA_VIDEO,
+            video_url="https://cdn.example.com/reviews/story.mp4",
+            rating=5,
+            is_featured=True,
+            is_active=True,
+        )
+
+        response = self.client.get(reverse("interface:home"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("<video", content)
+        self.assertIn("story-media-badge", content)
+
     def test_salon_only_badge_is_rendered(self):
         self.provider_a.location_mode = Provider.LOCATION_MODE_SALON_ONLY
         self.provider_a.save()
