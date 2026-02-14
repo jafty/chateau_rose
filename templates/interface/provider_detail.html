@@ -576,7 +576,10 @@
             syncLocationPreference();
             if (locationPreferenceRadios.length) {
                 locationPreferenceRadios.forEach((radio) =>
-                    radio.addEventListener('change', syncLocationPreference)
+                    radio.addEventListener('change', () => {
+                        syncLocationPreference();
+                        refreshEstimate();
+                    })
                 );
             }
         }
@@ -797,7 +800,9 @@
             const selectedAdjustment = generalAdjustmentSelect?.value;
             const generalAdj = selectedAdjustment && adjustments[selectedAdjustment] !== undefined ? adjustments[selectedAdjustment] : 0;
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
-            const totalCents = base + lengthAdj + generalAdj + mecheAdj;
+            const selectedLocationPreference = document.querySelector('input[name="location_preference"]:checked')?.value || locationPreferenceInput?.value;
+            const atHomeAdj = selectedLocationPreference === "domicile" ? pricing.at_home_bonus || 0 : 0;
+            const totalCents = base + lengthAdj + generalAdj + mecheAdj + atHomeAdj;
             const totalStr = formatPrice(totalCents);
             const depositCents = pricing.deposit_cents ?? 0;
             const depositStr = formatPrice(depositCents);
@@ -815,7 +820,8 @@
                     ? '+ mèches fournies'
                     : 'sans mèches fournies'
                 : 'mèches non fournies';
-            finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}). Total à régler le jour J.`;
+            const locationText = atHomeAdj > 0 ? `à domicile (+${formatPrice(atHomeAdj)})` : "en salon";
+            finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). Total à régler le jour J.`;
             if (generalAdjustmentsDisplay) {
                 const adjustmentsText = selectedAdjustment
                     ? formatAdjustment(selectedAdjustment, generalAdj)
@@ -875,6 +881,7 @@
             const hairLength = hairLengthSelect?.value || 'standard';
             const generalAdjustment = generalAdjustmentSelect?.value || '';
             const meche = mecheCheckbox ? mecheCheckbox.checked : false;
+            const locationPreference = document.querySelector('input[name="location_preference"]:checked')?.value || locationPreferenceInput?.value;
             const providerId = form?.querySelector('input[name="provider_id"]')?.value;
 
             if (!serviceId || !providerId) {
@@ -893,6 +900,7 @@
                     hair_length: hairLength,
                     general_adjustment: generalAdjustment,
                     meche,
+                    location_preference: locationPreference,
                 }),
             });
 

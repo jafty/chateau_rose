@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import ValidationError
+from chateaurose.domain.services.pricing import estimate_service_price_cents
 
 SUBMITTED = "SUBMITTED"
 SALON_LOCATION_LABEL = "Salon"
@@ -76,34 +77,13 @@ def execute(
     if not provider_catalog.provider_covers_zone(provider_id, coverage_location):
         raise ValidationError("Provider does not cover this zone")
 
-    base_price = service["base_price_cents"]
-    length_adjustments = service.get("hair_length_adjustments") or {"standard": 0}
-    if not hair_length:
-        if len(length_adjustments) == 1:
-            hair_length = next(iter(length_adjustments))
-        else:
-            raise ValidationError("Missing required field: hair_length")
-    if hair_length not in length_adjustments:
-        raise ValidationError("Hair length is not supported for this service")
-    length_adj = length_adjustments[hair_length]
-
-    raw_general_adjustments = service.get("general_adjustments") or {}
-    if raw_general_adjustments:
-        general_adjustments = raw_general_adjustments
-        default_general_adjustment = None
-    else:
-        general_adjustments = {"standard": 0}
-        default_general_adjustment = "standard"
-    general_adj_value = 0
-    if general_adjustment:
-        if general_adjustment not in general_adjustments:
-            raise ValidationError("General adjustment is not supported for this service")
-        general_adj_value = general_adjustments[general_adjustment]
-    elif default_general_adjustment:
-        general_adjustment = default_general_adjustment
-        general_adj_value = general_adjustments[general_adjustment]
-    meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
-    estimated_price = base_price + length_adj + general_adj_value + meche_bonus
+    estimated_price, hair_length, general_adjustment = estimate_service_price_cents(
+        service=service,
+        hair_length=hair_length,
+        general_adjustment=general_adjustment,
+        meche=meche,
+        location_preference=normalized_location_preference,
+    )
     deposit_cents = service.get("deposit_cents")
     if deposit_cents is None:
         raise ValidationError("Missing required field: deposit_cents")

@@ -25,6 +25,7 @@ class DjangoProviderCatalog:
             ),
             "general_adjustments": service.general_adjustments or {},
             "meche_bonus_cents": service.meche_bonus_cents,
+            "at_home_bonus_cents": service.at_home_bonus_cents,
             "deposit_cents": service.provider.deposit_cents,
         }
 

@@ -148,6 +148,10 @@ class ServiceAdminForm(forms.ModelForm):
         required=False,
         help_text="Supplément en centimes lorsque l'option mèches fournies est cochée.",
     )
+    at_home_bonus_cents = forms.IntegerField(
+        required=False,
+        help_text='Supplément en centimes appliqué quand la cliente choisit "à domicile".',
+    )
 
     class Meta:
         model = Service
@@ -160,6 +164,7 @@ class ServiceAdminForm(forms.ModelForm):
             "hair_length_adjustments",
             "general_adjustments",
             "meche_bonus_cents",
+            "at_home_bonus_cents",
         )
 
     def __init__(self, *args, **kwargs):

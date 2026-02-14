@@ -129,6 +129,61 @@ def test_request_haircut_submitted_with_auth_and_notification():
     ]
 
 
+
+
+def test_request_haircut_adds_domicile_bonus_to_estimated_price():
+    now = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    clock = FixedClock(now)
+
+    provider_id = "provider_1"
+    service_id = "service_tresses"
+    zone = "Saint-Cyprien"
+
+    services_by_provider = {
+        provider_id: {
+            service_id: {
+                "id": service_id,
+                "name": "Tresses africaines",
+                "base_price_cents": 5000,
+                "hair_length_adjustments": {"long": 1000},
+                "general_adjustments": {},
+                "meche_bonus_cents": 0,
+                "at_home_bonus_cents": 1200,
+                "deposit_cents": 2000,
+            }
+        }
+    }
+    zones_by_provider = {provider_id: {zone}}
+
+    provider_catalog = InMemoryProviderCatalog(
+        services_by_provider=services_by_provider,
+        zones_by_provider=zones_by_provider,
+    )
+
+    request = request_haircut.execute(
+        provider_id=provider_id,
+        service_id=service_id,
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location=zone,
+        location_preference="domicile",
+        client_address="5 place du Capitole, 31000 Toulouse",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=["s3://bucket/inspo1.jpg"],
+        free_text="",
+        booking_repository=InMemoryBookingRepository(),
+        provider_catalog=provider_catalog,
+        payment_gateway=InMemoryPaymentGateway(),
+        notifier=InMemoryNotifier(),
+        reminder_gateway=InMemoryReminderGateway(),
+        clock=clock,
+    )
+
+    assert request.estimated_price_cents == 7200
+
+
 def test_request_haircut_generates_readable_id():
     now = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
     clock = FixedClock(now)
