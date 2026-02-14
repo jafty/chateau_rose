@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="container">
         <div class="story-header">
             <h2 class="story-title">Les clientes partagent leurs résultats en story</h2>
-            <p class="section-subtitle">Survole une story pour lire l'avis associé.</p>
+            <p class="section-subtitle">Survole (ou touche sur mobile) une story pour lire l'avis associé.</p>
         </div>
         <div class="story-scroll">
             {% for review in homepage_reviews %}
@@ -139,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     {% else %}
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Story cliente" loading="lazy" decoding="async">
                     {% endif %}
-                    <span class="story-pill">Story Instagram</span>
                     <div class="story-review-popover">
                         <div class="hero-review-stars" aria-hidden="true">
                             {% for _ in "12345"|make_list %}
