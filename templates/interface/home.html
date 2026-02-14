@@ -7,9 +7,64 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const storyCards = document.querySelectorAll('[data-story-card]');
+    const storyZoomModal = document.querySelector('[data-story-zoom-modal]');
+    const storyZoomImage = storyZoomModal?.querySelector('[data-story-zoom-image]');
+    const storyZoomCaption = storyZoomModal?.querySelector('[data-story-zoom-caption]');
+    const modalCloseButtons = storyZoomModal?.querySelectorAll('[data-story-zoom-close]') || [];
+
+    const closeStoryZoom = () => {
+        if (!storyZoomModal) {
+            return;
+        }
+        storyZoomModal.classList.remove('is-open');
+        storyZoomModal.setAttribute('aria-hidden', 'true');
+    };
+
+    const openStoryZoom = (card) => {
+        if (!storyZoomModal || !storyZoomImage) {
+            return;
+        }
+
+        const imageSrc = card.dataset.storyImageSrc;
+        if (!imageSrc) {
+            return;
+        }
+
+        storyZoomImage.src = imageSrc;
+        storyZoomImage.alt = card.dataset.storyImageAlt || 'Photo du résultat cliente';
+        if (storyZoomCaption) {
+            storyZoomCaption.textContent = card.dataset.storyClientName || '';
+        }
+        storyZoomModal.classList.add('is-open');
+        storyZoomModal.setAttribute('aria-hidden', 'false');
+    };
+
     storyCards.forEach((card) => {
         card.addEventListener('focusin', () => card.classList.add('is-hovered'));
         card.addEventListener('focusout', () => card.classList.remove('is-hovered'));
+        card.addEventListener('click', () => openStoryZoom(card));
+        card.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openStoryZoom(card);
+            }
+        });
+    });
+
+    modalCloseButtons.forEach((button) => {
+        button.addEventListener('click', closeStoryZoom);
+    });
+
+    storyZoomModal?.addEventListener('click', (event) => {
+        if (event.target === storyZoomModal) {
+            closeStoryZoom();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && storyZoomModal?.classList.contains('is-open')) {
+            closeStoryZoom();
+        }
     });
 });
 </script>
@@ -133,7 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="story-scroll">
             {% for review in homepage_reviews %}
-                <article class="story-card" data-story-card tabindex="0">
+                <article class="story-card" data-story-card tabindex="0" role="button" aria-label="Zoomer la photo de {{ review.client_name }}" data-story-client-name="{{ review.client_name }}" data-story-image-alt="Story de {{ review.client_name }}"
+                    {% if review.resolved_photo %}
+                        data-story-image-src="{{ review.resolved_photo }}"
+                    {% else %}
+                        data-story-image-src="{% static 'demo_pictures/provider-placeholder.svg' %}"
+                    {% endif %}
+                >
                     {% if review.resolved_photo %}
                         <img src="{{ review.resolved_photo }}" alt="Story de {{ review.client_name }}" loading="lazy" decoding="async">
                     {% else %}
@@ -153,6 +214,14 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
 </section>
+
+<div class="story-zoom-modal" data-story-zoom-modal aria-hidden="true" role="dialog" aria-label="Zoom de la photo cliente">
+    <button type="button" class="story-zoom-close" data-story-zoom-close aria-label="Fermer le zoom">×</button>
+    <figure class="story-zoom-figure">
+        <img src="" alt="Photo du résultat cliente" data-story-zoom-image>
+        <figcaption data-story-zoom-caption></figcaption>
+    </figure>
+</div>
 
 <section class="reassurance-strip" aria-label="Éléments de réassurance">
     <div class="container reassurance-grid">
