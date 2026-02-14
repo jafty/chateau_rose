@@ -278,7 +278,6 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 /* --- HERO / HUB --- */
 .hero {
     padding: 80px 0 100px;
-    background: radial-gradient(circle at top right, #FFF5F7 0%, transparent 45%);
 }
 
 .hero .hero-grid {
