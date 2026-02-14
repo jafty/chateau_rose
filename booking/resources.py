@@ -40,6 +40,7 @@ class ProviderResource(resources.ModelResource):
             "contact_phone",
             "contact_email",
             "deposit_cents",
+            "deposit_percentage",
             "salon_zone",
             "salon_address",
             "profile_image_url",

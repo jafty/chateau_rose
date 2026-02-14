@@ -51,6 +51,10 @@ class Provider(models.Model):
         default=2000,
         help_text="Montant fixe de l'acompte en centimes.",
     )
+    deposit_percentage = models.PositiveSmallIntegerField(
+        default=30,
+        help_text="Pourcentage de l'estimation utilisé pour calculer l'acompte.",
+    )
     pending_reminder_sent_at = models.DateTimeField(null=True, blank=True)
     salon_zone = models.CharField(
         max_length=255,
@@ -112,6 +116,13 @@ class Provider(models.Model):
         if self.profile_image:
             return self.profile_image.url
         return self.profile_image_url or None
+
+    @property
+    def resolved_cover_image(self):
+        photo = self.photos.filter(media_kind=ProviderPhoto.MEDIA_IMAGE).first()
+        if photo and photo.resolved_url:
+            return photo.resolved_url
+        return self.resolved_profile_image
 
     @property
     def location_mode_label(self):

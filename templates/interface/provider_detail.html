@@ -384,7 +384,7 @@
                                 {% if stripe_public_key %}
                                     <div class="form-field full-width">
                                         <label>Saisir la carte pour garantir le créneau</label>
-                                        <p class="field-hint" id="deposit-payment-hint">Montant de l'acompte : -- € (empreinte bancaire).</p>
+                                        <p class="field-hint" id="deposit-payment-hint">Acompte estimé : -- € (empreinte bancaire).</p>
                                         <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
                                         <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
                                     </div>
@@ -411,7 +411,7 @@
                             <div class="sticky-price-bar" id="sticky-price-bar">
                                 <span class="total-label">Estimation totale</span>
                                 <span class="total-amount" id="final-price-display">...</span>
-                                <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher l'estimation à régler le jour J.</p>
+                                <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher ton estimation.</p>
                                 <p class="meta-line" id="general-adjustments-display" hidden></p>
                                 <div class="deposit-summary">
                                     <span class="deposit-label">Acompte à confirmer</span>
@@ -776,18 +776,18 @@
             if (!serviceId || !pricingData[serviceId]) {
                 stickyPriceValue.textContent = '-- €';
                 finalPriceDisplay.textContent = '...';
-                finalDetailsDisplay.textContent = "Sélectionne un service pour afficher l'estimation à régler le jour J.";
+                finalDetailsDisplay.textContent = "Sélectionne un service pour afficher ton estimation.";
                 if (depositAmountDisplay) {
                     depositAmountDisplay.textContent = '-- €';
                 }
                 if (depositDetailsDisplay) {
-                    depositDetailsDisplay.textContent = "Sélectionne un service pour afficher l'acompte.";
+                    depositDetailsDisplay.textContent = "Sélectionne un service pour afficher l'acompte estimé.";
                 }
                 if (depositInlineDisplay) {
                     depositInlineDisplay.textContent = '-- €';
                 }
                 if (depositPaymentHint) {
-                    depositPaymentHint.textContent = "Montant de l'acompte : -- € (empreinte bancaire).";
+                    depositPaymentHint.textContent = "Acompte estimé : -- € (empreinte bancaire).";
                 }
                 if (generalAdjustmentsDisplay) {
                     generalAdjustmentsDisplay.textContent = '';
@@ -809,7 +809,8 @@
             const atHomeAdj = selectedLocationPreference === "domicile" ? pricing.at_home_bonus || 0 : 0;
             const totalCents = base + lengthAdj + generalAdj + mecheAdj + atHomeAdj;
             const totalStr = formatPrice(totalCents);
-            const depositCents = pricing.deposit_cents ?? 0;
+            const depositPercentage = pricing.deposit_percentage ?? 0;
+            const depositCents = Math.round(totalCents * depositPercentage / 100);
             const depositStr = formatPrice(depositCents);
             const selectedOption = serviceSelect?.selectedOptions?.[0];
             const serviceName =
@@ -826,7 +827,8 @@
                     : 'sans mèches fournies'
                 : 'mèches non fournies';
             const locationText = atHomeAdj > 0 ? `à domicile (+${formatPrice(atHomeAdj)})` : "en salon";
-            finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). Total à régler le jour J.`;
+            const remainingStr = formatPrice(Math.max(totalCents - depositCents, 0));
+            finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). À payer après acompte : ${remainingStr}.`; 
             if (generalAdjustmentsDisplay) {
                 const adjustmentsText = selectedAdjustment
                     ? formatAdjustment(selectedAdjustment, generalAdj)
@@ -841,11 +843,11 @@
                 depositInlineDisplay.textContent = depositStr;
             }
             if (depositPaymentHint) {
-                depositPaymentHint.textContent = `Montant de l'acompte : ${depositStr} (empreinte bancaire).`;
+                depositPaymentHint.textContent = `Acompte estimé : ${depositStr} (empreinte bancaire).`; 
             }
             if (depositDetailsDisplay) {
                 depositDetailsDisplay.textContent =
-                    "Acompte fixe, prélevé uniquement après confirmation du rendez-vous.";
+                    `Acompte estimé (${depositPercentage} %), capturé seulement après confirmation.`;
             }
         };
 

@@ -84,9 +84,13 @@ def execute(
         meche=meche,
         location_preference=normalized_location_preference,
     )
-    deposit_cents = service.get("deposit_cents")
+    deposit_percentage = service.get("deposit_percentage")
+    if deposit_percentage is not None:
+        deposit_cents = round(estimated_price * deposit_percentage / 100)
+    else:
+        deposit_cents = service.get("deposit_cents")
     if deposit_cents is None:
-        raise ValidationError("Missing required field: deposit_cents")
+        raise ValidationError("Missing required field: deposit configuration")
 
     booking_id = _generate_id()
     if not payment_auth_id:

@@ -699,3 +699,108 @@ def test_request_haircut_defaults_length_and_adjustment_when_single_option():
     assert booking.hair_length == "standard"
     assert booking.general_adjustment == "standard"
     assert booking.estimated_price_cents == 5000
+
+
+def test_request_haircut_computes_deposit_from_percentage():
+    now = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    clock = FixedClock(now)
+
+    provider_id = "provider_1"
+    service_id = "service_tresses"
+    zone = "Saint-Cyprien"
+
+    services_by_provider = {
+        provider_id: {
+            service_id: {
+                "id": service_id,
+                "name": "Tresses africaines",
+                "base_price_cents": 5100,
+                "hair_length_adjustments": {"standard": 0},
+                "general_adjustments": {"standard": 0},
+                "deposit_percentage": 35,
+            }
+        }
+    }
+
+    provider_catalog = InMemoryProviderCatalog(
+        services_by_provider=services_by_provider,
+        zones_by_provider={provider_id: {zone}},
+    )
+    payment_gateway = InMemoryPaymentGateway()
+
+    booking = request_haircut.execute(
+        provider_id=provider_id,
+        service_id=service_id,
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location=zone,
+        location_preference="domicile",
+        client_address="5 place du Capitole, 31000 Toulouse",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="standard",
+        general_adjustment="standard",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        booking_repository=InMemoryBookingRepository(),
+        provider_catalog=provider_catalog,
+        payment_gateway=payment_gateway,
+        notifier=InMemoryNotifier(),
+        reminder_gateway=InMemoryReminderGateway(),
+        clock=clock,
+    )
+
+    assert booking.estimated_price_cents == 5100
+    assert payment_gateway.auth_calls[0]["amount_cents"] == 1785
+
+
+def test_request_haircut_keeps_fixed_deposit_when_percentage_missing():
+    now = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    clock = FixedClock(now)
+
+    provider_id = "provider_1"
+    service_id = "service_tresses"
+    zone = "Saint-Cyprien"
+
+    services_by_provider = {
+        provider_id: {
+            service_id: {
+                "id": service_id,
+                "name": "Tresses africaines",
+                "base_price_cents": 5100,
+                "hair_length_adjustments": {"standard": 0},
+                "general_adjustments": {"standard": 0},
+                "deposit_cents": 2000,
+            }
+        }
+    }
+
+    provider_catalog = InMemoryProviderCatalog(
+        services_by_provider=services_by_provider,
+        zones_by_provider={provider_id: {zone}},
+    )
+    payment_gateway = InMemoryPaymentGateway()
+
+    request_haircut.execute(
+        provider_id=provider_id,
+        service_id=service_id,
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location=zone,
+        location_preference="domicile",
+        client_address="5 place du Capitole, 31000 Toulouse",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="standard",
+        general_adjustment="standard",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        booking_repository=InMemoryBookingRepository(),
+        provider_catalog=provider_catalog,
+        payment_gateway=payment_gateway,
+        notifier=InMemoryNotifier(),
+        reminder_gateway=InMemoryReminderGateway(),
+        clock=clock,
+    )
+
+    assert payment_gateway.auth_calls[0]["amount_cents"] == 2000

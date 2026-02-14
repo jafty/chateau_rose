@@ -255,7 +255,7 @@ def provider_payment_intent(request):
         return JsonResponse({"error": "Service non disponible."}, status=400)
 
     try:
-        estimate_service_price_cents(
+        estimated_price_cents, _, _ = estimate_service_price_cents(
             service=service,
             hair_length=hair_length,
             general_adjustment=general_adjustment,
@@ -269,7 +269,11 @@ def provider_payment_intent(request):
         if "General adjustment" in message:
             return JsonResponse({"error": "Supplément non supporté."}, status=400)
         return JsonResponse({"error": "Informations manquantes."}, status=400)
-    deposit_cents = service.get("deposit_cents")
+    deposit_percentage = service.get("deposit_percentage")
+    if deposit_percentage is not None:
+        deposit_cents = round(estimated_price_cents * deposit_percentage / 100)
+    else:
+        deposit_cents = service.get("deposit_cents")
     if deposit_cents is None:
         return JsonResponse({"error": "Acompte non défini."}, status=400)
 

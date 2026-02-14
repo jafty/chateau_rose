@@ -1264,6 +1264,32 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     border-top-left-radius: inherit;
     border-top-right-radius: inherit;
 }
+
+.provider-img > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.provider-avatar-badge {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: var(--shadow-paper);
+    overflow: hidden;
+    background: #fff;
+}
+
+.provider-avatar-badge img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .provider-rating {
     position: absolute;
     bottom: 20px;
