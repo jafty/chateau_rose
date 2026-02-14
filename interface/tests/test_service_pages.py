@@ -166,6 +166,8 @@ class ServicePagesTests(TestCase):
         content = response.content.decode()
         self.assertIn("<video", content)
         self.assertIn("story-media-badge", content)
+        self.assertIn('data-story-media-kind="video"', content)
+        self.assertIn('data-story-media-src="https://cdn.example.com/reviews/story.mp4"', content)
 
     def test_salon_only_badge_is_rendered(self):
         self.provider_a.location_mode = Provider.LOCATION_MODE_SALON_ONLY

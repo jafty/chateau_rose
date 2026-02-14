@@ -8,30 +8,72 @@
 document.addEventListener('DOMContentLoaded', () => {
     const storyCards = document.querySelectorAll('[data-story-card]');
     const storyZoomModal = document.querySelector('[data-story-zoom-modal]');
-    const storyZoomImage = storyZoomModal?.querySelector('[data-story-zoom-image]');
+    const storyZoomFigure = storyZoomModal?.querySelector('[data-story-zoom-figure]');
+    const storyZoomMediaSlot = storyZoomModal?.querySelector('[data-story-zoom-media-slot]');
     const storyZoomCaption = storyZoomModal?.querySelector('[data-story-zoom-caption]');
     const modalCloseButtons = storyZoomModal?.querySelectorAll('[data-story-zoom-close]') || [];
+
+    const buildStoryZoomMedia = (card) => {
+        if (!storyZoomMediaSlot) {
+            return;
+        }
+
+        const mediaSrc = card.dataset.storyMediaSrc;
+        const mediaKind = card.dataset.storyMediaKind === 'video' ? 'video' : 'image';
+        const mediaAlt = card.dataset.storyImageAlt || 'Photo du résultat cliente';
+
+        if (!mediaSrc) {
+            return;
+        }
+
+        storyZoomMediaSlot.innerHTML = '';
+
+        if (mediaKind === 'video') {
+            const video = document.createElement('video');
+            video.src = mediaSrc;
+            video.controls = true;
+            video.autoplay = true;
+            video.setAttribute('playsinline', '');
+            video.setAttribute('preload', 'metadata');
+            video.setAttribute('aria-label', mediaAlt);
+            storyZoomMediaSlot.appendChild(video);
+            return;
+        }
+
+        const image = document.createElement('img');
+        image.src = mediaSrc;
+        image.alt = mediaAlt;
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        storyZoomMediaSlot.appendChild(image);
+    };
 
     const closeStoryZoom = () => {
         if (!storyZoomModal) {
             return;
+        }
+        storyZoomMediaSlot?.querySelectorAll('video').forEach((video) => {
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+        });
+        if (storyZoomMediaSlot) {
+            storyZoomMediaSlot.innerHTML = '';
         }
         storyZoomModal.classList.remove('is-open');
         storyZoomModal.setAttribute('aria-hidden', 'true');
     };
 
     const openStoryZoom = (card) => {
-        if (!storyZoomModal || !storyZoomImage) {
+        if (!storyZoomModal || !storyZoomFigure) {
             return;
         }
 
-        const imageSrc = card.dataset.storyImageSrc;
-        if (!imageSrc) {
+        if (!card.dataset.storyMediaSrc) {
             return;
         }
 
-        storyZoomImage.src = imageSrc;
-        storyZoomImage.alt = card.dataset.storyImageAlt || 'Photo du résultat cliente';
+        buildStoryZoomMedia(card);
         if (storyZoomCaption) {
             storyZoomCaption.textContent = card.dataset.storyClientName || '';
         }
@@ -190,9 +232,11 @@ document.addEventListener('DOMContentLoaded', () => {
             {% for review in homepage_reviews %}
                 <article class="story-card" data-story-card tabindex="0" role="button" aria-label="Zoomer la photo de {{ review.client_name }}" data-story-client-name="{{ review.client_name }}" data-story-image-alt="Story de {{ review.client_name }}"
                     {% if review.resolved_photo %}
-                        data-story-image-src="{{ review.resolved_photo }}"
+                        data-story-media-src="{{ review.resolved_photo }}"
+                        data-story-media-kind="{% if review.is_video %}video{% else %}image{% endif %}"
                     {% else %}
-                        data-story-image-src="{% static 'demo_pictures/provider-placeholder.svg' %}"
+                        data-story-media-src="{% static 'demo_pictures/provider-placeholder.svg' %}"
+                        data-story-media-kind="image"
                     {% endif %}
                 >
                     {% if review.resolved_photo %}
@@ -222,8 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <div class="story-zoom-modal" data-story-zoom-modal aria-hidden="true" role="dialog" aria-label="Zoom de la photo cliente">
     <button type="button" class="story-zoom-close" data-story-zoom-close aria-label="Fermer le zoom">×</button>
-    <figure class="story-zoom-figure">
-        <img src="" alt="Photo du résultat cliente" data-story-zoom-image>
+    <figure class="story-zoom-figure" data-story-zoom-figure>
+        <div data-story-zoom-media-slot></div>
         <figcaption data-story-zoom-caption></figcaption>
     </figure>
 </div>
