@@ -1295,6 +1295,10 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 .cta-banner .highlight-list { margin-top: 12px; }
 
+.providers-footer-gap {
+    margin-bottom: 72px;
+}
+
 @media (max-width: 960px) {
     .nav-wrapper {
         align-items: center;
