@@ -25,7 +25,7 @@ class DjangoProviderCatalog:
             ),
             "general_adjustments": service.general_adjustments or {},
             "meche_bonus_cents": service.meche_bonus_cents,
-            "deposit_cents": service.provider.deposit_cents,
+            "deposit_percentage": service.provider.deposit_percentage,
         }
 
     def provider_covers_zone(self, provider_id: str, zone_name: str) -> bool:

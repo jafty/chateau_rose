@@ -32,7 +32,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
                 "hair_length_adjustments": {"long": 1500, "medium": 0, "short": -500},
                 "general_adjustments": {"motif": 500},
                 "meche_bonus_cents": 2000,
-                "deposit_cents": 2000,
+                "deposit_percentage": 30,
             }
         }
     }
@@ -80,9 +80,9 @@ def test_request_haircut_submitted_with_auth_and_notification():
     assert request.payment_auth_id == "auth_1"
     assert request.created_at == now
 
-    # Payment auth created for €20 deposit
+     # Payment auth created with 30% of estimated price
     assert payment_gateway.auth_calls == [
-        {"amount_cents": 2000, "currency": "EUR", "reference": request.id, "id": "auth_1"}
+        {"amount_cents": 2700, "currency": "EUR", "reference": request.id, "id": "auth_1"}
     ]
 
     # Provider and client notified immediately
@@ -145,7 +145,7 @@ def test_request_haircut_generates_readable_id():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 1500, "medium": 0, "short": -500},
                 "meche_bonus_cents": 2000,
-                "deposit_cents": 2000,
+                "deposit_percentage": 30,
             }
         }
     }
@@ -251,7 +251,7 @@ def test_request_haircut_estimated_price_defaults_to_base_when_no_adjustments():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 1500, "medium": 0},
                 "meche_bonus_cents": 2000,
-                "deposit_cents": 2000,
+                "deposit_percentage": 30,
             }
         }
     }
@@ -305,7 +305,7 @@ def test_request_haircut_rejects_zone_not_covered():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"medium": 0},
                 "meche_bonus_cents": 0,
-                "deposit_cents": 2000,
+                "deposit_percentage": 30,
             }
         }
     }
@@ -363,7 +363,7 @@ def test_salon_only_provider_allows_salon_location_without_zones():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 1500, "medium": 0, "short": -500},
                 "meche_bonus_cents": 2000,
-                "deposit_cents": 2000,
+                "deposit_percentage": 30,
             }
         }
     }
@@ -419,7 +419,7 @@ def test_request_haircut_requires_salon_zone_for_salon_booking():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 0},
                 "meche_bonus_cents": 0,
-                "deposit_cents": 2000,
+                "deposit_percentage": 30,
             }
         }
     }
@@ -485,7 +485,7 @@ def test_request_haircut_missing_mandatory_fields(missing_field, payload):
                 "id": service_id,
                 "name": "Tresses africaines",
                 "base_price_cents": 5000,
-                "deposit_cents": 2000,
+                "deposit_percentage": 30,
             }
         }
     }
@@ -547,7 +547,7 @@ def test_request_haircut_requires_length_when_multiple_adjustments():
                 "name": "Tresses africaines",
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {"long": 1500, "medium": 0},
-                "deposit_cents": 2000,
+                "deposit_percentage": 30,
             }
         }
     }
@@ -604,7 +604,7 @@ def test_request_haircut_defaults_length_and_adjustment_when_single_option():
                 "base_price_cents": 5000,
                 "hair_length_adjustments": {},
                 "general_adjustments": {},
-                "deposit_cents": 2000,
+                "deposit_percentage": 30,
             }
         }
     }
@@ -644,3 +644,40 @@ def test_request_haircut_defaults_length_and_adjustment_when_single_option():
     assert booking.hair_length == "standard"
     assert booking.general_adjustment == "standard"
     assert booking.estimated_price_cents == 5000
+
+
+def test_calculate_deposit_cents_returns_percentage_of_estimate():
+    assert request_haircut.calculate_deposit_cents(
+        estimated_price_cents=8500,
+        deposit_percentage=30,
+    ) == 2550
+
+
+def test_calculate_deposit_cents_rejects_missing_percentage():
+    with pytest.raises(ValidationError) as exc:
+        request_haircut.calculate_deposit_cents(
+            estimated_price_cents=8500,
+            deposit_percentage=None,
+        )
+
+    assert "deposit_percentage" in str(exc.value)
+
+
+def test_calculate_deposit_cents_rejects_negative_percentage():
+    with pytest.raises(ValidationError) as exc:
+        request_haircut.calculate_deposit_cents(
+            estimated_price_cents=8500,
+            deposit_percentage=-1,
+        )
+
+    assert "between 0 and 100" in str(exc.value)
+
+
+def test_calculate_deposit_cents_rejects_percentage_over_100():
+    with pytest.raises(ValidationError) as exc:
+        request_haircut.calculate_deposit_cents(
+            estimated_price_cents=8500,
+            deposit_percentage=101,
+        )
+
+    assert "between 0 and 100" in str(exc.value)

@@ -406,12 +406,12 @@
                             <div class="sticky-price-bar" id="sticky-price-bar">
                                 <span class="total-label">Estimation totale</span>
                                 <span class="total-amount" id="final-price-display">...</span>
-                                <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher l'estimation à régler le jour J.</p>
+                                <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher l'estimation.</p>
                                 <p class="meta-line" id="general-adjustments-display" hidden></p>
                                 <div class="deposit-summary">
-                                    <span class="deposit-label">Acompte à confirmer</span>
+                                    <span class="deposit-label">Acompte</span>
                                     <span class="deposit-amount" id="deposit-amount-display">-- €</span>
-                                    <p class="meta-line" id="deposit-details-display">Empreinte bancaire, aucun débit immédiat.</p>
+                                    <p class="meta-line" id="deposit-details-display">Prélevé après confirmation du rendez-vous.</p>
                                 </div>
                                 <span class="sr-only" id="sticky-price-value">-- €</span>
                             </div>
@@ -768,7 +768,7 @@
             if (!serviceId || !pricingData[serviceId]) {
                 stickyPriceValue.textContent = '-- €';
                 finalPriceDisplay.textContent = '...';
-                finalDetailsDisplay.textContent = "Sélectionne un service pour afficher l'estimation à régler le jour J.";
+                finalDetailsDisplay.textContent = "Sélectionne un service pour afficher l'estimation.";
                 if (depositAmountDisplay) {
                     depositAmountDisplay.textContent = '-- €';
                 }
@@ -799,7 +799,8 @@
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
             const totalCents = base + lengthAdj + generalAdj + mecheAdj;
             const totalStr = formatPrice(totalCents);
-            const depositCents = pricing.deposit_cents ?? 0;
+            const depositPercentage = pricing.deposit_percentage ?? 0;
+            const depositCents = Math.round(totalCents * depositPercentage / 100);
             const depositStr = formatPrice(depositCents);
             const selectedOption = serviceSelect?.selectedOptions?.[0];
             const serviceName =
@@ -834,7 +835,7 @@
             }
             if (depositDetailsDisplay) {
                 depositDetailsDisplay.textContent =
-                    "Acompte fixe, prélevé uniquement après confirmation du rendez-vous.";
+                    "Déjà inclus dans le total.";
             }
         };
 

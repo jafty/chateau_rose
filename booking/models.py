@@ -2,6 +2,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.files.storage import default_storage
 from django.db import models
 
@@ -47,9 +48,10 @@ class Provider(models.Model):
     )
     contact_phone = models.CharField(max_length=64, blank=True)
     contact_email = models.EmailField(blank=True)
-    deposit_cents = models.IntegerField(
-        default=2000,
-        help_text="Montant fixe de l'acompte en centimes.",
+    deposit_percentage = models.PositiveSmallIntegerField(
+        default=30,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Pourcentage de l'acompte appliqué sur l'estimation (ex: 30 pour 30%).",
     )
     pending_reminder_sent_at = models.DateTimeField(null=True, blank=True)
     salon_zone = models.CharField(

@@ -280,9 +280,13 @@ def provider_payment_intent(request):
         general_adj_value = general_adjustments[general_adjustment]
     meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
     estimated_price = base_price + length_adj + general_adj_value + meche_bonus
-    deposit_cents = service.get("deposit_cents")
-    if deposit_cents is None:
+    deposit_percentage = service.get("deposit_percentage")
+    if deposit_percentage is None:
         return JsonResponse({"error": "Acompte non défini."}, status=400)
+    if deposit_percentage < 0 or deposit_percentage > 100:
+        return JsonResponse({"error": "Pourcentage d'acompte invalide."}, status=400)
+
+    deposit_cents = round(estimated_price * deposit_percentage / 100)
 
     intent = payment_gateway.create_payment_intent(
         amount_cents=deposit_cents,

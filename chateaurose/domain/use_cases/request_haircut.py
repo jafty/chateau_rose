@@ -8,6 +8,14 @@ SUBMITTED = "SUBMITTED"
 SALON_LOCATION_LABEL = "Salon"
 
 
+def calculate_deposit_cents(*, estimated_price_cents: int, deposit_percentage: int) -> int:
+    if deposit_percentage is None:
+        raise ValidationError("Missing required field: deposit_percentage")
+    if deposit_percentage < 0 or deposit_percentage > 100:
+        raise ValidationError("Deposit percentage must be between 0 and 100")
+    return round(estimated_price_cents * deposit_percentage / 100)
+
+
 def _generate_id() -> str:
     readable = uuid.uuid4().hex[:8].upper()
     return f"BK-{readable}"
@@ -104,9 +112,11 @@ def execute(
         general_adj_value = general_adjustments[general_adjustment]
     meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
     estimated_price = base_price + length_adj + general_adj_value + meche_bonus
-    deposit_cents = service.get("deposit_cents")
-    if deposit_cents is None:
-        raise ValidationError("Missing required field: deposit_cents")
+    deposit_percentage = service.get("deposit_percentage")
+    deposit_cents = calculate_deposit_cents(
+        estimated_price_cents=estimated_price,
+        deposit_percentage=deposit_percentage,
+    )
 
     booking_id = _generate_id()
     if not payment_auth_id:
