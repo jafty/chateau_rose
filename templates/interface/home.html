@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const mediaSrc = card.dataset.storyMediaSrc;
         const mediaKind = card.dataset.storyMediaKind === 'video' ? 'video' : 'image';
-        const mediaAlt = card.dataset.storyImageAlt || 'Photo du résultat cliente';
+        const mediaAlt = card.dataset.storyImageAlt || 'Photo du résultat client ou cliente';
 
         if (!mediaSrc) {
             return;
@@ -108,6 +108,21 @@ document.addEventListener('DOMContentLoaded', () => {
             closeStoryZoom();
         }
     });
+
+    const providersScroll = document.querySelector('[data-providers-scroll]');
+    const providersScrollCue = document.querySelector('[data-providers-scroll-cue]');
+
+    const refreshProvidersScrollCue = () => {
+        if (!providersScroll || !providersScrollCue) {
+            return;
+        }
+
+        const canScroll = providersScroll.scrollWidth > providersScroll.clientWidth + 8;
+        providersScrollCue.classList.toggle('is-hidden', !canScroll);
+    };
+
+    refreshProvidersScrollCue();
+    window.addEventListener('resize', refreshProvidersScrollCue);
 });
 </script>
 {% endblock %}
@@ -119,8 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <h1 class="hero-title">Réserve ta coiffure <span>afro</span> à Toulouse sans galère.</h1>
             <p class="hero-text">En deux minutes tu poses ton rendez-vous, tu échanges directement avec le ou la prestataire et tu reçois une réponse rapide et fiable.</p>
             <div class="hero-actions">
-                <a href="{% url 'interface:provider_list' %}" class="btn">Voir les prestataires</a>
-                <a href="#catalogue" class="btn secondary">Choisir ma catégorie</a>
+                <a href="#service-request" class="btn">Prendre rendez-vous</a>
+                <a href="#providers" class="btn secondary">Choisir mon ou ma prestataire</a>
             </div>
             <a href="#happy-clients" class="trust-indicator" aria-label="Voir les avis clients et résultats">
                 <span class="trust-icon" aria-hidden="true">✓</span>
@@ -225,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="story-section" id="happy-clients" aria-label="Stories et avis clients">
     <div class="container">
         <div class="story-header">
-            <h2 class="story-title">Les clientes partagent leurs résultats en story</h2>
+            <h2 class="story-title">Les clients et clientes partagent leurs résultats en story</h2>
             <p class="section-subtitle">Survole (ou touche sur mobile) une story pour lire l'avis associé.</p>
         </div>
         <div class="story-scroll">
@@ -247,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <img src="{{ review.resolved_photo }}" alt="Story de {{ review.client_name }}" loading="lazy" decoding="async">
                         {% endif %}
                     {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Story cliente" loading="lazy" decoding="async">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Story client ou cliente" loading="lazy" decoding="async">
                     {% endif %}
                     <div class="story-review-popover">
                         <div class="hero-review-stars" aria-hidden="true">
@@ -264,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 </section>
 
-<div class="story-zoom-modal" data-story-zoom-modal aria-hidden="true" role="dialog" aria-label="Zoom de la photo cliente">
+<div class="story-zoom-modal" data-story-zoom-modal aria-hidden="true" role="dialog" aria-label="Zoom de la photo client ou cliente">
     <button type="button" class="story-zoom-close" data-story-zoom-close aria-label="Fermer le zoom">×</button>
     <figure class="story-zoom-figure" data-story-zoom-figure>
         <div data-story-zoom-media-slot></div>
@@ -301,8 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="providers-section" id="providers">
     <div class="container">
         <h2 class="section-title">Nos As de la coiffure afro à Toulouse</h2>
-        <p class="providers-scroll-hint">Fais défiler pour découvrir plus de profils →</p>
-        <div class="providers-scroll" aria-label="Liste de prestataires, défilable horizontalement">
+        <p class="providers-scroll-hint" data-providers-scroll-cue>↔︎ Fais glisser pour découvrir tous les profils</p>
+        <div class="providers-scroll" data-providers-scroll aria-label="Liste de prestataires, défilable horizontalement">
             {% for provider in providers %}
                 <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                     <div class="provider-img">
