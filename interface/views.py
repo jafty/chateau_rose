@@ -16,8 +16,9 @@ from django.utils import timezone
 from django.urls import reverse
 
 from booking.models import Booking, Provider, Service, ServiceCategory, Zone
-from chateaurose.domain.exceptions import DomainError
+from chateaurose.domain.exceptions import DomainError, ValidationError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
+from chateaurose.domain.services.pricing import estimate_service_price_cents
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
 from chateaurose.domain.use_cases import request_haircut, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
@@ -243,6 +244,7 @@ def provider_payment_intent(request):
     hair_length = payload.get("hair_length")
     general_adjustment = payload.get("general_adjustment")
     meche = payload.get("meche")
+    location_preference = payload.get("location_preference")
 
     if not all([provider_id, service_id]) or meche is None:
         return JsonResponse({"error": "Informations manquantes."}, status=400)
@@ -252,34 +254,21 @@ def provider_payment_intent(request):
     except KeyError:
         return JsonResponse({"error": "Service non disponible."}, status=400)
 
-    length_adjustments = service.get("hair_length_adjustments") or {"standard": 0}
-    if not hair_length:
-        if len(length_adjustments) == 1:
-            hair_length = next(iter(length_adjustments))
-        else:
-            return JsonResponse({"error": "Informations manquantes."}, status=400)
-    if hair_length not in length_adjustments:
-        return JsonResponse({"error": "Longueur de cheveux non supportée."}, status=400)
-
-    base_price = service["base_price_cents"]
-    length_adj = length_adjustments[hair_length]
-    raw_general_adjustments = service.get("general_adjustments") or {}
-    if raw_general_adjustments:
-        general_adjustments = raw_general_adjustments
-        default_general_adjustment = None
-    else:
-        general_adjustments = {"standard": 0}
-        default_general_adjustment = "standard"
-    general_adj_value = 0
-    if general_adjustment:
-        if general_adjustment not in general_adjustments:
+    try:
+        estimate_service_price_cents(
+            service=service,
+            hair_length=hair_length,
+            general_adjustment=general_adjustment,
+            meche=meche,
+            location_preference=location_preference,
+        )
+    except ValidationError as exc:
+        message = str(exc)
+        if "hair_length" in message:
+            return JsonResponse({"error": "Longueur de cheveux non supportée."}, status=400)
+        if "General adjustment" in message:
             return JsonResponse({"error": "Supplément non supporté."}, status=400)
-        general_adj_value = general_adjustments[general_adjustment]
-    elif default_general_adjustment:
-        general_adjustment = default_general_adjustment
-        general_adj_value = general_adjustments[general_adjustment]
-    meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
-    estimated_price = base_price + length_adj + general_adj_value + meche_bonus
+        return JsonResponse({"error": "Informations manquantes."}, status=400)
     deposit_cents = service.get("deposit_cents")
     if deposit_cents is None:
         return JsonResponse({"error": "Acompte non défini."}, status=400)

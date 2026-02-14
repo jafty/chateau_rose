@@ -85,6 +85,7 @@ class ServiceResource(resources.ModelResource):
             "hair_length_adjustments",
             "general_adjustments",
             "meche_bonus_cents",
+            "at_home_bonus_cents",
         )
         export_order = fields
 

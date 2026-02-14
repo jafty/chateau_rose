@@ -146,6 +146,7 @@ class Service(models.Model):
     hair_length_adjustments = models.JSONField(default=dict, blank=True)
     general_adjustments = models.JSONField(default=dict, blank=True)
     meche_bonus_cents = models.IntegerField(default=0)
+    at_home_bonus_cents = models.IntegerField(default=0)
 
     class Meta:
         unique_together = (("provider", "name"), ("provider", "slug"))
