@@ -219,6 +219,13 @@ class ServiceRequest(models.Model):
 
 
 class ClientReview(models.Model):
+    MEDIA_IMAGE = "image"
+    MEDIA_VIDEO = "video"
+    MEDIA_KIND_CHOICES = (
+        (MEDIA_IMAGE, "Image"),
+        (MEDIA_VIDEO, "Vidéo"),
+    )
+
     client_name = models.CharField(max_length=120)
     review_text = models.TextField()
     photo = models.ImageField(upload_to="marketing/reviews/", blank=True, null=True)
@@ -226,6 +233,17 @@ class ClientReview(models.Model):
         max_length=500,
         blank=True,
         validators=[validate_absolute_or_root_relative_url],
+    )
+    video = models.FileField(upload_to="marketing/reviews/videos/", blank=True, null=True)
+    video_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+    )
+    media_kind = models.CharField(
+        max_length=16,
+        choices=MEDIA_KIND_CHOICES,
+        default=MEDIA_IMAGE,
     )
     rating = models.PositiveSmallIntegerField(default=5)
     is_featured = models.BooleanField(default=False)
@@ -237,9 +255,17 @@ class ClientReview(models.Model):
 
     @property
     def resolved_photo(self):
+        if self.media_kind == self.MEDIA_VIDEO:
+            if self.video:
+                return self.video.url
+            return self.video_url or None
         if self.photo:
             return self.photo.url
         return self.photo_url or None
+
+    @property
+    def is_video(self):
+        return self.media_kind == self.MEDIA_VIDEO
 
     def save(self, *args, **kwargs):
         if self.rating < 1:

@@ -1025,9 +1025,33 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     scroll-snap-align: start;
 }
 
-.story-card img {
+.story-card img,
+.story-card video {
     border-radius: 14px;
 }
+
+.story-card video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.story-media-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    background: rgba(15, 23, 42, 0.75);
+    color: #fff;
+    border-radius: 999px;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    font-size: 0.85rem;
+}
+
 
 
 .story-review-popover {
@@ -2321,7 +2345,8 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     box-shadow: 0 10px 20px rgba(17, 24, 39, 0.08);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.gallery-thumb img {
+.gallery-thumb img,
+.gallery-thumb video {
     width: 100%;
     height: 100%;
     aspect-ratio: 4 / 3;
@@ -2329,6 +2354,21 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     display: block;
     transition: transform 0.3s ease;
 }
+.gallery-thumb__play {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: rgba(15, 23, 42, 0.75);
+    color: #fff;
+    z-index: 2;
+    font-size: 0.85rem;
+}
+
 .gallery-thumb__overlay {
     position: absolute;
     inset: 0;
@@ -2350,6 +2390,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     box-shadow: 0 16px 30px rgba(233, 30, 99, 0.18);
 }
 .gallery-thumb:hover img,
+.gallery-thumb:hover video,
 .gallery-thumb:focus-visible img {
     transform: scale(1.06);
 }
@@ -2422,7 +2463,8 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     gap: 0.6rem;
     text-align: center;
 }
-.gallery-modal__figure img {
+.gallery-modal__figure img,
+.gallery-modal__figure video {
     width: 100%;
     max-height: 60vh;
     object-fit: contain;
@@ -2453,7 +2495,8 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     opacity: 1;
     border-color: var(--rose-accent);
 }
-.gallery-modal__thumbs img {
+.gallery-modal__thumbs img,
+.gallery-modal__thumbs video {
     width: 100%;
     height: 60px;
     object-fit: cover;

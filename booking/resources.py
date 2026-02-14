@@ -101,7 +101,9 @@ class ProviderPhotoResource(resources.ModelResource):
         fields = (
             "id",
             "provider",
+            "media_kind",
             "image_url",
+            "video_url",
             "caption",
             "order",
         )
