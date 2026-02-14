@@ -2,7 +2,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from booking.models import Provider, ProviderMarketingService, ProviderZone, Zone
+from booking.models import Provider, ProviderMarketingService, ProviderPhoto, ProviderZone, Zone
 from interface.models import ClientReview, MarketingService, MarketingServiceZone, MarketingZone, ServiceRequest
 
 
@@ -69,6 +69,24 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("https://static.example.com/tresses.jpg", response.content.decode())
+
+
+    def test_provider_list_card_uses_main_and_identity_images(self):
+        self.provider_a.profile_image_url = "https://cdn.example.com/provider-avatar.jpg"
+        self.provider_a.save()
+        ProviderPhoto.objects.create(
+            provider=self.provider_a,
+            image_url="https://cdn.example.com/provider-work.jpg",
+            order=0,
+        )
+
+        response = self.client.get(reverse("interface:provider_list"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("https://cdn.example.com/provider-work.jpg", content)
+        self.assertIn("https://cdn.example.com/provider-avatar.jpg", content)
+        self.assertIn("provider-identity-badge", content)
 
     def test_unknown_service_or_zone_returns_404(self):
         service_url = reverse("interface:service_page", args=["unknown-service"])

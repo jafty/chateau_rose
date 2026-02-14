@@ -114,6 +114,20 @@ class Provider(models.Model):
         return self.profile_image_url or None
 
     @property
+    def card_main_image(self):
+        cached_photos = self._prefetched_objects_cache.get("photos") if hasattr(
+            self, "_prefetched_objects_cache"
+        ) else None
+        first_photo = cached_photos[0] if cached_photos else self.photos.first()
+        if first_photo and first_photo.resolved_url:
+            return first_photo.resolved_url
+        return self.resolved_profile_image
+
+    @property
+    def card_identity_image(self):
+        return self.resolved_profile_image or self.card_main_image
+
+    @property
     def location_mode_label(self):
         return dict(self.LOCATION_MODE_CHOICES).get(self.location_mode, "")
 

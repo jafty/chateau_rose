@@ -52,10 +52,15 @@
         {% for provider in providers %}
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                 <div class="provider-header">
-                    {% if provider.resolved_profile_image %}
-                        <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}" loading="lazy" decoding="async">
+                    {% if provider.card_main_image %}
+                        <img src="{{ provider.card_main_image }}" alt="Réalisation de {{ provider.name }}" loading="lazy" decoding="async">
                     {% else %}
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Profil prestataire coiffure afro" loading="lazy" decoding="async">
+                    {% endif %}
+                    {% if provider.card_identity_image %}
+                        <span class="provider-identity-badge">
+                            <img src="{{ provider.card_identity_image }}" alt="Portrait ou logo de {{ provider.name }}" loading="lazy" decoding="async">
+                        </span>
                     {% endif %}
                     <span class="provider-rating">Disponible</span>
                 </div>

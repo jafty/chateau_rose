@@ -54,7 +54,7 @@ def _first_form_error(form: forms.Form) -> str | None:
 
 
 def home(request):
-    providers = Provider.objects.all()
+    providers = Provider.objects.prefetch_related("photos", "services").all()
     zones = Zone.objects.all()
     services = list(MarketingService.objects.all())
     services_by_slug = {service.slug: service for service in services}
@@ -100,7 +100,7 @@ def zone_search(request):
 
 
 def provider_list(request):
-    providers = Provider.objects.all()
+    providers = Provider.objects.prefetch_related("photos", "services").all()
     return render(request, "interface/provider_list.html", {"providers": providers})
 
 
@@ -615,7 +615,9 @@ def _build_service_schema(request, service_name: str, zone_name: str | None):
 def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
     providers = list(
-        Provider.objects.filter(marketing_services__slug=service_slug).distinct()
+        Provider.objects.filter(marketing_services__slug=service_slug)
+        .prefetch_related("photos")
+        .distinct()
     )
     request_form, request_success = _build_service_request_form(
         request, service_meta, zone=None
@@ -668,7 +670,9 @@ def service_city_page(request, service_slug: str, city_slug: str):
         Provider.objects.filter(
             marketing_services__slug=service_slug,
             zones__slug=zone.slug,
-        ).distinct()
+        )
+        .prefetch_related("photos")
+        .distinct()
     )
     request_form, request_success = _build_service_request_form(
         request, service_meta, zone=zone
@@ -718,7 +722,9 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
         Provider.objects.filter(
             marketing_services__slug=service_slug,
             zones__slug=zone.slug,
-        ).distinct()
+        )
+        .prefetch_related("photos")
+        .distinct()
     )
     request_form, request_success = _build_service_request_form(
         request, service_meta, zone=zone

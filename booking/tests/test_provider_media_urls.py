@@ -18,3 +18,27 @@ class ProviderMediaUrlValidationTests(TestCase):
         provider = Provider(name="Invalid", profile_image_url="javascript:alert('xss')")
         with self.assertRaises(ValidationError):
             provider.full_clean()
+
+    def test_card_main_image_prefers_first_gallery_photo(self):
+        provider = Provider.objects.create(
+            name="Main Visual",
+            profile_image_url="https://cdn.example.com/avatar.jpg",
+        )
+        ProviderPhoto.objects.create(
+            provider=provider,
+            image_url="https://cdn.example.com/work.jpg",
+            order=0,
+        )
+
+        provider.refresh_from_db()
+        self.assertEqual(provider.card_main_image, "https://cdn.example.com/work.jpg")
+        self.assertEqual(provider.card_identity_image, "https://cdn.example.com/avatar.jpg")
+
+    def test_card_images_fallback_to_profile_when_gallery_empty(self):
+        provider = Provider.objects.create(
+            name="Fallback",
+            profile_image_url="https://cdn.example.com/profile.jpg",
+        )
+
+        self.assertEqual(provider.card_main_image, "https://cdn.example.com/profile.jpg")
+        self.assertEqual(provider.card_identity_image, "https://cdn.example.com/profile.jpg")

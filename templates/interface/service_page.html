@@ -181,10 +181,15 @@
                     {% for provider in providers %}
                         <article class="provider-card-compact">
                             <div class="provider-header">
-                                {% if provider.resolved_profile_image %}
-                                    <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}" width="220" height="220" loading="lazy" decoding="async">
+                                {% if provider.card_main_image %}
+                                    <img src="{{ provider.card_main_image }}" alt="Réalisation de {{ provider.name }}" width="220" height="220" loading="lazy" decoding="async">
                                 {% else %}
                                     <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?q=80&w=600&auto=format" alt="Avatar coiffeuse" width="220" height="220" loading="lazy" decoding="async">
+                                {% endif %}
+                                {% if provider.card_identity_image %}
+                                    <span class="provider-identity-badge">
+                                        <img src="{{ provider.card_identity_image }}" alt="Portrait ou logo de {{ provider.name }}" loading="lazy" decoding="async">
+                                    </span>
                                 {% endif %}
                             </div>
                             <div class="provider-body">
