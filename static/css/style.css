@@ -1297,9 +1297,10 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .providers-scroll {
     display: flex;
     overflow-x: auto;
+    overflow-y: visible;
     scroll-snap-type: x proximity;
     gap: 24px;
-    padding: 4px var(--rail-offset) 12px;
+    padding: 12px var(--rail-offset) 20px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: var(--rose-accent) rgba(177, 130, 92, 0.18);
