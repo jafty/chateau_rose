@@ -993,6 +993,49 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     padding: 30px 0 20px;
 }
 
+
+.scroll-rail {
+    --rail-offset: clamp(20px, 6vw, 40px);
+    margin-inline: calc(var(--rail-offset) * -1);
+}
+
+.scroll-rail-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-inline: var(--rail-offset);
+    margin-bottom: 10px;
+}
+
+.scroll-rail-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.scroll-rail-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid rgba(177, 130, 92, 0.45);
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--ink-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.scroll-rail-btn:hover:enabled {
+    transform: translateY(-1px);
+    border-color: rgba(177, 130, 92, 0.7);
+}
+
+.scroll-rail-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
 .story-header {
     text-align: center;
     margin-bottom: 24px;
@@ -1007,7 +1050,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     display: flex;
     gap: 20px;
     overflow-x: auto;
-    padding: 8px 4px 18px;
+    padding: 8px var(--rail-offset) 18px;
     scroll-snap-type: x proximity;
     scrollbar-width: thin;
     scrollbar-color: var(--rose-accent) rgba(177, 130, 92, 0.18);
@@ -1256,7 +1299,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     overflow-x: auto;
     scroll-snap-type: x proximity;
     gap: 24px;
-    padding: 4px 2px 12px;
+    padding: 4px var(--rail-offset) 12px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: var(--rose-accent) rgba(177, 130, 92, 0.18);
@@ -1282,9 +1325,11 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 @media (max-width: 840px) {
+    .scroll-rail-actions {
+        display: none;
+    }
     .providers-scroll {
         gap: 20px;
-        padding-right: 16px;
     }
 
     .providers-scroll .provider-card {

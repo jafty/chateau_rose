@@ -128,20 +128,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const providersScroll = document.querySelector('[data-providers-scroll]');
-    const providersScrollCue = document.querySelector('[data-providers-scroll-cue]');
+    const rails = document.querySelectorAll('[data-scroll-rail]');
 
-    const refreshProvidersScrollCue = () => {
-        if (!providersScroll || !providersScrollCue) {
+    rails.forEach((rail) => {
+        const track = rail.querySelector('[data-scroll-track]');
+        const cue = rail.querySelector('[data-scroll-cue]');
+        const prevButton = rail.querySelector('[data-scroll-prev]');
+        const nextButton = rail.querySelector('[data-scroll-next]');
+
+        if (!track) {
             return;
         }
 
-        const canScroll = providersScroll.scrollWidth > providersScroll.clientWidth + 8;
-        providersScrollCue.classList.toggle('is-hidden', !canScroll);
-    };
+        const getStep = () => Math.max(track.clientWidth * 0.82, 240);
 
-    refreshProvidersScrollCue();
-    window.addEventListener('resize', refreshProvidersScrollCue);
+        const refreshRailState = () => {
+            const canScroll = track.scrollWidth > track.clientWidth + 8;
+            cue?.classList.toggle('is-hidden', !canScroll);
+
+            if (!prevButton || !nextButton) {
+                return;
+            }
+
+            prevButton.hidden = !canScroll;
+            nextButton.hidden = !canScroll;
+
+            const atStart = track.scrollLeft <= 8;
+            const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 8;
+
+            prevButton.disabled = atStart;
+            nextButton.disabled = atEnd;
+        };
+
+        prevButton?.addEventListener('click', () => {
+            track.scrollBy({ left: -getStep(), behavior: 'smooth' });
+        });
+
+        nextButton?.addEventListener('click', () => {
+            track.scrollBy({ left: getStep(), behavior: 'smooth' });
+        });
+
+        track.addEventListener('scroll', refreshRailState, { passive: true });
+        window.addEventListener('resize', refreshRailState);
+        refreshRailState();
+    });
 });
 </script>
 {% endblock %}
@@ -262,7 +292,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <h2 class="story-title">Les clients et clientes partagent leurs résultats en story</h2>
             <p class="section-subtitle">Survole (ou touche sur mobile) une story pour lire l'avis associé.</p>
         </div>
-        <div class="story-scroll">
+        <div class="scroll-rail" data-scroll-rail>
+            <div class="scroll-rail-topbar">
+                <p class="providers-scroll-hint" data-scroll-cue>↔︎ Fais glisser pour parcourir les stories</p>
+                <div class="scroll-rail-actions">
+                    <button type="button" class="scroll-rail-btn" data-scroll-prev aria-label="Stories précédentes">←</button>
+                    <button type="button" class="scroll-rail-btn" data-scroll-next aria-label="Stories suivantes">→</button>
+                </div>
+            </div>
+            <div class="story-scroll" data-scroll-track>
             {% for review in homepage_reviews %}
                 <article class="story-card" data-story-card tabindex="0" role="button" aria-label="Zoomer la photo de {{ review.client_name }}" data-story-client-name="{{ review.client_name }}" data-story-image-alt="Story de {{ review.client_name }}" data-story-rating="{{ review.rating }}" data-story-review-text="{{ review.review_text }}"
                     {% if review.resolved_photo %}
@@ -294,6 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </article>
             {% endfor %}
+            </div>
         </div>
     </div>
 </section>
@@ -339,8 +378,15 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="providers-section" id="providers">
     <div class="container">
         <h2 class="section-title">Nos As de la coiffure afro à Toulouse</h2>
-        <p class="providers-scroll-hint" data-providers-scroll-cue>↔︎ Fais glisser pour découvrir tous les profils</p>
-        <div class="providers-scroll" data-providers-scroll aria-label="Liste de prestataires, défilable horizontalement">
+        <div class="scroll-rail" data-scroll-rail>
+            <div class="scroll-rail-topbar">
+                <p class="providers-scroll-hint" data-scroll-cue>↔︎ Fais glisser pour découvrir tous les profils</p>
+                <div class="scroll-rail-actions">
+                    <button type="button" class="scroll-rail-btn" data-scroll-prev aria-label="Profils précédents">←</button>
+                    <button type="button" class="scroll-rail-btn" data-scroll-next aria-label="Profils suivants">→</button>
+                </div>
+            </div>
+        <div class="providers-scroll" data-scroll-track aria-label="Liste de prestataires, défilable horizontalement">
             {% for provider in providers %}
                 <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                     <div class="provider-img">
@@ -373,6 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
             {% empty %}
                 <p class="lead">Les prestataires seront publiés très bientôt.</p>
             {% endfor %}
+        </div>
         </div>
     </div>
 </section>
