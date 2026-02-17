@@ -231,6 +231,9 @@ class ServicePagesTests(TestCase):
             service=self.marketing_service,
             zone=self.capitole,
             intro="Intro personnalisée Capitole",
+            short_intro="Short intro Capitole",
+            long_description="Description longue Capitole",
+            long_title="Titre long Capitole",
             highlights=["Highlight personnalisé"],
             hero_image_url="https://cdn.example.com/tresses-capitole.jpg",
             meta_description="Meta personnalisée",
@@ -244,5 +247,8 @@ class ServicePagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("Highlight personnalisé", content)
+        self.assertIn("Short intro Capitole", content)
+        self.assertIn("Description longue Capitole", content)
+        self.assertIn("Titre long Capitole", content)
         self.assertIn(service_zone.hero_image_url, content)
         self.assertNotIn("Capitole highlight", content)

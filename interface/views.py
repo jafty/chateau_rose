@@ -603,9 +603,9 @@ def _apply_zone_marketing(
     return ServiceContent(
         name=service_meta.name,
         intro=service_zone.intro or base_content.intro,
-        short_intro=base_content.short_intro,
-        long_description=base_content.long_description,
-        long_title=base_content.long_title,
+        short_intro=service_zone.short_intro or base_content.short_intro,
+        long_description=service_zone.long_description or base_content.long_description,
+        long_title=service_zone.long_title or base_content.long_title,
         highlights=service_zone.highlights or base_content.highlights,
         main_image=service_zone.resolved_hero_image or base_content.main_image,
         gallery=base_content.gallery,

@@ -107,6 +107,9 @@ class MarketingServiceZone(models.Model):
         related_name="service_overrides",
     )
     intro = models.TextField(blank=True)
+    short_intro = models.TextField(blank=True)
+    long_description = models.TextField(blank=True)
+    long_title = models.CharField(max_length=255, blank=True)
     highlights = models.JSONField(default=list, blank=True)
     hero_image = models.ImageField(upload_to="marketing/service_zones/main/", blank=True, null=True)
     hero_image_url = models.CharField(
