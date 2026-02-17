@@ -7,6 +7,9 @@ class ServiceImport:
     slug: str
     name: str
     intro: str = ""
+    short_intro: str = ""
+    long_description: str = ""
+    long_title: str = ""
     highlights: List[str] = field(default_factory=list)
     main_image: str | None = None
     main_image_url: str | None = None

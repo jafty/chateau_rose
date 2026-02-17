@@ -13,6 +13,8 @@ def test_highlights_and_intro_include_location_when_given():
     content: MarketingContent = build_marketing_content(service=service, location_name="Toulouse")
 
     assert content.intro == "Base intro"
+    assert content.short_intro == "Base intro"
+    assert content.long_title == "Tresses"
     assert "Toulouse" in content.location_intro
     assert all("Toulouse" in h for h in content.highlights)
 
@@ -48,12 +50,18 @@ def test_fallbacks_when_service_missing_fields():
 def test_gallery_and_hero_forwarded():
     service = ServiceContent(
         name="Vanilles",
+        short_intro="Intro courte vanilles",
+        long_description="Version détaillée vanilles",
+        long_title="Vanilles premium",
         main_image="service-hero.jpg",
         gallery=[GalleryImage(url="s1.jpg"), GalleryImage(url="s2.jpg")],
     )
 
     content = build_marketing_content(service=service, location_name="Marseille")
 
+    assert content.short_intro == "Intro courte vanilles"
+    assert content.long_description == "Version détaillée vanilles"
+    assert content.long_title == "Vanilles premium"
     assert content.hero_image == "service-hero.jpg"
     assert [img.url for img in content.gallery] == ["s1.jpg", "s2.jpg"]
     assert "Marseille" in content.meta_description

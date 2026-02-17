@@ -24,6 +24,9 @@ class MarketingService(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
     intro = models.TextField(blank=True)
+    short_intro = models.TextField(blank=True)
+    long_description = models.TextField(blank=True)
+    long_title = models.CharField(max_length=255, blank=True)
     highlights = models.JSONField(default=list, blank=True)
     main_image = models.ImageField(upload_to="marketing/services/main/", blank=True, null=True)
     main_image_url = models.CharField(

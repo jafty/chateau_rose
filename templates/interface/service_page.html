@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load marketing_extras %}
 
-{% block title %}{{ service.name }}{% if zone %} à {{ zone.name }}{% else %} à Toulouse{% endif %} | Château Rose{% endblock %}
+{% block title %}{{ long_title|default:service.name }}{% if zone %} à {{ zone.name }}{% else %} à Toulouse{% endif %} | Château Rose{% endblock %}
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block extra_head %}
@@ -72,6 +72,13 @@
     }
 
     .provider-header img { width: 100%; height: 100%; object-fit: cover; }
+    .provider-card-compact .provider-avatar-badge {
+        width: 58px;
+        height: 58px;
+        bottom: 10px;
+        right: 10px;
+        border-width: 2px;
+    }
     .provider-body { padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
     .provider-name { font-size: 1.6rem; margin-bottom: 4px; }
     .provider-loc { font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--ink-secondary); }
@@ -139,13 +146,14 @@
             </div>
 
             <h1>
-                {{ service.name }} <br>
+                {{ long_title|default:service.name }} <br>
                 <span style="font-style: italic; font-family: 'Cormorant Garamond'; color: var(--rose-accent);">
                     {% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}
                 </span>
             </h1>
 
-            <p class="lead">{{ intro|sanitize_marketing_html }}</p>
+            <p class="lead">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
+
 
             <div class="btn-group">
                 {% if providers %}
@@ -180,12 +188,19 @@
                 <div style="display: grid; gap: 24px;">
                     {% for provider in providers %}
                         <article class="provider-card-compact">
-                            <div class="provider-header">
-                                {% if provider.resolved_profile_image %}
-                                    <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}" width="220" height="220" loading="lazy" decoding="async">
+                            <div class="provider-header provider-img">
+                                {% if provider.resolved_cover_image %}
+                                    <img src="{{ provider.resolved_cover_image }}" alt="Réalisations de {{ provider.name }}" width="220" height="220" loading="lazy" decoding="async">
                                 {% else %}
-                                    <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?q=80&w=600&auto=format" alt="Avatar coiffeuse" width="220" height="220" loading="lazy" decoding="async">
+                                    <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?q=80&w=600&auto=format" alt="Coiffure afro" width="220" height="220" loading="lazy" decoding="async">
                                 {% endif %}
+                                <span class="provider-avatar-badge" aria-hidden="true">
+                                    {% if provider.resolved_profile_image %}
+                                        <img src="{{ provider.resolved_profile_image }}" alt="" loading="lazy" decoding="async">
+                                    {% else %}
+                                        <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?q=80&w=160&auto=format" alt="" loading="lazy" decoding="async">
+                                    {% endif %}
+                                </span>
                             </div>
                             <div class="provider-body">
                                 <div style="display: flex; justify-content: space-between; align-items: start;">
@@ -216,6 +231,18 @@
             </div>
         {% endif %}
 
+        {% if intro or long_description %}
+        <div class="paper-card" style="margin-top: 36px;">
+            <h2 style="font-size: clamp(1.5rem, 2.4vw, 2rem); margin-bottom: 12px;">{{ service.name }} : ce qu'il faut savoir</h2>
+            {% if intro %}
+                <div style="color: var(--ink-secondary); line-height: 1.75; margin-bottom: 10px;">{{ intro|sanitize_marketing_html }}</div>
+            {% endif %}
+            {% if long_description %}
+                <div style="color: var(--ink-secondary); line-height: 1.75;">{{ long_description|sanitize_marketing_html }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <!-- Galerie Inspirations -->
         {% if gallery_images %}
         <div style="margin-top: 60px;">
@@ -243,7 +270,7 @@
         <!-- Navigation par Zones -->
         {% if zones %}
         <div class="paper-card" style="padding: 1.5rem;">
-            <h4 style="margin-bottom: 16px; border-bottom: 2px dashed rgba(0,0,0,0.1); padding-bottom: 8px;">Explorer les quartiers</h4>
+            <h4 style="margin-bottom: 16px; border-bottom: 2px dashed rgba(0,0,0,0.1); padding-bottom: 8px;">Explorer les zones</h4>
             {% with featured_zones=zones|slice:":5" remainder_zones=zones|slice:"5:" %}
             <div class="zone-accordion">
                 <div class="nav-list" data-featured-zones>

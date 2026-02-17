@@ -42,6 +42,9 @@ class GalleryImage:
 class ServiceContent:
     name: str
     intro: str = ""
+    short_intro: str = ""
+    long_description: str = ""
+    long_title: str = ""
     highlights: List[str] = field(default_factory=list)
     main_image: Optional[str] = None
     gallery: List[GalleryImage] = field(default_factory=list)
@@ -51,6 +54,9 @@ class ServiceContent:
 @dataclass
 class MarketingContent:
     intro: str
+    short_intro: str
+    long_description: str
+    long_title: str
     location_intro: str
     highlights: List[str]
     hero_image: Optional[str]
@@ -64,6 +70,9 @@ def build_marketing_content(
     location_name: Optional[str] = None,
 ) -> MarketingContent:
     intro = service.intro or DEFAULT_INTRO_TEMPLATE.format(service_name=service.name)
+    short_intro = service.short_intro or intro
+    long_description = service.long_description
+    long_title = service.long_title or service.name
     if location_name:
         location_intro = f"Disponible à {location_name} et dans les environs."
     else:
@@ -86,6 +95,9 @@ def build_marketing_content(
 
     return MarketingContent(
         intro=intro,
+        short_intro=short_intro,
+        long_description=long_description,
+        long_title=long_title,
         location_intro=location_intro,
         highlights=highlights,
         hero_image=service.main_image,

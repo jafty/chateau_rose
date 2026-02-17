@@ -15,6 +15,9 @@ class ImportMarketingContentCommandTest(TestCase):
                     "slug": "tresses",
                     "name": "Tresses",
                     "intro": "Base intro",
+                    "short_intro": "Intro courte",
+                    "long_description": "Description longue",
+                    "long_title": "Titre long",
                     "main_image_url": "https://static.example.com/service.jpg",
                     "gallery": ["https://static.example.com/s1.jpg"],
                     "highlights": ["Rapide"],
@@ -29,6 +32,9 @@ class ImportMarketingContentCommandTest(TestCase):
 
         service = MarketingService.objects.get(slug="tresses")
         self.assertEqual(service.intro, "Base intro")
+        self.assertEqual(service.short_intro, "Intro courte")
+        self.assertEqual(service.long_description, "Description longue")
+        self.assertEqual(service.long_title, "Titre long")
         self.assertEqual(service.main_image_url, "https://static.example.com/service.jpg")
         self.assertEqual(
             list(service.images.values_list("image_url", flat=True)),
