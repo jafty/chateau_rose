@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block title %}Prestataires afro à Toulouse | Château Rose{% endblock %}
 
@@ -7,23 +6,19 @@
 
 {% block content %}
 <section class="container page-hero providers-hero">
-    <div class="hero-grid">
-        <div class="paper-card">
-            <h1 style="margin: 12px 0 10px;">Des coiffeuses et coiffeurs Afro fiables et réactifs à Toulouse</h1>
-            <p class="lead">Choisis le ou la prestataire qui te correspond, pose ton rendez-vous et échange directement avec lui ou elle. Réponse rapide garantie.<br><br></p>
-            <div class="hero-meta">
-                <span>Réponse rapide à Toulouse</span>
-                <span>Prestations à domicile, chez la prestataire ou le prestataire, ou en salon partenaire</span>
-                <span>Estimation de tarifs affichés avant validation</span>
-            </div>
-            <div style="margin-top:30px; display:flex; gap:12px; flex-wrap:wrap;">
-                <a class="btn" href="#providers">Choisir une prestataire ou un prestataire</a>
-                <a class="btn secondary" href="#process">Comment ça se passe</a>
-            </div>
-        </div>
-        <div class="hero-media about-visual" style="transform: rotate(1deg);">
-            <img src="{% static 'demo_pictures/tressage_chambre.png' %}" alt="Prestataires coiffure afro" loading="lazy" decoding="async">
-        </div>
+    <div class="paper-card" style="max-width: 900px; margin: 0 auto;">
+        <h1 style="margin: 12px 0 10px;">Des coiffeuses et coiffeurs Afro fiables et réactifs à Toulouse</h1>
+        <p class="lead">Choisis le ou la prestataire qui te correspond, pose ton rendez-vous et échange directement avec lui ou elle. Réponse rapide garantie.</p>
+    </div>
+</section>
+
+<section class="container providers-section" id="providers" style="padding-top: 60px;">
+    <div class="providers-grid">
+        {% for provider in providers %}
+            {% include "interface/partials/provider_card.html" with provider=provider %}
+        {% empty %}
+            <p class="lead">Aucune prestataire ou aucun prestataire pour le moment.</p>
+        {% endfor %}
     </div>
 </section>
 
@@ -45,39 +40,6 @@
             <li>Accueil à domicile, chez la prestataire ou le prestataire, ou dans un salon partenaire.</li>
         </ul>
     </article>
-</section>
-
-<section class="container providers-section" id="providers" style="padding-top: 60px;">
-    <div class="providers-grid">
-        {% for provider in providers %}
-            <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
-                <div class="provider-header">
-                    {% if provider.resolved_profile_image %}
-                        <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}" loading="lazy" decoding="async">
-                    {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Profil prestataire coiffure afro" loading="lazy" decoding="async">
-                    {% endif %}
-                    <span class="provider-rating">Disponible</span>
-                </div>
-                <div class="provider-body">
-                    <h3 class="provider-name">{{ provider.name }}</h3>
-                    <p class="provider-loc">Toulouse & métropole</p>
-                    <div class="tags">
-                        {% for service in provider.services.all|slice:":3" %}
-                            <span class="tag">{{ service.name }}</span>
-                        {% empty %}
-                            <span class="tag">Coiffure afro</span>
-                        {% endfor %}
-                    </div>
-                    <div class="card-actions" aria-hidden="true">
-                        <span class="service-card-link">Voir le profil</span>
-                    </div>
-                </div>
-            </a>
-        {% empty %}
-            <p class="lead">Aucune prestataire ou aucun prestataire pour le moment.</p>
-        {% endfor %}
-    </div>
 </section>
 
 <section class="container cta-banner">

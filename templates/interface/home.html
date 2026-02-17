@@ -378,49 +378,18 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="providers-section" id="providers">
     <div class="container">
         <h2 class="section-title">Nos As de la coiffure afro à Toulouse</h2>
-        <div class="scroll-rail" data-scroll-rail>
-            <div class="scroll-rail-topbar">
-                <p class="providers-scroll-hint" data-scroll-cue>↔︎ Fais glisser pour découvrir tous les profils</p>
-                <div class="scroll-rail-actions">
-                    <button type="button" class="scroll-rail-btn" data-scroll-prev aria-label="Profils précédents">←</button>
-                    <button type="button" class="scroll-rail-btn" data-scroll-next aria-label="Profils suivants">→</button>
-                </div>
-            </div>
-        <div class="providers-scroll" data-scroll-track aria-label="Liste de prestataires, défilable horizontalement">
-            {% for provider in providers %}
-                <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
-                    <div class="provider-img">
-                        {% if provider.resolved_cover_image %}
-                            <img src="{{ provider.resolved_cover_image }}" alt="Réalisations de {{ provider.name }}" width="300" height="320" loading="lazy" decoding="async">
-                        {% else %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro" width="300" height="320" loading="lazy" decoding="async">
-                        {% endif %}
-                        <span class="provider-avatar-badge" aria-hidden="true">
-                            {% if provider.resolved_profile_image %}
-                                <img src="{{ provider.resolved_profile_image }}" alt="" loading="lazy" decoding="async">
-                            {% else %}
-                                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="" loading="lazy" decoding="async">
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="provider-body">
-                        <h3 class="provider-name">{{ provider.name }}</h3>
-                        <div class="provider-loc">Prestations à Toulouse et alentours</div>
-                        <ul class="service-list-mini">
-                            {% for service in provider.services.all|slice:":3" %}
-                                <li><span>{{ service.name }}</span></li>
-                            {% empty %}
-                                <li><span>Coiffure afro</span></li>
-                            {% endfor %}
-                        </ul>
-                        <span class="btn secondary provider-cta">Voir le profil</span>
-                    </div>
-                </a>
+        <div class="homepage-providers-grid" aria-label="Top 3 des prestataires">
+            {% for provider in providers|slice:":3" %}
+                {% include "interface/partials/provider_card.html" with provider=provider %}
             {% empty %}
                 <p class="lead">Les prestataires seront publiés très bientôt.</p>
             {% endfor %}
         </div>
-        </div>
+        {% if providers|length > 3 %}
+            <div class="homepage-providers-cta">
+                <a href="{% url 'interface:provider_list' %}" class="btn secondary">Voir tous les prestataires</a>
+            </div>
+        {% endif %}
     </div>
 </section>
 

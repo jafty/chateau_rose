@@ -1316,6 +1316,25 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     gap: 32px;
 }
 
+.homepage-providers-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+@media (min-width: 960px) {
+    .homepage-providers-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+    }
+}
+
+.homepage-providers-cta {
+    margin-top: 22px;
+    display: flex;
+    justify-content: center;
+}
+
 .providers-scroll {
     display: flex;
     overflow-x: auto;
