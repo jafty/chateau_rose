@@ -56,7 +56,21 @@ class MarketingServiceZoneAdmin(ImportExportModelAdmin):
     search_fields = ("service__name", "service__slug", "zone__name", "zone__slug")
     autocomplete_fields = ("service", "zone")
     fieldsets = (
-        (None, {"fields": ("service", "zone", "intro", "highlights", "meta_description")}),
+        (
+            None,
+            {
+                "fields": (
+                    "service",
+                    "zone",
+                    "long_title",
+                    "short_intro",
+                    "intro",
+                    "long_description",
+                    "highlights",
+                    "meta_description",
+                )
+            },
+        ),
         ("Image", {"fields": ("hero_image",)}),
     )
     resource_class = MarketingServiceZoneResource
