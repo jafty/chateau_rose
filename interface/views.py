@@ -459,7 +459,7 @@ def _get_zone_or_404(zone_slug: str):
 
 
 def _zone_options(active_zone=None):
-    zones = list(Zone.objects.all().order_by("name"))
+    zones = list(Zone.objects.filter(marketing_profile__isnull=False).order_by("name"))
     if active_zone and not any(zone.slug == active_zone.slug for zone in zones):
         zones.append(active_zone)
     return zones
@@ -550,6 +550,9 @@ def _to_service_content(service_meta: MarketingService) -> ServiceContent:
     return ServiceContent(
         name=service_meta.name,
         intro=service_meta.intro,
+        short_intro=service_meta.short_intro,
+        long_description=service_meta.long_description,
+        long_title=service_meta.long_title,
         highlights=service_meta.highlights,
         main_image=service_meta.resolved_main_image,
         gallery=_gallery_from_service(service_meta),
@@ -585,6 +588,9 @@ def _apply_zone_marketing(
         base_content = ServiceContent(
             name=service_meta.name,
             intro=" ".join([part for part in intro_parts if part]),
+            short_intro=service_meta.short_intro,
+            long_description=service_meta.long_description,
+            long_title=service_meta.long_title,
             highlights=merged_highlights,
             main_image=marketing_zone.resolved_hero_image or service_meta.resolved_main_image,
             gallery=_gallery_from_service(service_meta),
@@ -597,6 +603,9 @@ def _apply_zone_marketing(
     return ServiceContent(
         name=service_meta.name,
         intro=service_zone.intro or base_content.intro,
+        short_intro=base_content.short_intro,
+        long_description=base_content.long_description,
+        long_title=base_content.long_title,
         highlights=service_zone.highlights or base_content.highlights,
         main_image=service_zone.resolved_hero_image or base_content.main_image,
         gallery=base_content.gallery,
@@ -629,6 +638,9 @@ def service_page(request, service_slug: str):
     hero_image = marketing_content.hero_image
     gallery_images = marketing_content.gallery
     intro = marketing_content.intro
+    short_intro = marketing_content.short_intro
+    long_description = marketing_content.long_description
+    long_title = marketing_content.long_title
     city_intro = marketing_content.location_intro
     highlights = marketing_content.highlights
     meta_description = marketing_content.meta_description
@@ -643,6 +655,9 @@ def service_page(request, service_slug: str):
             "providers": providers,
             "zones": _zone_options(),
             "intro": intro,
+            "short_intro": short_intro,
+            "long_description": long_description,
+            "long_title": long_title,
             "city_intro": city_intro,
             "highlights": highlights,
             "hero_image": hero_image,
@@ -665,6 +680,9 @@ def service_city_page(request, service_slug: str, city_slug: str):
         location_name=zone.name,
     )
     intro = marketing_content.intro
+    short_intro = marketing_content.short_intro
+    long_description = marketing_content.long_description
+    long_title = marketing_content.long_title
     city_intro = marketing_content.location_intro
     highlights = marketing_content.highlights
 
@@ -693,6 +711,9 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "providers": providers,
             "zones": _zone_options(zone),
             "intro": intro,
+            "short_intro": short_intro,
+            "long_description": long_description,
+            "long_title": long_title,
             "city_intro": city_intro,
             "highlights": highlights,
             "hero_image": hero_image,
@@ -715,6 +736,9 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
         location_name=zone.name,
     )
     intro = marketing_content.intro
+    short_intro = marketing_content.short_intro
+    long_description = marketing_content.long_description
+    long_title = marketing_content.long_title
     city_intro = marketing_content.location_intro
     highlights = marketing_content.highlights
 
@@ -743,6 +767,9 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             "providers": providers,
             "zones": _zone_options(zone),
             "intro": intro,
+            "short_intro": short_intro,
+            "long_description": long_description,
+            "long_title": long_title,
             "city_intro": city_intro,
             "highlights": highlights,
             "hero_image": hero_image,

@@ -16,6 +16,9 @@ def _sample_payload():
                 "slug": "tresses",
                 "name": "Tresses",
                 "intro": "Base intro",
+                "short_intro": "Intro courte",
+                "long_description": "Description longue",
+                "long_title": "Titre long",
                 "highlights": ["Rapide"],
                 "main_image": "service.jpg",
                 "main_image_url": "https://static.example.com/service.jpg",
@@ -36,6 +39,9 @@ def test_valid_payload_builds_bundle_and_calls_repository():
     bundle = repository.received_bundle
     assert len(bundle.services) == 1
     assert bundle.services[0].slug == "tresses"
+    assert bundle.services[0].short_intro == "Intro courte"
+    assert bundle.services[0].long_description == "Description longue"
+    assert bundle.services[0].long_title == "Titre long"
     assert bundle.services[0].main_image_url == "https://static.example.com/service.jpg"
     assert result.services_count == 1
 

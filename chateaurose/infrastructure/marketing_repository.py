@@ -25,6 +25,9 @@ class DjangoMarketingContentRepository(MarketingContentRepository):
                 defaults={
                     "name": service.name,
                     "intro": service.intro,
+                    "short_intro": service.short_intro,
+                    "long_description": service.long_description,
+                    "long_title": service.long_title,
                     "highlights": service.highlights,
                     "main_image": service.main_image,
                     "main_image_url": service.main_image_url,
@@ -33,6 +36,9 @@ class DjangoMarketingContentRepository(MarketingContentRepository):
             )
             obj.name = service.name
             obj.intro = service.intro
+            obj.short_intro = service.short_intro
+            obj.long_description = service.long_description
+            obj.long_title = service.long_title
             obj.highlights = service.highlights
             obj.main_image = service.main_image or None
             obj.main_image_url = service.main_image_url or (service.main_image if self._is_url(service.main_image) else "")

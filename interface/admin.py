@@ -31,7 +31,7 @@ class MarketingServiceAdmin(ImportExportModelAdmin):
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
     fieldsets = (
-        (None, {"fields": ("name", "slug", "intro", "highlights", "meta_description")}),
+        (None, {"fields": ("name", "slug", "long_title", "short_intro", "intro", "long_description", "highlights", "meta_description")}),
         ("Image", {"fields": ("main_image",)}),
     )
     inlines = [MarketingServiceImageInline]

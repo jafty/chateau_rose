@@ -27,6 +27,9 @@ def _parse_service(service_payload: dict) -> ServiceImport:
         slug=_require_string(service_payload, "slug"),
         name=_require_string(service_payload, "name"),
         intro=service_payload.get("intro", ""),
+        short_intro=service_payload.get("short_intro", "") if isinstance(service_payload.get("short_intro", ""), str) else "",
+        long_description=service_payload.get("long_description", "") if isinstance(service_payload.get("long_description", ""), str) else "",
+        long_title=service_payload.get("long_title", "") if isinstance(service_payload.get("long_title", ""), str) else "",
         highlights=_list_of_strings(service_payload.get("highlights"), "highlights"),
         main_image=service_payload.get("main_image") if isinstance(service_payload.get("main_image"), str) else None,
         main_image_url=service_payload.get("main_image_url")

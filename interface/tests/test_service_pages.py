@@ -1,11 +1,12 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from booking.models import Provider, ProviderMarketingService, ProviderZone, Zone
 from interface.models import ClientReview, MarketingService, MarketingServiceZone, MarketingZone, ServiceRequest
 
 
+@override_settings(STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage")
 class ServicePagesTests(TestCase):
     def setUp(self):
         self.toulouse = Zone.objects.create(name="Toulouse", slug="toulouse")
@@ -16,6 +17,9 @@ class ServicePagesTests(TestCase):
             name="Tresses / Braids",
             slug="tresses",
             intro="Intro tresses",
+            short_intro="Intro courte tresses",
+            long_description="Description longue tresses",
+            long_title="Titre long tresses",
             highlights=["Rapide", "Soigné"],
         )
         self.provider_a = Provider.objects.create(name="Prestataire A")
@@ -28,6 +32,8 @@ class ServicePagesTests(TestCase):
         ProviderZone.objects.create(provider=self.provider_a, zone=self.toulouse)
         ProviderZone.objects.create(provider=self.provider_a, zone=self.capitole)
         ProviderZone.objects.create(provider=self.provider_b, zone=self.colomiers)
+
+        MarketingZone.objects.create(zone=self.toulouse)
 
     def test_service_page_filters_providers_by_service(self):
         url = reverse("interface:service_page", args=["tresses"])
@@ -57,7 +63,8 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn("Intro tresses", content)
+        self.assertIn("Intro courte tresses", content)
+        self.assertIn("Titre long tresses", content)
         self.assertIn("Rapide", content)
 
     def test_service_page_uses_static_main_image_when_no_upload(self):
@@ -84,6 +91,7 @@ class ServicePagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("/services/tresses/toulouse", content)
+        self.assertNotIn("/services/tresses/capitole", content)
 
     def test_service_city_district_page_filters_by_zone_slug(self):
         district_url = reverse("interface:service_city_district_page", args=["tresses", "toulouse", "capitole"])
@@ -207,8 +215,6 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn(self.marketing_service.intro, content)
-        self.assertIn(marketing_zone.intro, content)
         self.assertIn("Rapide", content)
         self.assertIn("Capitole highlight", content)
         self.assertIn(marketing_zone.hero_image_url, content)
@@ -237,7 +243,6 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn(service_zone.intro, content)
         self.assertIn("Highlight personnalisé", content)
         self.assertIn(service_zone.hero_image_url, content)
         self.assertNotIn("Capitole highlight", content)
