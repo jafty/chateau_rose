@@ -137,9 +137,12 @@
 <!-- SECTION HERO -->
 <section class="container page-hero">
     <div class="hero-grid">
-        <div class="hero-content">
+        <div class="hero-content hero-card">
             <div>
-                <span class="pill">Service Vérifié</span>
+                <span class="pill">
+                    <span class="verified-pill-icon" aria-hidden="true">✓</span>
+                    Prestataires vérifiés
+                </span>
                 {% if zone %}
                 <span class="pill" style="background:white; color:var(--ink-secondary);">{{ zone.name }}</span>
                 {% endif %}

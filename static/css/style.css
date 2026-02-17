@@ -100,6 +100,20 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     text-transform: uppercase;
 }
 
+
+.verified-pill-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
 /* --- HEADER --- */
 .site-header {
     padding: 16px 0;
@@ -162,6 +176,14 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .main-nav a:hover { color: var(--rose-accent); }
+
+.main-nav a.pro-link {
+    color: #fff;
+}
+
+.main-nav a.pro-link:hover {
+    color: #fff;
+}
 
 .pro-link {
     font-weight: 600;
@@ -1549,7 +1571,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     }
 
     .pro-link-desktop { display: none; }
-    .pro-link-mobile { display: inline-block; font-size: 0.85rem; }
+    .pro-link-mobile { display: inline-flex; font-size: 0.85rem; }
 }
 
 @media (max-width: 1024px) {
