@@ -12,6 +12,11 @@ urlpatterns = [
     path("cgu/", views.terms_of_use, name="terms_of_use"),
     path("confidentialite/", views.privacy_policy, name="privacy_policy"),
     path("prestataires/", views.provider_list, name="provider_list"),
+    path(
+        "prestataires/coiffure-afro-a-domicile/",
+        views.at_home_provider_list,
+        name="at_home_provider_list",
+    ),
     path("prestataires/<int:provider_id>/", views.provider_detail, name="provider_detail"),
     path(
         "prestataires/payment-intent/",

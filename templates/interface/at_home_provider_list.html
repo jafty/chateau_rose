@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Coiffure afro à domicile à Toulouse | Château Rose{% endblock %}
+
+{% block meta_description %}Trouve une coiffeuse ou un coiffeur afro disponible à domicile à Toulouse. Tresses, locks, soins et plus, avec réservation rapide sur Château Rose.{% endblock %}
+
+{% block content %}
+<section class="container page-hero providers-hero">
+    <div class="paper-card" style="max-width: 900px; margin: 0 auto;">
+        <h1 style="margin: 12px 0 10px;">Coiffure afro à domicile à Toulouse</h1>
+        <p class="lead">Compare les profils qui se déplacent chez toi, vérifie leurs spécialités et réserve rapidement avec la bonne personne.</p>
+    </div>
+</section>
+
+<section class="container providers-section" id="providers" style="padding-top: 60px;">
+    <div class="providers-grid">
+        {% for provider in providers %}
+            {% include "interface/partials/provider_card.html" with provider=provider %}
+        {% empty %}
+            <p class="lead">Aucune prestataire ou aucun prestataire à domicile pour le moment.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="container cta-banner providers-footer-gap">
+    <div>
+        <h3>Tu ne trouves pas encore le bon profil ?</h3>
+        <p class="lead">Dépose ta demande et on te met en relation avec une prestataire ou un prestataire disponible à domicile.</p>
+    </div>
+    <a class="btn" href="{% url 'interface:home' %}#service-request">Déposer ma demande</a>
+</section>
+{% endblock %}

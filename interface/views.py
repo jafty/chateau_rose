@@ -104,6 +104,16 @@ def provider_list(request):
     return render(request, "interface/provider_list.html", {"providers": providers})
 
 
+def at_home_provider_list(request):
+    providers = Provider.objects.filter(
+        location_mode__in=[
+            Provider.LOCATION_MODE_CLIENT_HOME_ONLY,
+            Provider.LOCATION_MODE_HYBRID,
+        ]
+    )
+    return render(request, "interface/at_home_provider_list.html", {"providers": providers})
+
+
 def provider_detail(request, provider_id):
     provider = get_object_or_404(Provider, id=provider_id)
     services = list(

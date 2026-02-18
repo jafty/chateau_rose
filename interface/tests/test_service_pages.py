@@ -252,3 +252,25 @@ class ServicePagesTests(TestCase):
         self.assertIn("Titre long Capitole", content)
         self.assertIn(service_zone.hero_image_url, content)
         self.assertNotIn("Capitole highlight", content)
+
+    def test_at_home_provider_page_filters_providers_by_location_mode(self):
+        self.provider_a.location_mode = Provider.LOCATION_MODE_HYBRID
+        self.provider_a.save()
+        self.provider_b.location_mode = Provider.LOCATION_MODE_SALON_ONLY
+        self.provider_b.save()
+
+        response = self.client.get(reverse("interface:at_home_provider_list"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(self.provider_a.name, content)
+        self.assertNotIn(self.provider_b.name, content)
+
+    def test_footer_and_home_link_to_at_home_page(self):
+        home = self.client.get(reverse("interface:home"))
+        providers = self.client.get(reverse("interface:provider_list"))
+
+        self.assertEqual(home.status_code, 200)
+        self.assertEqual(providers.status_code, 200)
+        self.assertIn(reverse("interface:at_home_provider_list"), home.content.decode())
+        self.assertIn(reverse("interface:at_home_provider_list"), providers.content.decode())
