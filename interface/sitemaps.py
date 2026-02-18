@@ -16,6 +16,7 @@ class StaticViewSitemap(Sitemap):
             "interface:home",
             "interface:about",
             "interface:provider_list",
+            "interface:at_home_provider_list",
             "interface:legal_notice",
             "interface:terms_of_sale",
             "interface:terms_of_use",
