@@ -1333,6 +1333,20 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     margin-top: 22px;
     display: flex;
     justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+
+.at-home-seo-content {
+    padding-top: 26px;
+}
+
+.at-home-seo-content .paper-card h2 {
+    margin-bottom: 16px;
+}
+
+.at-home-seo-content .paper-card p + p {
+    margin-top: 12px;
 }
 
 .providers-scroll {
