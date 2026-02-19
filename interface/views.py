@@ -13,6 +13,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.conf import settings
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.urls import reverse
 
 from booking.models import Booking, Provider, Service, ServiceCategory, Zone
@@ -30,7 +31,13 @@ from chateaurose.infrastructure.provider_catalog import (
     SALON_LOCATION_LABEL,
 )
 from interface.forms import ProviderBookingRequestForm, ServiceRequestForm
-from interface.models import ClientReview, MarketingService, MarketingServiceZone, MarketingZone
+from interface.models import (
+    ClientReview,
+    MarketingService,
+    MarketingServiceZone,
+    MarketingZone,
+    ProviderBookingDraft,
+)
 from interface.services import booking_requests
 from chateaurose.seo import build_base_url
 
@@ -184,6 +191,29 @@ def provider_detail(request, provider_id):
                     reminder_gateway=None,
                     clock=type("Clock", (), {"now": timezone.now}),
                 )
+
+                draft_qs = ProviderBookingDraft.objects.filter(
+                    provider=provider,
+                    completed_at__isnull=True,
+                )
+                draft_token = (request.POST.get("draft_token") or "").strip()
+                if draft_token:
+                    try:
+                        draft_uuid = uuid.UUID(draft_token)
+                    except ValueError:
+                        draft_uuid = None
+                    if draft_uuid:
+                        draft_qs = draft_qs.filter(token=draft_uuid)
+                else:
+                    draft_qs = draft_qs.filter(
+                        client_email__iexact=form.cleaned_data.get("client_email", "")
+                    )
+
+                draft = draft_qs.order_by("-updated_at").first()
+                if draft:
+                    draft.completed_at = timezone.now()
+                    draft.save(update_fields=["completed_at", "updated_at"])
+
                 message = f"Demande envoyée. ID: {booking.id}"
             except DomainError as exc:
                 error = str(exc)
@@ -233,7 +263,77 @@ def provider_detail(request, provider_id):
             "stripe_public_key": stripe_public_key,
             "payment_auth_id": prefilled_payment_auth_id,
             "payment_message": payment_message,
+            "booking_draft_url": reverse("interface:provider_booking_draft"),
         },
+    )
+
+
+def _sanitize_draft_payload(data: dict) -> dict:
+    allowed_fields = [
+        "service_id",
+        "hair_length",
+        "general_adjustment",
+        "meche",
+        "location_preference",
+        "location",
+        "client_address",
+        "desired_date",
+        "free_text",
+    ]
+    payload = {}
+    for key in allowed_fields:
+        value = data.get(key)
+        if value in (None, ""):
+            continue
+        payload[key] = value
+    return payload
+
+
+@require_POST
+def provider_booking_draft(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (TypeError, json.JSONDecodeError):
+        return HttpResponseBadRequest("Requête invalide")
+
+    provider_id = payload.get("provider_id")
+    if not provider_id:
+        return JsonResponse({"error": "Prestataire manquant."}, status=400)
+
+    provider = Provider.objects.filter(id=provider_id).first()
+    if not provider:
+        return JsonResponse({"error": "Prestataire introuvable."}, status=404)
+
+    token = payload.get("draft_token")
+    draft = None
+    if token:
+        draft = ProviderBookingDraft.objects.filter(token=token, provider=provider).first()
+
+    if draft is None:
+        draft = ProviderBookingDraft(provider=provider)
+
+    client_email = (payload.get("client_email") or "").strip()
+    client_name = (payload.get("client_name") or "").strip()
+
+    if client_email:
+        draft.client_email = client_email
+    if client_name:
+        draft.client_name = client_name
+
+    draft_payload = _sanitize_draft_payload(payload)
+    if draft_payload:
+        existing = draft.payload or {}
+        existing.update(draft_payload)
+        draft.payload = existing
+
+    draft.save()
+
+    return JsonResponse(
+        {
+            "draft_token": str(draft.token),
+            "saved": bool(draft.client_email),
+            "saved_at": draft.updated_at.isoformat(),
+        }
     )
 
 

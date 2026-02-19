@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 from interface.validators import validate_absolute_or_root_relative_url
@@ -222,6 +224,27 @@ class ServiceRequest(models.Model):
 
     def __str__(self):
         return f"Demande {self.marketing_service.name} ({self.client_name})"
+
+
+class ProviderBookingDraft(models.Model):
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    provider = models.ForeignKey(
+        "booking.Provider",
+        on_delete=models.CASCADE,
+        related_name="booking_drafts",
+    )
+    client_email = models.EmailField(blank=True)
+    client_name = models.CharField(max_length=255, blank=True)
+    payload = models.JSONField(default=dict, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-updated_at",)
+
+    def __str__(self):
+        return f"Brouillon {self.provider.name} ({self.client_email or self.token})"
 
 
 class ClientReview(models.Model):

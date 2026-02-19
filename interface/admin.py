@@ -16,6 +16,7 @@ from interface.models import (
     MarketingServiceZone,
     MarketingZone,
     ServiceRequest,
+    ProviderBookingDraft,
 )
 
 
@@ -110,3 +111,15 @@ class MarketingServiceImageAdmin(ImportExportModelAdmin):
     list_filter = ("service",)
     search_fields = ("caption",)
     resource_class = MarketingServiceImageResource
+
+
+@admin.register(ProviderBookingDraft)
+class ProviderBookingDraftAdmin(admin.ModelAdmin):
+    list_display = ("provider", "client_email", "client_name", "updated_at", "completed_at")
+    list_filter = ("provider", "completed_at")
+    search_fields = ("client_email", "client_name", "provider__name")
+    readonly_fields = ("token", "provider", "client_email", "client_name", "payload", "created_at", "updated_at")
+
+    @admin.display(description="Statut")
+    def status(self, obj):
+        return "Complété" if obj.completed_at else "En attente"
