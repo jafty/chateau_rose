@@ -24,6 +24,11 @@ urlpatterns = [
         name="provider_payment_intent",
     ),
     path(
+        "prestataires/booking-draft/",
+        views.provider_booking_draft,
+        name="provider_booking_draft",
+    ),
+    path(
         "prestataires/payment-return/",
         views.provider_payment_return,
         name="provider_payment_return",

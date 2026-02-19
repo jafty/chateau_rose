@@ -196,6 +196,7 @@
                             data-payment-intent-url="{% url 'interface:provider_payment_intent' %}"
                             data-payment-return-url="{% url 'interface:provider_payment_return' %}"
                             data-stripe-public-key="{{ stripe_public_key }}"
+                            data-booking-draft-url="{{ booking_draft_url }}"
                         >
                             {% csrf_token %}
 
@@ -260,6 +261,7 @@
 
                             <fieldset class="wizard-step" data-step="2">
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Tes cheveux & inspirations</h4>
+                                <p class="meta-line" style="margin-bottom: 12px;">On enregistre ton email dès cette étape pour éviter toute perte si tu t'arrêtes avant le paiement.</p>
 
                                 <div class="form-field full-width">
                                     <label>Photo de tes cheveux actuels <span class="required-mark">*</span></label>
@@ -282,6 +284,16 @@
                                 <div class="form-field full-width">
                                     <label for="free_text">Un petit mot pour {{ provider.name }} ?</label>
                                     <textarea name="free_text" id="free_text" placeholder="Ex: J'ai le cuir chevelu sensible, je suis dispo plutôt le matin..."></textarea>
+                                </div>
+
+                                <div class="form-field full-width">
+                                    <label>Ton Prénom/Nom <span class="required-mark">*</span></label>
+                                    <input type="text" name="client_name" id="client_name" required autocomplete="name">
+                                </div>
+                                <div class="form-field full-width">
+                                    <label>Ton Email <span class="required-mark">*</span></label>
+                                    <input type="email" name="client_email" id="client_email" required autocomplete="email">
+                                    <p class="meta-line" id="draft-save-status" style="margin-top: 8px;" hidden></p>
                                 </div>
 
                                 <div class="wizard-actions full-width">
@@ -354,15 +366,6 @@
                                     <input type="text" name="client_address" id="client_address" autocomplete="street-address" placeholder="414 route de Saint-Simon..." {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}disabled{% endif %}>
                                 </div>
 
-                                <div class="form-field full-width">
-                                    <label>Ton Prénom/Nom <span class="required-mark">*</span></label>
-                                    <input type="text" name="client_name" id="client_name" required autocomplete="name">
-                                </div>
-                                <div class="form-field full-width">
-                                    <label>Ton Email <span class="required-mark">*</span></label>
-                                    <input type="email" name="client_email" id="client_email" required autocomplete="email">
-                                </div>
-
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
                                     <button type="button" class="btn btn-next">Continuer</button>
@@ -405,6 +408,7 @@
 
                             <input type="hidden" name="provider_id" value="{{ provider.id }}">
                             <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
+                            <input type="hidden" name="draft_token" id="draft_token" value="">
                         </form>
 
                         <aside class="provider-form-aside">
@@ -446,6 +450,15 @@
     document.addEventListener('DOMContentLoaded', () => {
         const pricingData = JSON.parse('{{ pricing_data|default:"{}"|escapejs }}');
         const form = document.getElementById('provider-request-form');
+        const bookingDraftUrl = form?.dataset.bookingDraftUrl || '';
+        const draftStatus = document.getElementById('draft-save-status');
+        const draftTokenInput = document.getElementById('draft_token');
+        const draftStorageKey = form ? `bookingDraftToken:${form.querySelector('input[name="provider_id"]')?.value || ''}` : '';
+        let draftToken = draftStorageKey ? window.localStorage.getItem(draftStorageKey) || '' : '';
+        if (draftTokenInput) {
+            draftTokenInput.value = draftToken;
+        }
+        let draftSaveTimer = null;
 
         const steps = document.querySelectorAll('.wizard-step');
         const indicators = document.querySelectorAll('.step-indicator');
@@ -1031,6 +1044,101 @@
             if (paymentIntent?.id) {
                 paymentAuthInput.value = paymentIntent.id;
                 form.submit();
+            }
+        });
+
+        const setDraftStatus = (message) => {
+            if (!draftStatus) return;
+            if (!message) {
+                draftStatus.hidden = true;
+                draftStatus.textContent = '';
+                return;
+            }
+            draftStatus.hidden = false;
+            draftStatus.textContent = message;
+        };
+
+        const collectDraftPayload = () => {
+            if (!form) return null;
+            const clientEmail = form.querySelector('input[name="client_email"]')?.value?.trim() || '';
+            if (!clientEmail) return null;
+
+            return {
+                draft_token: draftToken || undefined,
+                provider_id: form.querySelector('input[name="provider_id"]')?.value,
+                client_email: clientEmail,
+                client_name: form.querySelector('input[name="client_name"]')?.value?.trim() || '',
+                service_id: form.querySelector('select[name="service_id"]')?.value || '',
+                hair_length: form.querySelector('select[name="hair_length"]')?.value || '',
+                general_adjustment: form.querySelector('select[name="general_adjustment"]')?.value || '',
+                meche: !!form.querySelector('input[name="meche"]')?.checked,
+                location_preference:
+                    form.querySelector('input[name="location_preference"]:checked')?.value ||
+                    form.querySelector('input[name="location_preference"]')?.value || '',
+                location: form.querySelector('[name="location"]')?.value || '',
+                client_address: form.querySelector('input[name="client_address"]')?.value?.trim() || '',
+                desired_date: form.querySelector('input[name="desired_date"]')?.value || '',
+                free_text: form.querySelector('textarea[name="free_text"]')?.value?.trim() || '',
+            };
+        };
+
+        const saveDraft = async () => {
+            if (!bookingDraftUrl) return;
+            const payload = collectDraftPayload();
+            if (!payload?.provider_id) return;
+            if (!payload?.client_email) {
+                setDraftStatus('');
+                return;
+            }
+
+            try {
+                const response = await fetch(bookingDraftUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                    body: JSON.stringify(payload),
+                });
+                if (!response.ok) {
+                    throw new Error('save failed');
+                }
+                const data = await response.json();
+                if (data.draft_token) {
+                    draftToken = data.draft_token;
+                    if (draftStorageKey) {
+                        window.localStorage.setItem(draftStorageKey, draftToken);
+                    }
+                    if (draftTokenInput) {
+                        draftTokenInput.value = draftToken;
+                    }
+                }
+                setDraftStatus('✅ Demande sauvegardée automatiquement.');
+            } catch (error) {
+                setDraftStatus('⚠️ Sauvegarde auto indisponible pour le moment.');
+            }
+        };
+
+        const scheduleDraftSave = () => {
+            if (draftSaveTimer) {
+                window.clearTimeout(draftSaveTimer);
+            }
+            draftSaveTimer = window.setTimeout(() => {
+                saveDraft();
+            }, 800);
+        };
+
+        form?.querySelectorAll('input, select, textarea').forEach((field) => {
+            if (field.name === 'payment_auth_id') return;
+            field.addEventListener('change', scheduleDraftSave);
+            if (field.type === 'text' || field.type === 'email' || field.tagName === 'TEXTAREA') {
+                field.addEventListener('blur', scheduleDraftSave);
+            }
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                saveDraft();
             }
         });
 

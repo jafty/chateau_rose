@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.urls import reverse_lazy
 
 from booking.models import Booking, Provider
+from interface.models import ProviderBookingDraft
 from chateaurose.domain.exceptions import DomainError
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
@@ -69,12 +70,18 @@ def index(request):
         .select_related("service")
     )
 
+    drafts = (
+        ProviderBookingDraft.objects.filter(provider=provider, completed_at__isnull=True)
+        .order_by("-updated_at")[:20]
+    )
+
     return render(
         request,
         "providers/index.html",
         {
             "provider": provider,
             "bookings": bookings,
+            "drafts": drafts,
         },
     )
 

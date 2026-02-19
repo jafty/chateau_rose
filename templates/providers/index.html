@@ -53,4 +53,39 @@
         {% endif %}
     </div>
 </section>
+
+<section class="container" style="padding-bottom:60px;">
+    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
+        <h3 class="section-title provider-section-title">Brouillons (demandes non finalisées)</h3>
+        {% if drafts %}
+            <div class="table-wrapper">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Nom</th>
+                            <th>Dernière mise à jour</th>
+                            <th>Service</th>
+                            <th>Date souhaitée</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for draft in drafts %}
+                            <tr>
+                                <td>{{ draft.client_email|default:"-" }}</td>
+                                <td>{{ draft.client_name|default:"-" }}</td>
+                                <td>{{ draft.updated_at }}</td>
+                                <td>{{ draft.payload.service_id|default:"-" }}</td>
+                                <td>{{ draft.payload.desired_date|default:"-" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="meta-line" style="margin-top:10px;">Seules tes données de brouillon sont visibles ici (compte prestataire connecté).</p>
+        {% else %}
+            <p class="meta-line">Aucun brouillon en attente.</p>
+        {% endif %}
+    </div>
+</section>
 {% endblock %}
