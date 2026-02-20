@@ -31,6 +31,7 @@ from chateaurose.infrastructure.provider_catalog import (
     SALON_LOCATION_LABEL,
 )
 from interface.forms import ProviderBookingRequestForm, ServiceRequestForm
+from interface.marketing_cities import MARKETING_CITY_ENTRIES
 from interface.models import (
     ClientReview,
     MarketingService,
@@ -76,6 +77,13 @@ def home(request):
                 featured_services.append(service)
     request_form, request_success = _build_service_request_form(request, service_meta=None, zone=None)
     homepage_reviews = _get_homepage_reviews()
+    city_links = [
+        {
+            "name": city["name"],
+            "url": reverse("interface:service_city_page", args=[FEATURED_SERVICE_SLUGS[0], city["slug"]]),
+        }
+        for city in MARKETING_CITY_ENTRIES
+    ]
     return render(
         request,
         "interface/home.html",
@@ -87,6 +95,7 @@ def home(request):
             "request_form": request_form,
             "request_success": request_success,
             "homepage_reviews": homepage_reviews,
+            "marketing_city_links": city_links,
         },
     )
 

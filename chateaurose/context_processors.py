@@ -5,6 +5,7 @@ import json
 from django.conf import settings
 
 from chateaurose.seo import build_absolute_url, build_base_url
+from interface.marketing_cities import MARKETING_CITY_ENTRIES
 
 
 def canonical_url(request):
@@ -44,3 +45,7 @@ def canonical_url(request):
         "business_schema_id": business_schema_id,
         "business_schema_json": json.dumps(business_schema, ensure_ascii=False),
     }
+
+
+def marketing_cities(_request):
+    return {"marketing_cities": MARKETING_CITY_ENTRIES}

@@ -6,7 +6,13 @@ from booking.models import Provider, ProviderMarketingService, ProviderZone, Zon
 from interface.models import ClientReview, MarketingService, MarketingServiceZone, MarketingZone, ServiceRequest
 
 
-@override_settings(STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage")
+@override_settings(
+    STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    },
+)
 class ServicePagesTests(TestCase):
     def setUp(self):
         self.toulouse = Zone.objects.create(name="Toulouse", slug="toulouse")
@@ -252,6 +258,24 @@ class ServicePagesTests(TestCase):
         self.assertIn("Titre long Capitole", content)
         self.assertIn(service_zone.hero_image_url, content)
         self.assertNotIn("Capitole highlight", content)
+
+
+    def test_home_renders_marketing_city_chips(self):
+        response = self.client.get(reverse("interface:home"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('Coiffure afro dans les villes voisines', content)
+        self.assertIn('/services/tresses/balma/', content)
+        self.assertIn('>Tournefeuille<', content)
+
+    def test_footer_renders_marketing_city_links(self):
+        response = self.client.get(reverse("interface:provider_list"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('Coiffure afro autour de Toulouse', content)
+        self.assertIn('/services/tresses/colomiers/', content)
 
     def test_at_home_provider_page_filters_providers_by_location_mode(self):
         self.provider_a.location_mode = Provider.LOCATION_MODE_HYBRID

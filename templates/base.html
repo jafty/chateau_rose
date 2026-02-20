@@ -100,6 +100,14 @@
                 </ul>
             </div>
             <div class="footer-section">
+                <h4>Coiffure afro autour de Toulouse</h4>
+                <ul class="footer-links footer-city-links">
+                    {% for city in marketing_cities %}
+                        <li><a href="{% url 'interface:service_city_page' 'tresses' city.slug %}">Coiffure afro à {{ city.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="footer-section">
                 <h4>Légal</h4>
                 <ul class="footer-links">
                     <li><a href="{% url 'interface:legal_notice' %}">Mentions légales</a></li>

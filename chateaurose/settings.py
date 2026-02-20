@@ -96,6 +96,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "chateaurose.context_processors.canonical_url",
+                "chateaurose.context_processors.marketing_cities",
             ],
         },
     },
