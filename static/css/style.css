@@ -9,7 +9,7 @@
     --rose-soft: #FFF0F3;
     --accent-gold: #C5A065;
     --tape-color: rgba(255, 255, 255, 0.45);
-    --shadow-paper: 0 2px 8px rgba(74, 59, 50, 0.04);
+    --shadow-paper: 0 8px 18px -14px rgba(74, 59, 50, 0.3), 0 2px 8px rgba(74, 59, 50, 0.07);
     --shadow-lifted: 0 20px 40px -10px rgba(74, 59, 50, 0.12);
     --shadow-soft: 0 12px 24px -6px rgba(74, 59, 50, 0.08);
     --shadow-hover: var(--shadow-lifted);
@@ -438,9 +438,11 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .tape.top-left { top: -10px; left: 25%; }
-.tape.bottom-right { bottom: -10px; right: 25%; transform: rotate(3deg); }
 .tape.top-right { top: -8px; right: 10px; transform: rotate(-5deg); }
-.tape.side-left { top: 5px; left: -5px; transform: rotate(-40deg); }
+.tape.top-center { top: -10px; left: 50%; transform: translateX(-50%) rotate(-2deg); }
+.tape.bottom-right { bottom: -10px; right: 10px; transform: rotate(4deg); }
+.tape.bottom-left { bottom: -10px; left: 10px; transform: rotate(-4deg); }
+.tape.side-left { top: -8px; left: 10px; transform: rotate(4deg); }
 
 @media (max-width: 900px) {
     .hero .hero-grid { grid-template-columns: 1fr; text-align: center; }
@@ -717,6 +719,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     background: #FFFEFD;
     border: 1px dashed rgba(74, 59, 50, 0.15);
     border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-paper);
 }
 
 .step-item::before {
@@ -2902,7 +2905,7 @@ footer {
     .paper-card { padding: 1.5rem; }
     .request-card, .provider-card { transform: none; }
     .provider-body { padding: 20px; }
-    .provider-card { border-radius: 0; }
+    .provider-card { border-radius: var(--radius-sm); }
     .providers-grid { gap: 22px; }
     .form-grid { grid-template-columns: 1fr; }
     .form-grid .form-field { min-width: 0; }

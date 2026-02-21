@@ -33,8 +33,14 @@
         {% for service in services %}
             <a href="{% url 'interface:service_city_page' service.slug zone.slug %}" class="service-polaroid">
                 {% if forloop.counter <= 8 %}
-                    {% cycle 'top-left' 'bottom-right' 'top-right' 'side-left' as tape_position silent %}
-                    <span class="tape {{ tape_position }}" aria-hidden="true"></span>
+                    {% if forloop.counter0|divisibleby:3 %}
+                        <span class="tape top-center" aria-hidden="true"></span>
+                    {% elif forloop.counter0|add:'1'|divisibleby:3 %}
+                        <span class="tape top-left" aria-hidden="true"></span>
+                    {% else %}
+                        <span class="tape top-left" aria-hidden="true"></span>
+                        <span class="tape top-right" aria-hidden="true"></span>
+                    {% endif %}
                 {% endif %}
                 {% if service.resolved_main_image %}
                     <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à {{ zone.name }}" width="320" height="320" loading="lazy" decoding="async">
