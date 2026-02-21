@@ -198,14 +198,13 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="hub-grid polaroid-grid">
             {% for service in featured_services %}
                 <a class="service-polaroid hero-polaroid" href="{% url 'interface:service_page' service.slug %}">
-                    {% if forloop.counter == 1 %}
+                    {% if forloop.counter0|divisibleby:3 %}
+                        <span class="tape top-center" aria-hidden="true"></span>
+                    {% elif forloop.counter0|add:'1'|divisibleby:3 %}
                         <span class="tape top-left" aria-hidden="true"></span>
-                    {% elif forloop.counter == 2 %}
-                        <span class="tape bottom-right" aria-hidden="true"></span>
-                    {% elif forloop.counter == 3 %}
-                        <span class="tape top-right" aria-hidden="true"></span>
                     {% else %}
-                        <span class="tape side-left" aria-hidden="true"></span>
+                        <span class="tape top-left" aria-hidden="true"></span>
+                        <span class="tape top-right" aria-hidden="true"></span>
                     {% endif %}
                     {% if service.resolved_main_image %}
                         <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}" width="320" height="320" loading="lazy" decoding="async">
@@ -400,8 +399,14 @@ document.addEventListener('DOMContentLoaded', () => {
         {% for service in services %}
             <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
                 {% if forloop.counter <= 8 %}
-                    {% cycle 'top-left' 'bottom-right' 'top-right' 'side-left' as tape_position silent %}
-                    <span class="tape {{ tape_position }}" aria-hidden="true"></span>
+                    {% if forloop.counter0|divisibleby:3 %}
+                        <span class="tape top-center" aria-hidden="true"></span>
+                    {% elif forloop.counter0|add:'1'|divisibleby:3 %}
+                        <span class="tape top-left" aria-hidden="true"></span>
+                    {% else %}
+                        <span class="tape top-left" aria-hidden="true"></span>
+                        <span class="tape top-right" aria-hidden="true"></span>
+                    {% endif %}
                 {% endif %}
                 {% if service.resolved_main_image %}
                     <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" width="320" height="320" loading="lazy" decoding="async">
