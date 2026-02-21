@@ -15,9 +15,8 @@
     </div>
 </section>
 
-<section class="providers-section" aria-label="Prestataires dans la ville">
+<section class="providers-section city-providers-section" aria-label="Prestataires dans la ville">
     <div class="container">
-        <h2 class="section-title">Prestataires à {{ zone.name }}</h2>
         <div class="homepage-providers-grid">
             {% for provider in providers %}
                 {% include "interface/partials/provider_card.html" with provider=provider %}
