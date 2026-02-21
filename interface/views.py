@@ -104,13 +104,6 @@ def city_page(request, city_slug: str):
     zone = _get_zone_or_404(city_slug)
     providers = list(Provider.objects.filter(zones__slug=zone.slug).distinct())
     services = list(MarketingService.objects.all())
-    service_links = [
-        {
-            "name": service.name,
-            "url": reverse("interface:service_city_page", args=[service.slug, zone.slug]),
-        }
-        for service in services
-    ]
 
     intro = (
         "Tu recherches une coiffure afro à {city} ? Château Rose te met en relation avec des "
@@ -131,7 +124,7 @@ def city_page(request, city_slug: str):
         {
             "zone": zone,
             "providers": providers,
-            "service_links": service_links,
+            "services": services,
             "intro": intro,
             "long_description": long_description,
         },
