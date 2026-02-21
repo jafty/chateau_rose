@@ -1,27 +1,16 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Coiffure afro à {{ zone.name }} | Château Rose{% endblock %}
 {% block meta_description %}Trouve une coiffeuse ou un coiffeur afro à {{ zone.name }}. Réserve une prestation adaptée à tes cheveux texturés sur Château Rose.{% endblock %}
 
 {% block content %}
-<section class="service-page-hero">
-    <div class="container service-page-layout">
-        <div class="service-page-main">
-            <p class="service-page-kicker">Page ville</p>
-            <h1>Coiffure afro à {{ zone.name }}</h1>
-            <p class="service-page-intro">{{ intro }}</p>
-            <p class="service-page-city-intro">{{ long_description }}</p>
-
-            {% if service_links %}
-            <section class="service-page-content" aria-label="Services dans cette ville">
-                <h2>Services disponibles à {{ zone.name }}</h2>
-                <ul>
-                    {% for service in service_links %}
-                        <li><a href="{{ service.url }}">{{ service.name }} à {{ zone.name }}</a></li>
-                    {% endfor %}
-                </ul>
-            </section>
-            {% endif %}
+<section class="hero">
+    <div class="container hero-grid">
+        <div class="hero-content hero-card">
+            <h1 class="hero-title">Coiffure <span>afro</span> à {{ zone.name }}</h1>
+            <p class="hero-text">{{ intro }}</p>
+            <p class="hero-text">{{ long_description }}</p>
         </div>
     </div>
 </section>
@@ -36,6 +25,26 @@
                 <p class="lead">Aucun profil disponible pour le moment à {{ zone.name }}.</p>
             {% endfor %}
         </div>
+    </div>
+</section>
+
+<section class="container" style="padding: 80px 20px;" id="catalogue-ville">
+    <h2 class="section-title">Services disponibles à {{ zone.name }}</h2>
+    <div class="all-services-grid polaroid-grid">
+        {% for service in services %}
+            <a href="{% url 'interface:service_city_page' service.slug zone.slug %}" class="service-polaroid">
+                {% if forloop.counter <= 8 %}
+                    {% cycle 'top-left' 'bottom-right' 'top-right' 'side-left' as tape_position silent %}
+                    <span class="tape {{ tape_position }}" aria-hidden="true"></span>
+                {% endif %}
+                {% if service.resolved_main_image %}
+                    <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à {{ zone.name }}" width="320" height="320" loading="lazy" decoding="async">
+                {% else %}
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à {{ zone.name }}" width="320" height="320" loading="lazy" decoding="async">
+                {% endif %}
+                <span class="service-label">{{ service.name }}</span>
+            </a>
+        {% endfor %}
     </div>
 </section>
 {% endblock %}
