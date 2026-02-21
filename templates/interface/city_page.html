@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Coiffure afro à {{ zone.name }} | Château Rose{% endblock %}
+{% block meta_description %}Trouve une coiffeuse ou un coiffeur afro à {{ zone.name }}. Réserve une prestation adaptée à tes cheveux texturés sur Château Rose.{% endblock %}
+
+{% block content %}
+<section class="service-page-hero">
+    <div class="container service-page-layout">
+        <div class="service-page-main">
+            <p class="service-page-kicker">Page ville</p>
+            <h1>Coiffure afro à {{ zone.name }}</h1>
+            <p class="service-page-intro">{{ intro }}</p>
+            <p class="service-page-city-intro">{{ long_description }}</p>
+
+            {% if service_links %}
+            <section class="service-page-content" aria-label="Services dans cette ville">
+                <h2>Services disponibles à {{ zone.name }}</h2>
+                <ul>
+                    {% for service in service_links %}
+                        <li><a href="{{ service.url }}">{{ service.name }} à {{ zone.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="providers-section" aria-label="Prestataires dans la ville">
+    <div class="container">
+        <h2 class="section-title">Prestataires à {{ zone.name }}</h2>
+        <div class="homepage-providers-grid">
+            {% for provider in providers %}
+                {% include "interface/partials/provider_card.html" with provider=provider %}
+            {% empty %}
+                <p class="lead">Aucun profil disponible pour le moment à {{ zone.name }}.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

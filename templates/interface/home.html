@@ -367,21 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </section>
 {% endif %}
 
-<section class="city-discovery" aria-label="Villes autour de Toulouse">
-    <div class="container">
-        <div class="city-discovery-card">
-            <p class="city-discovery-kicker">Autour de Toulouse</p>
-            <h2 class="section-title">Coiffure afro dans les villes voisines</h2>
-            <p class="section-subtitle">Tu peux réserver la même qualité de prestation dans plusieurs villes de la métropole toulousaine.</p>
-            <div class="city-chip-list">
-                {% for city in marketing_city_links %}
-                    <a class="city-chip" href="{{ city.url }}">{{ city.name }}</a>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</section>
-
 <section class="form-section" id="service-request">
     <div class="container">
         <div class="paper-form">
@@ -459,4 +444,17 @@ document.addEventListener('DOMContentLoaded', () => {
         <a href="{% url 'providers:signup' %}" class="btn secondary">Créer mon espace pro</a>
     </div>
 </section>
+
+<section class="city-discovery" aria-label="Pages ville coiffure afro">
+    <div class="container city-discovery-inner">
+        <p class="city-discovery-kicker">SEO local</p>
+        <h2 class="section-title">Coiffure afro à Toulouse Métropole</h2>
+        <div class="city-chip-list">
+            {% for city in marketing_city_links %}
+                <a class="city-chip" href="{{ city.url }}">Coiffure afro à {{ city.name }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
 {% endblock %}

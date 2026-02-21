@@ -80,7 +80,7 @@ def home(request):
     city_links = [
         {
             "name": city["name"],
-            "url": reverse("interface:service_city_page", args=[FEATURED_SERVICE_SLUGS[0], city["slug"]]),
+            "url": reverse("interface:city_page", args=[city["slug"]]),
         }
         for city in MARKETING_CITY_ENTRIES
     ]
@@ -96,6 +96,44 @@ def home(request):
             "request_success": request_success,
             "homepage_reviews": homepage_reviews,
             "marketing_city_links": city_links,
+        },
+    )
+
+
+def city_page(request, city_slug: str):
+    zone = _get_zone_or_404(city_slug)
+    providers = list(Provider.objects.filter(zones__slug=zone.slug).distinct())
+    services = list(MarketingService.objects.all())
+    service_links = [
+        {
+            "name": service.name,
+            "url": reverse("interface:service_city_page", args=[service.slug, zone.slug]),
+        }
+        for service in services
+    ]
+
+    intro = (
+        "Tu recherches une coiffure afro à {city} ? Château Rose te met en relation avec des "
+        "coiffeuses et coiffeurs afro qui connaissent les cheveux texturés et adaptent chaque "
+        "prestation à ton style : coiffures protectrices, tresses, locks, soins et finitions "
+        "personnalisées."
+    ).format(city=zone.name)
+    long_description = (
+        "Sur cette page dédiée à la coiffure afro à {city}, tu peux comparer les profils, vérifier "
+        "les disponibilités et réserver en quelques minutes. L'objectif est simple : te permettre "
+        "de trouver rapidement un ou une professionnelle sérieuse, proche de chez toi, avec un "
+        "accompagnement clair du début à la fin."
+    ).format(city=zone.name)
+
+    return render(
+        request,
+        "interface/city_page.html",
+        {
+            "zone": zone,
+            "providers": providers,
+            "service_links": service_links,
+            "intro": intro,
+            "long_description": long_description,
         },
     )
 

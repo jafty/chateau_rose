@@ -3078,58 +3078,51 @@ footer {
 }
 
 .city-discovery {
-    padding: 24px 0 10px;
+    padding: 64px 0 72px;
+    text-align: center;
 }
 
-.city-discovery-card {
-    background: linear-gradient(165deg, rgba(74, 59, 50, 0.95), rgba(85, 54, 43, 0.95));
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    box-shadow: var(--shadow-paper);
-    padding: 28px;
-    color: #fff;
+.city-discovery-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .city-discovery-kicker {
     display: inline-block;
-    padding: 6px 10px;
-    border: 1px dashed rgba(255, 255, 255, 0.75);
-    background: rgba(255, 255, 255, 0.08);
     margin-bottom: 10px;
     font-size: 0.82rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    color: var(--ink-secondary);
 }
 
 .city-discovery .section-title,
 .city-discovery .section-subtitle {
-    color: #fff;
+    color: var(--ink-primary);
 }
 
 .city-chip-list {
     margin-top: 18px;
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 10px;
+    max-width: 920px;
 }
 
 .city-chip {
     display: inline-block;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.75);
     color: var(--ink-primary);
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(86, 51, 40, 0.2);
     padding: 8px 14px;
     font-weight: 600;
     font-size: 0.88rem;
     text-decoration: none;
-    box-shadow: 0 6px 12px rgba(34, 24, 18, 0.15);
 }
 
 .city-chip:hover {
     transform: translateY(-1px);
 }
 
-.footer-city-links {
-    max-height: 240px;
-    overflow: auto;
-    padding-right: 4px;
-}

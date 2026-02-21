@@ -265,17 +265,26 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn('Coiffure afro dans les villes voisines', content)
-        self.assertIn('/services/tresses/balma/', content)
-        self.assertIn('>Tournefeuille<', content)
+        self.assertIn('Coiffure afro à Toulouse Métropole', content)
+        self.assertIn('/villes/balma/', content)
+        self.assertIn('Coiffure afro à Tournefeuille', content)
 
-    def test_footer_renders_marketing_city_links(self):
+    def test_footer_does_not_render_marketing_city_links(self):
         response = self.client.get(reverse("interface:provider_list"))
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn('Coiffure afro autour de Toulouse', content)
-        self.assertIn('/services/tresses/colomiers/', content)
+        self.assertNotIn('Coiffure afro autour de Toulouse', content)
+        self.assertNotIn('/villes/colomiers/', content)
+
+    def test_city_page_renders_providers_and_service_links(self):
+        response = self.client.get(reverse("interface:city_page", args=["toulouse"]))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('Coiffure afro à Toulouse', content)
+        self.assertIn('Prestataires à Toulouse', content)
+        self.assertIn('/services/tresses/toulouse/', content)
 
     def test_at_home_provider_page_filters_providers_by_location_mode(self):
         self.provider_a.location_mode = Provider.LOCATION_MODE_HYBRID
