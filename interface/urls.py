@@ -6,6 +6,7 @@ app_name = "interface"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("villes/<slug:city_slug>/", views.city_page, name="city_page"),
     path("a-propos/", views.about, name="about"),
     path("mentions-legales/", views.legal_notice, name="legal_notice"),
     path("cgv/", views.terms_of_sale, name="terms_of_sale"),
