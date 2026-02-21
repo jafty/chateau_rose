@@ -284,7 +284,7 @@ class ServicePagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn('Coiffure afro à Toulouse', content)
-        self.assertIn('Prestataires à Toulouse', content)
+        self.assertNotIn('Prestataires à Toulouse', content)
         self.assertIn('/services/tresses/toulouse/', content)
         self.assertNotIn('Page ville', content)
 

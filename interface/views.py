@@ -31,7 +31,7 @@ from chateaurose.infrastructure.provider_catalog import (
     SALON_LOCATION_LABEL,
 )
 from interface.forms import ProviderBookingRequestForm, ServiceRequestForm
-from interface.marketing_cities import MARKETING_CITY_ENTRIES
+from interface.marketing_cities import CITY_PAGE_COPY, MARKETING_CITY_ENTRIES
 from interface.models import (
     ClientReview,
     MarketingService,
@@ -105,18 +105,25 @@ def city_page(request, city_slug: str):
     providers = list(Provider.objects.filter(zones__slug=zone.slug).distinct())
     services = list(MarketingService.objects.all())
 
-    intro = (
-        "Tu recherches une coiffure afro à {city} ? Château Rose te met en relation avec des "
-        "coiffeuses et coiffeurs afro qui connaissent les cheveux texturés et adaptent chaque "
-        "prestation à ton style : coiffures protectrices, tresses, locks, soins et finitions "
-        "personnalisées."
-    ).format(city=zone.name)
-    long_description = (
-        "Sur cette page dédiée à la coiffure afro à {city}, tu peux comparer les profils, vérifier "
-        "les disponibilités et réserver en quelques minutes. L'objectif est simple : te permettre "
-        "de trouver rapidement un ou une professionnelle sérieuse, proche de chez toi, avec un "
-        "accompagnement clair du début à la fin."
-    ).format(city=zone.name)
+    city_copy = CITY_PAGE_COPY.get(zone.slug, {})
+    intro = city_copy.get(
+        "intro",
+        (
+            "Tu recherches une coiffure afro à {city} ? Château Rose te met en relation avec des "
+            "coiffeuses et coiffeurs afro qui connaissent les cheveux texturés et adaptent chaque "
+            "prestation à ton style : coiffures protectrices, tresses, locks, soins et finitions "
+            "personnalisées."
+        ).format(city=zone.name),
+    )
+    long_description = city_copy.get(
+        "long_description",
+        (
+            "Sur cette page dédiée à la coiffure afro à {city}, tu peux comparer les profils, vérifier "
+            "les disponibilités et réserver en quelques minutes. L'objectif est simple : te permettre "
+            "de trouver rapidement un ou une professionnelle sérieuse, proche de chez toi, avec un "
+            "accompagnement clair du début à la fin."
+        ).format(city=zone.name),
+    )
 
     return render(
         request,
