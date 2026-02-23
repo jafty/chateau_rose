@@ -135,6 +135,7 @@ class ProviderBookingRequestForm(forms.Form):
     general_adjustment = forms.CharField(label="Supplément", required=False)
     meche = forms.BooleanField(label="Besoin de mèches fournies", required=False)
     current_hair_picture_file = forms.FileField(label="Photo de tes cheveux", required=False)
+    current_hair_picture = forms.CharField(required=False)
     inspiration_pictures = MultipleFileField(
         label="Photos d'inspiration",
         required=False,
@@ -146,6 +147,7 @@ class ProviderBookingRequestForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.provider = kwargs.pop("provider", None)
         self.require_payment_auth = kwargs.pop("require_payment_auth", True)
+        self.require_current_hair_picture = kwargs.pop("require_current_hair_picture", True)
         super().__init__(*args, **kwargs)
 
     def clean_desired_date(self):
@@ -202,7 +204,7 @@ class ProviderBookingRequestForm(forms.Form):
         if not location:
             raise forms.ValidationError("Merci de choisir un lieu.")
 
-        if not cleaned_data.get("current_hair_picture_file"):
+        if self.require_current_hair_picture and not cleaned_data.get("current_hair_picture_file") and not cleaned_data.get("current_hair_picture"):
             raise forms.ValidationError("Merci d'ajouter une photo de tes cheveux.")
 
         if self.require_payment_auth and not cleaned_data.get("payment_auth_id"):

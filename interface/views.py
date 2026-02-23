@@ -61,6 +61,51 @@ def _first_form_error(form: forms.Form) -> str | None:
     return None
 
 
+
+
+def _prefill_data_from_draft(provider: Provider, draft_token: str) -> dict:
+    if not draft_token:
+        return {}
+    try:
+        token_uuid = uuid.UUID(draft_token)
+    except ValueError:
+        return {}
+
+    draft = (
+        ProviderBookingDraft.objects.filter(
+            provider=provider,
+            token=token_uuid,
+            completed_at__isnull=True,
+        )
+        .only("client_name", "client_email", "payload")
+        .first()
+    )
+    if not draft:
+        return {}
+
+    payload = dict(draft.payload or {})
+    if draft.client_name:
+        payload["client_name"] = draft.client_name
+    if draft.client_email:
+        payload["client_email"] = draft.client_email
+    payload["draft_token"] = str(draft.token)
+    return payload
+
+
+def _is_checkout_ready(prefill_data: dict) -> bool:
+    if not prefill_data:
+        return False
+    required_fields = [
+        "service_id",
+        "hair_length",
+        "location_preference",
+        "location",
+        "desired_date",
+        "client_name",
+        "client_email",
+    ]
+    return all(prefill_data.get(field) for field in required_fields)
+
 def home(request):
     providers = Provider.objects.all()
     zones = Zone.objects.all()
@@ -184,25 +229,37 @@ def provider_detail(request, provider_id):
     require_payment_auth = bool(stripe_public_key)
     prefilled_payment_auth_id = ""
     payment_message = None
+    prefill_data = {}
+    checkout_only = False
+    checkout_requested = request.GET.get("checkout", "").strip() == "1"
+    draft_token = request.GET.get("draft_token", "").strip()
 
     if request.method == "GET":
         prefilled_payment_auth_id = request.GET.get("payment_auth_id", "").strip()
+        prefill_data = _prefill_data_from_draft(provider, draft_token)
         if prefilled_payment_auth_id:
             payment_message = (
                 "Empreinte bancaire confirmée. Tu peux finaliser l'envoi de ta demande."
             )
+        if checkout_requested and _is_checkout_ready(prefill_data):
+            checkout_only = True
 
     if request.method == "POST":
+        prefill_data = _prefill_data_from_draft(provider, draft_token)
+        checkout_only = checkout_requested and _is_checkout_ready(prefill_data)
         form = ProviderBookingRequestForm(
             request.POST,
             request.FILES,
             provider=provider,
             require_payment_auth=require_payment_auth,
+            require_current_hair_picture=not checkout_only,
         )
         if form.is_valid():
-            current_picture = booking_requests.save_current_hair_picture(
-                form.cleaned_data["current_hair_picture_file"]
-            )
+            current_hair_picture_file = form.cleaned_data.get("current_hair_picture_file")
+            if current_hair_picture_file:
+                current_picture = booking_requests.save_current_hair_picture(current_hair_picture_file)
+            else:
+                current_picture = (form.cleaned_data.get("current_hair_picture") or "").strip()
             inspiration_paths = booking_requests.save_inspiration_pictures(
                 form.get_inspiration_files()
             )
@@ -311,6 +368,8 @@ def provider_detail(request, provider_id):
             "payment_auth_id": prefilled_payment_auth_id,
             "payment_message": payment_message,
             "booking_draft_url": reverse("interface:provider_booking_draft"),
+            "prefill_data": json.dumps(prefill_data),
+            "checkout_only": checkout_only,
         },
     )
 
@@ -326,6 +385,7 @@ def _sanitize_draft_payload(data: dict) -> dict:
         "client_address",
         "desired_date",
         "free_text",
+        "current_hair_picture",
     ]
     payload = {}
     for key in allowed_fields:

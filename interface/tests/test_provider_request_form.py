@@ -91,3 +91,20 @@ class ProviderBookingRequestFormTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn("Merci d'ajouter une photo de tes cheveux.", form.non_field_errors())
+
+
+    def test_checkout_mode_can_skip_current_hair_picture_requirement(self):
+        form = ProviderBookingRequestForm(
+            data={
+                "service_id": 1,
+                "client_name": "Alice",
+                "client_email": "test@example.com",
+                "location_preference": "salon",
+                "desired_date": "2026-01-01T12:00",
+                "payment_auth_id": "pi_123",
+            },
+            provider=self.provider,
+            require_current_hair_picture=False,
+        )
+
+        self.assertTrue(form.is_valid())
