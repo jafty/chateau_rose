@@ -44,7 +44,6 @@ class ProviderDetailPrefillTests(TestCase):
                     "desired_date": "2026-06-10T10:00",
                     "client_name": "Léa",
                     "client_email": "lea@example.com",
-                    "current_hair_picture": "manual/intake/current.jpg",
                 }
             )
         )

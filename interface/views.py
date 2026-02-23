@@ -103,7 +103,6 @@ def _is_checkout_ready(prefill_data: dict) -> bool:
         "desired_date",
         "client_name",
         "client_email",
-        "current_hair_picture",
     ]
     return all(prefill_data.get(field) for field in required_fields)
 
@@ -232,11 +231,11 @@ def provider_detail(request, provider_id):
     payment_message = None
     prefill_data = {}
     checkout_only = False
+    checkout_requested = request.GET.get("checkout", "").strip() == "1"
+    draft_token = request.GET.get("draft_token", "").strip()
 
     if request.method == "GET":
         prefilled_payment_auth_id = request.GET.get("payment_auth_id", "").strip()
-        draft_token = request.GET.get("draft_token", "").strip()
-        checkout_requested = request.GET.get("checkout", "").strip() == "1"
         prefill_data = _prefill_data_from_draft(provider, draft_token)
         if prefilled_payment_auth_id:
             payment_message = (
@@ -246,11 +245,14 @@ def provider_detail(request, provider_id):
             checkout_only = True
 
     if request.method == "POST":
+        prefill_data = _prefill_data_from_draft(provider, draft_token)
+        checkout_only = checkout_requested and _is_checkout_ready(prefill_data)
         form = ProviderBookingRequestForm(
             request.POST,
             request.FILES,
             provider=provider,
             require_payment_auth=require_payment_auth,
+            require_current_hair_picture=not checkout_only,
         )
         if form.is_valid():
             current_hair_picture_file = form.cleaned_data.get("current_hair_picture_file")

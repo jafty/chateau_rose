@@ -928,10 +928,6 @@
             currentStep = 4;
             document.querySelectorAll('.wizard-step[data-step="1"], .wizard-step[data-step="2"], .wizard-step[data-step="3"]').forEach((step) => {
                 step.hidden = true;
-                step.querySelectorAll('input, select, textarea').forEach((field) => {
-                    field.disabled = true;
-                    field.required = false;
-                });
             });
             const stepFour = document.querySelector('.wizard-step[data-step="4"]');
             stepFour?.querySelectorAll('.btn-prev').forEach((button) => {
