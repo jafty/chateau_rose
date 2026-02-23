@@ -242,14 +242,14 @@
                                 </div>
 
                                 {% if provider.provides_meche %}
-                                    <div class="form-field checkbox-field full-width" style="margin-top: 10px;">
+                                    <div class="form-field checkbox-field full-width" style="margin-top: 10px;" data-meche-field hidden>
                                         <label for="meche" style="background: white; padding: 10px; border: 1px dashed #ccc; width: 100%;">
                                             <input type="checkbox" name="meche" id="meche">
                                             <span>J'ai besoin que les mèches soient fournies</span>
                                         </label>
                                     </div>
                                 {% else %}
-                                    <div class="form-field full-width" style="margin-top: 10px;">
+                                    <div class="form-field full-width" style="margin-top: 10px;" data-meche-warning hidden>
                                         <div style="background: #fff7e6; border: 1px solid #ffd8a8; border-radius: 8px; padding: 12px; color: #7a4b00;">
                                             ⚠️ Cette prestataire ne fournit pas les mèches. Si tu en as besoin, pense à apporter tes propres mèches.
                                         </div>
@@ -479,6 +479,8 @@
         const hairLengthField = document.querySelector('[data-hair-length-field]');
         const generalAdjustmentField = document.querySelector('[data-general-adjustment-field]');
         const mecheCheckbox = document.getElementById('meche');
+        const mecheField = document.querySelector('[data-meche-field]');
+        const mecheWarning = document.querySelector('[data-meche-warning]');
 
         const stickyPriceValue = document.getElementById('sticky-price-value');
         const finalPriceDisplay = document.getElementById('final-price-display');
@@ -744,7 +746,10 @@
 
             const adjustments = pricingData[serviceId].general_adjustments || {};
             const keys = Object.keys(adjustments);
-            if (!keys.length) {
+            const hasOnlyStandardAdjustment =
+                keys.length === 1 && keys[0].toLowerCase() === 'standard';
+
+            if (!keys.length || hasOnlyStandardAdjustment) {
                 const defaultKey = 'standard';
                 const opt = document.createElement('option');
                 opt.value = defaultKey;
@@ -775,6 +780,21 @@
                 });
 
             toggleGeneralAdjustmentField(true);
+        };
+
+        const updateMecheField = (serviceId) => {
+            const servicePricing = serviceId ? pricingData[serviceId] : null;
+            const mecheAvailableForService = Boolean(servicePricing && (servicePricing.meche_bonus || 0) > 0);
+
+            if (mecheField) {
+                mecheField.hidden = !mecheAvailableForService;
+            }
+            if (mecheWarning) {
+                mecheWarning.hidden = !mecheAvailableForService;
+            }
+            if (!mecheAvailableForService && mecheCheckbox) {
+                mecheCheckbox.checked = false;
+            }
         };
 
         const minAdjustment = (lengths) => {
@@ -898,6 +918,7 @@
                 serviceSelect.value = String(prefillData.service_id);
                 updateHairLengths(serviceSelect.value);
                 updateGeneralAdjustments(serviceSelect.value);
+                updateMecheField(serviceSelect.value);
             }
             if (hairLengthSelect && prefillData.hair_length) {
                 hairLengthSelect.value = String(prefillData.hair_length);
@@ -1040,7 +1061,7 @@
         serviceSelect?.addEventListener('change', (event) => {
             updateHairLengths(event.target.value);
             updateGeneralAdjustments(event.target.value);
-            if (mecheCheckbox) mecheCheckbox.checked = false;
+            updateMecheField(event.target.value);
             refreshEstimate();
             resetPaymentElement();
             if (currentStep === 4) {
@@ -1075,6 +1096,7 @@
         if (serviceSelect?.value) {
             updateHairLengths(serviceSelect.value);
             updateGeneralAdjustments(serviceSelect.value);
+            updateMecheField(serviceSelect.value);
         }
         applyPrefillData();
         enableCheckoutOnlyMode();
