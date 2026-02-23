@@ -180,7 +180,7 @@
                 <div class="provider-form-card inline-form-card" id="booking-wizard">
                     <h3 class="section-title provider-section-title" style="text-align:center;">Réserver avec {{ provider.name }}</h3>
 
-                    <div class="step-progress">
+                    <div class="step-progress" {% if checkout_only %}hidden{% endif %}>
                         <div class="step-indicator active" data-step-indicator="1">1</div>
                         <div class="step-indicator" data-step-indicator="2">2</div>
                         <div class="step-indicator" data-step-indicator="3">3</div>
@@ -197,6 +197,8 @@
                             data-payment-return-url="{% url 'interface:provider_payment_return' %}"
                             data-stripe-public-key="{{ stripe_public_key }}"
                             data-booking-draft-url="{{ booking_draft_url }}"
+                            data-prefill-data="{{ prefill_data|default:"{}"|escapejs }}"
+                            data-checkout-only="{% if checkout_only %}1{% else %}0{% endif %}"
                         >
                             {% csrf_token %}
 
@@ -378,16 +380,16 @@
                                 <div class="secure-badge">
                                     <span style="font-size: 1.5rem;">🔒</span>
                                     <div>
-                                        <strong>Empreinte bancaire pour un acompte de <span id="deposit-amount-inline">-- €</span>.</strong><br>
-                                        Aucun débit immédiat : l'acompte est prélevé uniquement après confirmation du rendez-vous.<br>
-                                        Le solde est réglé directement à {{ provider.name }} le jour J.
+                                        <strong>Frais de réservation : <span id="deposit-amount-inline">-- €</span> (déduits du total).</strong><br>
+                                        Aucun débit immédiat : les frais de réservation sont prélevés uniquement après confirmation du rendez-vous.<br>
+                                        Le reste est réglé directement à {{ provider.name }} le jour J.
                                     </div>
                                 </div>
 
                                 {% if stripe_public_key %}
                                     <div class="form-field full-width">
                                         <label>Saisir la carte pour garantir le créneau</label>
-                                        <p class="field-hint" id="deposit-payment-hint">Acompte estimé : -- € (empreinte bancaire).</p>
+                                        <p class="field-hint" id="deposit-payment-hint">Frais de réservation estimés : -- € (empreinte bancaire).</p>
                                         <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
                                         <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
                                     </div>
@@ -408,6 +410,7 @@
 
                             <input type="hidden" name="provider_id" value="{{ provider.id }}">
                             <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
+                            <input type="hidden" name="current_hair_picture" id="current_hair_picture" value="">
                             <input type="hidden" name="draft_token" id="draft_token" value="">
                         </form>
 
@@ -418,7 +421,7 @@
                                 <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher ton estimation.</p>
                                 <p class="meta-line" id="general-adjustments-display" hidden></p>
                                 <div class="deposit-summary">
-                                    <span class="deposit-label">Acompte à confirmer</span>
+                                    <span class="deposit-label">Frais de réservation (déduits)</span>
                                     <span class="deposit-amount" id="deposit-amount-display">-- €</span>
                                     <p class="meta-line" id="deposit-details-display">Empreinte bancaire, aucun débit immédiat.</p>
                                 </div>
@@ -451,6 +454,8 @@
         const pricingData = JSON.parse('{{ pricing_data|default:"{}"|escapejs }}');
         const form = document.getElementById('provider-request-form');
         const bookingDraftUrl = form?.dataset.bookingDraftUrl || '';
+        const prefillData = JSON.parse(form?.dataset.prefillData || '{}');
+        const checkoutOnly = (form?.dataset.checkoutOnly || '0') === '1';
         const draftStatus = document.getElementById('draft-save-status');
         const draftTokenInput = document.getElementById('draft_token');
         const draftStorageKey = form ? `bookingDraftToken:${form.querySelector('input[name="provider_id"]')?.value || ''}` : '';
@@ -487,6 +492,7 @@
         const paymentElementContainer = document.getElementById('payment-element');
         const paymentError = document.getElementById('payment-error');
         const paymentAuthInput = document.getElementById('payment_auth_id');
+        const currentHairPictureInput = document.getElementById('current_hair_picture');
         const stripePublicKey = form?.dataset?.stripePublicKey;
         const paymentIntentUrl = form?.dataset?.paymentIntentUrl;
         const paymentReturnUrl = form?.dataset?.paymentReturnUrl;
@@ -800,7 +806,7 @@
                     depositInlineDisplay.textContent = '-- €';
                 }
                 if (depositPaymentHint) {
-                    depositPaymentHint.textContent = "Acompte estimé : -- € (empreinte bancaire).";
+                    depositPaymentHint.textContent = "Frais de réservation estimés : -- € (empreinte bancaire).";
                 }
                 if (generalAdjustmentsDisplay) {
                     generalAdjustmentsDisplay.textContent = '';
@@ -856,12 +862,82 @@
                 depositInlineDisplay.textContent = depositStr;
             }
             if (depositPaymentHint) {
-                depositPaymentHint.textContent = `Acompte estimé : ${depositStr} (empreinte bancaire).`; 
+                depositPaymentHint.textContent = `Frais de réservation estimés : ${depositStr} (empreinte bancaire).`; 
             }
             if (depositDetailsDisplay) {
                 depositDetailsDisplay.textContent =
-                    `Acompte estimé (${depositPercentage} %), capturé seulement après confirmation.`;
+                    `Frais de réservation estimés (${depositPercentage} %), prélevés seulement après confirmation. Déduits du total.`;
             }
+        };
+
+
+        const applyPrefillData = () => {
+            if (!form || !prefillData || Object.keys(prefillData).length === 0) return;
+
+            const setFieldValue = (selector, value) => {
+                if (value === undefined || value === null || value === '') return;
+                const input = form.querySelector(selector);
+                if (!input) return;
+                input.value = value;
+            };
+
+            if (prefillData.draft_token && draftTokenInput) {
+                draftTokenInput.value = prefillData.draft_token;
+                draftToken = prefillData.draft_token;
+            }
+            setFieldValue('input[name="client_name"]', prefillData.client_name);
+            setFieldValue('input[name="client_email"]', prefillData.client_email);
+            setFieldValue('input[name="desired_date"]', prefillData.desired_date);
+            setFieldValue('input[name="client_address"]', prefillData.client_address);
+            setFieldValue('textarea[name="free_text"]', prefillData.free_text);
+            if (currentHairPictureInput && prefillData.current_hair_picture) {
+                currentHairPictureInput.value = prefillData.current_hair_picture;
+            }
+
+            if (serviceSelect && prefillData.service_id) {
+                serviceSelect.value = String(prefillData.service_id);
+                updateHairLengths(serviceSelect.value);
+                updateGeneralAdjustments(serviceSelect.value);
+            }
+            if (hairLengthSelect && prefillData.hair_length) {
+                hairLengthSelect.value = String(prefillData.hair_length);
+            }
+            if (generalAdjustmentSelect && prefillData.general_adjustment !== undefined) {
+                generalAdjustmentSelect.value = String(prefillData.general_adjustment || '');
+            }
+            if (typeof prefillData.meche !== 'undefined' && mecheCheckbox) {
+                mecheCheckbox.checked = !!prefillData.meche;
+            }
+
+            if (prefillData.location_preference) {
+                const matchingRadio = form.querySelector(`input[name="location_preference"][value="${prefillData.location_preference}"]`);
+                if (matchingRadio) {
+                    matchingRadio.checked = true;
+                } else if (locationPreferenceInput) {
+                    locationPreferenceInput.value = prefillData.location_preference;
+                }
+            }
+
+            syncLocationPreference();
+            setFieldValue('[name="location"]', prefillData.location);
+            refreshEstimate();
+        };
+
+        const enableCheckoutOnlyMode = () => {
+            if (!checkoutOnly) return;
+            currentStep = 4;
+            document.querySelectorAll('.wizard-step[data-step="1"], .wizard-step[data-step="2"], .wizard-step[data-step="3"]').forEach((step) => {
+                step.hidden = true;
+                step.querySelectorAll('input, select, textarea').forEach((field) => {
+                    field.disabled = true;
+                    field.required = false;
+                });
+            });
+            const stepFour = document.querySelector('.wizard-step[data-step="4"]');
+            stepFour?.querySelectorAll('.btn-prev').forEach((button) => {
+                button.hidden = true;
+            });
+            updateWizardUI();
         };
 
         const getCsrfToken = () => {
@@ -1004,6 +1080,8 @@
             updateHairLengths(serviceSelect.value);
             updateGeneralAdjustments(serviceSelect.value);
         }
+        applyPrefillData();
+        enableCheckoutOnlyMode();
 
         form?.addEventListener('submit', async (event) => {
             if (!stripePublicKey) {
