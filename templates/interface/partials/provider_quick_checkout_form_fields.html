@@ -1,0 +1,27 @@
+                            <section class="quick-checkout-card full-width" aria-label="Paiement rapide">
+                                {% include "interface/partials/quick_checkout_summary.html" with quick_checkout=quick_checkout provider=provider %}
+
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Paiement</h4>
+                                <div class="secure-badge">
+                                    <span style="font-size: 1.5rem;">🔒</span>
+                                    <div>
+                                        <strong>Montant à régler : <span id="deposit-amount-inline">-- €</span>.</strong><br>
+                                        Paiement sécurisé par carte bancaire.
+                                    </div>
+                                </div>
+
+                                {% if stripe_public_key %}
+                                    <div class="form-field full-width">
+                                        <label>Saisir la carte pour régler ce montant</label>
+                                        <p class="field-hint" id="deposit-payment-hint">Montant à régler : -- €.</p>
+                                        <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
+                                        <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="wizard-actions full-width">
+                                    <button type="submit" class="btn">Valider le paiement</button>
+                                </div>
+                            </section>
+
+                            <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
