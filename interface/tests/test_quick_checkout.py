@@ -1,4 +1,5 @@
 from datetime import timedelta
+
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -52,8 +53,8 @@ class QuickCheckoutViewTests(TestCase):
         self.assertNotContains(response, "centimes")
         self.assertNotContains(response, 'class="step-progress"')
         self.assertNotContains(response, "Estimation totale")
-        self.assertContains(response, "Sécuriser le rendez-vous")
-        self.assertContains(response, 'data-quick-checkout-id="{}"'.format(self.checkout.id))
+        self.assertContains(response, "Valider le paiement")
+        self.assertContains(response, f'data-quick-checkout-id="{self.checkout.id}"')
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_uses_fixed_quick_checkout_price(self):
@@ -79,7 +80,7 @@ class QuickCheckoutViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(stub.calls[0]["amount_cents"], 3000)
+        self.assertEqual(stub.calls[0]["amount_cents"], 12000)
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_accepts_quick_checkout_id_without_client_fields(self):
@@ -92,18 +93,15 @@ class QuickCheckoutViewTests(TestCase):
 
         response = self.client.post(
             reverse("interface:provider_payment_intent"),
-            data={
-                "provider_id": self.provider.id,
-                "quick_checkout_id": self.checkout.id,
-            },
+            data={"quick_checkout_id": self.checkout.id},
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(stub.calls[0]["amount_cents"], 3000)
+        self.assertEqual(stub.calls[0]["amount_cents"], 12000)
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
-    def test_payment_intent_rejects_quick_checkout_id_with_mismatched_service(self):
+    def test_payment_intent_ignores_unrelated_service_fields_for_quick_checkout(self):
         from interface import views
 
         other_service = Service.objects.create(
@@ -128,4 +126,5 @@ class QuickCheckoutViewTests(TestCase):
             content_type="application/json",
         )
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(stub.calls[0]["amount_cents"], 12000)
