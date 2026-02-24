@@ -27,8 +27,16 @@
     </noscript>
     <link rel="icon" type="image/svg+xml" href="{% static 'assets/cr_logo.svg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Privacy-friendly analytics by Plausible -->
+    <script async src="https://plausible.io/js/pa-Im-d7ohOry4wTl5Bu4QKm.js"></script>
+    <script>
+      window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+      plausible.init()
+    </script>
+
     {% block extra_head %}{% endblock %}
 </head>
+    
 <body>
     <div class="texture-overlay" aria-hidden="true"></div>
     <header class="site-header">
@@ -113,8 +121,7 @@
         <div class="container footer-bottom">
             <span>CHÂTEAU ROSE &copy; 2026 · Toulouse</span>
             <div class="footer-social">
-                <a href="https://www.instagram.com/" rel="noopener noreferrer" target="_blank">Instagram</a>
-                <a href="https://www.facebook.com/" rel="noopener noreferrer" target="_blank">Facebook</a>
+                <a href="https://www.instagram.com/chateau_rose_toulouse" rel="noopener noreferrer" target="_blank">Instagram</a>
             </div>
         </div>
     </footer>
