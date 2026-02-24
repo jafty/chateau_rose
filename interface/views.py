@@ -197,55 +197,57 @@ def provider_detail(request, provider_id, quick_checkout=None):
             )
 
     if request.method == "POST":
-        if quick_checkout is not None:
-            payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
-            if require_payment_auth and not payment_auth_id:
-                error = "Merci d'ajouter une empreinte bancaire pour sécuriser la demande."
+        form = ProviderBookingRequestForm(
+            request.POST,
+            request.FILES,
+            provider=provider,
+            require_payment_auth=require_payment_auth,
+            require_current_hair_picture=True,
+        )
+        if form.is_valid():
+            current_hair_picture_file = form.cleaned_data.get("current_hair_picture_file")
+            if current_hair_picture_file:
+                current_picture = booking_requests.save_current_hair_picture(current_hair_picture_file)
             else:
-                booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
-                provider_booking_url_base = request.build_absolute_uri(
-                    booking_detail_path.replace("BOOKING_ID/", "")
+                current_picture = (form.cleaned_data.get("current_hair_picture") or "").strip()
+            inspiration_paths = booking_requests.save_inspiration_pictures(
+                form.get_inspiration_files()
+            )
+            booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
+            provider_booking_url_base = request.build_absolute_uri(
+                booking_detail_path.replace("BOOKING_ID/", "")
+            )
+            try:
+                booking = request_haircut.execute(
+                    provider_id=str(provider.id),
+                    service_id=form.cleaned_data.get("service_id"),
+                    client_contact={
+                        "name": form.cleaned_data.get("client_name"),
+                        "email": form.cleaned_data.get("client_email"),
+                    },
+                    location=form.cleaned_data.get("location"),
+                    location_preference=form.cleaned_data.get("location_preference"),
+                    client_address=form.cleaned_data.get("client_address"),
+                    desired_date=form.cleaned_data.get("desired_date"),
+                    hair_length=form.cleaned_data.get("hair_length"),
+                    general_adjustment=form.cleaned_data.get("general_adjustment"),
+                    meche=form.cleaned_data.get("meche", False),
+                    current_hair_picture=current_picture,
+                    inspiration_pictures=inspiration_paths,
+                    free_text=form.cleaned_data.get("free_text", ""),
+                    payment_auth_id=form.cleaned_data.get("payment_auth_id"),
+                    provider_booking_url_base=provider_booking_url_base,
+                    provider_salon_zone=provider.salon_zone,
+                    booking_repository=repo,
+                    provider_catalog=provider_catalog,
+                    payment_gateway=payment_gateway,
+                    notifier=notifier,
+                    reminder_gateway=None,
+                    clock=type("Clock", (), {"now": timezone.now}),
                 )
-                try:
-                    booking = request_haircut.execute(
-                        provider_id=str(provider.id),
-                        service_id=quick_checkout.service_id,
-                        client_contact={
-                            "name": quick_checkout.client_name,
-                            "email": quick_checkout.client_email,
-                        },
-                        location=quick_checkout.location,
-                        location_preference=quick_checkout.location_preference,
-                        client_address=quick_checkout.client_address,
-                        desired_date=quick_checkout.desired_date.isoformat(),
-                        hair_length=quick_checkout.hair_length,
-                        general_adjustment=quick_checkout.general_adjustment,
-                        meche=quick_checkout.meche,
-                        current_hair_picture="",
-                        inspiration_pictures=[],
-                        free_text=quick_checkout.free_text,
-                        payment_auth_id=payment_auth_id,
-                        provider_booking_url_base=provider_booking_url_base,
-                        provider_salon_zone=provider.salon_zone,
-                        booking_repository=repo,
-                        provider_catalog=provider_catalog,
-                        payment_gateway=payment_gateway,
-                        notifier=notifier,
-                        reminder_gateway=None,
-                        clock=type("Clock", (), {"now": timezone.now}),
-                    )
-
-                    booking_row = Booking.objects.filter(booking_id=booking.id).first()
-                    if booking_row:
-                        booking_row.estimated_price_cents = quick_checkout.fixed_price_cents
-                        booking_row.save(update_fields=["estimated_price_cents", "updated_at"])
-                    quick_checkout.completed_at = timezone.now()
-                    quick_checkout.is_active = False
-                    quick_checkout.save(update_fields=["completed_at", "is_active", "updated_at"])
-
-                    message = f"Demande envoyée. ID: {booking.id}"
-                except DomainError as exc:
-                    error = str(exc)
+                message = f"Demande envoyée. ID: {booking.id}"
+            except DomainError as exc:
+                error = str(exc)
         else:
             form = ProviderBookingRequestForm(
                 request.POST,
@@ -361,7 +363,88 @@ def quick_checkout_page(request, checkout_id):
     )
     if checkout.expires_at and checkout.expires_at <= timezone.now():
         raise Http404("Ce lien de paiement rapide a expiré.")
-    return provider_detail(request, checkout.provider_id, quick_checkout=checkout)
+
+    provider = checkout.provider
+    stripe_public_key = settings.STRIPE_PUBLIC_KEY
+    require_payment_auth = bool(stripe_public_key)
+    message = None
+    error = None
+    payment_message = None
+    prefilled_payment_auth_id = ""
+
+    if request.method == "GET":
+        prefilled_payment_auth_id = (request.GET.get("payment_auth_id") or "").strip()
+        if prefilled_payment_auth_id:
+            payment_message = (
+                "Empreinte bancaire confirmée. Tu peux finaliser l'envoi de ta demande."
+            )
+
+    if request.method == "POST":
+        payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
+        if require_payment_auth and not payment_auth_id:
+            error = "Merci d'ajouter une empreinte bancaire pour sécuriser la demande."
+        else:
+            booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
+            provider_booking_url_base = request.build_absolute_uri(
+                booking_detail_path.replace("BOOKING_ID/", "")
+            )
+            try:
+                booking = request_haircut.execute(
+                    provider_id=str(provider.id),
+                    service_id=checkout.service_id,
+                    client_contact={
+                        "name": checkout.client_name,
+                        "email": checkout.client_email,
+                    },
+                    location=checkout.location,
+                    location_preference=checkout.location_preference,
+                    client_address=checkout.client_address,
+                    desired_date=checkout.desired_date.isoformat(),
+                    hair_length=checkout.hair_length,
+                    general_adjustment=checkout.general_adjustment,
+                    meche=checkout.meche,
+                    current_hair_picture="quick-checkout",
+                    require_current_hair_picture=False,
+                    inspiration_pictures=[],
+                    free_text=checkout.free_text,
+                    payment_auth_id=payment_auth_id,
+                    provider_booking_url_base=provider_booking_url_base,
+                    provider_salon_zone=provider.salon_zone,
+                    booking_repository=repo,
+                    provider_catalog=provider_catalog,
+                    payment_gateway=payment_gateway,
+                    notifier=notifier,
+                    reminder_gateway=None,
+                    clock=type("Clock", (), {"now": timezone.now}),
+                )
+
+                booking_row = Booking.objects.filter(booking_id=booking.id).first()
+                if booking_row:
+                    booking_row.estimated_price_cents = checkout.fixed_price_cents
+                    booking_row.save(update_fields=["estimated_price_cents", "updated_at"])
+                checkout.completed_at = timezone.now()
+                checkout.is_active = False
+                checkout.save(update_fields=["completed_at", "is_active", "updated_at"])
+
+                message = f"Demande envoyée. ID: {booking.id}"
+            except DomainError as exc:
+                error = str(exc)
+
+    return render(
+        request,
+        "interface/quick_checkout_page.html",
+        {
+            "provider": provider,
+            "quick_checkout": checkout,
+            "message": message,
+            "error": error,
+            "payment_message": payment_message,
+            "payment_auth_id": prefilled_payment_auth_id,
+            "stripe_public_key": stripe_public_key,
+            "quick_checkout_id": checkout.id,
+            "fixed_price_cents": checkout.fixed_price_cents,
+        },
+    )
 
 
 def provider_payment_intent(request):

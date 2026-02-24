@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load price_filters %}
+
+{% block title %}Paiement rapide | Château Rose{% endblock %}
+
+{% block content %}
+<section class="page-shell" style="max-width: 760px;">
+    <div class="paper-card" style="margin-bottom: 16px;">
+        <h1 class="provider-page-title" style="margin-bottom: 6px;">Finaliser ton paiement</h1>
+        <p class="lead" style="margin: 0;">Paiement rapide et sécurisé pour confirmer ton rendez-vous avec {{ provider.name }}.</p>
+    </div>
+
+    {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
+    {% if payment_message %}<div class="alert success">{{ payment_message }}</div>{% endif %}
+    {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+
+    <div class="provider-form-card inline-form-card">
+        <form
+            method="post"
+            id="quick-checkout-form"
+            class="provider-form-grid"
+            data-payment-intent-url="{% url 'interface:provider_payment_intent' %}"
+            data-payment-return-url="{% url 'interface:provider_payment_return' %}"
+            data-stripe-public-key="{{ stripe_public_key }}"
+            data-quick-checkout-id="{{ quick_checkout_id }}"
+            data-fixed-price-cents="{{ fixed_price_cents }}"
+        >
+            {% csrf_token %}
+
+            {% include "interface/partials/quick_checkout_summary.html" with quick_checkout=quick_checkout provider=provider %}
+
+            <section class="quick-checkout-card full-width" aria-label="Paiement rapide">
+                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Sécuriser le rendez-vous</h4>
+                <div class="secure-badge" style="background: #ecfdf3; border: 1px solid #9fe3b5; color: #12542d;">
+                    <span style="font-size: 1.5rem;" aria-hidden="true">🔐</span>
+                    <div>
+                        <strong>Paiement vérifié · Frais de réservation à régler maintenant : <span id="deposit-amount-inline">{{ fixed_price_cents|cents_to_euros }}</span>.</strong><br>
+                        Ces frais sont <strong>déduits du prix total</strong>. Le reste sera réglé directement à {{ provider.name }} le jour du rendez-vous.
+                    </div>
+                </div>
+
+                {% if stripe_public_key %}
+                    <div class="form-field full-width" style="margin-top: 14px;">
+                        <label>Saisir la carte pour régler les frais de réservation</label>
+                        <p class="field-hint" id="deposit-payment-hint">Frais de réservation à régler : {{ fixed_price_cents|cents_to_euros }} (déduits du total).</p>
+                        <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
+                        <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
+                    </div>
+                {% endif %}
+
+                <p class="meta-line" style="margin-top: 12px; color: #2e7d32; font-weight: 600;">✅ Paiement sécurisé par Stripe. Tu recevras une confirmation juste après validation.</p>
+                <div class="wizard-actions full-width">
+                    <button type="submit" class="btn">Valider</button>
+                </div>
+            </section>
+
+            <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
+        </form>
+    </div>
+</section>
+
+<script src="https://js.stripe.com/v3"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('quick-checkout-form');
+    if (!form) return;
+
+    const paymentIntentUrl = form.dataset.paymentIntentUrl;
+    const paymentReturnUrl = form.dataset.paymentReturnUrl;
+    const quickCheckoutId = form.dataset.quickCheckoutId;
+    const stripePublicKey = form.dataset.stripePublicKey;
+    const paymentAuthInput = document.getElementById('payment_auth_id');
+    const paymentElementContainer = document.getElementById('payment-element');
+    const paymentError = document.getElementById('payment-error');
+
+    const showError = (message) => {
+        if (!paymentError) return;
+        paymentError.hidden = !message;
+        paymentError.textContent = message || '';
+    };
+
+    const returnUrl = new URL(paymentReturnUrl, window.location.origin);
+    returnUrl.searchParams.set('quick_checkout_id', quickCheckoutId);
+    returnUrl.searchParams.set('provider_id', '{{ provider.id }}');
+
+    if (!stripePublicKey || !window.Stripe || !paymentElementContainer) return;
+
+    const stripe = Stripe(stripePublicKey);
+    let elements = null;
+
+    const mount = async () => {
+        const response = await fetch(paymentIntentUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': form.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '',
+            },
+            body: JSON.stringify({ quick_checkout_id: quickCheckoutId }),
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Paiement indisponible.');
+
+        elements = stripe.elements({ clientSecret: payload.client_secret, appearance: { theme: 'stripe' } });
+        elements.create('payment').mount(paymentElementContainer);
+    };
+
+    mount().catch((err) => showError(err.message));
+
+    form.addEventListener('submit', async (event) => {
+        if (!elements || paymentAuthInput.value) return;
+        event.preventDefault();
+        showError('');
+
+        const { error, paymentIntent } = await stripe.confirmPayment({
+            elements,
+            confirmParams: { return_url: returnUrl.toString() },
+            redirect: 'if_required',
+        });
+
+        if (error) {
+            showError(error.message || 'Paiement refusé.');
+            return;
+        }
+        if (paymentIntent?.id) {
+            paymentAuthInput.value = paymentIntent.id;
+        }
+        form.submit();
+    });
+});
+</script>
+{% endblock %}

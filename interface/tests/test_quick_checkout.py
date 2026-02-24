@@ -25,7 +25,7 @@ class _PaymentStub:
 )
 class QuickCheckoutViewTests(TestCase):
     def setUp(self):
-        self.provider = Provider.objects.create(name="Diva", deposit_percentage=25)
+        self.provider = Provider.objects.create(name="Diva", deposit_percentage=25, salon_zone="Paris")
         self.service = Service.objects.create(
             provider=self.provider,
             name="Tresses",
@@ -53,8 +53,22 @@ class QuickCheckoutViewTests(TestCase):
         self.assertNotContains(response, "centimes")
         self.assertNotContains(response, 'class="step-progress"')
         self.assertNotContains(response, "Estimation totale")
-        self.assertContains(response, "Valider le paiement")
+        self.assertContains(response, "Valider")
         self.assertContains(response, f'data-quick-checkout-id="{self.checkout.id}"')
+
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_quick_checkout_submit_does_not_require_current_hair_picture(self):
+        response = self.client.post(
+            reverse("interface:quick_checkout_page", args=[self.checkout.id]),
+            data={"payment_auth_id": "pi_auth_1"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Demande envoyée")
+        self.checkout.refresh_from_db()
+        self.assertFalse(self.checkout.is_active)
+        self.assertIsNotNone(self.checkout.completed_at)
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_uses_fixed_quick_checkout_price(self):

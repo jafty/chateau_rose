@@ -27,6 +27,7 @@ def execute(
     general_adjustment: str | None = None,
     meche: bool,
     current_hair_picture: str,
+    require_current_hair_picture: bool = True,
     inspiration_pictures: list,
     free_text: str,
     payment_auth_id: str | None = None,
@@ -39,15 +40,18 @@ def execute(
     reminder_gateway,
     clock,
 ):
-    for field_name, value in [
+    required_fields = [
         ("provider_id", provider_id),
         ("service_id", service_id),
         ("client_name", client_contact.get("name")),
         ("client_email", client_contact.get("email")),
         ("location_preference", location_preference),
         ("desired_date", desired_date),
-        ("current_hair_picture", current_hair_picture),
-    ]:
+    ]
+    if require_current_hair_picture:
+        required_fields.append(("current_hair_picture", current_hair_picture))
+
+    for field_name, value in required_fields:
         if not value:
             raise ValidationError(f"Missing required field: {field_name}")
     if meche is None:

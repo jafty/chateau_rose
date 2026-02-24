@@ -198,17 +198,10 @@
                             data-payment-intent-url="{% url 'interface:provider_payment_intent' %}"
                             data-payment-return-url="{% url 'interface:provider_payment_return' %}"
                             data-stripe-public-key="{{ stripe_public_key }}"
-                            data-checkout-only="{% if is_quick_checkout %}1{% else %}0{% endif %}"
-                            data-fixed-price-cents="{{ fixed_price_cents|default:'' }}"
-                            data-quick-checkout-id="{{ quick_checkout_id|default:'' }}"
                         >
                             {% csrf_token %}
 
-                            {% if is_quick_checkout %}
-                            {% include "interface/partials/provider_quick_checkout_form_fields.html" %}
-                            {% else %}
                             {% include "interface/partials/provider_standard_booking_form_fields.html" %}
-                            {% endif %}
                         </form>
 
                         {% if not is_quick_checkout %}
@@ -252,7 +245,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const pricingData = JSON.parse('{{ pricing_data|default:"{}"|escapejs }}');
         const form = document.getElementById('provider-request-form');
-        const checkoutOnly = (form?.dataset.checkoutOnly || '0') === '1';
+        const checkoutOnly = false;
         const fixedPriceCents = Number.parseInt(form?.dataset.fixedPriceCents || '', 10);
         const quickCheckoutId = form?.dataset.quickCheckoutId || '';
 
@@ -800,7 +793,7 @@
                 depositInlineDisplay.textContent = totalStr;
             }
             if (depositPaymentHint) {
-                depositPaymentHint.textContent = `Montant à régler : ${totalStr}.`;
+                depositPaymentHint.textContent = `Frais de réservation à régler : ${totalStr} (déduits du total).`;
             }
             mountPaymentElement().catch((error) => showPaymentError(error.message));
         } else if (serviceSelect && serviceSelect.value) {
