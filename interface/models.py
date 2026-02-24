@@ -253,7 +253,6 @@ class QuickCheckoutPage(models.Model):
         ("salon", "En salon / chez la prestataire ou le prestataire"),
     )
 
-    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     provider = models.ForeignKey("booking.Provider", on_delete=models.CASCADE, related_name="quick_checkout_pages")
     service = models.ForeignKey("booking.Service", on_delete=models.CASCADE, related_name="quick_checkout_pages")
     client_name = models.CharField(max_length=255)

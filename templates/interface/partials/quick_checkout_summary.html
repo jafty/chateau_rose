@@ -1,0 +1,9 @@
+<div class="quick-checkout-summary" style="margin-bottom: 1rem; background: #fff8f6; border: 1px solid #f2d7cf; border-radius: 12px; padding: 16px;">
+    <h4 style="margin-bottom: 0.75rem; color: var(--rose-accent);">Récapitulatif de ton rendez-vous</h4>
+    <p class="meta-line" style="margin: 0 0 10px 0;"><strong>Prestation :</strong> {{ quick_checkout.service.name }}</p>
+    <p class="meta-line" style="margin: 0 0 10px 0;"><strong>Prix convenu :</strong> {{ quick_checkout.fixed_price_cents }} centimes</p>
+    <p class="meta-line" style="margin: 0 0 10px 0;"><strong>Date souhaitée :</strong> {{ quick_checkout.desired_date|date:"d/m/Y H:i" }}</p>
+    <p class="meta-line" style="margin: 0 0 10px 0;"><strong>Nom :</strong> {{ quick_checkout.client_name }}</p>
+    <p class="meta-line" style="margin: 0 0 10px 0;"><strong>Email :</strong> {{ quick_checkout.client_email }}</p>
+    <p class="meta-line" style="margin: 0;"><strong>Lieu :</strong> {% if quick_checkout.location_preference == 'salon' %}{{ provider.salon_zone|default:'En salon' }}{% else %}{{ quick_checkout.location|default:quick_checkout.client_address }}{% endif %}</p>
+</div>

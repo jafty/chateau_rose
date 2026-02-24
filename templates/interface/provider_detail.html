@@ -180,7 +180,7 @@
                 <div class="provider-form-card inline-form-card" id="booking-wizard">
                     <h3 class="section-title provider-section-title" style="text-align:center;">Réserver avec {{ provider.name }}</h3>
 
-                    <div class="step-progress" {% if checkout_only %}hidden{% endif %}>
+                    <div class="step-progress" {% if is_quick_checkout %}hidden{% endif %}>
                         <div class="step-indicator active" data-step-indicator="1">1</div>
                         <div class="step-indicator" data-step-indicator="2">2</div>
                         <div class="step-indicator" data-step-indicator="3">3</div>
@@ -196,15 +196,16 @@
                             data-payment-intent-url="{% url 'interface:provider_payment_intent' %}"
                             data-payment-return-url="{% url 'interface:provider_payment_return' %}"
                             data-stripe-public-key="{{ stripe_public_key }}"
-                            data-booking-draft-url="{{ booking_draft_url }}"
-                            data-prefill-data="{{ prefill_data|default:"{}"|escapejs }}"
-                            data-checkout-only="{% if checkout_only %}1{% else %}0{% endif %}"
+                            data-checkout-only="{% if is_quick_checkout %}1{% else %}0{% endif %}"
                             data-fixed-price-cents="{{ fixed_price_cents|default:'' }}"
-                            data-quick-checkout-token="{{ quick_checkout_token|default:'' }}"
+                            data-quick-checkout-id="{{ quick_checkout_id|default:'' }}"
                         >
                             {% csrf_token %}
 
-                            <fieldset class="wizard-step active" data-step="1" {% if checkout_only %}hidden{% endif %}>
+                            {% if is_quick_checkout %}
+                            {% include "interface/partials/quick_checkout_summary.html" with quick_checkout=quick_checkout provider=provider %}
+                        {% else %}
+<fieldset class="wizard-step active" data-step="1" {% if is_quick_checkout %}hidden{% endif %}>
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Choix de la coiffure</h4>
 
                                 <div class="form-field full-width">
@@ -263,7 +264,7 @@
                                 </div>
                             </fieldset>
 
-                            <fieldset class="wizard-step" data-step="2" {% if checkout_only %}hidden{% endif %}>
+                            <fieldset class="wizard-step" data-step="2" {% if is_quick_checkout %}hidden{% endif %}>
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Tes cheveux & inspirations</h4>
                                 <p class="meta-line" style="margin-bottom: 12px;">On enregistre ton email dès cette étape pour éviter toute perte si tu t'arrêtes avant le paiement.</p>
 
@@ -297,7 +298,6 @@
                                 <div class="form-field full-width">
                                     <label>Ton Email <span class="required-mark">*</span></label>
                                     <input type="email" name="client_email" id="client_email" required autocomplete="email">
-                                    <p class="meta-line" id="draft-save-status" style="margin-top: 8px;" hidden></p>
                                 </div>
 
                                 <div class="wizard-actions full-width">
@@ -306,7 +306,7 @@
                                 </div>
                             </fieldset>
 
-                            <fieldset class="wizard-step" data-step="3" {% if checkout_only %}hidden{% endif %}>
+                            <fieldset class="wizard-step" data-step="3" {% if is_quick_checkout %}hidden{% endif %}>
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Infos pratiques</h4>
 
                                 <div class="form-field full-width">
@@ -376,6 +376,8 @@
                                 </div>
                             </fieldset>
 
+                                                    {% endif %}
+
                             <fieldset class="wizard-step" data-step="4">
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Sécuriser le rendez-vous</h4>
 
@@ -413,13 +415,12 @@
                             <input type="hidden" name="provider_id" value="{{ provider.id }}">
                             <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
                             <input type="hidden" name="current_hair_picture" id="current_hair_picture" value="">
-                            <input type="hidden" name="draft_token" id="draft_token" value="">
-                            <input type="hidden" name="quick_checkout_token" id="quick_checkout_token" value="{{ quick_checkout_token|default:'' }}">
+                            <input type="hidden" name="quick_checkout_id" id="quick_checkout_id" value="{{ quick_checkout_id|default:'' }}">
                         </form>
 
-                        {% if checkout_only %}
+                        {% if is_quick_checkout %}
                         <p class="meta-line" style="text-align: center; margin-top: 0;">
-                            Les informations de réservation sont déjà enregistrées. Il ne reste que l'empreinte bancaire pour sécuriser ton créneau.
+                            Récapitulatif de ta prestation prêt : il ne reste qu'à sécuriser ton rendez-vous avec l'empreinte bancaire.
                         </p>
                         {% endif %}
 
@@ -462,19 +463,9 @@
     document.addEventListener('DOMContentLoaded', () => {
         const pricingData = JSON.parse('{{ pricing_data|default:"{}"|escapejs }}');
         const form = document.getElementById('provider-request-form');
-        const bookingDraftUrl = form?.dataset.bookingDraftUrl || '';
-        const prefillData = JSON.parse(form?.dataset.prefillData || '{}');
         const checkoutOnly = (form?.dataset.checkoutOnly || '0') === '1';
         const fixedPriceCents = Number.parseInt(form?.dataset.fixedPriceCents || '', 10);
-        const quickCheckoutToken = form?.dataset.quickCheckoutToken || '';
-        const draftStatus = document.getElementById('draft-save-status');
-        const draftTokenInput = document.getElementById('draft_token');
-        const draftStorageKey = form ? `bookingDraftToken:${form.querySelector('input[name="provider_id"]')?.value || ''}` : '';
-        let draftToken = draftStorageKey ? window.localStorage.getItem(draftStorageKey) || '' : '';
-        if (draftTokenInput) {
-            draftTokenInput.value = draftToken;
-        }
-        let draftSaveTimer = null;
+        const quickCheckoutId = form?.dataset.quickCheckoutId || '';
 
         const steps = document.querySelectorAll('.wizard-step');
         const indicators = document.querySelectorAll('.step-indicator');
@@ -906,214 +897,6 @@
             }
         };
 
-        const applyPrefillData = () => {
-            if (!form || !prefillData || Object.keys(prefillData).length === 0) return;
-
-            const setFieldValue = (selector, value) => {
-                if (value === undefined || value === null || value === '') return;
-                const input = form.querySelector(selector);
-                if (!input) return;
-                input.value = value;
-            };
-
-            if (prefillData.draft_token && draftTokenInput) {
-                draftTokenInput.value = prefillData.draft_token;
-                draftToken = prefillData.draft_token;
-            }
-            setFieldValue('input[name="client_name"]', prefillData.client_name);
-            setFieldValue('input[name="client_email"]', prefillData.client_email);
-            setFieldValue('input[name="desired_date"]', prefillData.desired_date);
-            setFieldValue('input[name="client_address"]', prefillData.client_address);
-            setFieldValue('textarea[name="free_text"]', prefillData.free_text);
-            if (currentHairPictureInput && prefillData.current_hair_picture) {
-                currentHairPictureInput.value = prefillData.current_hair_picture;
-            }
-
-            if (serviceSelect && prefillData.service_id) {
-                serviceSelect.value = String(prefillData.service_id);
-                updateHairLengths(serviceSelect.value);
-                updateGeneralAdjustments(serviceSelect.value);
-            }
-            if (hairLengthSelect && prefillData.hair_length) {
-                hairLengthSelect.value = String(prefillData.hair_length);
-            }
-            if (generalAdjustmentSelect && prefillData.general_adjustment !== undefined) {
-                generalAdjustmentSelect.value = String(prefillData.general_adjustment || '');
-            }
-            if (typeof prefillData.meche !== 'undefined' && mecheCheckbox) {
-                mecheCheckbox.checked = !!prefillData.meche;
-            }
-
-            if (prefillData.location_preference) {
-                const matchingRadio = form.querySelector(`input[name="location_preference"][value="${prefillData.location_preference}"]`);
-                if (matchingRadio) {
-                    matchingRadio.checked = true;
-                } else if (locationPreferenceInput) {
-                    locationPreferenceInput.value = prefillData.location_preference;
-                }
-            }
-
-            syncLocationPreference();
-            setFieldValue('[name="location"]', prefillData.location);
-            refreshEstimate();
-        };
-
-        const enableCheckoutOnlyMode = () => {
-            if (!checkoutOnly) return;
-            currentStep = 4;
-            document.querySelectorAll('.wizard-step[data-step="1"], .wizard-step[data-step="2"], .wizard-step[data-step="3"]').forEach((step) => {
-                step.hidden = true;
-            });
-            const stepFour = document.querySelector('.wizard-step[data-step="4"]');
-            stepFour?.querySelectorAll('.btn-prev').forEach((button) => {
-                button.hidden = true;
-            });
-            updateWizardUI();
-        };
-
-        const getCsrfToken = () => {
-            const cookie = document.cookie
-                .split(';')
-                .map((item) => item.trim())
-                .find((item) => item.startsWith('csrftoken='));
-            return cookie ? decodeURIComponent(cookie.split('=')[1]) : '';
-        };
-
-        const showPaymentError = (message) => {
-            if (!paymentError) return;
-            if (message) {
-                paymentError.textContent = message;
-                paymentError.hidden = false;
-            } else {
-                paymentError.hidden = true;
-                paymentError.textContent = '';
-            }
-        };
-
-        const buildReturnUrl = () => {
-            if (!paymentReturnUrl) {
-                return window.location.href;
-            }
-            const providerId = form?.querySelector('input[name="provider_id"]')?.value;
-            const url = new URL(paymentReturnUrl, window.location.origin);
-            if (providerId) {
-                url.searchParams.set('provider_id', providerId);
-            }
-            return url.toString();
-        };
-
-        const buildPaymentIntent = async () => {
-            if (!stripePublicKey || !paymentIntentUrl) return null;
-            const serviceId = serviceSelect?.value;
-            const hairLength = hairLengthSelect?.value || 'standard';
-            const generalAdjustment = generalAdjustmentSelect?.value || '';
-            const meche = mecheCheckbox ? mecheCheckbox.checked : false;
-            const locationPreference = document.querySelector('input[name="location_preference"]:checked')?.value || locationPreferenceInput?.value;
-            const providerId = form?.querySelector('input[name="provider_id"]')?.value;
-
-            if (!serviceId || !providerId) {
-                return null;
-            }
-
-            const response = await fetch(paymentIntentUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken(),
-                },
-                body: JSON.stringify({
-                    provider_id: providerId,
-                    service_id: serviceId,
-                    hair_length: hairLength,
-                    general_adjustment: generalAdjustment,
-                    meche,
-                    location_preference: locationPreference,
-                    quick_checkout_token: quickCheckoutToken || undefined,
-                }),
-            });
-
-            if (!response.ok) {
-                const data = await response.json().catch(() => ({}));
-                throw new Error(data.error || 'Impossible de préparer l’empreinte bancaire.');
-            }
-            return response.json();
-        };
-
-        const resetPaymentElement = () => {
-            currentClientSecret = null;
-            paymentAuthInput.value = '';
-            if (paymentElement) {
-                paymentElement.unmount();
-                paymentElement = null;
-            }
-            if (paymentElementContainer) {
-                paymentElementContainer.innerHTML = '';
-            }
-            elements = null;
-        };
-
-        const mountPaymentElement = async () => {
-            if (!stripePublicKey || !paymentElementContainer) return;
-            stripe = stripe || window.Stripe(stripePublicKey);
-            showPaymentError('');
-            const intentData = await buildPaymentIntent();
-            if (!intentData?.client_secret) return;
-
-            if (intentData.client_secret === currentClientSecret) {
-                return;
-            }
-
-            currentClientSecret = intentData.client_secret;
-            paymentAuthInput.value = '';
-            if (paymentElement) {
-                paymentElement.unmount();
-            }
-            elements = stripe.elements({ clientSecret: currentClientSecret });
-            paymentElement = elements.create('payment');
-            paymentElement.mount('#payment-element');
-        };
-
-        serviceSelect?.addEventListener('change', (event) => {
-            updateHairLengths(event.target.value);
-            updateGeneralAdjustments(event.target.value);
-            updateMecheField(event.target.value);
-            refreshEstimate();
-            resetPaymentElement();
-            if (currentStep === 4) {
-                mountPaymentElement().catch((error) => showPaymentError(error.message));
-            }
-        });
-
-        hairLengthSelect?.addEventListener('change', () => {
-            refreshEstimate();
-            resetPaymentElement();
-            if (currentStep === 4) {
-                mountPaymentElement().catch((error) => showPaymentError(error.message));
-            }
-        });
-
-        generalAdjustmentSelect?.addEventListener('change', () => {
-            refreshEstimate();
-            resetPaymentElement();
-            if (currentStep === 4) {
-                mountPaymentElement().catch((error) => showPaymentError(error.message));
-            }
-        });
-
-        mecheCheckbox?.addEventListener('change', () => {
-            refreshEstimate();
-            resetPaymentElement();
-            if (currentStep === 4) {
-                mountPaymentElement().catch((error) => showPaymentError(error.message));
-            }
-        });
-
-        if (serviceSelect?.value) {
-            updateHairLengths(serviceSelect.value);
-            updateGeneralAdjustments(serviceSelect.value);
-            updateMecheField(serviceSelect.value);
-        }
-        applyPrefillData();
         enableCheckoutOnlyMode();
 
         form?.addEventListener('submit', async (event) => {
@@ -1155,103 +938,6 @@
             if (paymentIntent?.id) {
                 paymentAuthInput.value = paymentIntent.id;
                 form.submit();
-            }
-        });
-
-        const setDraftStatus = (message) => {
-            if (!draftStatus) return;
-            if (!message) {
-                draftStatus.hidden = true;
-                draftStatus.textContent = '';
-                return;
-            }
-            draftStatus.hidden = false;
-            draftStatus.textContent = message;
-        };
-
-        const collectDraftPayload = () => {
-            if (!form) return null;
-            const clientEmail = form.querySelector('input[name="client_email"]')?.value?.trim() || '';
-            if (!clientEmail) return null;
-
-            return {
-                draft_token: draftToken || undefined,
-                provider_id: form.querySelector('input[name="provider_id"]')?.value,
-                client_email: clientEmail,
-                client_name: form.querySelector('input[name="client_name"]')?.value?.trim() || '',
-                service_id: form.querySelector('select[name="service_id"]')?.value || '',
-                hair_length: form.querySelector('select[name="hair_length"]')?.value || '',
-                general_adjustment: form.querySelector('select[name="general_adjustment"]')?.value || '',
-                meche: !!form.querySelector('input[name="meche"]')?.checked,
-                location_preference:
-                    form.querySelector('input[name="location_preference"]:checked')?.value ||
-                    form.querySelector('input[name="location_preference"]')?.value || '',
-                location: form.querySelector('[name="location"]')?.value || '',
-                client_address: form.querySelector('input[name="client_address"]')?.value?.trim() || '',
-                desired_date: form.querySelector('input[name="desired_date"]')?.value || '',
-                free_text: form.querySelector('textarea[name="free_text"]')?.value?.trim() || '',
-            };
-        };
-
-        const saveDraft = async () => {
-            if (!bookingDraftUrl) return;
-            const payload = collectDraftPayload();
-            if (!payload?.provider_id) return;
-            if (!payload?.client_email) {
-                setDraftStatus('');
-                return;
-            }
-
-            try {
-                const response = await fetch(bookingDraftUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCsrfToken(),
-                    },
-                    body: JSON.stringify(payload),
-                });
-                if (!response.ok) {
-                    throw new Error('save failed');
-                }
-                const data = await response.json();
-                if (data.draft_token) {
-                    draftToken = data.draft_token;
-                    if (draftStorageKey) {
-                        window.localStorage.setItem(draftStorageKey, draftToken);
-                    }
-                    if (draftTokenInput) {
-                        draftTokenInput.value = draftToken;
-                    }
-                }
-                setDraftStatus('✅ Demande sauvegardée automatiquement.');
-            } catch (error) {
-                setDraftStatus('⚠️ Sauvegarde auto indisponible pour le moment.');
-            }
-        };
-
-        const scheduleDraftSave = () => {
-            if (checkoutOnly) return;
-            if (draftSaveTimer) {
-                window.clearTimeout(draftSaveTimer);
-            }
-            draftSaveTimer = window.setTimeout(() => {
-                saveDraft();
-            }, 800);
-        };
-
-        form?.querySelectorAll('input, select, textarea').forEach((field) => {
-            if (field.name === 'payment_auth_id') return;
-            field.addEventListener('change', scheduleDraftSave);
-            if (field.type === 'text' || field.type === 'email' || field.tagName === 'TEXTAREA') {
-                field.addEventListener('blur', scheduleDraftSave);
-            }
-        });
-
-        document.addEventListener('visibilitychange', () => {
-            if (checkoutOnly) return;
-            if (document.visibilityState === 'hidden') {
-                saveDraft();
             }
         });
 

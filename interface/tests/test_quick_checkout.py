@@ -43,13 +43,12 @@ class QuickCheckoutViewTests(TestCase):
             fixed_price_cents=12000,
         )
 
-    def test_quick_checkout_page_renders_checkout_only_form(self):
-        response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.token]))
+    def test_quick_checkout_page_renders_summary_and_payment_step(self):
+        response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'data-checkout-only="1"')
-        self.assertContains(response, 'data-fixed-price-cents="12000"')
-        self.assertContains(response, f'value="{self.checkout.token}"')
+        self.assertContains(response, "Récapitulatif de ton rendez-vous")
+        self.assertContains(response, 'data-quick-checkout-id="{}"'.format(self.checkout.id))
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_uses_fixed_quick_checkout_price(self):
@@ -69,7 +68,7 @@ class QuickCheckoutViewTests(TestCase):
                 "general_adjustment": "",
                 "meche": False,
                 "location_preference": "salon",
-                "quick_checkout_token": str(self.checkout.token),
+                "quick_checkout_id": self.checkout.id,
             },
             content_type="application/json",
         )
@@ -77,17 +76,8 @@ class QuickCheckoutViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(stub.calls[0]["amount_cents"], 3000)
 
-
-    def test_quick_checkout_page_hides_regular_steps_server_side(self):
-        response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.token]))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'data-step="1" hidden')
-        self.assertContains(response, 'data-step="2" hidden')
-        self.assertContains(response, 'data-step="3" hidden')
-
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
-    def test_payment_intent_accepts_quick_checkout_token_without_client_fields(self):
+    def test_payment_intent_accepts_quick_checkout_id_without_client_fields(self):
         from interface import views
 
         stub = _PaymentStub()
@@ -99,7 +89,7 @@ class QuickCheckoutViewTests(TestCase):
             reverse("interface:provider_payment_intent"),
             data={
                 "provider_id": self.provider.id,
-                "quick_checkout_token": str(self.checkout.token),
+                "quick_checkout_id": self.checkout.id,
             },
             content_type="application/json",
         )
@@ -108,7 +98,7 @@ class QuickCheckoutViewTests(TestCase):
         self.assertEqual(stub.calls[0]["amount_cents"], 3000)
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
-    def test_payment_intent_rejects_quick_checkout_token_with_mismatched_service(self):
+    def test_payment_intent_rejects_quick_checkout_id_with_mismatched_service(self):
         from interface import views
 
         other_service = Service.objects.create(
@@ -128,7 +118,7 @@ class QuickCheckoutViewTests(TestCase):
             data={
                 "provider_id": self.provider.id,
                 "service_id": other_service.id,
-                "quick_checkout_token": str(self.checkout.token),
+                "quick_checkout_id": self.checkout.id,
             },
             content_type="application/json",
         )
