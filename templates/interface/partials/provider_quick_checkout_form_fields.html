@@ -1,0 +1,50 @@
+                            <section class="quick-checkout-card full-width" aria-label="Paiement rapide">
+                                {% include "interface/partials/quick_checkout_summary.html" with quick_checkout=quick_checkout provider=provider %}
+
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Sécuriser le rendez-vous</h4>
+                                <div class="secure-badge">
+                                    <span style="font-size: 1.5rem;">🔒</span>
+                                    <div>
+                                        <strong>Frais de réservation : <span id="deposit-amount-inline">-- €</span> (déduits du total).</strong><br>
+                                        Aucun débit immédiat : les frais de réservation sont prélevés uniquement après confirmation du rendez-vous.<br>
+                                        Le reste est réglé directement à {{ provider.name }} le jour J.
+                                    </div>
+                                </div>
+
+                                {% if stripe_public_key %}
+                                    <div class="form-field full-width">
+                                        <label>Saisir la carte pour garantir le créneau</label>
+                                        <p class="field-hint" id="deposit-payment-hint">Frais de réservation estimés : -- € (empreinte bancaire).</p>
+                                        <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
+                                        <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="form-field checkbox-field full-width" style="margin-top: 15px;">
+                                    <label>
+                                        <input type="checkbox" required>
+                                        <span style="font-size: 0.9rem;">J'accepte que cette empreinte serve de caution en cas d'absence injustifiée (No-show).</span>
+                                    </label>
+                                </div>
+
+                                <div class="wizard-actions full-width">
+                                    <button type="submit" class="btn">Valider</button>
+                                </div>
+                            </section>
+
+                            <input type="hidden" name="provider_id" value="{{ provider.id }}">
+                            <input type="hidden" name="service_id" value="{{ quick_checkout.service_id }}">
+                            <input type="hidden" name="hair_length" value="{{ quick_checkout.hair_length|default:'' }}">
+                            <input type="hidden" name="general_adjustment" value="{{ quick_checkout.general_adjustment|default:'' }}">
+                            <input type="hidden" name="meche" value="{% if quick_checkout.meche %}on{% endif %}">
+                            <input type="hidden" name="location_preference" value="{{ quick_checkout.location_preference|default:'' }}">
+                            <input type="hidden" name="location" value="{{ quick_checkout.location|default:'' }}">
+                            <input type="hidden" name="client_address" value="{{ quick_checkout.client_address|default:'' }}">
+                            <input type="hidden" name="free_text" value="{{ quick_checkout.free_text|default:'' }}">
+                            <input type="hidden" name="desired_date" value="{{ quick_checkout.desired_date|date:'Y-m-d\\TH:i' }}">
+                            <input type="hidden" name="client_name" value="{{ quick_checkout.client_name }}">
+                            <input type="hidden" name="client_email" value="{{ quick_checkout.client_email }}">
+                            <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
+                            <input type="hidden" name="current_hair_picture" id="current_hair_picture" value="">
+                            <input type="hidden" name="quick_checkout_id" id="quick_checkout_id" value="{{ quick_checkout_id|default:'' }}">
+                        
