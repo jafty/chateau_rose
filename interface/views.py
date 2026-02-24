@@ -38,6 +38,7 @@ from interface.models import (
     MarketingServiceZone,
     MarketingZone,
     ProviderBookingDraft,
+    QuickCheckoutPage,
 )
 from interface.services import booking_requests
 from chateaurose.seo import build_base_url
@@ -127,6 +128,23 @@ def _is_checkout_ready(prefill_data: dict) -> bool:
         return True
 
     return bool(prefill_data.get("location") and prefill_data.get("client_address"))
+
+
+
+def _prefill_data_from_quick_checkout(checkout: QuickCheckoutPage) -> dict:
+    return {
+        "service_id": str(checkout.service_id),
+        "hair_length": checkout.hair_length,
+        "general_adjustment": checkout.general_adjustment,
+        "meche": checkout.meche,
+        "location_preference": checkout.location_preference,
+        "location": checkout.location,
+        "client_address": checkout.client_address,
+        "desired_date": checkout.desired_date.strftime("%Y-%m-%dT%H:%M"),
+        "free_text": checkout.free_text,
+        "client_name": checkout.client_name,
+        "client_email": checkout.client_email,
+    }
 
 def home(request):
     providers = Provider.objects.all()
@@ -235,7 +253,7 @@ def at_home_provider_list(request):
     return render(request, "interface/at_home_provider_list.html", {"providers": providers})
 
 
-def provider_detail(request, provider_id):
+def provider_detail(request, provider_id, quick_checkout=None):
     provider = get_object_or_404(Provider, id=provider_id)
     services = list(
         Service.objects.filter(provider=provider)
@@ -255,10 +273,18 @@ def provider_detail(request, provider_id):
     checkout_only = False
     checkout_requested = _get_query_param(request, "checkout") == "1"
     draft_token = _get_query_param(request, "draft_token")
+    fixed_price_cents = None
+
+    if quick_checkout is not None:
+        prefill_data = _prefill_data_from_quick_checkout(quick_checkout)
+        checkout_only = True
+        checkout_requested = True
+        fixed_price_cents = quick_checkout.fixed_price_cents
 
     if request.method == "GET":
         prefilled_payment_auth_id = _get_query_param(request, "payment_auth_id")
-        prefill_data = _prefill_data_from_draft(provider, draft_token)
+        if quick_checkout is None:
+            prefill_data = _prefill_data_from_draft(provider, draft_token)
         if prefilled_payment_auth_id:
             payment_message = (
                 "Empreinte bancaire confirmée. Tu peux finaliser l'envoi de ta demande."
@@ -267,8 +293,11 @@ def provider_detail(request, provider_id):
             checkout_only = True
 
     if request.method == "POST":
-        prefill_data = _prefill_data_from_draft(provider, draft_token)
-        checkout_only = checkout_requested and _is_checkout_ready(prefill_data)
+        if quick_checkout is None:
+            prefill_data = _prefill_data_from_draft(provider, draft_token)
+            checkout_only = checkout_requested and _is_checkout_ready(prefill_data)
+        else:
+            checkout_only = True
         form = ProviderBookingRequestForm(
             request.POST,
             request.FILES,
@@ -290,6 +319,19 @@ def provider_detail(request, provider_id):
                 booking_detail_path.replace("BOOKING_ID/", "")
             )
             try:
+                if quick_checkout is not None:
+                    form.cleaned_data["service_id"] = quick_checkout.service_id
+                    form.cleaned_data["client_name"] = quick_checkout.client_name
+                    form.cleaned_data["client_email"] = quick_checkout.client_email
+                    form.cleaned_data["desired_date"] = quick_checkout.desired_date.isoformat()
+                    form.cleaned_data["hair_length"] = quick_checkout.hair_length
+                    form.cleaned_data["general_adjustment"] = quick_checkout.general_adjustment
+                    form.cleaned_data["meche"] = quick_checkout.meche
+                    form.cleaned_data["location_preference"] = quick_checkout.location_preference
+                    form.cleaned_data["location"] = quick_checkout.location
+                    form.cleaned_data["client_address"] = quick_checkout.client_address
+                    form.cleaned_data["free_text"] = quick_checkout.free_text
+
                 booking = request_haircut.execute(
                     provider_id=str(provider.id),
                     service_id=form.cleaned_data.get("service_id"),
@@ -339,6 +381,15 @@ def provider_detail(request, provider_id):
                 if draft:
                     draft.completed_at = timezone.now()
                     draft.save(update_fields=["completed_at", "updated_at"])
+
+                if quick_checkout is not None:
+                    booking_row = Booking.objects.filter(booking_id=booking.id).first()
+                    if booking_row:
+                        booking_row.estimated_price_cents = quick_checkout.fixed_price_cents
+                        booking_row.save(update_fields=["estimated_price_cents", "updated_at"])
+                    quick_checkout.completed_at = timezone.now()
+                    quick_checkout.is_active = False
+                    quick_checkout.save(update_fields=["completed_at", "is_active", "updated_at"])
 
                 message = f"Demande envoyée. ID: {booking.id}"
             except DomainError as exc:
@@ -392,8 +443,22 @@ def provider_detail(request, provider_id):
             "booking_draft_url": reverse("interface:provider_booking_draft"),
             "prefill_data": json.dumps(prefill_data),
             "checkout_only": checkout_only,
+            "fixed_price_cents": fixed_price_cents,
+            "quick_checkout_token": str(quick_checkout.token) if quick_checkout else "",
         },
     )
+
+
+def quick_checkout_page(request, token):
+    checkout = get_object_or_404(
+        QuickCheckoutPage.objects.select_related("provider", "service"),
+        token=token,
+        is_active=True,
+        completed_at__isnull=True,
+    )
+    if checkout.expires_at and checkout.expires_at <= timezone.now():
+        raise Http404("Ce lien de paiement rapide a expiré.")
+    return provider_detail(request, checkout.provider_id, quick_checkout=checkout)
 
 
 def _sanitize_draft_payload(data: dict) -> dict:
@@ -484,9 +549,20 @@ def provider_payment_intent(request):
     general_adjustment = payload.get("general_adjustment")
     meche = payload.get("meche")
     location_preference = payload.get("location_preference")
+    quick_checkout_token = payload.get("quick_checkout_token")
 
     if not all([provider_id, service_id]) or meche is None:
         return JsonResponse({"error": "Informations manquantes."}, status=400)
+
+    quick_checkout = None
+    if quick_checkout_token:
+        quick_checkout = QuickCheckoutPage.objects.filter(
+            token=quick_checkout_token,
+            provider_id=provider_id,
+            service_id=service_id,
+            is_active=True,
+            completed_at__isnull=True,
+        ).first()
 
     try:
         service = provider_catalog.get_service(provider_id, service_id)
@@ -508,6 +584,9 @@ def provider_payment_intent(request):
         if "General adjustment" in message:
             return JsonResponse({"error": "Supplément non supporté."}, status=400)
         return JsonResponse({"error": "Informations manquantes."}, status=400)
+    if quick_checkout is not None:
+        estimated_price_cents = quick_checkout.fixed_price_cents
+
     deposit_percentage = service.get("deposit_percentage")
     if deposit_percentage is not None:
         deposit_cents = round(estimated_price_cents * deposit_percentage / 100)

@@ -199,6 +199,8 @@
                             data-booking-draft-url="{{ booking_draft_url }}"
                             data-prefill-data="{{ prefill_data|default:"{}"|escapejs }}"
                             data-checkout-only="{% if checkout_only %}1{% else %}0{% endif %}"
+                            data-fixed-price-cents="{{ fixed_price_cents|default:'' }}"
+                            data-quick-checkout-token="{{ quick_checkout_token|default:'' }}"
                         >
                             {% csrf_token %}
 
@@ -412,6 +414,7 @@
                             <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
                             <input type="hidden" name="current_hair_picture" id="current_hair_picture" value="">
                             <input type="hidden" name="draft_token" id="draft_token" value="">
+                            <input type="hidden" name="quick_checkout_token" id="quick_checkout_token" value="{{ quick_checkout_token|default:'' }}">
                         </form>
 
                         <aside class="provider-form-aside">
@@ -456,6 +459,8 @@
         const bookingDraftUrl = form?.dataset.bookingDraftUrl || '';
         const prefillData = JSON.parse(form?.dataset.prefillData || '{}');
         const checkoutOnly = (form?.dataset.checkoutOnly || '0') === '1';
+        const fixedPriceCents = Number.parseInt(form?.dataset.fixedPriceCents || '', 10);
+        const quickCheckoutToken = form?.dataset.quickCheckoutToken || '';
         const draftStatus = document.getElementById('draft-save-status');
         const draftTokenInput = document.getElementById('draft_token');
         const draftStorageKey = form ? `bookingDraftToken:${form.querySelector('input[name="provider_id"]')?.value || ''}` : '';
@@ -846,7 +851,8 @@
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
             const selectedLocationPreference = document.querySelector('input[name="location_preference"]:checked')?.value || locationPreferenceInput?.value;
             const atHomeAdj = selectedLocationPreference === "domicile" ? pricing.at_home_bonus || 0 : 0;
-            const totalCents = base + lengthAdj + generalAdj + mecheAdj + atHomeAdj;
+            const computedTotalCents = base + lengthAdj + generalAdj + mecheAdj + atHomeAdj;
+            const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : computedTotalCents;
             const totalStr = formatPrice(totalCents);
             const depositPercentage = pricing.deposit_percentage ?? 0;
             const depositCents = Math.round(totalCents * depositPercentage / 100);
@@ -867,7 +873,11 @@
                 : 'mèches non fournies';
             const locationText = atHomeAdj > 0 ? `à domicile (+${formatPrice(atHomeAdj)})` : "en salon";
             const remainingStr = formatPrice(Math.max(totalCents - depositCents, 0));
-            finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). À payer après acompte : ${remainingStr}.`; 
+            if (Number.isFinite(fixedPriceCents)) {
+                finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). À payer après acompte : ${remainingStr}.`;
+            } else {
+                finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). À payer après acompte : ${remainingStr}.`;
+            } 
             if (generalAdjustmentsDisplay) {
                 const adjustmentsText = selectedAdjustment
                     ? formatAdjustment(selectedAdjustment, generalAdj)
@@ -1012,6 +1022,7 @@
                     general_adjustment: generalAdjustment,
                     meche,
                     location_preference: locationPreference,
+                    quick_checkout_token: quickCheckoutToken || undefined,
                 }),
             });
 
@@ -1214,6 +1225,7 @@
         };
 
         const scheduleDraftSave = () => {
+            if (checkoutOnly) return;
             if (draftSaveTimer) {
                 window.clearTimeout(draftSaveTimer);
             }
@@ -1231,6 +1243,7 @@
         });
 
         document.addEventListener('visibilitychange', () => {
+            if (checkoutOnly) return;
             if (document.visibilityState === 'hidden') {
                 saveDraft();
             }

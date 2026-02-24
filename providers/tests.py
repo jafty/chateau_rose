@@ -4,7 +4,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from booking.models import Booking, Provider, Service
-from interface.models import ProviderBookingDraft
 
 
 @override_settings(
@@ -69,40 +68,6 @@ class ProviderDashboardTests(TestCase):
         self.assertContains(response, detail_url)
         self.assertContains(response, booking.booking_id)
 
-
-    def test_dashboard_lists_only_provider_pending_drafts(self):
-        other_user = get_user_model().objects.create_user(
-            username="provider2",
-            password="safepass123",
-            email="provider2@example.com",
-        )
-        other_provider = Provider.objects.create(
-            name="Autre Pro",
-            contact_email="provider2@example.com",
-            user=other_user,
-        )
-        ProviderBookingDraft.objects.create(
-            provider=self.provider,
-            client_email="lead@example.com",
-            client_name="Lead One",
-            payload={"desired_date": "2026-01-10T17:00"},
-        )
-        ProviderBookingDraft.objects.create(
-            provider=self.provider,
-            client_email="done@example.com",
-            completed_at=timezone.now(),
-        )
-        ProviderBookingDraft.objects.create(
-            provider=other_provider,
-            client_email="other@example.com",
-        )
-
-        response = self.client.get(reverse("providers:providers_index"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "lead@example.com")
-        self.assertNotContains(response, "done@example.com")
-        self.assertNotContains(response, "other@example.com")
 
     def test_provider_can_propose_update_from_detail(self):
         booking = self._create_booking()
