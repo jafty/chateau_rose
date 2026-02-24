@@ -180,12 +180,14 @@
                 <div class="provider-form-card inline-form-card" id="booking-wizard">
                     <h3 class="section-title provider-section-title" style="text-align:center;">Réserver avec {{ provider.name }}</h3>
 
-                    <div class="step-progress" {% if is_quick_checkout %}hidden{% endif %}>
+                    {% if not is_quick_checkout %}
+                    <div class="step-progress">
                         <div class="step-indicator active" data-step-indicator="1">1</div>
                         <div class="step-indicator" data-step-indicator="2">2</div>
                         <div class="step-indicator" data-step-indicator="3">3</div>
                         <div class="step-indicator" data-step-indicator="4">4</div>
                     </div>
+                    {% endif %}
 
                     <div class="provider-form-layout">
                         <form
@@ -203,7 +205,55 @@
                             {% csrf_token %}
 
                             {% if is_quick_checkout %}
-                            {% include "interface/partials/quick_checkout_summary.html" with quick_checkout=quick_checkout provider=provider %}
+                            <section class="quick-checkout-card full-width" aria-label="Paiement rapide">
+                                {% include "interface/partials/quick_checkout_summary.html" with quick_checkout=quick_checkout provider=provider %}
+
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Sécuriser le rendez-vous</h4>
+                                <div class="secure-badge">
+                                    <span style="font-size: 1.5rem;">🔒</span>
+                                    <div>
+                                        <strong>Frais de réservation : <span id="deposit-amount-inline">-- €</span> (déduits du total).</strong><br>
+                                        Aucun débit immédiat : les frais de réservation sont prélevés uniquement après confirmation du rendez-vous.<br>
+                                        Le reste est réglé directement à {{ provider.name }} le jour J.
+                                    </div>
+                                </div>
+
+                                {% if stripe_public_key %}
+                                    <div class="form-field full-width">
+                                        <label>Saisir la carte pour garantir le créneau</label>
+                                        <p class="field-hint" id="deposit-payment-hint">Frais de réservation estimés : -- € (empreinte bancaire).</p>
+                                        <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
+                                        <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
+                                    </div>
+                                {% endif %}
+
+                                <div class="form-field checkbox-field full-width" style="margin-top: 15px;">
+                                    <label>
+                                        <input type="checkbox" required>
+                                        <span style="font-size: 0.9rem;">J'accepte que cette empreinte serve de caution en cas d'absence injustifiée (No-show).</span>
+                                    </label>
+                                </div>
+
+                                <div class="wizard-actions full-width">
+                                    <button type="submit" class="btn">Valider</button>
+                                </div>
+                            </section>
+
+                            <input type="hidden" name="provider_id" value="{{ provider.id }}">
+                            <input type="hidden" name="service_id" value="{{ quick_checkout.service_id }}">
+                            <input type="hidden" name="hair_length" value="{{ quick_checkout.hair_length|default:'' }}">
+                            <input type="hidden" name="general_adjustment" value="{{ quick_checkout.general_adjustment|default:'' }}">
+                            <input type="hidden" name="meche" value="{% if quick_checkout.meche %}on{% endif %}">
+                            <input type="hidden" name="location_preference" value="{{ quick_checkout.location_preference|default:'' }}">
+                            <input type="hidden" name="location" value="{{ quick_checkout.location|default:'' }}">
+                            <input type="hidden" name="client_address" value="{{ quick_checkout.client_address|default:'' }}">
+                            <input type="hidden" name="free_text" value="{{ quick_checkout.free_text|default:'' }}">
+                            <input type="hidden" name="desired_date" value="{{ quick_checkout.desired_date|date:'Y-m-d\\TH:i' }}">
+                            <input type="hidden" name="client_name" value="{{ quick_checkout.client_name }}">
+                            <input type="hidden" name="client_email" value="{{ quick_checkout.client_email }}">
+                            <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
+                            <input type="hidden" name="current_hair_picture" id="current_hair_picture" value="">
+                            <input type="hidden" name="quick_checkout_id" id="quick_checkout_id" value="{{ quick_checkout_id|default:'' }}">
                         {% else %}
 <fieldset class="wizard-step active" data-step="1" {% if is_quick_checkout %}hidden{% endif %}>
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Choix de la coiffure</h4>
@@ -376,7 +426,6 @@
                                 </div>
                             </fieldset>
 
-                                                    {% endif %}
 
                             <fieldset class="wizard-step" data-step="4">
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Sécuriser le rendez-vous</h4>
@@ -416,14 +465,10 @@
                             <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
                             <input type="hidden" name="current_hair_picture" id="current_hair_picture" value="">
                             <input type="hidden" name="quick_checkout_id" id="quick_checkout_id" value="{{ quick_checkout_id|default:'' }}">
+                            {% endif %}
                         </form>
 
-                        {% if is_quick_checkout %}
-                        <p class="meta-line" style="text-align: center; margin-top: 0;">
-                            Récapitulatif de ta prestation prêt : il ne reste qu'à sécuriser ton rendez-vous avec l'empreinte bancaire.
-                        </p>
-                        {% endif %}
-
+                        {% if not is_quick_checkout %}
                         <aside class="provider-form-aside">
                             <div class="sticky-price-bar" id="sticky-price-bar">
                                 <span class="total-label">Estimation totale</span>
@@ -438,6 +483,7 @@
                                 <span class="sr-only" id="sticky-price-value">-- €</span>
                             </div>
                         </aside>
+                        {% endif %}
                     </div>
                 </div>
             </section>
@@ -986,56 +1032,25 @@
             mecheCheckbox.addEventListener('change', refreshEstimate);
         }
 
-        const enableCheckoutOnlyMode = () => {
-            if (!checkoutOnly) {
-                if (serviceSelect && serviceSelect.value) {
-                    updateHairLengths(serviceSelect.value);
-                    updateGeneralAdjustments(serviceSelect.value);
-                    updateMecheField(serviceSelect.value);
-                }
-                return;
+        if (checkoutOnly) {
+            const quickCheckoutServiceId = form?.querySelector('input[name="service_id"]')?.value;
+            const quickPricing = quickCheckoutServiceId ? pricingData[quickCheckoutServiceId] : null;
+            const depositPercentage = quickPricing?.deposit_percentage ?? 0;
+            const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : 0;
+            const depositCents = Math.round(totalCents * depositPercentage / 100);
+            const depositStr = formatPrice(depositCents);
+            if (depositInlineDisplay) {
+                depositInlineDisplay.textContent = depositStr;
             }
-
-            currentStep = totalSteps;
-            steps.forEach((step) => {
-                const stepNumber = parseInt(step.dataset.step, 10);
-                step.hidden = stepNumber !== totalSteps;
-            });
-
-            const serviceIdInput = document.createElement('input');
-            serviceIdInput.type = 'hidden';
-            serviceIdInput.name = 'service_id';
-            serviceIdInput.value = '{{ quick_checkout.service_id|default:"" }}';
-            form?.appendChild(serviceIdInput);
-
-            const hairLengthInput = document.createElement('input');
-            hairLengthInput.type = 'hidden';
-            hairLengthInput.name = 'hair_length';
-            hairLengthInput.value = '{{ quick_checkout.hair_length|default:"" }}';
-            form?.appendChild(hairLengthInput);
-
-            const desiredDateInput = document.createElement('input');
-            desiredDateInput.type = 'hidden';
-            desiredDateInput.name = 'desired_date';
-            desiredDateInput.value = '{{ quick_checkout.desired_date|date:"Y-m-d\\TH:i" }}';
-            form?.appendChild(desiredDateInput);
-
-            const clientNameInput = document.createElement('input');
-            clientNameInput.type = 'hidden';
-            clientNameInput.name = 'client_name';
-            clientNameInput.value = '{{ quick_checkout.client_name|default:""|escapejs }}';
-            form?.appendChild(clientNameInput);
-
-            const clientEmailInput = document.createElement('input');
-            clientEmailInput.type = 'hidden';
-            clientEmailInput.name = 'client_email';
-            clientEmailInput.value = '{{ quick_checkout.client_email|default:""|escapejs }}';
-            form?.appendChild(clientEmailInput);
-
-            updateWizardUI();
-        };
-
-        enableCheckoutOnlyMode();
+            if (depositPaymentHint) {
+                depositPaymentHint.textContent = `Frais de réservation estimés : ${depositStr} (empreinte bancaire).`;
+            }
+            mountPaymentElement().catch((error) => showPaymentError(error.message));
+        } else if (serviceSelect && serviceSelect.value) {
+            updateHairLengths(serviceSelect.value);
+            updateGeneralAdjustments(serviceSelect.value);
+            updateMecheField(serviceSelect.value);
+        }
 
         form?.addEventListener('submit', async (event) => {
             if (!stripePublicKey) {
@@ -1056,7 +1071,7 @@
             showPaymentError('');
 
             if (!currentClientSecret) {
-                showPaymentError("Sélectionne un service et une longueur pour préparer l'empreinte.");
+                showPaymentError("Impossible de préparer l'empreinte bancaire.");
                 return;
             }
 
