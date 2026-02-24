@@ -405,6 +405,7 @@ def quick_checkout_page(request, checkout_id):
                     meche=checkout.meche,
                     current_hair_picture="quick-checkout",
                     require_current_hair_picture=False,
+                    skip_coverage_validation=True,
                     inspiration_pictures=[],
                     free_text=checkout.free_text,
                     payment_auth_id=payment_auth_id,

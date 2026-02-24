@@ -57,6 +57,14 @@ class QuickCheckoutViewTests(TestCase):
         self.assertContains(response, f'data-quick-checkout-id="{self.checkout.id}"')
 
 
+
+    def test_quick_checkout_summary_hides_precise_location_details(self):
+        response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Chez la/le prestataire ou en salon")
+        self.assertNotContains(response, "Paris")
+
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_quick_checkout_submit_does_not_require_current_hair_picture(self):
         response = self.client.post(

@@ -28,6 +28,7 @@ def execute(
     meche: bool,
     current_hair_picture: str,
     require_current_hair_picture: bool = True,
+    skip_coverage_validation: bool = False,
     inspiration_pictures: list,
     free_text: str,
     payment_auth_id: str | None = None,
@@ -78,7 +79,7 @@ def execute(
         if normalized_location_preference == "salon"
         else normalized_location
     )
-    if not provider_catalog.provider_covers_zone(provider_id, coverage_location):
+    if not skip_coverage_validation and not provider_catalog.provider_covers_zone(provider_id, coverage_location):
         raise ValidationError("Provider does not cover this zone")
 
     estimated_price, hair_length, general_adjustment = estimate_service_price_cents(

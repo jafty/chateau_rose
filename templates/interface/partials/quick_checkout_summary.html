@@ -31,9 +31,9 @@
             <dt>Lieu</dt>
             <dd>
                 {% if quick_checkout.location_preference == 'salon' %}
-                    {{ provider.salon_zone|default:'En salon' }}
+                    Chez la/le prestataire ou en salon
                 {% else %}
-                    {{ quick_checkout.location|default:quick_checkout.client_address }}
+                    À ton domicile
                 {% endif %}
             </dd>
         </div>
