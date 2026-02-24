@@ -1725,6 +1725,45 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     box-shadow: var(--shadow-paper);
 }
 
+.quick-checkout-summary {
+    margin-bottom: 1rem;
+    padding: 18px;
+    border: 1px solid #f2d7cf;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #fff8f6 0%, #fff 100%);
+    display: grid;
+    gap: 14px;
+}
+.quick-checkout-summary__header h4 {
+    margin: 0 0 0.35rem;
+    color: var(--rose-accent);
+}
+.quick-checkout-summary__header .meta-line { margin: 0; }
+.quick-checkout-summary__grid {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+}
+.quick-checkout-summary__grid div {
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(209, 77, 114, 0.18);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+.quick-checkout-summary__grid dt {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ink-secondary);
+    margin-bottom: 4px;
+}
+.quick-checkout-summary__grid dd { margin: 0; font-weight: 600; }
+.quick-checkout-summary__price {
+    color: var(--rose-accent);
+    font-size: 1.05rem;
+}
+
 /* --- PROVIDER BOOKING DETAIL --- */
 .booking-detail-header {
     display: grid;

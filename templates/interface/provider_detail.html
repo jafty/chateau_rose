@@ -612,6 +612,76 @@
             }
         }
 
+        const csrfToken = form?.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
+
+        const showPaymentError = (message) => {
+            if (!paymentError) return;
+            paymentError.textContent = message || '';
+            paymentError.hidden = !message;
+        };
+
+        const buildReturnUrl = () => {
+            if (!paymentReturnUrl) return window.location.href;
+            const url = new URL(paymentReturnUrl, window.location.origin);
+            if (quickCheckoutId) {
+                url.searchParams.set('quick_checkout_id', quickCheckoutId);
+            }
+            return url.toString();
+        };
+
+        const buildPaymentPayload = () => ({
+            provider_id: form?.querySelector('input[name="provider_id"]')?.value,
+            service_id: serviceSelect?.value,
+            hair_length: hairLengthSelect?.value,
+            general_adjustment: generalAdjustmentSelect?.value || '',
+            meche: Boolean(mecheCheckbox?.checked),
+            location_preference:
+                document.querySelector('input[name="location_preference"]:checked')?.value ||
+                locationPreferenceInput?.value ||
+                'salon',
+            quick_checkout_id: quickCheckoutId || undefined,
+        });
+
+        const fetchPaymentIntent = async () => {
+            if (!paymentIntentUrl) {
+                throw new Error("L'URL de paiement est indisponible.");
+            }
+            const response = await fetch(paymentIntentUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify(buildPaymentPayload()),
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.error || "Impossible de préparer l'empreinte bancaire.");
+            }
+            return payload;
+        };
+
+        const mountPaymentElement = async () => {
+            if (!stripePublicKey || !paymentElementContainer) return;
+            const { client_secret } = await fetchPaymentIntent();
+            if (!client_secret) {
+                throw new Error("Réponse de paiement invalide.");
+            }
+
+            if (!stripe) {
+                stripe = Stripe(stripePublicKey);
+            }
+            if (paymentElement) {
+                paymentElement.destroy();
+            }
+            elements = stripe.elements({ clientSecret: client_secret });
+            paymentElement = elements.create('payment');
+            paymentElement.mount('#payment-element');
+            currentClientSecret = client_secret;
+            showPaymentError('');
+        };
+
         const updateWizardUI = () => {
             steps.forEach((step) => {
                 step.classList.toggle('active', parseInt(step.dataset.step, 10) === currentStep);
@@ -895,6 +965,74 @@
                 depositDetailsDisplay.textContent =
                     `Frais de réservation estimés (${depositPercentage} %), prélevés seulement après confirmation. Déduits du total.`;
             }
+        };
+
+        if (serviceSelect) {
+            serviceSelect.addEventListener('change', () => {
+                const serviceId = serviceSelect.value;
+                updateHairLengths(serviceId);
+                updateGeneralAdjustments(serviceId);
+                updateMecheField(serviceId);
+                refreshEstimate();
+            });
+        }
+        if (hairLengthSelect) {
+            hairLengthSelect.addEventListener('change', refreshEstimate);
+        }
+        if (generalAdjustmentSelect) {
+            generalAdjustmentSelect.addEventListener('change', refreshEstimate);
+        }
+        if (mecheCheckbox) {
+            mecheCheckbox.addEventListener('change', refreshEstimate);
+        }
+
+        const enableCheckoutOnlyMode = () => {
+            if (!checkoutOnly) {
+                if (serviceSelect && serviceSelect.value) {
+                    updateHairLengths(serviceSelect.value);
+                    updateGeneralAdjustments(serviceSelect.value);
+                    updateMecheField(serviceSelect.value);
+                }
+                return;
+            }
+
+            currentStep = totalSteps;
+            steps.forEach((step) => {
+                const stepNumber = parseInt(step.dataset.step, 10);
+                step.hidden = stepNumber !== totalSteps;
+            });
+
+            const serviceIdInput = document.createElement('input');
+            serviceIdInput.type = 'hidden';
+            serviceIdInput.name = 'service_id';
+            serviceIdInput.value = '{{ quick_checkout.service_id|default:"" }}';
+            form?.appendChild(serviceIdInput);
+
+            const hairLengthInput = document.createElement('input');
+            hairLengthInput.type = 'hidden';
+            hairLengthInput.name = 'hair_length';
+            hairLengthInput.value = '{{ quick_checkout.hair_length|default:"" }}';
+            form?.appendChild(hairLengthInput);
+
+            const desiredDateInput = document.createElement('input');
+            desiredDateInput.type = 'hidden';
+            desiredDateInput.name = 'desired_date';
+            desiredDateInput.value = '{{ quick_checkout.desired_date|date:"Y-m-d\\TH:i" }}';
+            form?.appendChild(desiredDateInput);
+
+            const clientNameInput = document.createElement('input');
+            clientNameInput.type = 'hidden';
+            clientNameInput.name = 'client_name';
+            clientNameInput.value = '{{ quick_checkout.client_name|default:""|escapejs }}';
+            form?.appendChild(clientNameInput);
+
+            const clientEmailInput = document.createElement('input');
+            clientEmailInput.type = 'hidden';
+            clientEmailInput.name = 'client_email';
+            clientEmailInput.value = '{{ quick_checkout.client_email|default:""|escapejs }}';
+            form?.appendChild(clientEmailInput);
+
+            updateWizardUI();
         };
 
         enableCheckoutOnlyMode();
