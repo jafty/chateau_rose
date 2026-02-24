@@ -39,9 +39,9 @@ class QuickCheckoutViewTests(TestCase):
             client_name="Léa",
             client_email="lea@example.com",
             desired_date=timezone.now() + timedelta(days=3),
-            hair_length="long",
             location_preference="salon",
-            fixed_price_cents=12000,
+            final_price_cents=12000,
+            reservation_fee_cents=3000,
         )
 
     def test_quick_checkout_page_renders_summary_and_payment_step(self):
@@ -50,6 +50,7 @@ class QuickCheckoutViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Récapitulatif de ton rendez-vous")
         self.assertContains(response, "120,00 €")
+        self.assertContains(response, "30,00 €")
         self.assertNotContains(response, "centimes")
         self.assertNotContains(response, 'class="step-progress"')
         self.assertNotContains(response, "Estimation totale")
@@ -58,11 +59,12 @@ class QuickCheckoutViewTests(TestCase):
 
 
 
-    def test_quick_checkout_summary_hides_precise_location_details(self):
+    def test_quick_checkout_summary_shows_fee_and_hides_location_label(self):
         response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Chez la/le prestataire ou en salon")
+        self.assertContains(response, "Frais de réservation")
+        self.assertNotContains(response, "Chez la/le prestataire ou en salon")
         self.assertNotContains(response, "Paris")
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
@@ -102,7 +104,7 @@ class QuickCheckoutViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(stub.calls[0]["amount_cents"], 12000)
+        self.assertEqual(stub.calls[0]["amount_cents"], 3000)
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_accepts_quick_checkout_id_without_client_fields(self):
@@ -120,7 +122,7 @@ class QuickCheckoutViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(stub.calls[0]["amount_cents"], 12000)
+        self.assertEqual(stub.calls[0]["amount_cents"], 3000)
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_ignores_unrelated_service_fields_for_quick_checkout(self):
@@ -149,4 +151,4 @@ class QuickCheckoutViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(stub.calls[0]["amount_cents"], 12000)
+        self.assertEqual(stub.calls[0]["amount_cents"], 3000)

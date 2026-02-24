@@ -187,7 +187,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
     fixed_price_cents = None
 
     if quick_checkout is not None:
-        fixed_price_cents = quick_checkout.fixed_price_cents
+        fixed_price_cents = quick_checkout.reservation_fee_cents
 
     if request.method == "GET":
         prefilled_payment_auth_id = (request.GET.get("payment_auth_id") or "").strip()
@@ -388,6 +388,11 @@ def quick_checkout_page(request, checkout_id):
             provider_booking_url_base = request.build_absolute_uri(
                 booking_detail_path.replace("BOOKING_ID/", "")
             )
+            hair_length_value = (checkout.hair_length or "").strip()
+            supported_lengths = set((checkout.service.hair_length_adjustments or {}).keys())
+            if hair_length_value and supported_lengths and hair_length_value not in supported_lengths:
+                hair_length_value = ""
+
             try:
                 booking = request_haircut.execute(
                     provider_id=str(provider.id),
@@ -396,13 +401,13 @@ def quick_checkout_page(request, checkout_id):
                         "name": checkout.client_name,
                         "email": checkout.client_email,
                     },
-                    location=checkout.location,
+                    location=(provider.salon_zone or "Salon") if checkout.location_preference == "salon" else checkout.client_address,
                     location_preference=checkout.location_preference,
                     client_address=checkout.client_address,
                     desired_date=checkout.desired_date.isoformat(),
-                    hair_length=checkout.hair_length,
-                    general_adjustment=checkout.general_adjustment,
-                    meche=checkout.meche,
+                    hair_length=hair_length_value,
+                    general_adjustment="",
+                    meche=False,
                     current_hair_picture="quick-checkout",
                     require_current_hair_picture=False,
                     skip_coverage_validation=True,
@@ -421,7 +426,7 @@ def quick_checkout_page(request, checkout_id):
 
                 booking_row = Booking.objects.filter(booking_id=booking.id).first()
                 if booking_row:
-                    booking_row.estimated_price_cents = checkout.fixed_price_cents
+                    booking_row.estimated_price_cents = checkout.final_price_cents
                     booking_row.save(update_fields=["estimated_price_cents", "updated_at"])
                 checkout.completed_at = timezone.now()
                 checkout.is_active = False
@@ -443,7 +448,9 @@ def quick_checkout_page(request, checkout_id):
             "payment_auth_id": prefilled_payment_auth_id,
             "stripe_public_key": stripe_public_key,
             "quick_checkout_id": checkout.id,
-            "fixed_price_cents": checkout.fixed_price_cents,
+            "final_price_cents": checkout.final_price_cents,
+            "reservation_fee_cents": checkout.reservation_fee_cents,
+            "remaining_price_cents": max(checkout.final_price_cents - checkout.reservation_fee_cents, 0),
         },
     )
 
@@ -478,7 +485,7 @@ def provider_payment_intent(request):
         if quick_checkout is None:
             return JsonResponse({"error": "Lien checkout invalide."}, status=400)
 
-        amount_cents = quick_checkout.fixed_price_cents
+        amount_cents = quick_checkout.reservation_fee_cents
     else:
         if not all([provider_id, service_id]) or meche is None:
             return JsonResponse({"error": "Informations manquantes."}, status=400)
