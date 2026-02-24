@@ -888,50 +888,7 @@
                 depositDetailsDisplay.textContent =
                     `Frais de réservation estimés (${depositPercentage} %), prélevés seulement après confirmation. Déduits du total.`;
             }
-
-            if (serviceSelect && prefillData.service_id) {
-                serviceSelect.value = String(prefillData.service_id);
-                updateHairLengths(serviceSelect.value);
-                updateGeneralAdjustments(serviceSelect.value);
-                updateMecheField(serviceSelect.value);
-            }
-            if (hairLengthSelect && prefillData.hair_length) {
-                hairLengthSelect.value = String(prefillData.hair_length);
-            }
-            if (generalAdjustmentSelect && prefillData.general_adjustment !== undefined) {
-                generalAdjustmentSelect.value = String(prefillData.general_adjustment || '');
-            }
-            if (typeof prefillData.meche !== 'undefined' && mecheCheckbox) {
-                mecheCheckbox.checked = !!prefillData.meche;
-            }
-
-            if (prefillData.location_preference) {
-                const matchingRadio = form.querySelector(`input[name="location_preference"][value="${prefillData.location_preference}"]`);
-                if (matchingRadio) {
-                    matchingRadio.checked = true;
-                } else if (locationPreferenceInput) {
-                    locationPreferenceInput.value = prefillData.location_preference;
-                }
-            }
-
-            syncLocationPreference();
-            setFieldValue('[name="location"]', prefillData.location);
-            refreshEstimate();
         };
-
-        const enableCheckoutOnlyMode = () => {
-            if (!checkoutOnly) return;
-            currentStep = 4;
-            document.querySelectorAll('.wizard-step[data-step="1"], .wizard-step[data-step="2"], .wizard-step[data-step="3"]').forEach((step) => {
-                step.hidden = true;
-            });
-            const stepFour = document.querySelector('.wizard-step[data-step="4"]');
-            stepFour?.querySelectorAll('.btn-prev').forEach((button) => {
-                button.hidden = true;
-            });
-            updateWizardUI();
-        };
-
 
         const applyPrefillData = () => {
             if (!form || !prefillData || Object.keys(prefillData).length === 0) return;
