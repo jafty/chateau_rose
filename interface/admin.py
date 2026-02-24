@@ -128,7 +128,7 @@ class ProviderBookingDraftAdmin(admin.ModelAdmin):
 
 @admin.register(QuickCheckoutPage)
 class QuickCheckoutPageAdmin(admin.ModelAdmin):
-    list_display = ("provider", "service", "client_email", "fixed_price_cents", "is_active", "expires_at", "created_at")
+    list_display = ("provider", "service", "client_email", "final_price_cents", "reservation_fee_cents", "is_active", "expires_at", "created_at")
     list_filter = ("is_active", "provider", "service")
     search_fields = ("client_email", "client_name", "provider__name", "service__name")
     readonly_fields = ("created_at", "updated_at", "completed_at")

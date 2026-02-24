@@ -23,7 +23,8 @@
             data-payment-return-url="{% url 'interface:provider_payment_return' %}"
             data-stripe-public-key="{{ stripe_public_key }}"
             data-quick-checkout-id="{{ quick_checkout_id }}"
-            data-fixed-price-cents="{{ fixed_price_cents }}"
+            data-final-price-cents="{{ final_price_cents }}"
+            data-reservation-fee-cents="{{ reservation_fee_cents }}"
         >
             {% csrf_token %}
 
@@ -34,15 +35,15 @@
                 <div class="secure-badge" style="background: #ecfdf3; border: 1px solid #9fe3b5; color: #12542d;">
                     <span style="font-size: 1.5rem;" aria-hidden="true">🔐</span>
                     <div>
-                        <strong>Paiement vérifié · Frais de réservation à régler maintenant : <span id="deposit-amount-inline">{{ fixed_price_cents|cents_to_euros }}</span>.</strong><br>
-                        Ces frais sont <strong>déduits du prix total</strong>. Le reste sera réglé directement à {{ provider.name }} le jour du rendez-vous.
+                        <strong>Paiement vérifié · Frais de réservation à régler maintenant : <span id="deposit-amount-inline">{{ reservation_fee_cents|cents_to_euros }}</span>.</strong><br>
+                        Ces frais sont <strong>déduits du prix total</strong>. Le reste ({{ remaining_price_cents|cents_to_euros }}) sera réglé directement à {{ provider.name }} le jour du rendez-vous.
                     </div>
                 </div>
 
                 {% if stripe_public_key %}
                     <div class="form-field full-width" style="margin-top: 14px;">
                         <label>Saisir la carte pour régler les frais de réservation</label>
-                        <p class="field-hint" id="deposit-payment-hint">Frais de réservation à régler : {{ fixed_price_cents|cents_to_euros }} (déduits du total).</p>
+                        <p class="field-hint" id="deposit-payment-hint">Frais de réservation à régler : {{ reservation_fee_cents|cents_to_euros }} (déduits du total).</p>
                         <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
                         <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
                     </div>

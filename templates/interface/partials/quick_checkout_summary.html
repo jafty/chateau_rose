@@ -12,8 +12,8 @@
             <dd>{{ quick_checkout.service.name }}</dd>
         </div>
         <div>
-            <dt>Prix convenu</dt>
-            <dd class="quick-checkout-summary__price">{{ quick_checkout.fixed_price_cents|cents_to_euros }}</dd>
+            <dt>Prix final</dt>
+            <dd class="quick-checkout-summary__price">{{ quick_checkout.final_price_cents|cents_to_euros }}</dd>
         </div>
         <div>
             <dt>Date souhaitée</dt>
@@ -28,14 +28,8 @@
             <dd>{{ quick_checkout.client_email }}</dd>
         </div>
         <div>
-            <dt>Lieu</dt>
-            <dd>
-                {% if quick_checkout.location_preference == 'salon' %}
-                    Chez la/le prestataire ou en salon
-                {% else %}
-                    À ton domicile
-                {% endif %}
-            </dd>
+            <dt>Frais de réservation</dt>
+            <dd>{{ quick_checkout.reservation_fee_cents|cents_to_euros }} (déduits du prix final)</dd>
         </div>
     </dl>
 </section>
