@@ -48,6 +48,9 @@ class QuickCheckoutViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Récapitulatif de ton rendez-vous")
+        self.assertContains(response, "120,00 €")
+        self.assertNotContains(response, "centimes")
+        self.assertContains(response, 'class="step-progress" hidden')
         self.assertContains(response, 'data-quick-checkout-id="{}"'.format(self.checkout.id))
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
