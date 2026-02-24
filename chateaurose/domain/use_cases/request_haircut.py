@@ -27,6 +27,8 @@ def execute(
     general_adjustment: str | None = None,
     meche: bool,
     current_hair_picture: str,
+    require_current_hair_picture: bool = True,
+    skip_coverage_validation: bool = False,
     inspiration_pictures: list,
     free_text: str,
     payment_auth_id: str | None = None,
@@ -39,15 +41,18 @@ def execute(
     reminder_gateway,
     clock,
 ):
-    for field_name, value in [
+    required_fields = [
         ("provider_id", provider_id),
         ("service_id", service_id),
         ("client_name", client_contact.get("name")),
         ("client_email", client_contact.get("email")),
         ("location_preference", location_preference),
         ("desired_date", desired_date),
-        ("current_hair_picture", current_hair_picture),
-    ]:
+    ]
+    if require_current_hair_picture:
+        required_fields.append(("current_hair_picture", current_hair_picture))
+
+    for field_name, value in required_fields:
         if not value:
             raise ValidationError(f"Missing required field: {field_name}")
     if meche is None:
@@ -74,7 +79,7 @@ def execute(
         if normalized_location_preference == "salon"
         else normalized_location
     )
-    if not provider_catalog.provider_covers_zone(provider_id, coverage_location):
+    if not skip_coverage_validation and not provider_catalog.provider_covers_zone(provider_id, coverage_location):
         raise ValidationError("Provider does not cover this zone")
 
     estimated_price, hair_length, general_adjustment = estimate_service_price_cents(

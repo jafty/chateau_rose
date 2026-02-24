@@ -202,7 +202,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
             request.FILES,
             provider=provider,
             require_payment_auth=require_payment_auth,
-            require_current_hair_picture=quick_checkout is None,
+            require_current_hair_picture=True,
         )
         if form.is_valid():
             current_hair_picture_file = form.cleaned_data.get("current_hair_picture_file")
@@ -218,19 +218,6 @@ def provider_detail(request, provider_id, quick_checkout=None):
                 booking_detail_path.replace("BOOKING_ID/", "")
             )
             try:
-                if quick_checkout is not None:
-                    form.cleaned_data["service_id"] = quick_checkout.service_id
-                    form.cleaned_data["client_name"] = quick_checkout.client_name
-                    form.cleaned_data["client_email"] = quick_checkout.client_email
-                    form.cleaned_data["desired_date"] = quick_checkout.desired_date.isoformat()
-                    form.cleaned_data["hair_length"] = quick_checkout.hair_length
-                    form.cleaned_data["general_adjustment"] = quick_checkout.general_adjustment
-                    form.cleaned_data["meche"] = quick_checkout.meche
-                    form.cleaned_data["location_preference"] = quick_checkout.location_preference
-                    form.cleaned_data["location"] = quick_checkout.location
-                    form.cleaned_data["client_address"] = quick_checkout.client_address
-                    form.cleaned_data["free_text"] = quick_checkout.free_text
-
                 booking = request_haircut.execute(
                     provider_id=str(provider.id),
                     service_id=form.cleaned_data.get("service_id"),
@@ -258,16 +245,6 @@ def provider_detail(request, provider_id, quick_checkout=None):
                     reminder_gateway=None,
                     clock=type("Clock", (), {"now": timezone.now}),
                 )
-
-                if quick_checkout is not None:
-                    booking_row = Booking.objects.filter(booking_id=booking.id).first()
-                    if booking_row:
-                        booking_row.estimated_price_cents = quick_checkout.fixed_price_cents
-                        booking_row.save(update_fields=["estimated_price_cents", "updated_at"])
-                    quick_checkout.completed_at = timezone.now()
-                    quick_checkout.is_active = False
-                    quick_checkout.save(update_fields=["completed_at", "is_active", "updated_at"])
-
                 message = f"Demande envoyée. ID: {booking.id}"
             except DomainError as exc:
                 error = str(exc)
@@ -334,7 +311,89 @@ def quick_checkout_page(request, checkout_id):
     )
     if checkout.expires_at and checkout.expires_at <= timezone.now():
         raise Http404("Ce lien de paiement rapide a expiré.")
-    return provider_detail(request, checkout.provider_id, quick_checkout=checkout)
+
+    provider = checkout.provider
+    stripe_public_key = settings.STRIPE_PUBLIC_KEY
+    require_payment_auth = bool(stripe_public_key)
+    message = None
+    error = None
+    payment_message = None
+    prefilled_payment_auth_id = ""
+
+    if request.method == "GET":
+        prefilled_payment_auth_id = (request.GET.get("payment_auth_id") or "").strip()
+        if prefilled_payment_auth_id:
+            payment_message = (
+                "Empreinte bancaire confirmée. Tu peux finaliser l'envoi de ta demande."
+            )
+
+    if request.method == "POST":
+        payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
+        if require_payment_auth and not payment_auth_id:
+            error = "Merci d'ajouter une empreinte bancaire pour sécuriser la demande."
+        else:
+            booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
+            provider_booking_url_base = request.build_absolute_uri(
+                booking_detail_path.replace("BOOKING_ID/", "")
+            )
+            try:
+                booking = request_haircut.execute(
+                    provider_id=str(provider.id),
+                    service_id=checkout.service_id,
+                    client_contact={
+                        "name": checkout.client_name,
+                        "email": checkout.client_email,
+                    },
+                    location=checkout.location,
+                    location_preference=checkout.location_preference,
+                    client_address=checkout.client_address,
+                    desired_date=checkout.desired_date.isoformat(),
+                    hair_length=checkout.hair_length,
+                    general_adjustment=checkout.general_adjustment,
+                    meche=checkout.meche,
+                    current_hair_picture="quick-checkout",
+                    require_current_hair_picture=False,
+                    skip_coverage_validation=True,
+                    inspiration_pictures=[],
+                    free_text=checkout.free_text,
+                    payment_auth_id=payment_auth_id,
+                    provider_booking_url_base=provider_booking_url_base,
+                    provider_salon_zone=provider.salon_zone,
+                    booking_repository=repo,
+                    provider_catalog=provider_catalog,
+                    payment_gateway=payment_gateway,
+                    notifier=notifier,
+                    reminder_gateway=None,
+                    clock=type("Clock", (), {"now": timezone.now}),
+                )
+
+                booking_row = Booking.objects.filter(booking_id=booking.id).first()
+                if booking_row:
+                    booking_row.estimated_price_cents = checkout.fixed_price_cents
+                    booking_row.save(update_fields=["estimated_price_cents", "updated_at"])
+                checkout.completed_at = timezone.now()
+                checkout.is_active = False
+                checkout.save(update_fields=["completed_at", "is_active", "updated_at"])
+
+                message = f"Demande envoyée. ID: {booking.id}"
+            except DomainError as exc:
+                error = str(exc)
+
+    return render(
+        request,
+        "interface/quick_checkout_page.html",
+        {
+            "provider": provider,
+            "quick_checkout": checkout,
+            "message": message,
+            "error": error,
+            "payment_message": payment_message,
+            "payment_auth_id": prefilled_payment_auth_id,
+            "stripe_public_key": stripe_public_key,
+            "quick_checkout_id": checkout.id,
+            "fixed_price_cents": checkout.fixed_price_cents,
+        },
+    )
 
 
 def provider_payment_intent(request):
@@ -364,57 +423,45 @@ def provider_payment_intent(request):
             is_active=True,
             completed_at__isnull=True,
         ).first()
-        if quick_checkout is not None:
-            provider_id = provider_id or quick_checkout.provider_id
-            service_id = service_id or quick_checkout.service_id
-            hair_length = hair_length or quick_checkout.hair_length
-            general_adjustment = (
-                general_adjustment
-                if general_adjustment is not None
-                else quick_checkout.general_adjustment
-            )
-            location_preference = location_preference or quick_checkout.location_preference
-            meche = quick_checkout.meche if meche is None else meche
+        if quick_checkout is None:
+            return JsonResponse({"error": "Lien checkout invalide."}, status=400)
 
-            if str(quick_checkout.provider_id) != str(provider_id) or str(quick_checkout.service_id) != str(service_id):
-                return JsonResponse({"error": "Lien checkout invalide."}, status=400)
-
-    if not all([provider_id, service_id]) or meche is None:
-        return JsonResponse({"error": "Informations manquantes."}, status=400)
-
-    try:
-        service = provider_catalog.get_service(provider_id, service_id)
-    except KeyError:
-        return JsonResponse({"error": "Service non disponible."}, status=400)
-
-    try:
-        estimated_price_cents, _, _ = estimate_service_price_cents(
-            service=service,
-            hair_length=hair_length,
-            general_adjustment=general_adjustment,
-            meche=meche,
-            location_preference=location_preference,
-        )
-    except ValidationError as exc:
-        message = str(exc)
-        if "hair_length" in message:
-            return JsonResponse({"error": "Longueur de cheveux non supportée."}, status=400)
-        if "General adjustment" in message:
-            return JsonResponse({"error": "Supplément non supporté."}, status=400)
-        return JsonResponse({"error": "Informations manquantes."}, status=400)
-    if quick_checkout is not None:
-        estimated_price_cents = quick_checkout.fixed_price_cents
-
-    deposit_percentage = service.get("deposit_percentage")
-    if deposit_percentage is not None:
-        deposit_cents = round(estimated_price_cents * deposit_percentage / 100)
+        amount_cents = quick_checkout.fixed_price_cents
     else:
-        deposit_cents = service.get("deposit_cents")
-    if deposit_cents is None:
-        return JsonResponse({"error": "Acompte non défini."}, status=400)
+        if not all([provider_id, service_id]) or meche is None:
+            return JsonResponse({"error": "Informations manquantes."}, status=400)
+
+        try:
+            service = provider_catalog.get_service(provider_id, service_id)
+        except KeyError:
+            return JsonResponse({"error": "Service non disponible."}, status=400)
+
+        try:
+            estimated_price_cents, _, _ = estimate_service_price_cents(
+                service=service,
+                hair_length=hair_length,
+                general_adjustment=general_adjustment,
+                meche=meche,
+                location_preference=location_preference,
+            )
+        except ValidationError as exc:
+            message = str(exc)
+            if "hair_length" in message:
+                return JsonResponse({"error": "Longueur de cheveux non supportée."}, status=400)
+            if "General adjustment" in message:
+                return JsonResponse({"error": "Supplément non supporté."}, status=400)
+            return JsonResponse({"error": "Informations manquantes."}, status=400)
+
+        deposit_percentage = service.get("deposit_percentage")
+        if deposit_percentage is not None:
+            amount_cents = round(estimated_price_cents * deposit_percentage / 100)
+        else:
+            amount_cents = service.get("deposit_cents")
+        if amount_cents is None:
+            return JsonResponse({"error": "Acompte non défini."}, status=400)
 
     intent = payment_gateway.create_payment_intent(
-        amount_cents=deposit_cents,
+        amount_cents=amount_cents,
         currency="EUR",
         reference=f"estimate-{uuid.uuid4().hex[:10]}",
     )
@@ -423,7 +470,7 @@ def provider_payment_intent(request):
         {
             "client_secret": intent["client_secret"],
             "payment_auth_id": intent["id"],
-            "amount_cents": deposit_cents,
+            "amount_cents": amount_cents,
         }
     )
 
