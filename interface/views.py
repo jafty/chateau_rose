@@ -61,6 +61,18 @@ def _first_form_error(form: forms.Form) -> str | None:
     return None
 
 
+def _get_query_param(request, key: str) -> str:
+    direct_value = request.GET.get(key)
+    if direct_value is not None:
+        return direct_value.strip()
+
+    normalized_key = key.strip()
+    for query_key, value in request.GET.items():
+        if query_key.strip() == normalized_key:
+            return (value or "").strip()
+    return ""
+
+
 
 
 def _prefill_data_from_draft(provider: Provider, draft_token: str) -> dict:
@@ -84,6 +96,10 @@ def _prefill_data_from_draft(provider: Provider, draft_token: str) -> dict:
         return {}
 
     payload = dict(draft.payload or {})
+    location_preference = (payload.get("location_preference") or "").strip().lower()
+    if location_preference in {"home", "client_home", "a_domicile", "à domicile"}:
+        payload["location_preference"] = "domicile"
+
     if draft.client_name:
         payload["client_name"] = draft.client_name
     if draft.client_email:
@@ -99,12 +115,18 @@ def _is_checkout_ready(prefill_data: dict) -> bool:
         "service_id",
         "hair_length",
         "location_preference",
-        "location",
         "desired_date",
         "client_name",
         "client_email",
     ]
-    return all(prefill_data.get(field) for field in required_fields)
+    if not all(prefill_data.get(field) for field in required_fields):
+        return False
+
+    location_preference = (prefill_data.get("location_preference") or "").strip().lower()
+    if location_preference == "salon":
+        return True
+
+    return bool(prefill_data.get("location") and prefill_data.get("client_address"))
 
 def home(request):
     providers = Provider.objects.all()
@@ -231,11 +253,11 @@ def provider_detail(request, provider_id):
     payment_message = None
     prefill_data = {}
     checkout_only = False
-    checkout_requested = request.GET.get("checkout", "").strip() == "1"
-    draft_token = request.GET.get("draft_token", "").strip()
+    checkout_requested = _get_query_param(request, "checkout") == "1"
+    draft_token = _get_query_param(request, "draft_token")
 
     if request.method == "GET":
-        prefilled_payment_auth_id = request.GET.get("payment_auth_id", "").strip()
+        prefilled_payment_auth_id = _get_query_param(request, "payment_auth_id")
         prefill_data = _prefill_data_from_draft(provider, draft_token)
         if prefilled_payment_auth_id:
             payment_message = (
