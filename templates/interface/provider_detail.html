@@ -419,6 +419,11 @@
         };
 
         const buildPaymentPayload = () => {
+            if (checkoutOnly) {
+                return {
+                    quick_checkout_id: quickCheckoutId || undefined,
+                };
+            }
             const hiddenServiceInput = form?.querySelector('input[name="service_id"]');
             const hiddenMecheInput = form?.querySelector('input[name="meche"]');
             const hiddenHairLengthInput = form?.querySelector('input[name="hair_length"]');
@@ -789,17 +794,13 @@
         }
 
         if (checkoutOnly) {
-            const quickCheckoutServiceId = form?.querySelector('input[name="service_id"]')?.value;
-            const quickPricing = quickCheckoutServiceId ? pricingData[quickCheckoutServiceId] : null;
-            const depositPercentage = quickPricing?.deposit_percentage ?? 0;
             const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : 0;
-            const depositCents = Math.round(totalCents * depositPercentage / 100);
-            const depositStr = formatPrice(depositCents);
+            const totalStr = formatPrice(totalCents);
             if (depositInlineDisplay) {
-                depositInlineDisplay.textContent = depositStr;
+                depositInlineDisplay.textContent = totalStr;
             }
             if (depositPaymentHint) {
-                depositPaymentHint.textContent = `Frais de réservation estimés : ${depositStr} (empreinte bancaire).`;
+                depositPaymentHint.textContent = `Montant à régler : ${totalStr}.`;
             }
             mountPaymentElement().catch((error) => showPaymentError(error.message));
         } else if (serviceSelect && serviceSelect.value) {
