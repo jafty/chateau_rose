@@ -76,3 +76,61 @@ class QuickCheckoutViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(stub.calls[0]["amount_cents"], 3000)
+
+
+    def test_quick_checkout_page_hides_regular_steps_server_side(self):
+        response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.token]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-step="1" hidden')
+        self.assertContains(response, 'data-step="2" hidden')
+        self.assertContains(response, 'data-step="3" hidden')
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_payment_intent_accepts_quick_checkout_token_without_client_fields(self):
+        from interface import views
+
+        stub = _PaymentStub()
+        original_gateway = views.payment_gateway
+        views.payment_gateway = stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+
+        response = self.client.post(
+            reverse("interface:provider_payment_intent"),
+            data={
+                "provider_id": self.provider.id,
+                "quick_checkout_token": str(self.checkout.token),
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(stub.calls[0]["amount_cents"], 3000)
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_payment_intent_rejects_quick_checkout_token_with_mismatched_service(self):
+        from interface import views
+
+        other_service = Service.objects.create(
+            provider=self.provider,
+            name="Twists",
+            slug="twists",
+            base_price_cents=4000,
+        )
+
+        stub = _PaymentStub()
+        original_gateway = views.payment_gateway
+        views.payment_gateway = stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+
+        response = self.client.post(
+            reverse("interface:provider_payment_intent"),
+            data={
+                "provider_id": self.provider.id,
+                "service_id": other_service.id,
+                "quick_checkout_token": str(self.checkout.token),
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)

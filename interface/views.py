@@ -293,13 +293,34 @@ def provider_detail(request, provider_id, quick_checkout=None):
             checkout_only = True
 
     if request.method == "POST":
+        post_data = request.POST.copy()
+        if quick_checkout is not None:
+            post_data.update(
+                {
+                    "service_id": str(quick_checkout.service_id),
+                    "client_name": quick_checkout.client_name,
+                    "client_email": quick_checkout.client_email,
+                    "desired_date": quick_checkout.desired_date.strftime("%Y-%m-%dT%H:%M"),
+                    "hair_length": quick_checkout.hair_length,
+                    "general_adjustment": quick_checkout.general_adjustment,
+                    "location_preference": quick_checkout.location_preference,
+                    "location": quick_checkout.location,
+                    "client_address": quick_checkout.client_address,
+                    "free_text": quick_checkout.free_text,
+                }
+            )
+            if quick_checkout.meche:
+                post_data["meche"] = "on"
+            else:
+                post_data.pop("meche", None)
+
         if quick_checkout is None:
             prefill_data = _prefill_data_from_draft(provider, draft_token)
             checkout_only = checkout_requested and _is_checkout_ready(prefill_data)
         else:
             checkout_only = True
         form = ProviderBookingRequestForm(
-            request.POST,
+            post_data,
             request.FILES,
             provider=provider,
             require_payment_auth=require_payment_auth,
@@ -551,18 +572,30 @@ def provider_payment_intent(request):
     location_preference = payload.get("location_preference")
     quick_checkout_token = payload.get("quick_checkout_token")
 
-    if not all([provider_id, service_id]) or meche is None:
-        return JsonResponse({"error": "Informations manquantes."}, status=400)
-
     quick_checkout = None
     if quick_checkout_token:
         quick_checkout = QuickCheckoutPage.objects.filter(
             token=quick_checkout_token,
-            provider_id=provider_id,
-            service_id=service_id,
             is_active=True,
             completed_at__isnull=True,
         ).first()
+        if quick_checkout is not None:
+            provider_id = provider_id or quick_checkout.provider_id
+            service_id = service_id or quick_checkout.service_id
+            hair_length = hair_length or quick_checkout.hair_length
+            general_adjustment = (
+                general_adjustment
+                if general_adjustment is not None
+                else quick_checkout.general_adjustment
+            )
+            location_preference = location_preference or quick_checkout.location_preference
+            meche = quick_checkout.meche if meche is None else meche
+
+            if str(quick_checkout.provider_id) != str(provider_id) or str(quick_checkout.service_id) != str(service_id):
+                return JsonResponse({"error": "Lien checkout invalide."}, status=400)
+
+    if not all([provider_id, service_id]) or meche is None:
+        return JsonResponse({"error": "Informations manquantes."}, status=400)
 
     try:
         service = provider_catalog.get_service(provider_id, service_id)

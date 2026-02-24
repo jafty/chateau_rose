@@ -204,7 +204,7 @@
                         >
                             {% csrf_token %}
 
-                            <fieldset class="wizard-step active" data-step="1">
+                            <fieldset class="wizard-step active" data-step="1" {% if checkout_only %}hidden{% endif %}>
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Choix de la coiffure</h4>
 
                                 <div class="form-field full-width">
@@ -263,7 +263,7 @@
                                 </div>
                             </fieldset>
 
-                            <fieldset class="wizard-step" data-step="2">
+                            <fieldset class="wizard-step" data-step="2" {% if checkout_only %}hidden{% endif %}>
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Tes cheveux & inspirations</h4>
                                 <p class="meta-line" style="margin-bottom: 12px;">On enregistre ton email dès cette étape pour éviter toute perte si tu t'arrêtes avant le paiement.</p>
 
@@ -306,7 +306,7 @@
                                 </div>
                             </fieldset>
 
-                            <fieldset class="wizard-step" data-step="3">
+                            <fieldset class="wizard-step" data-step="3" {% if checkout_only %}hidden{% endif %}>
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Infos pratiques</h4>
 
                                 <div class="form-field full-width">
@@ -416,6 +416,12 @@
                             <input type="hidden" name="draft_token" id="draft_token" value="">
                             <input type="hidden" name="quick_checkout_token" id="quick_checkout_token" value="{{ quick_checkout_token|default:'' }}">
                         </form>
+
+                        {% if checkout_only %}
+                        <p class="meta-line" style="text-align: center; margin-top: 0;">
+                            Les informations de réservation sont déjà enregistrées. Il ne reste que l'empreinte bancaire pour sécuriser ton créneau.
+                        </p>
+                        {% endif %}
 
                         <aside class="provider-form-aside">
                             <div class="sticky-price-bar" id="sticky-price-bar">
