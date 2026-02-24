@@ -249,7 +249,59 @@ def provider_detail(request, provider_id, quick_checkout=None):
             except DomainError as exc:
                 error = str(exc)
         else:
-            error = _first_form_error(form)
+            form = ProviderBookingRequestForm(
+                request.POST,
+                request.FILES,
+                provider=provider,
+                require_payment_auth=require_payment_auth,
+                require_current_hair_picture=True,
+            )
+            if form.is_valid():
+                current_hair_picture_file = form.cleaned_data.get("current_hair_picture_file")
+                if current_hair_picture_file:
+                    current_picture = booking_requests.save_current_hair_picture(current_hair_picture_file)
+                else:
+                    current_picture = (form.cleaned_data.get("current_hair_picture") or "").strip()
+                inspiration_paths = booking_requests.save_inspiration_pictures(
+                    form.get_inspiration_files()
+                )
+                booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
+                provider_booking_url_base = request.build_absolute_uri(
+                    booking_detail_path.replace("BOOKING_ID/", "")
+                )
+                try:
+                    booking = request_haircut.execute(
+                        provider_id=str(provider.id),
+                        service_id=form.cleaned_data.get("service_id"),
+                        client_contact={
+                            "name": form.cleaned_data.get("client_name"),
+                            "email": form.cleaned_data.get("client_email"),
+                        },
+                        location=form.cleaned_data.get("location"),
+                        location_preference=form.cleaned_data.get("location_preference"),
+                        client_address=form.cleaned_data.get("client_address"),
+                        desired_date=form.cleaned_data.get("desired_date"),
+                        hair_length=form.cleaned_data.get("hair_length"),
+                        general_adjustment=form.cleaned_data.get("general_adjustment"),
+                        meche=form.cleaned_data.get("meche", False),
+                        current_hair_picture=current_picture,
+                        inspiration_pictures=inspiration_paths,
+                        free_text=form.cleaned_data.get("free_text", ""),
+                        payment_auth_id=form.cleaned_data.get("payment_auth_id"),
+                        provider_booking_url_base=provider_booking_url_base,
+                        provider_salon_zone=provider.salon_zone,
+                        booking_repository=repo,
+                        provider_catalog=provider_catalog,
+                        payment_gateway=payment_gateway,
+                        notifier=notifier,
+                        reminder_gateway=None,
+                        clock=type("Clock", (), {"now": timezone.now}),
+                    )
+                    message = f"Demande envoyée. ID: {booking.id}"
+                except DomainError as exc:
+                    error = str(exc)
+            else:
+                error = _first_form_error(form)
 
     service_categories = []
     if provider.categorized_services_enabled:
