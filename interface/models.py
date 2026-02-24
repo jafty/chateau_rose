@@ -247,6 +247,39 @@ class ProviderBookingDraft(models.Model):
         return f"Brouillon {self.provider.name} ({self.client_email or self.token})"
 
 
+class QuickCheckoutPage(models.Model):
+    LOCATION_PREFERENCE_CHOICES = (
+        ("domicile", "À domicile"),
+        ("salon", "En salon / chez la prestataire ou le prestataire"),
+    )
+
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    provider = models.ForeignKey("booking.Provider", on_delete=models.CASCADE, related_name="quick_checkout_pages")
+    service = models.ForeignKey("booking.Service", on_delete=models.CASCADE, related_name="quick_checkout_pages")
+    client_name = models.CharField(max_length=255)
+    client_email = models.EmailField()
+    desired_date = models.DateTimeField()
+    hair_length = models.CharField(max_length=120)
+    location_preference = models.CharField(max_length=32, choices=LOCATION_PREFERENCE_CHOICES, default="domicile")
+    location = models.CharField(max_length=255, blank=True)
+    client_address = models.TextField(blank=True)
+    general_adjustment = models.CharField(max_length=120, blank=True)
+    meche = models.BooleanField(default=False)
+    free_text = models.TextField(blank=True)
+    fixed_price_cents = models.PositiveIntegerField(help_text="Prix fixé pour ce checkout (en centimes).")
+    is_active = models.BooleanField(default=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"Checkout rapide {self.provider.name} / {self.client_email}"
+
+
 class ClientReview(models.Model):
     MEDIA_IMAGE = "image"
     MEDIA_VIDEO = "video"

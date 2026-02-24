@@ -17,6 +17,7 @@ from interface.models import (
     MarketingZone,
     ServiceRequest,
     ProviderBookingDraft,
+    QuickCheckoutPage,
 )
 
 
@@ -123,3 +124,11 @@ class ProviderBookingDraftAdmin(admin.ModelAdmin):
     @admin.display(description="Statut")
     def status(self, obj):
         return "Complété" if obj.completed_at else "En attente"
+
+
+@admin.register(QuickCheckoutPage)
+class QuickCheckoutPageAdmin(admin.ModelAdmin):
+    list_display = ("provider", "service", "client_email", "fixed_price_cents", "is_active", "expires_at", "created_at")
+    list_filter = ("is_active", "provider", "service")
+    search_fields = ("client_email", "client_name", "provider__name", "service__name")
+    readonly_fields = ("token", "created_at", "updated_at", "completed_at")
