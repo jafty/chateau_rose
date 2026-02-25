@@ -75,7 +75,8 @@ class QuickCheckoutViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Demande envoyée")
+        self.assertContains(response, "Rendez-vous confirmé")
+        self.assertNotContains(response, "Demande envoyée")
         self.checkout.refresh_from_db()
         self.assertFalse(self.checkout.is_active)
         self.assertIsNotNone(self.checkout.completed_at)

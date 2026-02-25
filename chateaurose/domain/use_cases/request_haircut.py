@@ -40,6 +40,7 @@ def execute(
     notifier,
     reminder_gateway,
     clock,
+    send_submission_notifications: bool = True,
 ):
     required_fields = [
         ("provider_id", provider_id),
@@ -170,16 +171,17 @@ def execute(
     if free_text:
         client_message_lines.append(f"- Ton message : {free_text}")
 
-    notifier.notify(
-        provider_id,
-        "Nouvelle demande de coiffure",
-        "\n".join(provider_message_lines),
-    )
-    notifier.notify(
-        client_contact["email"],
-        "Demande envoyée",
-        "\n".join(client_message_lines),
-    )
+    if send_submission_notifications:
+        notifier.notify(
+            provider_id,
+            "Nouvelle demande de coiffure",
+            "\n".join(provider_message_lines),
+        )
+        notifier.notify(
+            client_contact["email"],
+            "Demande envoyée",
+            "\n".join(client_message_lines),
+        )
 
     if reminder_gateway:
         reminder_gateway.schedule(
