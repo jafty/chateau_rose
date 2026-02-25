@@ -428,7 +428,8 @@ def quick_checkout_page(request, checkout_id):
                 booking_row = Booking.objects.filter(booking_id=booking.id).first()
                 if booking_row:
                     booking_row.estimated_price_cents = checkout.final_price_cents
-                    booking_row.save(update_fields=["estimated_price_cents", "updated_at"])
+                    booking_row.status = finalize_booking_uc.CONFIRMED
+                    booking_row.save(update_fields=["estimated_price_cents", "status", "updated_at"])
                 checkout.completed_at = timezone.now()
                 checkout.is_active = False
                 checkout.save(update_fields=["completed_at", "is_active", "updated_at"])
@@ -458,7 +459,7 @@ def quick_checkout_page(request, checkout_id):
                     ),
                 )
 
-                message = f"Rendez-vous confirmé. ID: {booking.id}"
+                return redirect("interface:quick_checkout_confirmation", booking_id=booking.id)
             except DomainError as exc:
                 error = str(exc)
 
@@ -477,6 +478,34 @@ def quick_checkout_page(request, checkout_id):
             "final_price_cents": checkout.final_price_cents,
             "reservation_fee_cents": checkout.reservation_fee_cents,
             "remaining_price_cents": max(checkout.final_price_cents - checkout.reservation_fee_cents, 0),
+        },
+    )
+
+
+def quick_checkout_confirmation(request, booking_id):
+    booking = get_object_or_404(
+        Booking.objects.select_related("provider", "service"),
+        booking_id=booking_id,
+    )
+    effective_date = booking.proposed_date or booking.desired_date
+    effective_price = (
+        booking_requests.format_price(booking.proposed_price_cents)
+        if booking.proposed_price_cents is not None
+        else booking_requests.format_price(booking.estimated_price_cents)
+    )
+    is_salon = booking.location_preference == "salon"
+
+    return render(
+        request,
+        "interface/quick_checkout_confirmation.html",
+        {
+            "booking": booking,
+            "effective_date": effective_date,
+            "effective_price": effective_price,
+            "is_salon": is_salon,
+            "provider_email": booking.provider.contact_email or "Non communiqué",
+            "provider_phone": booking.provider.contact_phone or "Non communiqué",
+            "provider_salon_address": booking.provider.salon_address or "Adresse à confirmer",
         },
     )
 

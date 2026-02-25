@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Rendez-vous confirmé | Château Rose{% endblock %}
+
+{% block content %}
+<section class="page-shell">
+    <div class="paper-card">
+        <h1 class="section-title">Rendez-vous confirmé</h1>
+        <p class="lead">Merci {{ booking.client_name }}, ton rendez-vous est bien confirmé.</p>
+        <div class="meta-line">Réservation #{{ booking.booking_id }}</div>
+    </div>
+
+    <div class="paper-card" style="margin-top: 24px;">
+        <h2 class="section-title">Récapitulatif</h2>
+        <ul class="meta-line" style="margin: 0; padding-left: 18px;">
+            <li>Date : {{ effective_date }}</li>
+            <li>Tarif : {{ effective_price }}</li>
+            <li>Prestation : {{ booking.service.name }}</li>
+            <li>Lieu : {{ booking.location }}</li>
+        </ul>
+        {% if is_salon %}
+            <p class="meta-line" style="margin: 12px 0 0;">
+                Adresse du salon : {{ provider_salon_address }}
+            </p>
+            <p class="meta-line" style="margin: 6px 0 0;">
+                Cette information est partagée uniquement pour organiser le rendez-vous.
+            </p>
+        {% endif %}
+    </div>
+
+    <div class="paper-card" style="margin-top: 24px;">
+        <h2 class="section-title">Contacter la prestataire ou le prestataire</h2>
+        <p class="meta-line" style="margin: 0;">Téléphone : {{ provider_phone }}</p>
+        <p class="meta-line" style="margin: 6px 0 0;">Email : {{ provider_email }}</p>
+    </div>
+</section>
+{% endblock %}

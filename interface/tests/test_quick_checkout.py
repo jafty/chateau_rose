@@ -4,7 +4,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from booking.models import Provider, Service
+from booking.models import Booking, Provider, Service
 from interface.models import QuickCheckoutPage
 
 
@@ -68,18 +68,39 @@ class QuickCheckoutViewTests(TestCase):
         self.assertNotContains(response, "Paris")
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
-    def test_quick_checkout_submit_does_not_require_current_hair_picture(self):
+    def test_quick_checkout_submit_redirects_to_confirmation_and_marks_booking_confirmed(self):
         response = self.client.post(
             reverse("interface:quick_checkout_page", args=[self.checkout.id]),
             data={"payment_auth_id": "pi_auth_1"},
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Rendez-vous confirmé")
-        self.assertNotContains(response, "Demande envoyée")
+        self.assertEqual(response.status_code, 302)
+        booking = Booking.objects.get()
+        self.assertRedirects(
+            response,
+            reverse("interface:quick_checkout_confirmation", args=[booking.booking_id]),
+        )
+        self.assertEqual(booking.status, "CONFIRMED")
         self.checkout.refresh_from_db()
         self.assertFalse(self.checkout.is_active)
         self.assertIsNotNone(self.checkout.completed_at)
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_quick_checkout_confirmation_page_renders_booking_summary(self):
+        self.client.post(
+            reverse("interface:quick_checkout_page", args=[self.checkout.id]),
+            data={"payment_auth_id": "pi_auth_1"},
+        )
+        booking = Booking.objects.get()
+
+        response = self.client.get(
+            reverse("interface:quick_checkout_confirmation", args=[booking.booking_id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Rendez-vous confirmé")
+        self.assertContains(response, booking.booking_id)
+        self.assertContains(response, "Contacter la prestataire ou le prestataire")
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_uses_fixed_quick_checkout_price(self):
