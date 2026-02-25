@@ -1,23 +1,22 @@
 (function () {
-    const debounce = (fn, delay = 250) => {
-        let timer;
-        return (...args) => {
-            clearTimeout(timer);
-            timer = setTimeout(() => fn(...args), delay);
-        };
-    };
+    const normalize = (value) =>
+        (value || '')
+            .toString()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
 
     const initZoneSearch = (select) => {
-        const searchUrl = select.dataset.zoneSearchUrl;
-        if (!searchUrl) return;
-
-        const labelField = select.dataset.zoneLabelField || 'name';
-        const valueField = select.dataset.zoneValueField || 'id';
         const placeholder = select.dataset.zoneSearchPlaceholder || 'Rechercher une zone';
 
-        const allowedValues = Array.from(select.options)
-            .map((option) => option.value)
-            .filter((value) => value !== '');
+        const options = Array.from(select.options)
+            .map((option) => ({
+                value: option.value,
+                label: option.textContent.trim(),
+                disabled: option.disabled,
+            }))
+            .filter((option) => option.value !== '' && option.label);
 
         const hiddenInput = document.createElement('input');
         hiddenInput.type = 'hidden';
@@ -65,73 +64,68 @@
             dropdown.hidden = dropdown.children.length === 0;
         };
 
+        const selectOption = (option) => {
+            textInput.value = option.label;
+            hiddenInput.value = option.value;
+            closeDropdown();
+        };
+
         const populateOptions = (results) => {
             dropdown.innerHTML = '';
             results.forEach((item) => {
                 const option = document.createElement('button');
-                const label = item[labelField] ?? '';
-                const value = item[valueField] ?? '';
                 option.type = 'button';
                 option.className = 'zone-search__option';
-                option.textContent = label;
-                option.dataset.value = value;
-                option.dataset.label = label;
-                option.addEventListener('click', () => {
-                    textInput.value = label;
-                    hiddenInput.value = value || label;
-                    closeDropdown();
+                option.textContent = item.label;
+                option.dataset.value = item.value;
+                option.dataset.label = item.label;
+
+                option.addEventListener('mousedown', (event) => {
+                    event.preventDefault();
+                    selectOption(item);
                 });
+
                 dropdown.appendChild(option);
             });
             openDropdown();
         };
 
-        const fetchResults = debounce((term) => {
-            const url = new URL(searchUrl, window.location.origin);
-            if (term) {
-                url.searchParams.set('q', term);
-            }
-            fetch(url.toString(), { headers: { Accept: 'application/json' } })
-                .then((response) => response.json())
-                .then((data) => {
-                    const results = Array.isArray(data.results) ? data.results : [];
-                    const filteredResults = allowedValues.length
-                        ? results.filter((item) => allowedValues.includes(String(item[valueField] ?? '')))
-                        : results;
-                    populateOptions(filteredResults);
+        const filterOptions = (term = '') => {
+            const normalizedTerm = normalize(term);
+            const filtered = options
+                .filter((option) => !option.disabled)
+                .filter((option) => {
+                    if (!normalizedTerm) return true;
+                    return normalize(option.label).includes(normalizedTerm);
                 })
-                .catch(() => {
-                    closeDropdown();
-                });
-        }, 250);
+                .slice(0, 20);
+            populateOptions(filtered);
+        };
 
         textInput.addEventListener('input', (event) => {
             hiddenInput.value = '';
-            fetchResults(event.target.value.trim());
+            filterOptions(event.target.value);
             dropdown.hidden = false;
         });
 
-        textInput.addEventListener('change', () => {
-            const match = Array.from(dropdown.children).find((option) => option.dataset.label === textInput.value);
-            hiddenInput.value = match ? match.dataset.value || match.dataset.label : '';
-            closeDropdown();
-        });
-
         textInput.addEventListener('focus', () => {
-            if (dropdown.children.length) {
-                dropdown.hidden = false;
-            } else {
-                fetchResults(textInput.value.trim());
-            }
+            filterOptions(textInput.value);
         });
 
-        document.addEventListener('click', (event) => {
-            if (!wrapper.contains(event.target)) {
+        textInput.addEventListener('blur', () => {
+            const matchingOption = options.find((option) => normalize(option.label) === normalize(textInput.value));
+            if (matchingOption && !matchingOption.disabled) {
+                hiddenInput.value = matchingOption.value;
+                textInput.value = matchingOption.label;
+            }
+            window.setTimeout(closeDropdown, 100);
+        });
+
+        textInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
                 closeDropdown();
             }
         });
-
-        fetchResults('');
     };
 
     document.addEventListener('DOMContentLoaded', () => {
