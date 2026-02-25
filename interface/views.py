@@ -75,7 +75,13 @@ def home(request):
         for service in services:
             if service not in featured_services and len(featured_services) < 4:
                 featured_services.append(service)
+    service_request_redirect = _build_service_request_redirect(request)
+    if service_request_redirect:
+        return service_request_redirect
+
     request_form, request_success = _build_service_request_form(request, service_meta=None, zone=None)
+    if request_form is None:
+        return redirect(f"{request.path}?anchor=service-request")
     homepage_reviews = _get_homepage_reviews()
     city_links = [
         {
@@ -190,6 +196,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
         fixed_price_cents = quick_checkout.reservation_fee_cents
 
     if request.method == "GET":
+        message = request.session.pop("provider_request_message", None)
         prefilled_payment_auth_id = (request.GET.get("payment_auth_id") or "").strip()
         if prefilled_payment_auth_id:
             payment_message = (
@@ -245,7 +252,8 @@ def provider_detail(request, provider_id, quick_checkout=None):
                     reminder_gateway=None,
                     clock=type("Clock", (), {"now": timezone.now}),
                 )
-                message = f"Demande envoyée. ID: {booking.id}"
+                request.session["provider_request_message"] = f"Demande envoyée. ID: {booking.id}"
+                return redirect(f"{request.path}#booking-wizard")
             except DomainError as exc:
                 error = str(exc)
         else:
@@ -297,7 +305,8 @@ def provider_detail(request, provider_id, quick_checkout=None):
                         reminder_gateway=None,
                         clock=type("Clock", (), {"now": timezone.now}),
                     )
-                    message = f"Demande envoyée. ID: {booking.id}"
+                    request.session["provider_request_message"] = f"Demande envoyée. ID: {booking.id}"
+                    return redirect(f"{request.path}#booking-wizard")
                 except DomainError as exc:
                     error = str(exc)
             else:
@@ -815,6 +824,21 @@ def _get_homepage_reviews(limit: int = 6) -> list[ClientReview]:
     return featured + extra
 
 
+def _build_service_request_redirect(request):
+    if request.method != "GET":
+        return None
+
+    target_anchor = request.GET.get("anchor", "").strip()
+    if target_anchor != "service-request":
+        return None
+
+    success = request.session.get("service_request_success", False)
+    if not success:
+        return None
+
+    return redirect(f"{request.path}#service-request")
+
+
 def _build_service_request_form(request, service_meta: MarketingService | None, zone):
     form = ServiceRequestForm(request.POST or None, request.FILES or None)
     request_success = request.session.pop("service_request_success", False)
@@ -838,17 +862,8 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
             record.inspiration_picture_urls = inspiration_paths
             record.save()
             _notify_service_request(record)
-            request_success = True
             request.session["service_request_success"] = True
-            form = ServiceRequestForm()
-            if service_meta:
-                form.fields["marketing_service"].initial = service_meta
-                form.fields["marketing_service"].widget = forms.HiddenInput()
-                form.fields["marketing_service"].required = False
-            if zone:
-                form.fields["zone"].initial = zone
-                form.fields["zone"].widget = forms.HiddenInput()
-                form.fields["zone"].required = False
+            return None, False
 
     return form, request_success
 
@@ -947,9 +962,15 @@ def service_page(request, service_slug: str):
     providers = list(
         Provider.objects.filter(marketing_services__slug=service_slug).distinct()
     )
+    service_request_redirect = _build_service_request_redirect(request)
+    if service_request_redirect:
+        return service_request_redirect
+
     request_form, request_success = _build_service_request_form(
         request, service_meta, zone=None
     )
+    if request_form is None:
+        return redirect(f"{request.path}?anchor=service-request")
     service_content = _to_service_content(service_meta)
     marketing_content = build_marketing_content(service=service_content)
     hero_image = marketing_content.hero_image
@@ -1009,9 +1030,15 @@ def service_city_page(request, service_slug: str, city_slug: str):
             zones__slug=zone.slug,
         ).distinct()
     )
+    service_request_redirect = _build_service_request_redirect(request)
+    if service_request_redirect:
+        return service_request_redirect
+
     request_form, request_success = _build_service_request_form(
         request, service_meta, zone=zone
     )
+    if request_form is None:
+        return redirect(f"{request.path}?anchor=service-request")
 
     gallery_images = marketing_content.gallery
     hero_image = marketing_content.hero_image
@@ -1065,9 +1092,15 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             zones__slug=zone.slug,
         ).distinct()
     )
+    service_request_redirect = _build_service_request_redirect(request)
+    if service_request_redirect:
+        return service_request_redirect
+
     request_form, request_success = _build_service_request_form(
         request, service_meta, zone=zone
     )
+    if request_form is None:
+        return redirect(f"{request.path}?anchor=service-request")
 
     gallery_images = marketing_content.gallery
     hero_image = marketing_content.hero_image or service_meta.resolved_main_image
