@@ -380,6 +380,8 @@ def quick_checkout_page(request, checkout_id):
     error = None
     payment_message = None
     prefilled_payment_auth_id = ""
+    client_address_value = (checkout.client_address or "").strip()
+    is_domicile = checkout.location_preference == "domicile"
 
     if request.method == "GET":
         prefilled_payment_auth_id = (request.GET.get("payment_auth_id") or "").strip()
@@ -390,8 +392,13 @@ def quick_checkout_page(request, checkout_id):
 
     if request.method == "POST":
         payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
+        client_address_value = (request.POST.get("client_address") or "").strip()
+        if not is_domicile:
+            client_address_value = ""
         if require_payment_auth and not payment_auth_id:
             error = "Merci d'ajouter une empreinte bancaire pour sécuriser la demande."
+        elif is_domicile and not client_address_value:
+            error = "Merci d'indiquer ton adresse complète pour le rendez-vous à domicile."
         else:
             booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
             provider_booking_url_base = request.build_absolute_uri(
@@ -410,9 +417,9 @@ def quick_checkout_page(request, checkout_id):
                         "name": checkout.client_name,
                         "email": checkout.client_email,
                     },
-                    location=(provider.salon_zone or "Salon") if checkout.location_preference == "salon" else checkout.client_address,
+                    location=(provider.salon_zone or "Salon") if checkout.location_preference == "salon" else client_address_value,
                     location_preference=checkout.location_preference,
-                    client_address=checkout.client_address,
+                    client_address=client_address_value,
                     desired_date=checkout.desired_date.isoformat(),
                     hair_length=hair_length_value,
                     general_adjustment="",
@@ -439,9 +446,11 @@ def quick_checkout_page(request, checkout_id):
                     booking_row.estimated_price_cents = checkout.final_price_cents
                     booking_row.status = finalize_booking_uc.CONFIRMED
                     booking_row.save(update_fields=["estimated_price_cents", "status", "updated_at"])
+                if checkout.client_address != client_address_value:
+                    checkout.client_address = client_address_value
                 checkout.completed_at = timezone.now()
                 checkout.is_active = False
-                checkout.save(update_fields=["completed_at", "is_active", "updated_at"])
+                checkout.save(update_fields=["client_address", "completed_at", "is_active", "updated_at"])
 
                 notifier.notify(
                     provider.id,
@@ -456,16 +465,20 @@ def quick_checkout_page(request, checkout_id):
                         ]
                     ),
                 )
+                client_confirmation_lines = [
+                    f"Merci {checkout.client_name} ! Ton rendez-vous pour {checkout.service.name} est confirmé.",
+                    f"Date : {checkout.desired_date.isoformat()}",
+                    f"ID réservation : {booking.id}",
+                ]
+                if checkout.location_preference == "salon":
+                    client_confirmation_lines.append(
+                        f"Adresse du salon : {provider.salon_address or 'Adresse à confirmer'}"
+                    )
+
                 notifier.notify(
                     checkout.client_email,
                     "Rendez-vous confirmé",
-                    "\n".join(
-                        [
-                            f"Merci {checkout.client_name} ! Ton rendez-vous pour {checkout.service.name} est confirmé.",
-                            f"Date : {checkout.desired_date.isoformat()}",
-                            f"ID réservation : {booking.id}",
-                        ]
-                    ),
+                    "\n".join(client_confirmation_lines),
                 )
 
                 return redirect("interface:quick_checkout_confirmation", booking_id=booking.id)
@@ -487,6 +500,8 @@ def quick_checkout_page(request, checkout_id):
             "final_price_cents": checkout.final_price_cents,
             "reservation_fee_cents": checkout.reservation_fee_cents,
             "remaining_price_cents": max(checkout.final_price_cents - checkout.reservation_fee_cents, 0),
+            "is_domicile": is_domicile,
+            "client_address": client_address_value,
         },
     )
 

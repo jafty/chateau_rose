@@ -25,7 +25,7 @@ class _PaymentStub:
 )
 class QuickCheckoutViewTests(TestCase):
     def setUp(self):
-        self.provider = Provider.objects.create(name="Diva", deposit_percentage=25, salon_zone="Paris")
+        self.provider = Provider.objects.create(name="Diva", deposit_percentage=25, salon_zone="Paris", salon_address="12 rue des Fleurs, 75010 Paris")
         self.service = Service.objects.create(
             provider=self.provider,
             name="Tresses",
@@ -58,6 +58,37 @@ class QuickCheckoutViewTests(TestCase):
         self.assertContains(response, f'data-quick-checkout-id="{self.checkout.id}"')
 
 
+
+
+
+    def test_quick_checkout_page_hides_address_field_for_salon(self):
+        response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'aria-label="Informations de lieu" hidden')
+
+    def test_quick_checkout_page_shows_address_field_for_domicile(self):
+        self.checkout.location_preference = "domicile"
+        self.checkout.save(update_fields=["location_preference", "updated_at"])
+
+        response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Ton adresse complète")
+        self.assertContains(response, 'name="client_address"')
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_quick_checkout_submit_requires_address_for_domicile(self):
+        self.checkout.location_preference = "domicile"
+        self.checkout.save(update_fields=["location_preference", "updated_at"])
+
+        response = self.client.post(
+            reverse("interface:quick_checkout_page", args=[self.checkout.id]),
+            data={"payment_auth_id": "pi_auth_1", "client_address": ""},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "adresse complète pour le rendez-vous à domicile")
 
     def test_quick_checkout_summary_shows_fee_and_hides_location_label(self):
         response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
@@ -100,7 +131,8 @@ class QuickCheckoutViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Rendez-vous confirmé")
         self.assertContains(response, booking.booking_id)
-        self.assertContains(response, "Contacter la prestataire ou le prestataire")
+        self.assertContains(response, "Contacter le profil partenaire")
+        self.assertContains(response, "12 rue des Fleurs, 75010 Paris")
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_uses_fixed_quick_checkout_price(self):
