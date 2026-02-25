@@ -422,6 +422,7 @@ def quick_checkout_page(request, checkout_id):
                     notifier=notifier,
                     reminder_gateway=None,
                     clock=type("Clock", (), {"now": timezone.now}),
+                    send_submission_notifications=False,
                 )
 
                 booking_row = Booking.objects.filter(booking_id=booking.id).first()
@@ -432,7 +433,32 @@ def quick_checkout_page(request, checkout_id):
                 checkout.is_active = False
                 checkout.save(update_fields=["completed_at", "is_active", "updated_at"])
 
-                message = f"Demande envoyée. ID: {booking.id}"
+                notifier.notify(
+                    provider.id,
+                    "Rendez-vous confirmé",
+                    "\n".join(
+                        [
+                            "Bonne nouvelle ! Le paiement de réservation a bien été validé.",
+                            f"Client·e : {checkout.client_name} ({checkout.client_email})",
+                            f"Prestation : {checkout.service.name}",
+                            f"Date : {checkout.desired_date.isoformat()}",
+                            f"ID réservation : {booking.id}",
+                        ]
+                    ),
+                )
+                notifier.notify(
+                    checkout.client_email,
+                    "Rendez-vous confirmé",
+                    "\n".join(
+                        [
+                            f"Merci {checkout.client_name} ! Ton rendez-vous pour {checkout.service.name} est confirmé.",
+                            f"Date : {checkout.desired_date.isoformat()}",
+                            f"ID réservation : {booking.id}",
+                        ]
+                    ),
+                )
+
+                message = f"Rendez-vous confirmé. ID: {booking.id}"
             except DomainError as exc:
                 error = str(exc)
 
