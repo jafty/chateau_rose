@@ -26,6 +26,22 @@ provider_directory = DjangoProviderDirectory()
 logger = logging.getLogger(__name__)
 
 
+def _format_price_from_cents(amount_cents: int) -> str:
+    euros = Decimal(amount_cents) / Decimal("100")
+    return f"{euros:.2f}".replace(".", ",") + " €"
+
+
+def _payment_summary(booking) -> dict:
+    effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
+    reservation_fee_cents = int((Decimal(effective_total_cents) * Decimal("0.30")).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    remaining_cents = max(effective_total_cents - reservation_fee_cents, 0)
+    return {
+        "total": _format_price_from_cents(effective_total_cents),
+        "reservation_fee": _format_price_from_cents(reservation_fee_cents),
+        "remaining": _format_price_from_cents(remaining_cents),
+    }
+
+
 class ProviderPasswordResetView(auth_views.PasswordResetView):
     success_url = reverse_lazy("providers:password_reset_done")
     form_class = ProviderPasswordResetForm
@@ -118,7 +134,7 @@ def booking_detail(request, booking_id):
                     provider_directory=provider_directory,
                     client_control_url=client_control_url,
                 )
-                message = "Proposition envoyée à la cliente ou au client."
+                message = "Proposition envoyée à la personne cliente."
             elif action in ("confirm", "reject"):
                 finalize_booking_uc.execute(
                     booking_id=booking.booking_id,
@@ -146,6 +162,7 @@ def booking_detail(request, booking_id):
             "booking": booking,
             "message": message,
             "error": error,
+            "payment_summary": _payment_summary(booking),
         },
     )
 

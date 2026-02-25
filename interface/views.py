@@ -482,6 +482,23 @@ def quick_checkout_page(request, checkout_id):
     )
 
 
+def _format_euros_from_cents(amount_cents: int) -> str:
+    return booking_requests.format_price(amount_cents)
+
+
+def _payment_summary(booking, *, total_cents: int | None = None) -> dict:
+    effective_total_cents = total_cents
+    if effective_total_cents is None:
+        effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
+    reservation_fee_cents = round(effective_total_cents * 0.30)
+    remaining_cents = max(effective_total_cents - reservation_fee_cents, 0)
+    return {
+        "total": _format_euros_from_cents(effective_total_cents),
+        "reservation_fee": _format_euros_from_cents(reservation_fee_cents),
+        "remaining": _format_euros_from_cents(remaining_cents),
+    }
+
+
 def quick_checkout_confirmation(request, booking_id):
     booking = get_object_or_404(
         Booking.objects.select_related("provider", "service"),
@@ -506,6 +523,7 @@ def quick_checkout_confirmation(request, booking_id):
             "provider_email": booking.provider.contact_email or "Non communiqué",
             "provider_phone": booking.provider.contact_phone or "Non communiqué",
             "provider_salon_address": booking.provider.salon_address or "Adresse à confirmer",
+            "payment_summary": _payment_summary(booking),
         },
     )
 
@@ -719,6 +737,7 @@ def client_confirmation(request, booking_id):
             "provider_email": booking.provider.contact_email or "Non communiqué",
             "provider_phone": booking.provider.contact_phone or "Non communiqué",
             "provider_salon_address": booking.provider.salon_address or "Adresse à confirmer",
+            "payment_summary": _payment_summary(booking),
         },
     )
 
@@ -743,6 +762,7 @@ def client_proposal(request, booking_id):
             "proposed_price": proposed_price,
             "provider_email": booking.provider.contact_email or "Non communiqué",
             "provider_phone": booking.provider.contact_phone or "Non communiqué",
+            "payment_summary": _payment_summary(booking),
         },
     )
 
