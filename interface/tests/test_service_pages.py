@@ -127,7 +127,8 @@ class ServicePagesTests(TestCase):
             },
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response["Location"].endswith("?anchor=service-request"))
         self.assertEqual(ServiceRequest.objects.count(), 1)
         request_record = ServiceRequest.objects.first()
         self.assertEqual(request_record.marketing_service, self.marketing_service)
