@@ -9,6 +9,28 @@ PENDING_CLIENT_VALIDATION = "PENDING_CLIENT_VALIDATION"
 SUBMITTED = "SUBMITTED"
 
 
+def _format_euros(amount_cents: int) -> str:
+    euros = amount_cents / 100
+    return f"{euros:.2f}".replace(".", ",") + " €"
+
+
+def _payment_lines(total_cents: int, *, captured: bool) -> list[str]:
+    reservation_fee_cents = round(total_cents * 0.30)
+    remaining_cents = max(total_cents - reservation_fee_cents, 0)
+    if captured:
+        return [
+            "Paiement :",
+            f"- Frais de réservation débités : {_format_euros(reservation_fee_cents)}",
+            f"- Reste à régler directement au salon/prestataire : {_format_euros(remaining_cents)}",
+        ]
+    return [
+        "Paiement :",
+        f"- Empreinte bancaire déjà validée : {_format_euros(reservation_fee_cents)} (pas encore débités)",
+        f"- Montant qui sera débité à la confirmation : {_format_euros(reservation_fee_cents)}",
+        f"- Reste à régler directement au salon/prestataire après confirmation : {_format_euros(remaining_cents)}",
+    ]
+
+
 def _parse_datetime(value, *, reference_tz):
     if isinstance(value, datetime):
         parsed = value
@@ -66,9 +88,7 @@ def execute(
         if booking.proposed_price_cents is not None
         else booking.estimated_price_cents
     )
-    euros = effective_price_cents / 100
-    formatted_price = f"{euros:.2f}".replace(".", ",")
-    formatted_price = f"{formatted_price} €"
+    formatted_price = _format_euros(effective_price_cents)
 
     location_label = booking.location
     is_salon = booking.location_preference == "salon"
@@ -83,14 +103,14 @@ def execute(
             booking.status = CONFIRMED
             payment_gateway.capture_auth(booking.payment_auth_id)
             provider_location_lines = (
-                ["La cliente ou le client se déplace au salon."]
+                ["La personne cliente se déplace au salon."]
                 if is_salon
-                else [f"Adresse de la cliente ou du client : {client_address}", provider_address_note]
+                else [f"Adresse de la personne cliente : {client_address}", provider_address_note]
             )
             client_location_lines = (
                 [f"Adresse du salon : {salon_address}", client_address_note]
                 if is_salon
-                else ["La prestataire ou le prestataire se déplace jusqu'à toi."]
+                else ["Le profil partenaire se déplace jusqu'à toi."]
             )
             notifier.notify(
                 booking.provider_id,
@@ -104,6 +124,8 @@ def execute(
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
+                        "",
+                        *_payment_lines(effective_price_cents, captured=True),
                         "",
                         *provider_location_lines,
                         "",
@@ -124,6 +146,8 @@ def execute(
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
+                        "",
+                        *_payment_lines(effective_price_cents, captured=True),
                         "",
                         *client_location_lines,
                         "",
@@ -148,6 +172,8 @@ def execute(
                                 f"- Date : {effective_date}",
                                 f"- Lieu : {location_label}",
                                 f"- Tarif : {formatted_price}",
+                                "",
+                                *_payment_lines(effective_price_cents, captured=True),
                                 "",
                                 "À très vite,",
                                 "L'équipe Château Rose",
@@ -170,6 +196,8 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
+                        *_payment_lines(effective_price_cents, captured=False),
+                        "",
                         "À bientôt,",
                         "L'équipe Château Rose",
                     ]
@@ -188,6 +216,8 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
+                        *_payment_lines(effective_price_cents, captured=False),
+                        "",
                         "Si tu veux, tu peux déposer une nouvelle demande.",
                         "À bientôt,",
                         "L'équipe Château Rose",
@@ -202,14 +232,14 @@ def execute(
             booking.status = CONFIRMED
             payment_gateway.capture_auth(booking.payment_auth_id)
             provider_location_lines = (
-                ["La cliente ou le client se déplace au salon."]
+                ["La personne cliente se déplace au salon."]
                 if is_salon
-                else [f"Adresse de la cliente ou du client : {client_address}", provider_address_note]
+                else [f"Adresse de la personne cliente : {client_address}", provider_address_note]
             )
             client_location_lines = (
                 [f"Adresse du salon : {salon_address}", client_address_note]
                 if is_salon
-                else ["La prestataire ou le prestataire se déplace jusqu'à toi."]
+                else ["Le profil partenaire se déplace jusqu'à toi."]
             )
             notifier.notify(
                 booking.provider_id,
@@ -218,11 +248,13 @@ def execute(
                     [
                         f"Bonjour {provider_name},",
                         "",
-                        "La cliente ou le client a accepté la proposition.",
+                        "La personne cliente a accepté la proposition.",
                         "Récapitulatif :",
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
+                        "",
+                        *_payment_lines(effective_price_cents, captured=True),
                         "",
                         *provider_location_lines,
                         "",
@@ -243,6 +275,8 @@ def execute(
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
+                        "",
+                        *_payment_lines(effective_price_cents, captured=True),
                         "",
                         *client_location_lines,
                         "",
@@ -268,6 +302,8 @@ def execute(
                                 f"- Lieu : {location_label}",
                                 f"- Tarif : {formatted_price}",
                                 "",
+                                *_payment_lines(effective_price_cents, captured=True),
+                                "",
                                 "À très vite,",
                                 "L'équipe Château Rose",
                             ]
@@ -283,11 +319,13 @@ def execute(
                     [
                         f"Bonjour {provider_name},",
                         "",
-                        "La cliente ou le client a refusé la proposition.",
+                        "La personne cliente a refusé la proposition.",
                         "Récapitulatif :",
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
+                        "",
+                        *_payment_lines(effective_price_cents, captured=False),
                         "",
                         "À bientôt,",
                         "L'équipe Château Rose",
@@ -306,6 +344,8 @@ def execute(
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
+                        "",
+                        *_payment_lines(effective_price_cents, captured=False),
                         "",
                         "Si tu veux, tu peux déposer une nouvelle demande.",
                         "À bientôt,",

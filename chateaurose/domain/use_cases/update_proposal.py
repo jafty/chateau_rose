@@ -4,6 +4,11 @@ from chateaurose.domain.exceptions import InvalidState, PermissionError, Validat
 PENDING_CLIENT_VALIDATION = "PENDING_CLIENT_VALIDATION"
 
 
+def _format_euros(amount_cents: int) -> str:
+    euros = amount_cents / 100
+    return f"{euros:.2f}".replace(".", ",") + " €"
+
+
 def execute(
     *,
     booking_id: str,
@@ -44,13 +49,12 @@ def execute(
 
     proposed_date = booking.proposed_date or booking.desired_date or "À confirmer"
     if new_price_cents is None:
-        euros = booking.estimated_price_cents / 100
-        proposed_price = f"{euros:.2f}".replace(".", ",")
-        proposed_price = f"{proposed_price} €"
+        effective_price_cents = booking.estimated_price_cents
     else:
-        euros = booking.proposed_price_cents / 100
-        proposed_price = f"{euros:.2f}".replace(".", ",")
-        proposed_price = f"{proposed_price} €"
+        effective_price_cents = booking.proposed_price_cents
+    proposed_price = _format_euros(effective_price_cents)
+    reservation_fee_cents = round(effective_price_cents * 0.30)
+    remaining_cents = max(effective_price_cents - reservation_fee_cents, 0)
 
     message_lines = [
         f"Bonjour {booking.client_contact['name']},",
@@ -59,6 +63,11 @@ def execute(
         "Voici les nouveaux détails :",
         f"- Date proposée : {proposed_date}",
         f"- Tarif proposé : {proposed_price}",
+        "",
+        "Paiement :",
+        f"- Empreinte bancaire déjà validée : {_format_euros(reservation_fee_cents)} (pas encore débités)",
+        f"- Montant débité si tu acceptes : {_format_euros(reservation_fee_cents)}",
+        f"- Reste à régler directement au salon/prestataire : {_format_euros(remaining_cents)}",
         "",
         "Tu peux accepter ou refuser la proposition depuis ton espace de suivi :",
         client_control_url,

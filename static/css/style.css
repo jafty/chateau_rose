@@ -2854,7 +2854,7 @@ footer {
     .footer-brand { grid-column: span 2; }
 }
 
-.footer-brand .logo { margin-bottom: 4px; }
+.footer-brand .logo { margin-bottom: 4px; width: fit-content; max-width: 100%; }
 
 .footer-copy {
     color: #E0D6D1;

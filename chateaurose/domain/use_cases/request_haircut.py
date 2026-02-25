@@ -9,6 +9,11 @@ SUBMITTED = "SUBMITTED"
 SALON_LOCATION_LABEL = "Salon"
 
 
+def _format_euros(amount_cents: int) -> str:
+    euros = amount_cents / 100
+    return f"{euros:.2f}".replace(".", ",") + " €"
+
+
 def _generate_id() -> str:
     readable = uuid.uuid4().hex[:8].upper()
     return f"BK-{readable}"
@@ -144,6 +149,11 @@ def execute(
         f"Longueur : {hair_length}",
         f"Mèches : {'oui' if meche else 'non'}",
         f"ID demande : {booking_id}",
+        "",
+        "Paiement :",
+        f"- Empreinte bancaire validée : {_format_euros(deposit_cents)} (pas encore débités)",
+        f"- Débit des frais de réservation uniquement après confirmation : {_format_euros(deposit_cents)}",
+        f"- Reste à régler directement au salon/prestataire : {_format_euros(max(estimated_price - deposit_cents, 0))}",
     ]
     if free_text:
         provider_message_lines.append(f"Message : {free_text}")
@@ -167,6 +177,11 @@ def execute(
         f"- Longueur : {hair_length}",
         f"- Mèches : {'oui' if meche else 'non'}",
         f"- ID demande : {booking_id}",
+        "",
+        "Paiement :",
+        f"- Empreinte bancaire déjà validée : {_format_euros(deposit_cents)} (pas encore débités)",
+        f"- Montant qui sera débité à la confirmation : {_format_euros(deposit_cents)}",
+        f"- Reste à régler directement au salon/prestataire : {_format_euros(max(estimated_price - deposit_cents, 0))}",
     ]
     if free_text:
         client_message_lines.append(f"- Ton message : {free_text}")

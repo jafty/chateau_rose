@@ -88,6 +88,19 @@
                     </div>
                 </div>
 
+                <div class="booking-notes">
+                    <h3>Paiement</h3>
+                    <p><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
+                    {% if booking.status == "CONFIRMED" %}
+                        <p><strong>Frais de réservation débités :</strong> {{ payment_summary.reservation_fee }}</p>
+                        <p><strong>Reste à régler au salon/prestataire :</strong> {{ payment_summary.remaining }}</p>
+                    {% else %}
+                        <p><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }} (pas encore débités)</p>
+                        <p><strong>Montant débité à la confirmation :</strong> {{ payment_summary.reservation_fee }}</p>
+                        <p><strong>Reste à régler après confirmation :</strong> {{ payment_summary.remaining }}</p>
+                    {% endif %}
+                </div>
+
                 {% if booking.proposed_price_cents or booking.proposed_date %}
                     <div class="booking-proposal-callout">
                         <strong>Proposition en cours :</strong>
@@ -196,7 +209,7 @@
                 <div class="booking-action-card booking-status-info">
                     <h3>En attente de validation</h3>
                     <p class="booking-action-lead">
-                        La cliente ou le client doit valider ta proposition avant confirmation.
+                        La personne cliente doit valider ta proposition avant confirmation.
                     </p>
                 </div>
             {% elif booking.status == "CONFIRMED" %}
@@ -217,7 +230,7 @@
 
             <div class="booking-help-box">
                 <strong>Besoin d'aide ?</strong><br />
-                Une empreinte bancaire a été réalisée côté client. En confirmant, l'acompte est capturé.
+                Une empreinte bancaire a été réalisée côté client. En confirmant, les frais de réservation sont débités.
             </div>
         </aside>
     </div>
