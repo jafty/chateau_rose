@@ -259,7 +259,8 @@
 
         const serviceSelect = document.getElementById('service_id');
         const hairLengthSelect = document.getElementById('hair_length');
-        const generalAdjustmentSelect = document.getElementById('general_adjustment');
+        const generalAdjustmentsContainer = document.getElementById('general_adjustments');
+        const generalAdjustmentsInput = document.getElementById('general_adjustments_input');
         const hairLengthField = document.querySelector('[data-hair-length-field]');
         const generalAdjustmentField = document.querySelector('[data-general-adjustment-field]');
         const mecheCheckbox = document.getElementById('meche');
@@ -420,7 +421,7 @@
             const hiddenServiceInput = form?.querySelector('input[name="service_id"]');
             const hiddenMecheInput = form?.querySelector('input[name="meche"]');
             const hiddenHairLengthInput = form?.querySelector('input[name="hair_length"]');
-            const hiddenAdjustmentInput = form?.querySelector('input[name="general_adjustment"]');
+            const hiddenAdjustmentsInput = form?.querySelector('input[name="general_adjustments"]');
             const hiddenLocationPreferenceInput = form?.querySelector('input[name="location_preference"]');
 
             const mecheValue = mecheCheckbox
@@ -431,7 +432,14 @@
                 provider_id: form?.querySelector('input[name="provider_id"]')?.value,
                 service_id: serviceSelect?.value || hiddenServiceInput?.value || null,
                 hair_length: hairLengthSelect?.value || hiddenHairLengthInput?.value || null,
-                general_adjustment: generalAdjustmentSelect?.value || hiddenAdjustmentInput?.value || '',
+                general_adjustments: (() => {
+                    const fallback = hiddenAdjustmentsInput?.value || '[]';
+                    try {
+                        return JSON.parse(generalAdjustmentsInput?.value || fallback);
+                    } catch (err) {
+                        return [];
+                    }
+                })(),
                 meche: mecheValue,
                 location_preference:
                     document.querySelector('input[name="location_preference"]:checked')?.value ||
@@ -604,54 +612,58 @@
             if (generalAdjustmentField) {
                 generalAdjustmentField.hidden = !isVisible;
             }
-            if (generalAdjustmentSelect) {
-                generalAdjustmentSelect.disabled = !isVisible;
-            }
+        };
+
+        const syncGeneralAdjustmentsInput = () => {
+            if (!generalAdjustmentsContainer || !generalAdjustmentsInput) return;
+            const selectedValues = Array.from(
+                generalAdjustmentsContainer.querySelectorAll('input[type="checkbox"]:checked')
+            ).map((input) => input.value);
+            generalAdjustmentsInput.value = JSON.stringify(selectedValues);
         };
 
         const updateGeneralAdjustments = (serviceId) => {
-            if (!generalAdjustmentSelect || !generalAdjustmentField) return;
-            generalAdjustmentSelect.innerHTML = '';
+            if (!generalAdjustmentsContainer || !generalAdjustmentField || !generalAdjustmentsInput) return;
+            generalAdjustmentsContainer.innerHTML = '';
+            generalAdjustmentsInput.value = '[]';
             toggleGeneralAdjustmentField(false);
 
             if (!serviceId || !pricingData[serviceId]) return;
 
             const adjustments = pricingData[serviceId].general_adjustments || {};
-            const keys = Object.keys(adjustments);
-            const hasOnlyStandardAdjustment =
-                keys.length === 1 && keys[0].toLowerCase() === 'standard';
+            const keys = Object.keys(adjustments).filter((key) => key.toLowerCase() !== 'standard');
 
-            if (!keys.length || hasOnlyStandardAdjustment) {
-                const defaultKey = 'standard';
-                const opt = document.createElement('option');
-                opt.value = defaultKey;
-                opt.textContent = defaultKey;
-                generalAdjustmentSelect.appendChild(opt);
-                generalAdjustmentSelect.value = defaultKey;
-                generalAdjustmentSelect.disabled = true;
+            if (!keys.length) {
                 toggleGeneralAdjustmentField(false);
                 return;
             }
 
-            const noneOption = document.createElement('option');
-            noneOption.value = '';
-            noneOption.textContent = 'Aucun supplément';
-            noneOption.selected = true;
-            generalAdjustmentSelect.appendChild(noneOption);
-
-            keys
-                .sort()
-                .forEach((adjustmentKey) => {
-                    const opt = document.createElement('option');
-                    opt.value = adjustmentKey;
-                    const delta = adjustments[adjustmentKey];
-                    const displayDelta =
-                        delta === 0 ? '' : delta > 0 ? ` (+${formatPrice(delta)})` : ` (${formatPrice(delta)})`;
-                    opt.textContent = `${adjustmentKey}${displayDelta}`;
-                    generalAdjustmentSelect.appendChild(opt);
+            keys.sort().forEach((adjustmentKey) => {
+                const optionId = `supplement-${serviceId}-${adjustmentKey}`.replace(/[^a-zA-Z0-9_-]/g, '-');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = adjustmentKey;
+                checkbox.id = optionId;
+                checkbox.addEventListener('change', () => {
+                    syncGeneralAdjustmentsInput();
+                    refreshEstimate();
                 });
 
+                const label = document.createElement('label');
+                label.htmlFor = optionId;
+                const delta = adjustments[adjustmentKey];
+                const displayDelta = delta === 0 ? '' : delta > 0 ? ` (+${formatPrice(delta)})` : ` (${formatPrice(delta)})`;
+                label.textContent = `${adjustmentKey}${displayDelta}`;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'supplement-option';
+                wrapper.appendChild(checkbox);
+                wrapper.appendChild(label);
+                generalAdjustmentsContainer.appendChild(wrapper);
+            });
+
             toggleGeneralAdjustmentField(true);
+            syncGeneralAdjustmentsInput();
         };
 
         const updateMecheField = (serviceId) => {
@@ -678,7 +690,7 @@
         const formatAdjustment = (label, value) => {
             if (!label || value === undefined || value === null) return '';
             const sign = value > 0 ? '+' : '';
-            return `Supplément : ${label} (${sign}${formatPrice(value)})`;
+            return `${label} (${sign}${formatPrice(value)})`;
         };
 
         const refreshEstimate = () => {
@@ -713,8 +725,14 @@
             const adjustments = pricing.general_adjustments || {};
             const selectedLength = hairLengthSelect?.value;
             const lengthAdj = selectedLength && lengths[selectedLength] !== undefined ? lengths[selectedLength] : minAdjustment(lengths);
-            const selectedAdjustment = generalAdjustmentSelect?.value;
-            const generalAdj = selectedAdjustment && adjustments[selectedAdjustment] !== undefined ? adjustments[selectedAdjustment] : 0;
+            const selectedAdjustments = (() => {
+                try {
+                    return JSON.parse(generalAdjustmentsInput?.value || '[]');
+                } catch (err) {
+                    return [];
+                }
+            })();
+            const generalAdj = selectedAdjustments.reduce((total, item) => total + (adjustments[item] || 0), 0);
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
             const selectedLocationPreference = document.querySelector('input[name="location_preference"]:checked')?.value || locationPreferenceInput?.value;
             const atHomeAdj = selectedLocationPreference === "domicile" ? pricing.at_home_bonus || 0 : 0;
@@ -746,8 +764,8 @@
                 finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). À payer après acompte : ${remainingStr}.`;
             } 
             if (generalAdjustmentsDisplay) {
-                const adjustmentsText = selectedAdjustment
-                    ? formatAdjustment(selectedAdjustment, generalAdj)
+                const adjustmentsText = selectedAdjustments.length
+                    ? `Suppléments : ${selectedAdjustments.map((item) => formatAdjustment(item, adjustments[item] || 0)).filter(Boolean).join(' · ')}`
                     : '';
                 generalAdjustmentsDisplay.textContent = adjustmentsText;
                 generalAdjustmentsDisplay.hidden = !adjustmentsText;
@@ -778,9 +796,6 @@
         }
         if (hairLengthSelect) {
             hairLengthSelect.addEventListener('change', refreshEstimate);
-        }
-        if (generalAdjustmentSelect) {
-            generalAdjustmentSelect.addEventListener('change', refreshEstimate);
         }
         if (mecheCheckbox) {
             mecheCheckbox.addEventListener('change', refreshEstimate);

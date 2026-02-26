@@ -29,7 +29,7 @@ def execute(
     client_address: str | None = None,
     desired_date: str,
     hair_length: str,
-    general_adjustment: str | None = None,
+    general_adjustments: list[str] | None = None,
     meche: bool,
     current_hair_picture: str,
     require_current_hair_picture: bool = True,
@@ -88,10 +88,10 @@ def execute(
     if not skip_coverage_validation and not provider_catalog.provider_covers_zone(provider_id, coverage_location):
         raise ValidationError("Provider does not cover this zone")
 
-    estimated_price, hair_length, general_adjustment = estimate_service_price_cents(
+    estimated_price, hair_length, general_adjustments = estimate_service_price_cents(
         service=service,
         hair_length=hair_length,
-        general_adjustment=general_adjustment,
+        general_adjustments=general_adjustments,
         meche=meche,
         location_preference=normalized_location_preference,
     )
@@ -121,7 +121,7 @@ def execute(
         location_preference=normalized_location_preference,
         desired_date=desired_date,
         hair_length=hair_length,
-        general_adjustment=general_adjustment,
+        general_adjustments=general_adjustments,
         meche=meche,
         current_hair_picture=current_hair_picture,
         inspiration_pictures=inspiration_pictures,

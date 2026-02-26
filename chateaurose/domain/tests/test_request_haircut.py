@@ -56,7 +56,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
         client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
-        general_adjustment="motif",
+        general_adjustments=["motif"],
         meche=True,
         current_hair_picture="s3://bucket/hair.jpg",
         inspiration_pictures=["s3://bucket/inspo1.jpg"],
@@ -693,7 +693,7 @@ def test_request_haircut_defaults_length_and_adjustment_when_single_option():
         client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="",
-        general_adjustment="",
+        general_adjustments=[],
         meche=False,
         current_hair_picture="s3://bucket/hair.jpg",
         inspiration_pictures=[],
@@ -707,7 +707,7 @@ def test_request_haircut_defaults_length_and_adjustment_when_single_option():
     )
 
     assert booking.hair_length == "standard"
-    assert booking.general_adjustment == "standard"
+    assert booking.general_adjustments == []
     assert booking.estimated_price_cents == 5000
 
 
@@ -747,7 +747,7 @@ def test_request_haircut_computes_deposit_from_percentage():
         client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="standard",
-        general_adjustment="standard",
+        general_adjustments=["standard"],
         meche=False,
         current_hair_picture="s3://bucket/hair.jpg",
         inspiration_pictures=[],
@@ -800,7 +800,7 @@ def test_request_haircut_keeps_fixed_deposit_when_percentage_missing():
         client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="standard",
-        general_adjustment="standard",
+        general_adjustments=["standard"],
         meche=False,
         current_hair_picture="s3://bucket/hair.jpg",
         inspiration_pictures=[],
@@ -906,7 +906,7 @@ def test_request_haircut_can_skip_submission_notifications():
         client_address="5 place du Capitole, 31000 Toulouse",
         desired_date="2026-01-10T17:00:00Z",
         hair_length="long",
-        general_adjustment="",
+        general_adjustments=[],
         meche=False,
         current_hair_picture="s3://bucket/hair.jpg",
         inspiration_pictures=[],
