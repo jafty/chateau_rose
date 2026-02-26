@@ -9,10 +9,10 @@ def estimate_service_price_cents(
     *,
     service: dict,
     hair_length: str | None,
-    general_adjustment: str | None,
+    general_adjustments: list[str] | None,
     meche: bool,
     location_preference: str | None,
-) -> tuple[int, str, str | None]:
+) -> tuple[int, str, list[str]]:
     base_price = service["base_price_cents"]
 
     length_adjustments = service.get("hair_length_adjustments") or {STANDARD_ADJUSTMENT_KEY: 0}
@@ -26,23 +26,27 @@ def estimate_service_price_cents(
         raise ValidationError("Hair length is not supported for this service")
     length_adj = length_adjustments[normalized_hair_length]
 
-    raw_general_adjustments = service.get("general_adjustments") or {}
-    if raw_general_adjustments:
-        general_adjustments = raw_general_adjustments
-        default_general_adjustment = None
+    selectable_general_adjustments = service.get("general_adjustments") or {}
+    if general_adjustments is None:
+        raw_general_adjustments = []
+    elif isinstance(general_adjustments, (list, tuple)):
+        raw_general_adjustments = list(general_adjustments)
     else:
-        general_adjustments = {STANDARD_ADJUSTMENT_KEY: 0}
-        default_general_adjustment = STANDARD_ADJUSTMENT_KEY
+        raise ValidationError("General adjustments must be a list")
 
-    normalized_general_adjustment = general_adjustment
-    general_adj_value = 0
-    if normalized_general_adjustment:
-        if normalized_general_adjustment not in general_adjustments:
-            raise ValidationError("General adjustment is not supported for this service")
-        general_adj_value = general_adjustments[normalized_general_adjustment]
-    elif default_general_adjustment:
-        normalized_general_adjustment = default_general_adjustment
-        general_adj_value = general_adjustments[normalized_general_adjustment]
+    normalized_general_adjustments = [
+        str(item).strip() for item in raw_general_adjustments if str(item).strip()
+    ]
+
+    unknown_adjustments = [
+        item for item in normalized_general_adjustments if item not in selectable_general_adjustments
+    ]
+    if unknown_adjustments:
+        raise ValidationError("General adjustment is not supported for this service")
+
+    general_adj_value = sum(
+        selectable_general_adjustments[item] for item in normalized_general_adjustments
+    )
 
     meche_bonus = service.get("meche_bonus_cents", 0) if meche else 0
     domicile_bonus = (
@@ -52,4 +56,4 @@ def estimate_service_price_cents(
     )
 
     estimated_price = base_price + length_adj + general_adj_value + meche_bonus + domicile_bonus
-    return estimated_price, normalized_hair_length, normalized_general_adjustment
+    return estimated_price, normalized_hair_length, normalized_general_adjustments

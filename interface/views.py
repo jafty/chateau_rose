@@ -237,7 +237,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
                     client_address=form.cleaned_data.get("client_address"),
                     desired_date=form.cleaned_data.get("desired_date"),
                     hair_length=form.cleaned_data.get("hair_length"),
-                    general_adjustment=form.cleaned_data.get("general_adjustment"),
+                    general_adjustments=form.cleaned_data.get("general_adjustments", []),
                     meche=form.cleaned_data.get("meche", False),
                     current_hair_picture=current_picture,
                     inspiration_pictures=inspiration_paths,
@@ -290,7 +290,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
                         client_address=form.cleaned_data.get("client_address"),
                         desired_date=form.cleaned_data.get("desired_date"),
                         hair_length=form.cleaned_data.get("hair_length"),
-                        general_adjustment=form.cleaned_data.get("general_adjustment"),
+                        general_adjustments=form.cleaned_data.get("general_adjustments", []),
                         meche=form.cleaned_data.get("meche", False),
                         current_hair_picture=current_picture,
                         inspiration_pictures=inspiration_paths,
@@ -422,7 +422,7 @@ def quick_checkout_page(request, checkout_id):
                     client_address=client_address_value,
                     desired_date=checkout.desired_date.isoformat(),
                     hair_length=hair_length_value,
-                    general_adjustment="",
+                    general_adjustments=[],
                     meche=False,
                     current_hair_picture="quick-checkout",
                     require_current_hair_picture=False,
@@ -567,7 +567,7 @@ def provider_payment_intent(request):
     provider_id = payload.get("provider_id")
     service_id = payload.get("service_id")
     hair_length = payload.get("hair_length")
-    general_adjustment = payload.get("general_adjustment")
+    general_adjustments = payload.get("general_adjustments") or []
     meche = payload.get("meche")
     location_preference = payload.get("location_preference")
     quick_checkout_id = payload.get("quick_checkout_id")
@@ -596,7 +596,7 @@ def provider_payment_intent(request):
             estimated_price_cents, _, _ = estimate_service_price_cents(
                 service=service,
                 hair_length=hair_length,
-                general_adjustment=general_adjustment,
+                general_adjustments=general_adjustments,
                 meche=meche,
                 location_preference=location_preference,
             )
@@ -605,7 +605,7 @@ def provider_payment_intent(request):
             if "hair_length" in message:
                 return JsonResponse({"error": "Longueur de cheveux non supportée."}, status=400)
             if "General adjustment" in message:
-                return JsonResponse({"error": "Supplément non supporté."}, status=400)
+                return JsonResponse({"error": "Un ou plusieurs suppléments ne sont pas supportés."}, status=400)
             return JsonResponse({"error": "Informations manquantes."}, status=400)
 
         deposit_percentage = service.get("deposit_percentage")

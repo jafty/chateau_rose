@@ -298,7 +298,7 @@ class Booking(models.Model):
     client_address = models.TextField(blank=True)
     desired_date = models.CharField(max_length=128)
     hair_length = models.CharField(max_length=64)
-    general_adjustment = models.CharField(max_length=64, blank=True)
+    general_adjustments = models.JSONField(default=list, blank=True)
     meche = models.BooleanField()
     current_hair_picture = models.CharField(max_length=255)
     inspiration_pictures = models.JSONField(default=list)

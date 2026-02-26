@@ -2147,6 +2147,27 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .location-choice .choice-pill.is-selected span {
     color: var(--ink-primary); /* Texte plus foncé pour confirmer */
 }
+
+.supplements-list {
+    display: grid;
+    gap: 8px;
+}
+.supplement-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid #ead8e0;
+    border-radius: 10px;
+    background: #fff;
+}
+.supplement-option input[type="checkbox"] {
+    width: auto;
+}
+.supplement-option label {
+    margin: 0;
+    font-weight: 600;
+}
 .checkbox-field input[type="checkbox"] { width: auto; }
 .provider-form-grid textarea { min-height: 140px; }
 .provider-form-grid .estimation-box { grid-column: 1 / -1; background: #fff5fb; border: 1px solid #f3c1da; border-radius: 12px; padding: 12px; }

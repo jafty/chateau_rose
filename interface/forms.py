@@ -132,7 +132,7 @@ class ProviderBookingRequestForm(forms.Form):
     )
     desired_date = forms.CharField(label="Date souhaitée")
     hair_length = forms.CharField(label="Longueur de cheveux", required=False)
-    general_adjustment = forms.CharField(label="Supplément", required=False)
+    general_adjustments = forms.JSONField(label="Suppléments", required=False)
     meche = forms.BooleanField(label="Besoin de mèches fournies", required=False)
     current_hair_picture_file = forms.FileField(label="Photo de tes cheveux", required=False)
     current_hair_picture = forms.CharField(required=False)
@@ -215,6 +215,14 @@ class ProviderBookingRequestForm(forms.Form):
         if self.provider and not self.provider.provides_meche:
             cleaned_data["meche"] = False
 
+
+        selected_adjustments = cleaned_data.get("general_adjustments")
+        if selected_adjustments in (None, ""):
+            cleaned_data["general_adjustments"] = []
+        elif isinstance(selected_adjustments, list):
+            cleaned_data["general_adjustments"] = [str(item).strip() for item in selected_adjustments if str(item).strip()]
+        else:
+            raise forms.ValidationError("Format de suppléments invalide.")
         cleaned_data["location"] = location
         cleaned_data["location_preference"] = location_preference
         cleaned_data["client_address"] = client_address

@@ -31,10 +31,9 @@
                                 </div>
 
                                 <div class="form-field full-width" data-general-adjustment-field hidden>
-                                    <label for="general_adjustment">Supplément</label>
-                                    <select name="general_adjustment" id="general_adjustment">
-                                        <option value="" selected>Aucun supplément</option>
-                                    </select>
+                                    <label>Suppléments (optionnel)</label>
+                                    <div id="general_adjustments" class="supplements-list"></div>
+                                    <input type="hidden" name="general_adjustments" id="general_adjustments_input" value="[]">
                                 </div>
 
                                 {% if provider.provides_meche %}

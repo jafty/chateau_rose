@@ -149,7 +149,7 @@ class QuickCheckoutViewTests(TestCase):
                 "provider_id": self.provider.id,
                 "service_id": self.service.id,
                 "hair_length": "long",
-                "general_adjustment": "",
+                "general_adjustments": [],
                 "meche": False,
                 "location_preference": "salon",
                 "quick_checkout_id": self.checkout.id,
