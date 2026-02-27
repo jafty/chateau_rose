@@ -81,7 +81,7 @@ def _first_form_error(form: forms.Form) -> str | None:
 
 
 def home(request):
-    providers = Provider.objects.all()
+    providers = Provider.objects.all().order_by("homepage_order", "id")
     zones = Zone.objects.all()
     services = list(MarketingService.objects.all())
     services_by_slug = {service.slug: service for service in services}

@@ -55,6 +55,7 @@ class ProviderAdminForm(forms.ModelForm):
             "provides_meche",
             "location_mode",
             "categorized_services_enabled",
+            "homepage_order",
             "user",
             "zones",
             "marketing_services",
@@ -112,6 +113,7 @@ class ProviderAdmin(ImportExportModelAdmin):
         "provides_meche",
         "location_mode",
         "categorized_services_enabled",
+        "homepage_order",
         "user",
     )
     list_filter = ("location_mode",)
