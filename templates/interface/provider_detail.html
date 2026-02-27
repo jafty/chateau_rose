@@ -8,6 +8,10 @@
     <div class="provider-page-header paper-card">
         <h1 class="provider-page-title">{{ provider.name }}</h1>
         <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p>
+        <div class="provider-header-ctas">
+            <a href="#booking-wizard" class="btn">Prendre RDV</a>
+            <a href="#provider-question" class="btn secondary">Poser une question</a>
+        </div>
     </div>
 
     <div class="provider-layout">
@@ -171,6 +175,50 @@
                     </div>
                 </section>
             {% endif %}
+
+            <section class="content-section" id="provider-question">
+                <div class="paper-card provider-question-card">
+                    <h3 class="section-title provider-section-title">Poser une question à {{ provider.name }}</h3>
+                    <p class="provider-note">Une question avant de réserver ? Choisis ton destinataire et écris ton message.</p>
+                    {% if question_message %}<div class="alert success">{{ question_message }}</div>{% endif %}
+                    {% if question_error %}<div class="alert error">{{ question_error }}</div>{% endif %}
+
+                    <form method="post" class="provider-form-grid provider-question-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="question_form" value="1">
+                        <div class="form-field full-width">
+                            <label for="id_client_name">Ton nom <span class="required-mark">*</span></label>
+                            {{ question_form.client_name }}
+                        </div>
+                        <div class="form-field full-width">
+                            <label for="id_client_email">Email <span class="required-mark">*</span></label>
+                            {{ question_form.client_email }}
+                        </div>
+                        <div class="form-field full-width">
+                            <label style="margin-bottom: 12px; display:block;">Destinataire <span class="required-mark">*</span></label>
+                            <div class="location-choice" role="radiogroup" aria-label="Destinataire du message">
+                                {% for option in question_form.target %}
+                                    <label class="choice-pill" data-question-target-choice>
+                                        {{ option.tag }}
+                                        <span>{{ option.choice_label }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="form-field full-width">
+                            <label for="id_subject">Sujet <span class="required-mark">*</span></label>
+                            {{ question_form.subject }}
+                        </div>
+                        <div class="form-field full-width">
+                            <label for="id_message">Ta question <span class="required-mark">*</span></label>
+                            {{ question_form.message }}
+                        </div>
+                        <div class="wizard-actions full-width">
+                            <button type="submit" class="btn">Envoyer ma question</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
 
             <section class="content-section">
             {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
