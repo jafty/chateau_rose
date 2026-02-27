@@ -54,23 +54,20 @@ SUPPORT_EMAIL = "japhet.situmonana@gmail.com"
 
 
 def _notify_provider_question(provider: Provider, question_form: ProviderQuestionForm) -> None:
-    target = question_form.cleaned_data["target"]
     client_name = question_form.cleaned_data["client_name"]
     client_email = question_form.cleaned_data["client_email"]
-    subject = question_form.cleaned_data["subject"]
     message = question_form.cleaned_data["message"]
 
-    email_subject = f"Question depuis le profil de {provider.name} - {subject}"
+    email_subject = f"Question depuis le profil de {provider.name}"
     body_lines = [
         f"Prestataire : {provider.name}",
         f"Client·e : {client_name} ({client_email})",
-        f"Destinataire choisi : {'Prestataire' if target == ProviderQuestionForm.TARGET_PROVIDER else 'Château Rose'}",
+        "Destinataire : Château Rose",
         "",
         "Question :",
         message,
     ]
-    recipient = provider.contact_email if target == ProviderQuestionForm.TARGET_PROVIDER else SUPPORT_EMAIL
-    notifier.notify(recipient, email_subject, "\n".join(body_lines))
+    notifier.notify(SUPPORT_EMAIL, email_subject, "\n".join(body_lines))
 
 
 def _first_form_error(form: forms.Form) -> str | None:
@@ -210,7 +207,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
     error = None
     question_error = None
     salon_location_label = SALON_LOCATION_LABEL
-    question_form = ProviderQuestionForm(provider=provider)
+    question_form = ProviderQuestionForm()
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
     require_payment_auth = bool(stripe_public_key)
     prefilled_payment_auth_id = ""
@@ -230,7 +227,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
             )
 
     if request.method == "POST" and request.POST.get("question_form") == "1":
-        question_form = ProviderQuestionForm(request.POST, provider=provider)
+        question_form = ProviderQuestionForm(request.POST)
         if question_form.is_valid():
             _notify_provider_question(provider, question_form)
             request.session["provider_question_message"] = "Question envoyée. Nous revenons vers toi rapidement."
