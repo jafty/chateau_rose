@@ -199,6 +199,7 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = _get_bool_env("EMAIL_USE_TLS", True)
 EMAIL_USE_SSL = _get_bool_env("EMAIL_USE_SSL", False)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@chateau-rose.com")
+OPERATIONS_EMAIL = os.environ.get("OPERATIONS_EMAIL", "")
 if (
     EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend"
     and not EMAIL_HOST

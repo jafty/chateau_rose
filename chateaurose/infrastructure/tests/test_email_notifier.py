@@ -28,6 +28,21 @@ class EmailNotifierTests(TestCase):
         assert message.body == "Contenu"
         assert message.from_email == "no-reply@example.com"
 
+
+
+    @override_settings(OPERATIONS_EMAIL="ops@example.com")
+    def test_notify_routes_provider_id_to_operations_email_when_configured(self):
+        provider = Provider.objects.create(
+            name="Maison Ops",
+            contact_email="provider@example.com",
+        )
+
+        self.notifier.notify(str(provider.id), "Rappel", "Contenu")
+
+        assert len(mail.outbox) == 1
+        message = mail.outbox[0]
+        assert message.to == ["ops@example.com"]
+
     def test_notify_sends_to_direct_email(self):
         self.notifier.notify("client@example.com", "Sujet", "Message")
 

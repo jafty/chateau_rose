@@ -22,6 +22,9 @@
                         Reçue le {{ booking.created_at|date:"d F Y à H\\hi" }}
                     </p>
                     <p class="meta-line">ID court : <strong>{{ booking.booking_id }}</strong></p>
+                    {% if admin_mode %}
+                        <p class="meta-line">Mode admin · action pour le prestataire <strong>{{ booking.provider.name }}</strong>.</p>
+                    {% endif %}
                 </div>
                 <div class="booking-detail-header-actions">
                     <a class="btn secondary booking-header-back" href="{% url 'providers:providers_index' %}">
