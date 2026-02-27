@@ -107,6 +107,10 @@ class Provider(models.Model):
         default=False,
         help_text="Active la présentation des services par catégories sur la page prestataire.",
     )
+    homepage_order = models.PositiveIntegerField(
+        default=0,
+        help_text="Ordre d'affichage sur la page d'accueil (plus petit = affiché en premier).",
+    )
 
     def __str__(self):
         return self.name

@@ -261,6 +261,19 @@ class ServicePagesTests(TestCase):
         self.assertNotIn("Capitole highlight", content)
 
 
+
+    def test_home_uses_homepage_order_for_provider_cards(self):
+        self.provider_a.homepage_order = 10
+        self.provider_a.save()
+        self.provider_b.homepage_order = 1
+        self.provider_b.save()
+
+        response = self.client.get(reverse("interface:home"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertLess(content.index(self.provider_b.name), content.index(self.provider_a.name))
+
     def test_home_renders_marketing_city_chips(self):
         response = self.client.get(reverse("interface:home"))
 

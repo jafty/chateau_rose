@@ -47,6 +47,7 @@ class ProviderResource(resources.ModelResource):
             "provides_meche",
             "location_mode",
             "categorized_services_enabled",
+            "homepage_order",
             "user",
         )
         export_order = fields
