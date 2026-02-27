@@ -5,12 +5,31 @@
 
 {% block content %}
 <section class="page-shell provider-profile">
-    <div class="provider-page-header paper-card">
-        <h1 class="provider-page-title">{{ provider.name }}</h1>
-        <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p>
-        <div class="provider-header-ctas">
-            <a href="#booking-wizard" class="btn">Prendre RDV</a>
-            <a href="#provider-question" class="btn secondary">Poser une question</a>
+    <div class="provider-page-header hero-grid">
+        <div class="hero-content hero-card provider-hero-card">
+            <div>
+                <span class="pill">
+                    <span class="verified-pill-icon" aria-hidden="true">✓</span>
+                    Prestataire vérifié
+                </span>
+                <span class="pill" style="background:white; color:var(--ink-secondary);">{{ provider.location_mode_label }}</span>
+            </div>
+            <h1 class="provider-page-title">{{ provider.name }}</h1>
+            <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p>
+            <div class="provider-header-ctas">
+                <a href="#booking-wizard" class="btn">Prendre RDV</a>
+                <a href="#provider-question" class="btn secondary">Poser une question</a>
+            </div>
+        </div>
+        <div class="hero-media polaroid provider-hero-media">
+            {% if provider.resolved_cover_image %}
+                <img src="{{ provider.resolved_cover_image }}" alt="Réalisation de {{ provider.name }}" loading="eager" fetchpriority="high" decoding="async">
+            {% elif provider.resolved_profile_image %}
+                <img src="{{ provider.resolved_profile_image }}" alt="Photo de {{ provider.name }}" loading="eager" fetchpriority="high" decoding="async">
+            {% else %}
+                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Réalisation coiffure afro" loading="eager" fetchpriority="high" decoding="async">
+            {% endif %}
+            <span>Réalisations de {{ provider.name }}</span>
         </div>
     </div>
 
@@ -29,6 +48,7 @@
                         <span class="tag">Coiffure afro</span>
                     {% endfor %}
                 </div>
+                <a href="#booking-wizard" class="btn provider-sidebar-booking-cta">Réserver avec {{ provider.name }}</a>
             </div>
             <div class="paper-card provider-sidebar-card">
                 <h4 class="section-title provider-section-title">Disponibilités</h4>
@@ -128,6 +148,7 @@
             <section class="content-section">
                 <div class="paper-card provider-services-card">
                     <h3 class="section-title provider-section-title">Services et tarifs</h3>
+                    <p class="meta-line provider-pricing-note">Prix indicatifs (à partir de), confirmés après échange sur tes besoins.</p>
                     {% if provider.categorized_services_enabled and service_categories %}
                         <div class="service-category-accordion">
                             {% for category in service_categories %}
@@ -143,7 +164,7 @@
                                                 <div class="service-name">
                                                     <h4>{{ service.name }}</h4>
                                                 </div>
-                                                <span class="service-price">{{ service.price_display }}</span>
+                                                <span class="service-price"><small>À partir de</small> {{ service.price_display }}</span>
                                             </li>
                                         {% endfor %}
                                     </ul>
@@ -157,7 +178,7 @@
                                     <div class="service-name">
                                         <h4>{{ service.name }}</h4>
                                     </div>
-                                    <span class="service-price">{{ service.price_display }}</span>
+                                    <span class="service-price"><small>À partir de</small> {{ service.price_display }}</span>
                                 </li>
                             {% empty %}
                                 <li class="service-line"><p class="meta-line" style="margin: 0;">Tarifs à confirmer avec la prestataire ou le prestataire.</p></li>
@@ -175,50 +196,6 @@
                     </div>
                 </section>
             {% endif %}
-
-            <section class="content-section" id="provider-question">
-                <div class="paper-card provider-question-card">
-                    <h3 class="section-title provider-section-title">Poser une question à {{ provider.name }}</h3>
-                    <p class="provider-note">Une question avant de réserver ? Choisis ton destinataire et écris ton message.</p>
-                    {% if question_message %}<div class="alert success">{{ question_message }}</div>{% endif %}
-                    {% if question_error %}<div class="alert error">{{ question_error }}</div>{% endif %}
-
-                    <form method="post" class="provider-form-grid provider-question-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="question_form" value="1">
-                        <div class="form-field full-width">
-                            <label for="id_client_name">Ton nom <span class="required-mark">*</span></label>
-                            {{ question_form.client_name }}
-                        </div>
-                        <div class="form-field full-width">
-                            <label for="id_client_email">Email <span class="required-mark">*</span></label>
-                            {{ question_form.client_email }}
-                        </div>
-                        <div class="form-field full-width">
-                            <label style="margin-bottom: 12px; display:block;">Destinataire <span class="required-mark">*</span></label>
-                            <div class="location-choice" role="radiogroup" aria-label="Destinataire du message">
-                                {% for option in question_form.target %}
-                                    <label class="choice-pill" data-question-target-choice>
-                                        {{ option.tag }}
-                                        <span>{{ option.choice_label }}</span>
-                                    </label>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="form-field full-width">
-                            <label for="id_subject">Sujet <span class="required-mark">*</span></label>
-                            {{ question_form.subject }}
-                        </div>
-                        <div class="form-field full-width">
-                            <label for="id_message">Ta question <span class="required-mark">*</span></label>
-                            {{ question_form.message }}
-                        </div>
-                        <div class="wizard-actions full-width">
-                            <button type="submit" class="btn">Envoyer ma question</button>
-                        </div>
-                    </form>
-                </div>
-            </section>
 
             <section class="content-section">
             {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
@@ -269,6 +246,35 @@
                         </aside>
                         {% endif %}
                     </div>
+                </div>
+            </section>
+
+            <section class="content-section" id="provider-question">
+                <div class="paper-card provider-question-card">
+                    <h3 class="section-title provider-section-title">Poser une question à {{ provider.name }}</h3>
+                    <p class="provider-note">Une question avant de réserver ? Écris ton message et Château Rose te répond rapidement.</p>
+                    {% if question_message %}<div class="alert success">{{ question_message }}</div>{% endif %}
+                    {% if question_error %}<div class="alert error">{{ question_error }}</div>{% endif %}
+
+                    <form method="post" class="provider-form-grid provider-question-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="question_form" value="1">
+                        <div class="form-field full-width">
+                            <label for="id_client_name">Ton nom <span class="required-mark">*</span></label>
+                            {{ question_form.client_name }}
+                        </div>
+                        <div class="form-field full-width">
+                            <label for="id_client_email">Email <span class="required-mark">*</span></label>
+                            {{ question_form.client_email }}
+                        </div>
+                        <div class="form-field full-width">
+                            <label for="id_message">Ta question <span class="required-mark">*</span></label>
+                            {{ question_form.message }}
+                        </div>
+                        <div class="wizard-actions full-width">
+                            <button type="submit" class="btn">Envoyer ma question</button>
+                        </div>
+                    </form>
                 </div>
             </section>
         </div>
