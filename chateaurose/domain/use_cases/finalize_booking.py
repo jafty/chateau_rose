@@ -14,8 +14,8 @@ def _format_euros(amount_cents: int) -> str:
     return f"{euros:.2f}".replace(".", ",") + " €"
 
 
-def _payment_lines(total_cents: int, *, captured: bool) -> list[str]:
-    reservation_fee_cents = round(total_cents * 0.30)
+def _payment_lines(total_cents: int, *, captured: bool, deposit_percentage: int = 30) -> list[str]:
+    reservation_fee_cents = round(total_cents * deposit_percentage / 100)
     remaining_cents = max(total_cents - reservation_fee_cents, 0)
     if captured:
         return [
@@ -81,6 +81,7 @@ def execute(
     provider_contact = provider_directory.get_provider_contact(booking.provider_id)
     provider_name = provider_contact.get("name") or "La prestataire ou le prestataire"
     salon_address = provider_contact.get("salon_address") or "Adresse à confirmer"
+    deposit_percentage = provider_contact.get("deposit_percentage") or 30
 
     effective_date = booking.proposed_date or booking.desired_date
     effective_price_cents = (
@@ -125,7 +126,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=True),
+                        *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage),
                         "",
                         *provider_location_lines,
                         "",
@@ -147,7 +148,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=True),
+                        *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage),
                         "",
                         *client_location_lines,
                         "",
@@ -173,7 +174,7 @@ def execute(
                                 f"- Lieu : {location_label}",
                                 f"- Tarif : {formatted_price}",
                                 "",
-                                *_payment_lines(effective_price_cents, captured=True),
+                                *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage),
                                 "",
                                 "À très vite,",
                                 "L'équipe Château Rose",
@@ -196,7 +197,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=False),
+                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage),
                         "",
                         "À bientôt,",
                         "L'équipe Château Rose",
@@ -216,7 +217,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=False),
+                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage),
                         "",
                         "Si tu veux, tu peux déposer une nouvelle demande.",
                         "À bientôt,",
@@ -254,7 +255,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=True),
+                        *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage),
                         "",
                         *provider_location_lines,
                         "",
@@ -276,7 +277,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=True),
+                        *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage),
                         "",
                         *client_location_lines,
                         "",
@@ -302,7 +303,7 @@ def execute(
                                 f"- Lieu : {location_label}",
                                 f"- Tarif : {formatted_price}",
                                 "",
-                                *_payment_lines(effective_price_cents, captured=True),
+                                *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage),
                                 "",
                                 "À très vite,",
                                 "L'équipe Château Rose",
@@ -325,7 +326,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=False),
+                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage),
                         "",
                         "À bientôt,",
                         "L'équipe Château Rose",
@@ -345,7 +346,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=False),
+                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage),
                         "",
                         "Si tu veux, tu peux déposer une nouvelle demande.",
                         "À bientôt,",

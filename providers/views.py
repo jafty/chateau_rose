@@ -33,7 +33,8 @@ def _format_price_from_cents(amount_cents: int) -> str:
 
 def _payment_summary(booking) -> dict:
     effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
-    reservation_fee_cents = int((Decimal(effective_total_cents) * Decimal("0.30")).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    deposit_percentage = booking.provider.deposit_percentage or 30
+    reservation_fee_cents = int((Decimal(effective_total_cents) * Decimal(deposit_percentage) / Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
     remaining_cents = max(effective_total_cents - reservation_fee_cents, 0)
     return {
         "total": _format_price_from_cents(effective_total_cents),
