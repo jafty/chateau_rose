@@ -214,3 +214,83 @@ class ProviderSignupTests(TestCase):
         self.assertEqual(provider.contact_email, "new@pro.fr")
         self.assertEqual(provider.location_mode, Provider.LOCATION_MODE_HYBRID)
         self.assertTrue(response.wsgi_request.user.is_authenticated)
+
+
+@override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
+class ProviderAdminModeTests(TestCase):
+    def setUp(self):
+        self.admin_user = get_user_model().objects.create_user(
+            username="admin",
+            password="safepass123",
+            email="admin@example.com",
+            is_staff=True,
+        )
+        self.provider_user = get_user_model().objects.create_user(
+            username="provider2",
+            password="safepass123",
+            email="provider2@example.com",
+        )
+        self.provider = Provider.objects.create(
+            name="Coiffeuse 2",
+            contact_email="provider2@example.com",
+            user=self.provider_user,
+        )
+        self.service = Service.objects.create(
+            provider=self.provider,
+            name="Vanilles",
+            slug="vanilles",
+            base_price_cents=7000,
+        )
+        self.booking = Booking.objects.create(
+            booking_id="BK-ADM1N01",
+            provider=self.provider,
+            service=self.service,
+            client_name="Lina",
+            client_email="lina@example.com",
+            location="Paris",
+            location_preference="domicile",
+            client_address="10 rue de Paris",
+            desired_date="2026-01-10T17:00:00Z",
+            hair_length="long",
+            meche=True,
+            current_hair_picture="/media/hair.jpg",
+            inspiration_pictures=[],
+            free_text="",
+            estimated_price_cents=7000,
+            payment_auth_id="auth_admin_1",
+            status="SUBMITTED",
+            created_at=timezone.now(),
+            updated_at=timezone.now(),
+        )
+        self.client = Client()
+        self.client.login(username="admin", password="safepass123")
+
+    def test_staff_without_provider_can_access_centralized_dashboard(self):
+        response = self.client.get(reverse("providers:providers_index"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Gestion centralisée des demandes")
+        self.assertContains(response, self.provider.name)
+        self.assertContains(response, self.booking.booking_id)
+
+    def test_staff_without_provider_can_manage_booking_detail(self):
+        detail_url = reverse("providers:booking_detail", args=[self.booking.booking_id])
+        response = self.client.post(
+            detail_url,
+            {
+                "action": "propose",
+                "proposed_price_euros": "75",
+                "proposed_date": "2026-03-01T10:30",
+            },
+            follow=True,
+        )
+
+        self.booking.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.booking.status, "PENDING_CLIENT_VALIDATION")
+        self.assertEqual(self.booking.proposed_price_cents, 7500)

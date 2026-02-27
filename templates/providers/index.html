@@ -5,10 +5,16 @@
 {% block content %}
 <section class="container page-hero">
     <div class="paper-card" style="max-width:760px; margin: 0 auto;">
-        <span class="pill">Espace prestataire</span>
-        <h1 style="margin: 12px 0 10px;">Bienvenue {{ provider.name }}</h1>
-        <p class="lead">Cet espace privé est relié à ton compte : seul(e) toi peux y accéder avec tes identifiants.</p>
-        <p class="meta-line">Partage ce lien d'accès uniquement si tu veux inviter quelqu'un à se connecter en ton nom : <code>{{ request.build_absolute_uri }}</code></p>
+        <span class="pill">{% if admin_mode %}Console admin{% else %}Espace prestataire{% endif %}</span>
+        <h1 style="margin: 12px 0 10px;">{% if admin_mode %}Gestion centralisée des demandes{% else %}Bienvenue {{ provider.name }}{% endif %}</h1>
+        <p class="lead">
+            {% if admin_mode %}
+                Tu gères toutes les demandes depuis ton compte admin, sans rattacher chaque prestataire à ton utilisateur.
+            {% else %}
+                Cet espace privé est relié à ton compte : seul(e) toi peux y accéder avec tes identifiants.
+            {% endif %}
+        </p>
+        <p class="meta-line">{% if admin_mode %}Tu peux ouvrir chaque demande, proposer un créneau, confirmer ou refuser au nom du prestataire concerné.{% else %}Partage ce lien d'accès uniquement si tu veux inviter quelqu'un à se connecter en ton nom : <code>{{ request.build_absolute_uri }}</code>{% endif %}</p>
         <div class="btn-group" style="margin-top:10px;">
             <form method="post" action="{% url 'providers:logout' %}">
                 {% csrf_token %}
@@ -28,6 +34,7 @@
                         <tr>
                             <th>Demande</th>
                             <th>Client</th>
+                            {% if admin_mode %}<th>Prestataire</th>{% endif %}
                             <th>Service</th>
                             <th>Date souhaitée</th>
                             <th>Lieu</th>
@@ -39,6 +46,7 @@
                             <tr>
                                 <td><a href="{% url 'providers:booking_detail' booking.booking_id %}">{{ booking.booking_id }}</a></td>
                                 <td>{{ booking.client_name }}</td>
+                                {% if admin_mode %}<td>{{ booking.provider.name }}</td>{% endif %}
                                 <td>{{ booking.service.name }}</td>
                                 <td>{{ booking.desired_date }}</td>
                                 <td>{{ booking.location }}</td>

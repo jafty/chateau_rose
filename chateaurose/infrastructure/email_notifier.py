@@ -78,6 +78,10 @@ class EmailNotifier:
 
         raw = str(recipient).strip()
         if raw.isdigit():
+            operations_email = (getattr(settings, "OPERATIONS_EMAIL", "") or "").strip()
+            if operations_email and self._is_valid_email(operations_email):
+                return operations_email
+
             provider_email = (
                 Provider.objects.filter(id=raw)
                 .values_list("contact_email", flat=True)

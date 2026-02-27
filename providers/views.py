@@ -74,16 +74,19 @@ def _parse_price_to_cents(raw_value: str | None) -> int | None:
 
 @login_required(login_url="providers:login")
 def index(request):
-    try:
-        provider = Provider.objects.get(user=request.user)
-    except Provider.DoesNotExist:
+    provider = Provider.objects.filter(user=request.user).first()
+    admin_mode = provider is None and request.user.is_staff
+    if provider is None and not admin_mode:
         return HttpResponseForbidden("Accès réservé aux prestataires enregistrés.")
 
-    bookings = (
-        Booking.objects.filter(provider=provider)
-        .order_by("-created_at")
-        .select_related("service")
-    )
+    if admin_mode:
+        bookings = Booking.objects.order_by("-created_at").select_related("service", "provider")
+    else:
+        bookings = (
+            Booking.objects.filter(provider=provider)
+            .order_by("-created_at")
+            .select_related("service", "provider")
+        )
 
     return render(
         request,
@@ -91,22 +94,29 @@ def index(request):
         {
             "provider": provider,
             "bookings": bookings,
+            "admin_mode": admin_mode,
         },
     )
 
 
 @login_required(login_url="providers:login")
 def booking_detail(request, booking_id):
-    try:
-        provider = Provider.objects.get(user=request.user)
-    except Provider.DoesNotExist:
+    provider = Provider.objects.filter(user=request.user).first()
+    admin_mode = provider is None and request.user.is_staff
+    if provider is None and not admin_mode:
         return HttpResponseForbidden("Accès réservé aux prestataires enregistrés.")
 
-    booking = get_object_or_404(
-        Booking.objects.select_related("service", "provider"),
-        booking_id=booking_id,
-        provider=provider,
-    )
+    booking_query = Booking.objects.select_related("service", "provider")
+    if admin_mode:
+        booking = get_object_or_404(booking_query, booking_id=booking_id)
+    else:
+        booking = get_object_or_404(
+            booking_query,
+            booking_id=booking_id,
+            provider=provider,
+        )
+
+    acting_provider = booking.provider if admin_mode else provider
 
     message = None
     error = None
@@ -125,7 +135,7 @@ def booking_detail(request, booking_id):
                 )
                 update_proposal.execute(
                     booking_id=booking.booking_id,
-                    provider_id=provider.id,
+                    provider_id=acting_provider.id,
                     new_price_cents=price_cents,
                     new_date=proposed_date,
                     now=timezone.now(),
@@ -163,6 +173,7 @@ def booking_detail(request, booking_id):
             "message": message,
             "error": error,
             "payment_summary": _payment_summary(booking),
+            "admin_mode": admin_mode,
         },
     )
 
