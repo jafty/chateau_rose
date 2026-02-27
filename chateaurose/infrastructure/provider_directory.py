@@ -14,4 +14,5 @@ class DjangoProviderDirectory:
             "phone": provider.contact_phone or "",
             "salon_zone": provider.salon_zone or "",
             "salon_address": provider.salon_address or "",
+            "deposit_percentage": provider.deposit_percentage,
         }

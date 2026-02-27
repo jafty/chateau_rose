@@ -129,6 +129,18 @@ class ProviderDashboardTests(TestCase):
         self.assertIsNone(booking.proposed_price_cents)
         self.assertEqual(booking.proposed_date, "2026-02-05T11:30")
 
+    def test_booking_detail_uses_provider_deposit_percentage_for_payment_summary(self):
+        self.provider.deposit_percentage = 10
+        self.provider.save(update_fields=["deposit_percentage"])
+        booking = self._create_booking()
+
+        detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
+        response = self.client.get(detail_url)
+
+        self.assertContains(response, "Empreinte bancaire validée")
+        self.assertContains(response, "6,50 €")
+        self.assertContains(response, "58,50 €")
+
     def test_booking_detail_shows_photos_and_prices_in_euros(self):
         booking = self._create_booking()
         booking.inspiration_pictures = ["/media/inspo1.jpg", "/media/inspo2.jpg"]

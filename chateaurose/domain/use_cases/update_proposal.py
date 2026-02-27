@@ -46,6 +46,7 @@ def execute(
     provider_name = provider_contact.get("name") or "La prestataire ou le prestataire"
     provider_phone = provider_contact.get("phone") or "Non renseigné"
     provider_email = provider_contact.get("email") or "Non renseigné"
+    deposit_percentage = provider_contact.get("deposit_percentage") or 30
 
     proposed_date = booking.proposed_date or booking.desired_date or "À confirmer"
     if new_price_cents is None:
@@ -53,7 +54,7 @@ def execute(
     else:
         effective_price_cents = booking.proposed_price_cents
     proposed_price = _format_euros(effective_price_cents)
-    reservation_fee_cents = round(effective_price_cents * 0.30)
+    reservation_fee_cents = round(effective_price_cents * deposit_percentage / 100)
     remaining_cents = max(effective_price_cents - reservation_fee_cents, 0)
 
     message_lines = [
