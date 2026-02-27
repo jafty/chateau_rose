@@ -1653,6 +1653,12 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .provider-profile { padding: 50px 0; display: grid; gap: 22px; }
 .provider-page-header { transform: none; }
 .provider-page-title { margin: 12px 0 10px; font-size: clamp(2.2rem, 3vw, 3rem); }
+.provider-header-ctas {
+    margin-top: 14px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
 .provider-contacts { display: flex; gap: 12px; flex-wrap: wrap; }
 
 .provider-layout { display: grid; grid-template-columns: 320px 1fr; gap: 2rem; align-items: start; }
@@ -1686,6 +1692,20 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .provider-section-title { text-align: left; font-size: 2rem; margin-bottom: 0.8rem; }
 .provider-gallery-card { padding: 1.5rem; }
 .provider-services-card { display: grid; gap: 1rem; }
+.provider-question-card {
+    display: grid;
+    gap: 14px;
+    background: var(--bg-paper);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: clamp(1.25rem, 3vw, 2rem);
+    box-shadow: var(--shadow-paper);
+}
+.provider-question-form {
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+}
 .services-list-simple { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
 .service-line { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: 1px dashed rgba(0,0,0,0.08); }
 .service-line h4 { margin: 0; font-size: 1.1rem; }

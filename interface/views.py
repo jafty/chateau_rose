@@ -30,7 +30,7 @@ from chateaurose.infrastructure.provider_catalog import (
     DjangoProviderCatalog,
     SALON_LOCATION_LABEL,
 )
-from interface.forms import ProviderBookingRequestForm, ServiceRequestForm
+from interface.forms import ProviderBookingRequestForm, ProviderQuestionForm, ServiceRequestForm
 from interface.marketing_cities import CITY_PAGE_COPY, MARKETING_CITY_ENTRIES
 from interface.models import (
     ClientReview,
@@ -48,7 +48,29 @@ payment_gateway = StripePaymentGateway()
 provider_catalog = DjangoProviderCatalog()
 provider_directory = DjangoProviderDirectory()
 
+
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
+SUPPORT_EMAIL = "japhet.situmonana@gmail.com"
+
+
+def _notify_provider_question(provider: Provider, question_form: ProviderQuestionForm) -> None:
+    target = question_form.cleaned_data["target"]
+    client_name = question_form.cleaned_data["client_name"]
+    client_email = question_form.cleaned_data["client_email"]
+    subject = question_form.cleaned_data["subject"]
+    message = question_form.cleaned_data["message"]
+
+    email_subject = f"Question depuis le profil de {provider.name} - {subject}"
+    body_lines = [
+        f"Prestataire : {provider.name}",
+        f"Client·e : {client_name} ({client_email})",
+        f"Destinataire choisi : {'Prestataire' if target == ProviderQuestionForm.TARGET_PROVIDER else 'Château Rose'}",
+        "",
+        "Question :",
+        message,
+    ]
+    recipient = provider.contact_email if target == ProviderQuestionForm.TARGET_PROVIDER else SUPPORT_EMAIL
+    notifier.notify(recipient, email_subject, "\n".join(body_lines))
 
 
 def _first_form_error(form: forms.Form) -> str | None:
@@ -184,8 +206,11 @@ def provider_detail(request, provider_id, quick_checkout=None):
     pricing_data, starting_prices = booking_requests.build_pricing_data(services)
     zones = provider.zones.all()
     message = None
+    question_message = None
     error = None
+    question_error = None
     salon_location_label = SALON_LOCATION_LABEL
+    question_form = ProviderQuestionForm(provider=provider)
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
     require_payment_auth = bool(stripe_public_key)
     prefilled_payment_auth_id = ""
@@ -197,13 +222,22 @@ def provider_detail(request, provider_id, quick_checkout=None):
 
     if request.method == "GET":
         message = request.session.pop("provider_request_message", None)
+        question_message = request.session.pop("provider_question_message", None)
         prefilled_payment_auth_id = (request.GET.get("payment_auth_id") or "").strip()
         if prefilled_payment_auth_id:
             payment_message = (
                 "Empreinte bancaire confirmée. Tu peux finaliser l'envoi de ta demande."
             )
 
-    if request.method == "POST":
+    if request.method == "POST" and request.POST.get("question_form") == "1":
+        question_form = ProviderQuestionForm(request.POST, provider=provider)
+        if question_form.is_valid():
+            _notify_provider_question(provider, question_form)
+            request.session["provider_question_message"] = "Question envoyée. Nous revenons vers toi rapidement."
+            return redirect(f"{request.path}#provider-question")
+        question_error = _first_form_error(question_form)
+
+    if request.method == "POST" and request.POST.get("question_form") != "1":
         form = ProviderBookingRequestForm(
             request.POST,
             request.FILES,
@@ -257,60 +291,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
             except DomainError as exc:
                 error = str(exc)
         else:
-            form = ProviderBookingRequestForm(
-                request.POST,
-                request.FILES,
-                provider=provider,
-                require_payment_auth=require_payment_auth,
-                require_current_hair_picture=True,
-            )
-            if form.is_valid():
-                current_hair_picture_file = form.cleaned_data.get("current_hair_picture_file")
-                if current_hair_picture_file:
-                    current_picture = booking_requests.save_current_hair_picture(current_hair_picture_file)
-                else:
-                    current_picture = (form.cleaned_data.get("current_hair_picture") or "").strip()
-                inspiration_paths = booking_requests.save_inspiration_pictures(
-                    form.get_inspiration_files()
-                )
-                booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
-                provider_booking_url_base = request.build_absolute_uri(
-                    booking_detail_path.replace("BOOKING_ID/", "")
-                )
-                try:
-                    booking = request_haircut.execute(
-                        provider_id=str(provider.id),
-                        service_id=form.cleaned_data.get("service_id"),
-                        client_contact={
-                            "name": form.cleaned_data.get("client_name"),
-                            "email": form.cleaned_data.get("client_email"),
-                        },
-                        location=form.cleaned_data.get("location"),
-                        location_preference=form.cleaned_data.get("location_preference"),
-                        client_address=form.cleaned_data.get("client_address"),
-                        desired_date=form.cleaned_data.get("desired_date"),
-                        hair_length=form.cleaned_data.get("hair_length"),
-                        general_adjustments=form.cleaned_data.get("general_adjustments", []),
-                        meche=form.cleaned_data.get("meche", False),
-                        current_hair_picture=current_picture,
-                        inspiration_pictures=inspiration_paths,
-                        free_text=form.cleaned_data.get("free_text", ""),
-                        payment_auth_id=form.cleaned_data.get("payment_auth_id"),
-                        provider_booking_url_base=provider_booking_url_base,
-                        provider_salon_zone=provider.salon_zone,
-                        booking_repository=repo,
-                        provider_catalog=provider_catalog,
-                        payment_gateway=payment_gateway,
-                        notifier=notifier,
-                        reminder_gateway=None,
-                        clock=type("Clock", (), {"now": timezone.now}),
-                    )
-                    request.session["provider_request_message"] = f"Demande envoyée. ID: {booking.id}"
-                    return redirect(f"{request.path}#booking-wizard")
-                except DomainError as exc:
-                    error = str(exc)
-            else:
-                error = _first_form_error(form)
+            error = _first_form_error(form)
 
     service_categories = []
     if provider.categorized_services_enabled:
@@ -346,7 +327,10 @@ def provider_detail(request, provider_id, quick_checkout=None):
             "service_categories": service_categories,
             "zones": zones,
             "message": message,
+            "question_message": question_message,
             "error": error,
+            "question_error": question_error,
+            "question_form": question_form,
             "pricing_data": json.dumps(pricing_data),
             "default_starting_price": (
                 booking_requests.format_price(min(starting_prices)) if starting_prices else None
