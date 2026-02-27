@@ -1651,7 +1651,13 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 /* --- PROVIDER PROFILE LAYOUT --- */
 .provider-profile { padding: 50px 0; display: grid; gap: 22px; }
-.provider-page-header { transform: none; }
+.provider-page-header { transform: none; align-items: start; }
+.provider-hero-card { padding: clamp(1.5rem, 3vw, 2.2rem); }
+.provider-hero-media { margin: 0; max-width: 420px; width: 100%; justify-self: center; align-self: start; }
+.provider-hero-media img { aspect-ratio: 1 / 1; object-fit: cover; }
+.provider-sidebar-booking-cta { margin-top: 12px; width: 100%; justify-content: center; }
+.provider-pricing-note { margin: -4px 0 4px; }
+.service-price small { font-size: 0.72rem; font-weight: 600; color: var(--ink-secondary); margin-right: 5px; text-transform: uppercase; letter-spacing: 0.03em; }
 .provider-page-title { margin: 12px 0 10px; font-size: clamp(2.2rem, 3vw, 3rem); }
 .provider-header-ctas {
     margin-top: 14px;

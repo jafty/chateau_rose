@@ -233,36 +233,6 @@ class ProviderBookingRequestForm(forms.Form):
 
 
 class ProviderQuestionForm(forms.Form):
-    TARGET_PROVIDER = "provider"
-    TARGET_CHATEAU_ROSE = "chateau_rose"
-
     client_name = forms.CharField(label="Ton nom")
     client_email = forms.EmailField(label="Email")
-    target = forms.ChoiceField(
-        label="Destinataire",
-        choices=(
-            (TARGET_PROVIDER, "La prestataire / le prestataire"),
-            (TARGET_CHATEAU_ROSE, "Château Rose"),
-        ),
-        widget=forms.RadioSelect,
-    )
-    subject = forms.CharField(label="Sujet", max_length=120)
     message = forms.CharField(label="Ta question", widget=forms.Textarea(attrs={"rows": 4}))
-
-    def __init__(self, *args, **kwargs):
-        self.provider = kwargs.pop("provider", None)
-        super().__init__(*args, **kwargs)
-        if self.provider and not self.provider.contact_email:
-            self.fields["target"].initial = self.TARGET_CHATEAU_ROSE
-
-    def clean_target(self):
-        target = self.cleaned_data.get("target")
-        if (
-            target == self.TARGET_PROVIDER
-            and self.provider
-            and not self.provider.contact_email
-        ):
-            raise forms.ValidationError(
-                "La prestataire ou le prestataire ne reçoit pas encore les questions par email."
-            )
-        return target
