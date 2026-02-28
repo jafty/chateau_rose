@@ -688,8 +688,13 @@
             const adjustments = pricingData[serviceId].general_adjustments || {};
             const keys = Object.keys(adjustments).filter((key) => key.toLowerCase() !== 'standard');
 
+            toggleGeneralAdjustmentField(true);
+
             if (!keys.length) {
-                toggleGeneralAdjustmentField(false);
+                const emptyState = document.createElement('p');
+                emptyState.className = 'meta-line supplements-empty';
+                emptyState.textContent = 'Aucun supplément disponible pour cette prestation.';
+                generalAdjustmentsContainer.appendChild(emptyState);
                 return;
             }
 
@@ -717,7 +722,6 @@
                 generalAdjustmentsContainer.appendChild(wrapper);
             });
 
-            toggleGeneralAdjustmentField(true);
             syncGeneralAdjustmentsInput();
         };
 

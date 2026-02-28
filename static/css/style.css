@@ -1651,7 +1651,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 /* --- PROVIDER PROFILE LAYOUT --- */
 .provider-profile { padding: 50px 0; display: grid; gap: 22px; }
-.provider-page-header { transform: none; align-items: start; }
+.provider-page-header { transform: none; align-items: start; margin-bottom: clamp(1.5rem, 5vw, 3.25rem); }
 .provider-hero-card { padding: clamp(1.5rem, 3vw, 2.2rem); }
 .provider-hero-media { margin: 0; max-width: 420px; width: 100%; justify-self: center; align-self: start; }
 .provider-hero-media img { aspect-ratio: 1 / 1; object-fit: cover; }
@@ -2193,6 +2193,13 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .supplement-option label {
     margin: 0;
     font-weight: 600;
+}
+.supplements-empty {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px dashed #e3c8d3;
+    border-radius: 10px;
+    background: #fff;
 }
 .checkbox-field input[type="checkbox"] { width: auto; }
 .provider-form-grid textarea { min-height: 140px; }
@@ -2996,6 +3003,7 @@ footer {
     .form-grid { grid-template-columns: 1fr; }
     .form-grid .form-field { min-width: 0; }
     .provider-profile { padding: 40px 0; }
+    .provider-page-header { margin-bottom: clamp(2rem, 8vw, 3.5rem); }
 }
 
 
