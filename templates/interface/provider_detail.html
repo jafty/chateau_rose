@@ -7,7 +7,7 @@
 <section class="page-shell provider-profile">
     <div class="provider-page-header hero-grid">
         <div class="hero-content hero-card provider-hero-card">
-            <div>
+            <div class="provider-hero-badges">
                 <span class="pill">
                     <span class="verified-pill-icon" aria-hidden="true">✓</span>
                     Prestataire vérifié
@@ -875,7 +875,7 @@
                 depositPaymentHint.textContent = `Frais de réservation à régler : ${totalStr} (déduits du total).`;
             }
             mountPaymentElement().catch((error) => showPaymentError(error.message));
-        } else if (serviceSelect && serviceSelect.value) {
+        } else if (serviceSelect) {
             updateHairLengths(serviceSelect.value);
             updateGeneralAdjustments(serviceSelect.value);
             updateMecheField(serviceSelect.value);
