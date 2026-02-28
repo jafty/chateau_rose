@@ -101,6 +101,30 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 
+
+.provider-hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+@media (max-width: 640px) {
+    .provider-hero-badges {
+        flex-wrap: nowrap;
+        align-items: stretch;
+    }
+
+    .provider-hero-badges .pill {
+        flex: 1 1 0;
+        justify-content: center;
+        text-align: center;
+        min-width: 0;
+        letter-spacing: 0.2px;
+        font-size: 0.78rem;
+        padding-inline: 10px;
+    }
+}
 .verified-pill-icon {
     width: 20px;
     height: 20px;
