@@ -80,6 +80,93 @@ def _first_form_error(form: forms.Form) -> str | None:
     return None
 
 
+def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
+    provider = checkout.provider
+    client_address_value = (checkout.client_address or "").strip()
+    if checkout.location_preference == "domicile" and not client_address_value:
+        raise DomainError("Missing client address for domicile quick checkout")
+
+    booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
+    provider_booking_url_base = booking_detail_path.replace("BOOKING_ID/", "")
+    hair_length_value = (checkout.hair_length or "").strip()
+    supported_lengths = set((checkout.service.hair_length_adjustments or {}).keys())
+    if hair_length_value and supported_lengths and hair_length_value not in supported_lengths:
+        hair_length_value = ""
+
+    booking = request_haircut.execute(
+        provider_id=str(provider.id),
+        service_id=checkout.service_id,
+        client_contact={
+            "name": checkout.client_name,
+            "email": checkout.client_email,
+        },
+        location=(provider.salon_zone or "Salon") if checkout.location_preference == "salon" else client_address_value,
+        location_preference=checkout.location_preference,
+        client_address=client_address_value,
+        desired_date=checkout.desired_date.isoformat(),
+        hair_length=hair_length_value,
+        general_adjustments=[],
+        meche=False,
+        current_hair_picture="quick-checkout",
+        require_current_hair_picture=False,
+        skip_coverage_validation=True,
+        inspiration_pictures=[],
+        free_text=checkout.free_text,
+        payment_auth_id=payment_auth_id,
+        provider_booking_url_base=provider_booking_url_base,
+        provider_salon_zone=provider.salon_zone,
+        booking_repository=repo,
+        provider_catalog=provider_catalog,
+        payment_gateway=payment_gateway,
+        notifier=notifier,
+        reminder_gateway=None,
+        clock=type("Clock", (), {"now": timezone.now}),
+        send_submission_notifications=False,
+    )
+
+    booking_row = Booking.objects.filter(booking_id=booking.id).first()
+    if booking_row:
+        booking_row.estimated_price_cents = checkout.final_price_cents
+        booking_row.status = finalize_booking_uc.CONFIRMED
+        booking_row.save(update_fields=["estimated_price_cents", "status", "updated_at"])
+
+    checkout.completed_at = timezone.now()
+    checkout.is_active = False
+    checkout.save(update_fields=["completed_at", "is_active", "updated_at"])
+
+    notifier.notify(
+        provider.id,
+        "Rendez-vous confirmé",
+        "\n".join(
+            [
+                "Bonne nouvelle ! Le paiement de réservation a bien été validé.",
+                f"Client·e : {checkout.client_name} ({checkout.client_email})",
+                f"Prestation : {checkout.service.name}",
+                f"Date : {checkout.desired_date.isoformat()}",
+                f"ID réservation : {booking.id}",
+            ]
+        ),
+    )
+    client_confirmation_lines = [
+        f"Merci {checkout.client_name} ! Ton rendez-vous pour {checkout.service.name} est confirmé.",
+        "Le montant de réservation a bien été reçu.",
+        "",
+        "Récapitulatif :",
+        f"- Prestation : {checkout.service.name}",
+        f"- Date : {checkout.desired_date.isoformat()}",
+        f"- Montant déjà réglé : {booking_requests.format_price(checkout.reservation_fee_cents)}",
+        f"- Reste à payer le jour J : {booking_requests.format_price(max(checkout.final_price_cents - checkout.reservation_fee_cents, 0))}",
+        f"- ID réservation : {booking.id}",
+    ]
+    notifier.notify(
+        checkout.client_email,
+        "Rendez-vous confirmé",
+        "\n".join(client_confirmation_lines),
+    )
+
+    return booking
+
+
 def home(request):
     providers = Provider.objects.all().order_by("homepage_order", "id")
     zones = Zone.objects.all()
@@ -381,87 +468,11 @@ def quick_checkout_page(request, checkout_id):
         elif is_domicile and not client_address_value:
             error = "Merci d'indiquer ton adresse complète pour le rendez-vous à domicile."
         else:
-            booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
-            provider_booking_url_base = request.build_absolute_uri(
-                booking_detail_path.replace("BOOKING_ID/", "")
-            )
-            hair_length_value = (checkout.hair_length or "").strip()
-            supported_lengths = set((checkout.service.hair_length_adjustments or {}).keys())
-            if hair_length_value and supported_lengths and hair_length_value not in supported_lengths:
-                hair_length_value = ""
-
+            if checkout.client_address != client_address_value:
+                checkout.client_address = client_address_value
+                checkout.save(update_fields=["client_address", "updated_at"])
             try:
-                booking = request_haircut.execute(
-                    provider_id=str(provider.id),
-                    service_id=checkout.service_id,
-                    client_contact={
-                        "name": checkout.client_name,
-                        "email": checkout.client_email,
-                    },
-                    location=(provider.salon_zone or "Salon") if checkout.location_preference == "salon" else client_address_value,
-                    location_preference=checkout.location_preference,
-                    client_address=client_address_value,
-                    desired_date=checkout.desired_date.isoformat(),
-                    hair_length=hair_length_value,
-                    general_adjustments=[],
-                    meche=False,
-                    current_hair_picture="quick-checkout",
-                    require_current_hair_picture=False,
-                    skip_coverage_validation=True,
-                    inspiration_pictures=[],
-                    free_text=checkout.free_text,
-                    payment_auth_id=payment_auth_id,
-                    provider_booking_url_base=provider_booking_url_base,
-                    provider_salon_zone=provider.salon_zone,
-                    booking_repository=repo,
-                    provider_catalog=provider_catalog,
-                    payment_gateway=payment_gateway,
-                    notifier=notifier,
-                    reminder_gateway=None,
-                    clock=type("Clock", (), {"now": timezone.now}),
-                    send_submission_notifications=False,
-                )
-
-                booking_row = Booking.objects.filter(booking_id=booking.id).first()
-                if booking_row:
-                    booking_row.estimated_price_cents = checkout.final_price_cents
-                    booking_row.status = finalize_booking_uc.CONFIRMED
-                    booking_row.save(update_fields=["estimated_price_cents", "status", "updated_at"])
-                if checkout.client_address != client_address_value:
-                    checkout.client_address = client_address_value
-                checkout.completed_at = timezone.now()
-                checkout.is_active = False
-                checkout.save(update_fields=["client_address", "completed_at", "is_active", "updated_at"])
-
-                notifier.notify(
-                    provider.id,
-                    "Rendez-vous confirmé",
-                    "\n".join(
-                        [
-                            "Bonne nouvelle ! Le paiement de réservation a bien été validé.",
-                            f"Client·e : {checkout.client_name} ({checkout.client_email})",
-                            f"Prestation : {checkout.service.name}",
-                            f"Date : {checkout.desired_date.isoformat()}",
-                            f"ID réservation : {booking.id}",
-                        ]
-                    ),
-                )
-                client_confirmation_lines = [
-                    f"Merci {checkout.client_name} ! Ton rendez-vous pour {checkout.service.name} est confirmé.",
-                    f"Date : {checkout.desired_date.isoformat()}",
-                    f"ID réservation : {booking.id}",
-                ]
-                if checkout.location_preference == "salon":
-                    client_confirmation_lines.append(
-                        f"Adresse du salon : {provider.salon_address or 'Adresse à confirmer'}"
-                    )
-
-                notifier.notify(
-                    checkout.client_email,
-                    "Rendez-vous confirmé",
-                    "\n".join(client_confirmation_lines),
-                )
-
+                booking = _complete_quick_checkout(checkout, payment_auth_id)
                 return redirect("interface:quick_checkout_confirmation", booking_id=booking.id)
             except DomainError as exc:
                 error = str(exc)
@@ -631,12 +642,30 @@ def provider_payment_return(request):
     success_statuses = {"succeeded", "requires_capture", "processing"}
     failure_statuses = {"requires_payment_method", "canceled"}
 
+    quick_checkout_id = request.GET.get("quick_checkout_id", "").strip()
+    completed_booking_id = ""
+    if status in success_statuses and intent_id and quick_checkout_id:
+        checkout = QuickCheckoutPage.objects.filter(
+            id=quick_checkout_id,
+            is_active=True,
+            completed_at__isnull=True,
+        ).select_related("provider", "service").first()
+        if checkout is not None:
+            try:
+                booking = _complete_quick_checkout(checkout, intent_id)
+                completed_booking_id = booking.id
+            except DomainError:
+                completed_booking_id = ""
+
     if status in success_statuses:
         headline = "Empreinte bancaire confirmée"
         tone = "success"
-        message = (
-            "Ton empreinte bancaire a bien été enregistrée. Tu peux maintenant finaliser ta demande."
-        )
+        if completed_booking_id:
+            message = "Le paiement a été validé et ton rendez-vous est déjà confirmé."
+        else:
+            message = (
+                "Ton empreinte bancaire a bien été enregistrée. Tu peux maintenant finaliser ta demande."
+            )
     elif status in failure_statuses:
         headline = "Empreinte bancaire refusée"
         tone = "error"
@@ -658,7 +687,9 @@ def provider_payment_return(request):
             action_url = reverse("interface:home")
         else:
             action_url = reverse("interface:provider_detail", args=[provider_id])
-            if status in success_statuses and intent_id:
+            if completed_booking_id:
+                action_url = reverse("interface:quick_checkout_confirmation", args=[completed_booking_id])
+            elif status in success_statuses and intent_id:
                 action_url = f"{action_url}?payment_auth_id={intent_id}"
 
     return render(
@@ -672,6 +703,7 @@ def provider_payment_return(request):
             "action_url": action_url,
             "status": status,
             "status_checked": status_checked,
+            "completed_booking_id": completed_booking_id,
         },
     )
 

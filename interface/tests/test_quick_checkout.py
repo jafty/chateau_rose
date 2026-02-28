@@ -17,6 +17,16 @@ class _PaymentStub:
         return {"id": "pi_auth_1", "client_secret": "secret_123"}
 
 
+
+
+class _PaymentReturnStub:
+    def __init__(self, status):
+        self.status = status
+
+    def retrieve_payment_intent(self, intent_id):
+        return {"id": intent_id, "status": self.status}
+
+
 @override_settings(
     STORAGES={
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -133,6 +143,55 @@ class QuickCheckoutViewTests(TestCase):
         self.assertContains(response, booking.booking_id)
         self.assertContains(response, "Contacter le profil partenaire")
         self.assertContains(response, "12 rue des Fleurs, 75010 Paris")
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_payment_return_completes_quick_checkout_after_bank_redirect(self):
+        from interface import views
+
+        original_gateway = views.payment_gateway
+        views.payment_gateway = _PaymentReturnStub("succeeded")
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+
+        response = self.client.get(
+            reverse("interface:provider_payment_return"),
+            data={
+                "provider_id": self.provider.id,
+                "quick_checkout_id": self.checkout.id,
+                "payment_intent": "pi_success_1",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "rendez-vous est déjà confirmé")
+        booking = Booking.objects.get()
+        self.assertEqual(booking.status, "CONFIRMED")
+        self.checkout.refresh_from_db()
+        self.assertFalse(self.checkout.is_active)
+        self.assertIsNotNone(self.checkout.completed_at)
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_payment_return_does_not_complete_quick_checkout_on_failed_status(self):
+        from interface import views
+
+        original_gateway = views.payment_gateway
+        views.payment_gateway = _PaymentReturnStub("requires_payment_method")
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+
+        response = self.client.get(
+            reverse("interface:provider_payment_return"),
+            data={
+                "provider_id": self.provider.id,
+                "quick_checkout_id": self.checkout.id,
+                "payment_intent": "pi_failed_1",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "carte")
+        self.assertEqual(Booking.objects.count(), 0)
+        self.checkout.refresh_from_db()
+        self.assertTrue(self.checkout.is_active)
+        self.assertIsNone(self.checkout.completed_at)
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_uses_fixed_quick_checkout_price(self):
