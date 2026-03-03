@@ -52,6 +52,18 @@ class EmailNotifierTests(TestCase):
         assert message.subject == "Sujet"
         assert message.body == "Message"
 
+    def test_notify_sets_reply_to_when_provided(self):
+        self.notifier.notify(
+            "client@example.com",
+            "Sujet",
+            "Message",
+            reply_to="reply@example.com",
+        )
+
+        assert len(mail.outbox) == 1
+        message = mail.outbox[0]
+        assert message.reply_to == ["reply@example.com"]
+
     def test_notify_skips_invalid_recipient(self):
         self.notifier.notify("not-an-email", "Sujet", "Message")
 

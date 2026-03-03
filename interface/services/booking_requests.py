@@ -1,5 +1,6 @@
 import os
 from io import BytesIO
+from urllib.parse import urlparse
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -72,3 +73,18 @@ def save_inspiration_pictures(files):
         if saved:
             inspiration_paths.append(saved)
     return inspiration_paths
+
+
+def resolve_stored_media_url(path: str | None) -> str | None:
+    if not path:
+        return None
+
+    cleaned = str(path).strip()
+    if not cleaned:
+        return None
+
+    parsed = urlparse(cleaned)
+    if parsed.scheme or cleaned.startswith("/"):
+        return cleaned
+
+    return default_storage.url(cleaned)
