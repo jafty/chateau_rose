@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from interface.services.booking_requests import resolve_stored_media_url
 
@@ -16,6 +16,17 @@ class ResolveStoredMediaUrlTests(TestCase):
         )
         url_mock.assert_called_once_with("bookings/inspiration/img.jpg")
 
+    @override_settings(MEDIA_URL="https://bucket.s3.amazonaws.com/")
+    def test_resolve_absolute_media_url_on_same_host_gets_resigned(self):
+        with patch("interface.services.booking_requests.default_storage.url", return_value="https://bucket.s3.amazonaws.com/bookings/inspiration/img.jpg?X-Amz-Signature=fresh") as url_mock:
+            resolved = resolve_stored_media_url("https://bucket.s3.amazonaws.com/bookings/inspiration/img.jpg")
+
+        self.assertEqual(
+            resolved,
+            "https://bucket.s3.amazonaws.com/bookings/inspiration/img.jpg?X-Amz-Signature=fresh",
+        )
+        url_mock.assert_called_once_with("bookings/inspiration/img.jpg")
+    
     def test_resolve_absolute_url_kept(self):
         absolute = "https://example.com/path.jpg"
         self.assertEqual(resolve_stored_media_url(absolute), absolute)
