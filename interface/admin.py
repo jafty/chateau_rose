@@ -93,7 +93,7 @@ class ServiceRequestAdmin(admin.ModelAdmin):
     )
     list_filter = ("marketing_service", "zone")
     search_fields = ("client_name", "client_email", "details", "inspiration_picture_urls")
-    readonly_fields = ("inspiration_pictures_preview",)
+    readonly_fields = ("inspiration_pictures_preview", "created_at")
     fields = (
         "marketing_service",
         "zone",
