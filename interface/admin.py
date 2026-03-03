@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.conf import settings
+from django.utils.html import format_html, format_html_join
 
 from import_export.admin import ImportExportModelAdmin
 
@@ -92,10 +94,54 @@ class ServiceRequestAdmin(admin.ModelAdmin):
     )
     list_filter = ("marketing_service", "zone")
     search_fields = ("client_name", "client_email", "details", "inspiration_picture_urls")
+    readonly_fields = ("inspiration_pictures_preview", "created_at")
+    fields = (
+        "marketing_service",
+        "zone",
+        "location_preference",
+        "client_name",
+        "client_email",
+        "client_address",
+        "desired_date",
+        "hair_length",
+        "meche_provided",
+        "details",
+        "inspiration_picture_urls",
+        "inspiration_pictures_preview",
+        "created_at",
+    )
 
     @admin.display(description="Photos")
     def inspiration_pictures_count(self, obj):
         return len(obj.inspiration_picture_urls or [])
+
+    @admin.display(description="Aperçu photos")
+    def inspiration_pictures_preview(self, obj):
+        urls = obj.inspiration_picture_urls or []
+        if not urls:
+            return "-"
+
+        resolved_urls = [self._resolve_inspiration_url(url) for url in urls if url]
+        if not resolved_urls:
+            return "-"
+
+        return format_html(
+            '<div style="display:grid;gap:8px;">{}</div>',
+            format_html_join(
+                "",
+                '<div><a href="{}" target="_blank" rel="noopener">Ouvrir l\'image {}</a><br><img src="{}" alt="Inspiration {}" style="margin-top:4px;max-width:240px;max-height:240px;border-radius:8px;border:1px solid #ddd;" /></div>',
+                ((url, idx + 1, url, idx + 1) for idx, url in enumerate(resolved_urls)),
+            ),
+        )
+
+    def _resolve_inspiration_url(self, url: str) -> str:
+        cleaned = str(url).strip()
+        if not cleaned:
+            return ""
+        if cleaned.startswith(("http://", "https://", "/")):
+            return cleaned
+        media_url = (settings.MEDIA_URL or "/media/").rstrip("/")
+        return f"{media_url}/{cleaned.lstrip('/')}"
 
 
 @admin.register(ClientReview)
