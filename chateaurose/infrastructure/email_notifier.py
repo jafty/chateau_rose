@@ -4,7 +4,7 @@ import logging
 
 import requests
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
@@ -15,10 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 class EmailNotifier:
-    def notify(self, recipient: str, subject: str, body: str) -> None:
+    def notify(self, recipient: str, subject: str, body: str, reply_to: str | None = None) -> None:
         resolved = self._resolve_recipient(recipient)
         if not resolved:
             return
+
+        resolved_reply_to = self._resolve_reply_to(reply_to)
 
         try:
             if settings.BREVO_API_KEY:
@@ -26,15 +28,17 @@ class EmailNotifier:
                     recipient=resolved,
                     subject=subject,
                     body=body,
+                    reply_to=resolved_reply_to,
                 )
             else:
-                send_mail(
+                message = EmailMessage(
                     subject=subject,
-                    message=body,
+                    body=body,
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[resolved],
-                    fail_silently=False,
+                    to=[resolved],
+                    reply_to=[resolved_reply_to] if resolved_reply_to else None,
                 )
+                message.send(fail_silently=False)
         except Exception:
             logger.warning(
                 "Email notification failed",
@@ -49,7 +53,12 @@ class EmailNotifier:
         )
 
     @staticmethod
-    def _send_via_brevo(recipient: str, subject: str, body: str) -> None:
+    def _send_via_brevo(
+        recipient: str,
+        subject: str,
+        body: str,
+        reply_to: str | None = None,
+    ) -> None:
         sender_email = settings.BREVO_SENDER_EMAIL or settings.DEFAULT_FROM_EMAIL
         payload = {
             "sender": {
@@ -60,6 +69,8 @@ class EmailNotifier:
             "subject": subject,
             "textContent": body,
         }
+        if reply_to:
+            payload["replyTo"] = {"email": reply_to}
         response = requests.post(
             settings.BREVO_API_URL,
             json=payload,
@@ -103,3 +114,13 @@ class EmailNotifier:
         except ValidationError:
             return False
         return True
+
+    def _resolve_reply_to(self, reply_to: str | None) -> str | None:
+        if not reply_to:
+            return None
+        cleaned = str(reply_to).strip()
+        if not cleaned:
+            return None
+        if self._is_valid_email(cleaned):
+            return cleaned
+        return None
