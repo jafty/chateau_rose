@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.conf import settings
 from django.utils.html import format_html, format_html_join
 
 from import_export.admin import ImportExportModelAdmin
@@ -21,6 +20,7 @@ from interface.models import (
     ProviderBookingDraft,
     QuickCheckoutPage,
 )
+from interface.services.booking_requests import resolve_stored_media_url
 
 
 class MarketingServiceImageInline(admin.TabularInline):
@@ -135,13 +135,7 @@ class ServiceRequestAdmin(admin.ModelAdmin):
         )
 
     def _resolve_inspiration_url(self, url: str) -> str:
-        cleaned = str(url).strip()
-        if not cleaned:
-            return ""
-        if cleaned.startswith(("http://", "https://", "/")):
-            return cleaned
-        media_url = (settings.MEDIA_URL or "/media/").rstrip("/")
-        return f"{media_url}/{cleaned.lstrip('/')}"
+        return resolve_stored_media_url(url) or ""
 
 
 @admin.register(ClientReview)
