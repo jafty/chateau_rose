@@ -67,7 +67,12 @@ def _notify_provider_question(provider: Provider, question_form: ProviderQuestio
         "Question :",
         message,
     ]
-    notifier.notify(SUPPORT_EMAIL, email_subject, "\n".join(body_lines))
+    notifier.notify(
+        SUPPORT_EMAIL,
+        email_subject,
+        "\n".join(body_lines),
+        reply_to=client_email,
+    )
 
 
 def _first_form_error(form: forms.Form) -> str | None:
@@ -122,6 +127,7 @@ def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
         reminder_gateway=None,
         clock=type("Clock", (), {"now": timezone.now}),
         send_submission_notifications=False,
+        operations_email=SUPPORT_EMAIL,
     )
 
     booking_row = Booking.objects.filter(booking_id=booking.id).first()
@@ -369,6 +375,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
                     notifier=notifier,
                     reminder_gateway=None,
                     clock=type("Clock", (), {"now": timezone.now}),
+                    operations_email=SUPPORT_EMAIL,
                 )
                 request.session["provider_request_message"] = f"Demande envoyée. ID: {booking.id}"
                 return redirect(f"{request.path}#booking-wizard")

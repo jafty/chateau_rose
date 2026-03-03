@@ -46,6 +46,7 @@ def execute(
     reminder_gateway,
     clock,
     send_submission_notifications: bool = True,
+    operations_email: str | None = None,
 ):
     required_fields = [
         ("provider_id", provider_id),
@@ -192,6 +193,13 @@ def execute(
             "Nouvelle demande de coiffure",
             "\n".join(provider_message_lines),
         )
+        if operations_email:
+            notifier.notify(
+                operations_email,
+                f"Copie demande {booking_id}",
+                "\n".join(provider_message_lines),
+                reply_to=client_contact["email"],
+            )
         notifier.notify(
             client_contact["email"],
             "Demande envoyée",
