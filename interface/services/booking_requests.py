@@ -1,7 +1,8 @@
 import os
 from io import BytesIO
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from PIL import Image, ImageOps
@@ -84,7 +85,17 @@ def resolve_stored_media_url(path: str | None) -> str | None:
         return None
 
     parsed = urlparse(cleaned)
-    if parsed.scheme or cleaned.startswith("/"):
+    if cleaned.startswith("/"):
+        return cleaned
+
+    if parsed.scheme:
+        media_url = urlparse(settings.MEDIA_URL or "")
+        if media_url.scheme and media_url.netloc and parsed.netloc == media_url.netloc:
+            media_prefix = media_url.path or "/"
+            if parsed.path.startswith(media_prefix):
+                storage_path = unquote(parsed.path[len(media_prefix) :].lstrip("/"))
+                if storage_path:
+                    return default_storage.url(storage_path)
         return cleaned
 
     return default_storage.url(cleaned)
