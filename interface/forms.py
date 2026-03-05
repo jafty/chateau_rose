@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from django import forms
-from django.urls import reverse
 from django.utils import timezone
 
 from booking.models import Provider, Zone
@@ -38,16 +37,12 @@ class MultipleFileField(forms.FileField):
 class ServiceRequestForm(forms.ModelForm):
     marketing_service = forms.ModelChoiceField(
         queryset=MarketingService.objects.all(),
-        label="Service souhaité",
+        label="Service",
     )
     zone = forms.ModelChoiceField(
         queryset=Zone.objects.all(),
         required=False,
-        label="Zone",
-        help_text=(
-            "Indique ton quartier si tu veux une prestation à domicile,"
-            " pour être mis(e) en relation avec une prestataire ou un prestataire proche."
-        ),
+        label="Secteur (si tu te déplaces en salon)",
     )
     location_preference = forms.ChoiceField(
         label="Où veux-tu réaliser la prestation ?",
@@ -55,23 +50,45 @@ class ServiceRequestForm(forms.ModelForm):
         initial=ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
         widget=forms.RadioSelect,
     )
+    salon_area = forms.CharField(
+        label="Secteur du salon",
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Ex. Toulouse centre / Capitole"}),
+    )
+    availabilities = forms.MultipleChoiceField(
+        label="Disponibilités",
+        required=False,
+        choices=ServiceRequest.AVAILABILITY_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+    )
+    hair_length = forms.ChoiceField(
+        label="Longueur des cheveux",
+        required=False,
+        choices=(
+            ("", "Choisir"),
+            ("court", "Court"),
+            ("epaule", "Épaule"),
+            ("milieu_dos", "Milieu du dos"),
+            ("fesses", "Fesses"),
+        ),
+    )
     inspiration_pictures = MultipleFileField(
         label="Ajoute une ou plusieurs photos (inspiration ou cheveux actuels)",
         required=False,
         widget=MultiFileInput(attrs={"multiple": True, "accept": "image/*"}),
     )
     desired_date = forms.DateTimeField(
-        label="Date souhaitée",
+        label="Date / heure idéale",
         input_formats=["%Y-%m-%dT%H:%M"],
         widget=forms.DateTimeInput(
             attrs={
                 "type": "datetime-local",
                 "inputmode": "numeric",
-                "placeholder": "JJ/MM/AAAA HH:MM",
+                "placeholder": "Ex. 22/03/2026 14:30",
             },
             format="%Y-%m-%dT%H:%M",
         ),
-        help_text="Format : JJ/MM/AAAA HH:MM (24h)",
+        help_text="Sélectionne ton créneau idéal.",
     )
 
     class Meta:
@@ -82,8 +99,9 @@ class ServiceRequestForm(forms.ModelForm):
             "location_preference",
             "desired_date",
             "client_name",
-            "client_email",
+            "client_phone",
             "client_address",
+            "availabilities",
             "hair_length",
             "meche_provided",
             "details",
@@ -93,31 +111,44 @@ class ServiceRequestForm(forms.ModelForm):
         }
         labels = {
             "client_name": "Ton nom",
-            "client_email": "Email",
+            "client_phone": "Numéro WhatsApp",
             "client_address": "Adresse complète",
-            "hair_length": "Longueur de cheveux",
+            "availabilities": "Tes disponibilités",
+            "hair_length": "Longueur des cheveux",
             "meche_provided": "Mèches déjà fournies",
-            "details": "Détails ou besoin",
+            "details": "Détails techniques",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["zone"].widget.attrs.update(
-            {
-                "data-zone-search-url": reverse("interface:zone_search"),
-                "data-zone-value-field": "id",
-                "data-zone-label-field": "name",
-                "data-zone-search-placeholder": "Cherche une zone ou un quartier",
-            }
-        )
         self.fields["inspiration_pictures"].widget.attrs.update({"multiple": True, "accept": "image/*"})
 
+    def clean_client_phone(self):
+        phone = "".join(char for char in (self.cleaned_data.get("client_phone") or "") if char.isdigit() or char == "+")
+        if len(phone.replace("+", "")) < 8:
+            raise forms.ValidationError("Merci de renseigner un numéro WhatsApp valide.")
+        return phone
 
     def clean(self):
         cleaned_data = super().clean()
         client_address = (cleaned_data.get("client_address") or "").strip()
+        salon_area = (cleaned_data.get("salon_area") or "").strip()
+        location_preference = cleaned_data.get("location_preference")
+
+        if location_preference == ServiceRequest.LOCATION_PREFERENCE_SALON and not salon_area:
+            self.add_error("salon_area", "Précise le secteur du salon pour mieux qualifier la demande.")
+
+        cleaned_data["salon_area"] = salon_area
         cleaned_data["client_address"] = client_address
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.salon_area = self.cleaned_data.get("salon_area", "")
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
 
 class ProviderBookingRequestForm(forms.Form):
