@@ -189,7 +189,7 @@ class ServiceRequest(models.Model):
     LOCATION_PREFERENCE_SALON = "salon"
     LOCATION_PREFERENCE_CHOICES = (
         (LOCATION_PREFERENCE_CLIENT_HOME, "À domicile"),
-        (LOCATION_PREFERENCE_SALON, "En salon / chez la prestataire ou le prestataire"),
+        (LOCATION_PREFERENCE_SALON, "Chez la prestataire / le prestataire"),
     )
     AVAILABILITY_CHOICES = (
         ("morning", "Matin"),
@@ -217,11 +217,11 @@ class ServiceRequest(models.Model):
         default=LOCATION_PREFERENCE_CLIENT_HOME,
     )
     salon_area = models.CharField(max_length=255, blank=True)
-    client_name = models.CharField(max_length=255)
+    client_name = models.CharField(max_length=255, blank=True, default="")
     client_phone = models.CharField(max_length=32, blank=True, default="")
     client_email = models.EmailField(blank=True)
     client_address = models.TextField(blank=True)
-    desired_date = models.DateTimeField()
+    desired_date = models.DateTimeField(null=True, blank=True)
     availabilities = models.JSONField(default=list, blank=True)
     hair_length = models.CharField(max_length=120, blank=True)
     meche_provided = models.BooleanField(default=False)
@@ -233,7 +233,7 @@ class ServiceRequest(models.Model):
         ordering = ("-created_at",)
 
     def __str__(self):
-        return f"Demande {self.marketing_service.name} ({self.client_name})"
+        return f"Demande {self.marketing_service.name} ({self.client_name or self.client_phone or 'sans contact'})"
 
 
 class ProviderBookingDraft(models.Model):
