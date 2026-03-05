@@ -131,6 +131,7 @@ def booking_detail(request, booking_id):
                 )
                 raw_date = request.POST.get("proposed_date", "")
                 proposed_date = raw_date.strip() or None
+                counter_proposal_message = request.POST.get("counter_proposal_message", "").strip() or None
                 client_control_url = request.build_absolute_uri(
                     reverse("interface:client_proposal", args=[booking.booking_id])
                 )
@@ -144,6 +145,7 @@ def booking_detail(request, booking_id):
                     notifier=notifier,
                     provider_directory=provider_directory,
                     client_control_url=client_control_url,
+                    counter_proposal_message=counter_proposal_message,
                 )
                 message = "Proposition envoyée à la personne cliente."
             elif action in ("confirm", "reject"):

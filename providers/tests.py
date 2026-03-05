@@ -109,6 +109,15 @@ class ProviderDashboardTests(TestCase):
         self.assertEqual(booking.proposed_price_cents, 8000)
         self.assertIsNone(booking.proposed_date)
 
+    def test_booking_detail_displays_optional_counter_proposal_message_field(self):
+        booking = self._create_booking()
+        detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
+
+        response = self.client.get(detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "name=\"counter_proposal_message\"")
+
     def test_provider_can_propose_only_date(self):
         booking = self._create_booking()
         detail_url = reverse("providers:booking_detail", args=[booking.booking_id])

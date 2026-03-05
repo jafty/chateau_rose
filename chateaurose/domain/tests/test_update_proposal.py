@@ -388,3 +388,51 @@ def test_update_proposal_requires_price_or_date():
             provider_directory=provider_directory,
             client_control_url="https://example.com/booking/booking_empty/",
         )
+
+
+def test_update_proposal_includes_optional_free_text_message_in_email():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+    provider_directory = InMemoryProviderDirectory(
+        {
+            "provider_1": {
+                "name": "Amandine",
+                "email": "amandine@example.com",
+                "phone": "+33601020304",
+            }
+        }
+    )
+
+    booking = BookingRequest(
+        id="booking_with_message",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Saint-Cyprien",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        payment_auth_id="auth_with_message",
+        status="SUBMITTED",
+        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+    )
+    repo.add(booking)
+
+    update_proposal.execute(
+        booking_id="booking_with_message",
+        provider_id="provider_1",
+        new_price_cents=9200,
+        new_date="2026-01-13T12:30:00Z",
+        counter_proposal_message="Je peux aussi avancer de 30 minutes si besoin.",
+        booking_repository=repo,
+        notifier=notifier,
+        provider_directory=provider_directory,
+        client_control_url="https://example.com/booking/booking_with_message/",
+    )
+
+    assert "Message de la prestataire / du prestataire :" in notifier.messages[0]["body"]
+    assert "Je peux aussi avancer de 30 minutes si besoin." in notifier.messages[0]["body"]

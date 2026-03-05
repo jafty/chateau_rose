@@ -16,6 +16,7 @@ def execute(
     new_price_cents: int | None,
     new_date: str | None,
     client_control_url: str | None,
+    counter_proposal_message: str | None = None,
     now=None,
     booking_repository,
     provider_directory,
@@ -57,6 +58,10 @@ def execute(
     reservation_fee_cents = round(effective_price_cents * deposit_percentage / 100)
     remaining_cents = max(effective_price_cents - reservation_fee_cents, 0)
 
+    normalized_counter_proposal_message = (
+        counter_proposal_message.strip() if isinstance(counter_proposal_message, str) else None
+    )
+
     message_lines = [
         f"Bonjour {booking.client_contact['name']},",
         "",
@@ -64,6 +69,18 @@ def execute(
         "Voici les nouveaux détails :",
         f"- Date proposée : {proposed_date}",
         f"- Tarif proposé : {proposed_price}",
+    ]
+
+    if normalized_counter_proposal_message:
+        message_lines.extend(
+            [
+                "",
+                "Message de la prestataire / du prestataire :",
+                normalized_counter_proposal_message,
+            ]
+        )
+
+    message_lines.extend([
         "",
         "Paiement :",
         f"- Empreinte bancaire déjà validée : {_format_euros(reservation_fee_cents)} (pas encore débités)",
@@ -79,7 +96,7 @@ def execute(
         "",
         "Merci et à très vite,",
         "L'équipe Château Rose",
-    ]
+    ])
 
     notifier.notify(
         booking.client_contact["email"],
