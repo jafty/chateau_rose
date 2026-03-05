@@ -73,7 +73,7 @@ class ServiceRequestForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["details"].required = True
-        self.fields["details"].widget.attrs.setdefault("placeholder", "Exemple : knotless braids S vers Saint-Cyprien, idéalement le 10 mars à 20:00.")
+        self.fields["details"].widget.attrs.setdefault("placeholder", "Exemple : knotless braids S vers Saint-Cyprien (cheveux longueur épaule), idéalement le 10 mars à 20:00. Disponible tous les samedis matin.")
 
     def clean_client_phone(self):
         phone = "".join(char for char in (self.cleaned_data.get("client_phone") or "") if char.isdigit() or char == "+")
