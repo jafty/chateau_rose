@@ -108,8 +108,9 @@ class QuickCheckoutViewTests(TestCase):
         self.assertNotContains(response, "Chez la/le prestataire ou en salon")
         self.assertNotContains(response, "Paris")
 
+
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
-    def test_quick_checkout_submit_redirects_to_confirmation_and_marks_booking_confirmed(self):
+    def test_quick_checkout_submit_redirects_to_client_confirmation_and_keeps_booking_pending(self):
         response = self.client.post(
             reverse("interface:quick_checkout_page", args=[self.checkout.id]),
             data={"payment_auth_id": "pi_auth_1"},
@@ -119,15 +120,15 @@ class QuickCheckoutViewTests(TestCase):
         booking = Booking.objects.get()
         self.assertRedirects(
             response,
-            reverse("interface:quick_checkout_confirmation", args=[booking.booking_id]),
+            reverse("interface:client_confirmation", args=[booking.booking_id]),
         )
-        self.assertEqual(booking.status, "CONFIRMED")
+        self.assertEqual(booking.status, "SUBMITTED")
         self.checkout.refresh_from_db()
         self.assertFalse(self.checkout.is_active)
         self.assertIsNotNone(self.checkout.completed_at)
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
-    def test_quick_checkout_confirmation_page_renders_booking_summary(self):
+    def test_client_confirmation_page_renders_pending_summary_after_quick_checkout(self):
         self.client.post(
             reverse("interface:quick_checkout_page", args=[self.checkout.id]),
             data={"payment_auth_id": "pi_auth_1"},
@@ -135,14 +136,13 @@ class QuickCheckoutViewTests(TestCase):
         booking = Booking.objects.get()
 
         response = self.client.get(
-            reverse("interface:quick_checkout_confirmation", args=[booking.booking_id])
+            reverse("interface:client_confirmation", args=[booking.booking_id])
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Rendez-vous confirmé")
+        self.assertContains(response, "Ta demande est en cours")
         self.assertContains(response, booking.booking_id)
         self.assertContains(response, "Contacter le profil partenaire")
-        self.assertContains(response, "12 rue des Fleurs, 75010 Paris")
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_return_completes_quick_checkout_after_bank_redirect(self):
@@ -162,9 +162,9 @@ class QuickCheckoutViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "rendez-vous est déjà confirmé")
+        self.assertContains(response, "attente de confirmation manuelle")
         booking = Booking.objects.get()
-        self.assertEqual(booking.status, "CONFIRMED")
+        self.assertEqual(booking.status, "SUBMITTED")
         self.checkout.refresh_from_db()
         self.assertFalse(self.checkout.is_active)
         self.assertIsNotNone(self.checkout.completed_at)

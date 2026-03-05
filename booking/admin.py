@@ -17,6 +17,7 @@ from .models import (
     Booking,
     Provider,
     ProviderMarketingService,
+    ProviderBlockedSlot,
     ProviderPhoto,
     ProviderZone,
     Service,
@@ -282,3 +283,12 @@ class ProviderMarketingServiceAdmin(ImportExportModelAdmin):
 class BookingAdmin(admin.ModelAdmin):
     list_display = ("booking_id", "provider", "service", "status", "created_at")
     list_filter = ("status", "provider")
+
+
+@admin.register(ProviderBlockedSlot)
+class ProviderBlockedSlotAdmin(admin.ModelAdmin):
+    list_display = ("provider", "starts_at", "ends_at", "source", "is_active")
+    list_filter = ("provider", "source", "is_active")
+    search_fields = ("provider__name", "reason")
+    fields = ("provider", "starts_at", "ends_at", "source", "reason", "is_active")
+

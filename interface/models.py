@@ -191,6 +191,13 @@ class ServiceRequest(models.Model):
         (LOCATION_PREFERENCE_CLIENT_HOME, "À domicile"),
         (LOCATION_PREFERENCE_SALON, "En salon / chez la prestataire ou le prestataire"),
     )
+    AVAILABILITY_CHOICES = (
+        ("morning", "Matin"),
+        ("afternoon", "Après-midi"),
+        ("evening", "Soir"),
+        ("weekday", "Semaine"),
+        ("weekend", "Week-end"),
+    )
 
     marketing_service = models.ForeignKey(
         MarketingService,
@@ -209,10 +216,13 @@ class ServiceRequest(models.Model):
         choices=LOCATION_PREFERENCE_CHOICES,
         default=LOCATION_PREFERENCE_CLIENT_HOME,
     )
+    salon_area = models.CharField(max_length=255, blank=True)
     client_name = models.CharField(max_length=255)
-    client_email = models.EmailField()
+    client_phone = models.CharField(max_length=32, blank=True, default="")
+    client_email = models.EmailField(blank=True)
     client_address = models.TextField(blank=True)
     desired_date = models.DateTimeField()
+    availabilities = models.JSONField(default=list, blank=True)
     hair_length = models.CharField(max_length=120, blank=True)
     meche_provided = models.BooleanField(default=False)
     inspiration_picture_urls = models.JSONField(default=list, blank=True)

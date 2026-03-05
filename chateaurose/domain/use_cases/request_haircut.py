@@ -89,6 +89,10 @@ def execute(
     if not skip_coverage_validation and not provider_catalog.provider_covers_zone(provider_id, coverage_location):
         raise ValidationError("Provider does not cover this zone")
 
+    has_blocked_slot = getattr(provider_catalog, "provider_has_blocked_slot", None)
+    if callable(has_blocked_slot) and has_blocked_slot(provider_id, desired_date):
+        raise ValidationError("Selected slot is unavailable")
+
     estimated_price, hair_length, general_adjustments = estimate_service_price_cents(
         service=service,
         hair_length=hair_length,

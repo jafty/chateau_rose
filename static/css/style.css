@@ -3280,3 +3280,42 @@ footer {
 .city-providers-section {
     padding-top: 20px;
 }
+
+
+.request-disclaimer {
+    margin-top: 8px;
+    font-size: 0.92rem;
+    color: #6b5c5c;
+}
+
+.request-disclaimer a {
+    color: var(--rose-accent);
+    font-weight: 600;
+}
+
+.availability-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.availability-pill {
+    position: relative;
+    cursor: pointer;
+    border: 1px solid rgba(178, 89, 138, 0.35);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    background: #fff;
+}
+
+.availability-pill input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.availability-pill.is-selected {
+    background: rgba(178, 89, 138, 0.12);
+    border-color: var(--rose-accent);
+}

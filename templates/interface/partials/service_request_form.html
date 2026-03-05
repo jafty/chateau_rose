@@ -3,6 +3,7 @@
         <div>
             <h2 style="margin-bottom:6px;">{{ title }}</h2>
             <p class="lead" style="margin:0;">{{ lead }}</p>
+            <p class="request-disclaimer">Les demandes rapides sont traitées sous 24 à 48h. Pour une prise de RDV plus rapide, <a href="{% url 'interface:home' %}#catalogue">réserve directement auprès d'un prestataire</a>.</p>
         </div>
     </div>
     {% if request_success %}
@@ -11,130 +12,99 @@
             Nous te recontactons très vite pour confirmer la prestataire idéale.
         </div>
     {% endif %}
-    <div class="step-progress">
-        <div class="step-indicator active" data-step-indicator="1">1</div>
-        <div class="step-indicator" data-step-indicator="2">2</div>
-        <div class="step-indicator" data-step-indicator="3">3</div>
-    </div>
-    <form method="post" action="{{ form_action|default:'' }}" class="request-wizard-form provider-form-grid" enctype="multipart/form-data">
+    <form method="post" action="{{ form_action|default:'' }}" class="request-single-form provider-form-grid" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="request_service" value="1" />
-        <fieldset class="wizard-step active" data-step="1">
-            <h4 style="margin-bottom: 0.5rem; color: var(--rose-accent);" class="full-width">
-                Choix de la coiffure
-            </h4>
-            {% if request_form.marketing_service.is_hidden %}
+
+        {% if request_form.marketing_service.is_hidden %}
+            {{ request_form.marketing_service }}
+        {% else %}
+            <div class="form-field full-width">
+                <label for="id_marketing_service">Service <span class="required-mark">*</span></label>
                 {{ request_form.marketing_service }}
-            {% else %}
-                <div class="form-field full-width">
-                    <label for="id_marketing_service">Service souhaité <span class="required-mark">*</span></label>
-                    {{ request_form.marketing_service }}
-                </div>
-            {% endif %}
-            <div class="form-field full-width">
-                <label style="margin-bottom: 12px; display:block;">Lieu préféré <span class="required-mark">*</span></label>
-                <div class="location-choice" role="radiogroup" aria-label="Lieu préféré">
-                    {% for option in request_form.location_preference %}
-                        <label class="choice-pill">
-                            {{ option.tag }}
-                            <span>{{ option.choice_label }}</span>
-                        </label>
-                    {% endfor %}
-                </div>
             </div>
-            {% if request_form.zone.is_hidden %}
-                {{ request_form.zone }}
-            {% else %}
-                <div class="form-field full-width" data-zone-field>
-                    <label for="id_zone">Zone</label>
-                    {{ request_form.zone }}
-                    {% if request_form.zone.help_text %}
-                        <small class="field-hint">{{ request_form.zone.help_text }}</small>
-                    {% endif %}
-                </div>
-            {% endif %}
-            <div class="wizard-actions full-width">
-                <button type="button" class="btn btn-next">Continuer</button>
-            </div>
-        </fieldset>
+        {% endif %}
 
-        <fieldset class="wizard-step" data-step="2">
-            <h4 style="margin-bottom: 0.5rem; color: var(--rose-accent);" class="full-width">
-                Tes disponibilités
-            </h4>
-            <div class="form-field full-width">
-                <label for="id_desired_date">Date souhaitée <span class="required-mark">*</span></label>
-                {{ request_form.desired_date }}
-                {% if request_form.desired_date.help_text %}
-                    <small class="field-hint">{{ request_form.desired_date.help_text }}</small>
-                {% endif %}
-            </div>
-            <div class="form-field full-width">
-                <label for="id_client_name">Ton nom <span class="required-mark">*</span></label>
-                {{ request_form.client_name }}
-            </div>
-            <div class="form-field full-width">
-                <label for="id_client_email">Email <span class="required-mark">*</span></label>
-                {{ request_form.client_email }}
-            </div>
-            <div class="wizard-actions full-width">
-                <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                <button type="button" class="btn btn-next">Continuer</button>
-            </div>
-        </fieldset>
+        <div class="form-field full-width">
+            <label for="id_client_phone">Numéro WhatsApp <span class="required-mark">*</span></label>
+            {{ request_form.client_phone }}
+        </div>
 
-        <fieldset class="wizard-step" data-step="3">
-            <h4 style="margin-bottom: 0.5rem; color: var(--rose-accent);" class="full-width">
-                Derniers détails
-            </h4>
-            <div class="form-field full-width">
-                <label for="id_hair_length">Longueur de cheveux</label>
-                {{ request_form.hair_length }}
-                <small class="field-hint">Exemple : court, épaules, milieu du dos, très longs.</small>
+        <div class="form-field full-width">
+            <label for="id_client_name">Nom <span class="required-mark">*</span></label>
+            {{ request_form.client_name }}
+        </div>
+
+        <div class="form-field full-width">
+            <label style="margin-bottom: 12px; display:block;">Où veux-tu réaliser la prestation ? <span class="required-mark">*</span></label>
+            <div class="location-choice" role="radiogroup" aria-label="Lieu préféré">
+                {% for option in request_form.location_preference %}
+                    <label class="choice-pill">
+                        {{ option.tag }}
+                        <span>{{ option.choice_label }}</span>
+                    </label>
+                {% endfor %}
             </div>
-            <div class="form-field checkbox-field full-width">
-                <label for="id_meche_provided" style="background: white; padding: 10px; border: 1px dashed #ccc; width: 100%;">
-                    {{ request_form.meche_provided }}
-                    <span>J'ai déjà mes mèches / ajouts.</span>
-                </label>
+        </div>
+
+        <div class="form-field full-width" data-salon-area-field hidden>
+            <label for="id_salon_area">Secteur du salon <span class="required-mark">*</span></label>
+            {{ request_form.salon_area }}
+        </div>
+
+        <div class="form-field full-width">
+            <label for="id_desired_date">Date / heure idéale <span class="required-mark">*</span></label>
+            {{ request_form.desired_date }}
+        </div>
+
+        <div class="form-field full-width">
+            <label style="margin-bottom: 8px; display:block;">Disponibilités</label>
+            <div class="availability-pills" aria-label="Disponibilités">
+                {% for option in request_form.availabilities %}
+                    <label class="availability-pill">
+                        {{ option.tag }}
+                        <span>{{ option.choice_label }}</span>
+                    </label>
+                {% endfor %}
             </div>
-            <div class="form-field full-width">
-                <label for="id_inspiration_pictures">Photos (inspiration ou cheveux actuels)</label>
-                <div class="file-upload-wrapper">
-                    {{ request_form.inspiration_pictures }}
-                    <label class="file-upload-label" for="id_inspiration_pictures">Choisir des photos</label>
-                    <div class="file-upload-info" id="file-label-inspiration">Aucune photo sélectionnée</div>
-                </div>
+        </div>
+
+        <div class="form-field full-width">
+            <label for="id_hair_length">Longueur des cheveux</label>
+            {{ request_form.hair_length }}
+        </div>
+
+        <div class="form-field full-width">
+            <label for="id_details">Détails techniques</label>
+            {{ request_form.details }}
+        </div>
+
+        <div class="form-field full-width">
+            <label for="id_inspiration_pictures">Photos (optionnel)</label>
+            <div class="file-upload-wrapper">
+                {{ request_form.inspiration_pictures }}
+                <label class="file-upload-label" for="id_inspiration_pictures">Choisir des photos</label>
+                <div class="file-upload-info" id="file-label-inspiration">Aucune photo sélectionnée</div>
             </div>
-            <div class="form-field full-width">
-                <label for="id_details">Dis-nous en plus</label>
-                {{ request_form.details }}
-            </div>
-            <div class="wizard-actions full-width">
-                <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                <button type="submit" class="btn">Envoyer ma demande</button>
-            </div>
-        </fieldset>
+        </div>
+
+        <div class="wizard-actions full-width">
+            <button type="submit" class="btn">Envoyer ma demande</button>
+        </div>
     </form>
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const forms = document.querySelectorAll('.request-card .request-wizard-form');
+        const forms = document.querySelectorAll('.request-card .request-single-form');
         if (!forms.length) return;
 
         forms.forEach((form) => {
             const container = form.closest('.request-card');
             if (!container) return;
-            const zoneField = form.querySelector('[data-zone-field]');
             const preferenceInputs = form.querySelectorAll('input[name="location_preference"]');
             const locationChoiceLabels = form.querySelectorAll('.location-choice .choice-pill');
-
-            const steps = container.querySelectorAll('.wizard-step');
-            const indicators = container.querySelectorAll('.step-indicator');
-            const nextButtons = container.querySelectorAll('.btn-next');
-            const prevButtons = container.querySelectorAll('.btn-prev');
-            let currentStep = 1;
-            const totalSteps = steps.length;
+            const availabilityLabels = form.querySelectorAll('.availability-pills .availability-pill');
+            const salonAreaField = form.querySelector('[data-salon-area-field]');
 
             const inspirationInput = form.querySelector('#id_inspiration_pictures');
             const inspirationLabel = container.querySelector('#file-label-inspiration');
@@ -151,67 +121,28 @@
                     : `${files.length} photos sélectionnées`;
             };
 
-            const syncFields = () => {
+            const syncLocationFields = () => {
                 const selected = form.querySelector('input[name="location_preference"]:checked')?.value;
                 const isSalon = selected === 'salon';
+
                 locationChoiceLabels.forEach((label) => {
                     const input = label.querySelector('input[type="radio"]');
                     label.classList.toggle('is-selected', Boolean(input && input.checked));
                 });
 
-                if (zoneField) {
-                    zoneField.hidden = isSalon;
-                    const input = zoneField.querySelector('input, select, textarea');
-                    if (input) input.required = !isSalon;
+                if (salonAreaField) {
+                    salonAreaField.hidden = !isSalon;
+                    const input = salonAreaField.querySelector('input');
+                    if (input) input.required = isSalon;
                 }
             };
 
-            const updateWizardUI = () => {
-                steps.forEach((step) => {
-                    step.classList.toggle('active', parseInt(step.dataset.step, 10) === currentStep);
-                });
-
-                indicators.forEach((indicator) => {
-                    const stepNum = parseInt(indicator.dataset.stepIndicator, 10);
-                    indicator.classList.remove('active', 'completed');
-                    if (stepNum === currentStep) indicator.classList.add('active');
-                    if (stepNum < currentStep) indicator.classList.add('completed');
+            const syncAvailabilityFields = () => {
+                availabilityLabels.forEach((label) => {
+                    const input = label.querySelector('input[type="checkbox"]');
+                    label.classList.toggle('is-selected', Boolean(input && input.checked));
                 });
             };
-
-            const validateCurrentStep = () => {
-                const currentStepEl = container.querySelector(`.wizard-step[data-step="${currentStep}"]`);
-                if (!currentStepEl) return true;
-                const inputs = currentStepEl.querySelectorAll('input, select, textarea');
-                let isValid = true;
-
-                inputs.forEach((input) => {
-                    if (!input.checkValidity()) {
-                        isValid = false;
-                        input.reportValidity();
-                        return;
-                    }
-                });
-                return isValid;
-            };
-
-            nextButtons.forEach((button) => {
-                button.addEventListener('click', () => {
-                    if (validateCurrentStep() && currentStep < totalSteps) {
-                        currentStep += 1;
-                        updateWizardUI();
-                    }
-                });
-            });
-
-            prevButtons.forEach((button) => {
-                button.addEventListener('click', () => {
-                    if (currentStep > 1) {
-                        currentStep -= 1;
-                        updateWizardUI();
-                    }
-                });
-            });
 
             if (inspirationInput) {
                 inspirationInput.addEventListener('change', updateInspirationLabel);
@@ -219,11 +150,15 @@
             }
 
             if (preferenceInputs.length) {
-                preferenceInputs.forEach((input) => input.addEventListener('change', syncFields));
-                syncFields();
+                preferenceInputs.forEach((input) => input.addEventListener('change', syncLocationFields));
+                syncLocationFields();
             }
 
-            updateWizardUI();
+            availabilityLabels.forEach((label) => {
+                const input = label.querySelector('input[type="checkbox"]');
+                if (input) input.addEventListener('change', syncAvailabilityFields);
+            });
+            syncAvailabilityFields();
         });
     });
 </script>

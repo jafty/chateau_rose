@@ -1,4 +1,7 @@
-from booking.models import Provider, Service, Zone
+from datetime import datetime
+
+from booking.models import Provider, ProviderBlockedSlot, Service, Zone
+from django.utils import timezone
 from chateaurose.domain.exceptions import NotFound
 
 SALON_LOCATION_LABEL = "Salon"
@@ -43,3 +46,19 @@ class DjangoProviderCatalog:
             return True
 
         return Zone.objects.filter(providers__id=provider_id, name=zone_name).exists()
+
+    def provider_has_blocked_slot(self, provider_id: str, desired_date: str) -> bool:
+        try:
+            appointment_at = datetime.fromisoformat(str(desired_date).replace("Z", "+00:00"))
+        except ValueError:
+            return False
+
+        if timezone.is_naive(appointment_at):
+            appointment_at = timezone.make_aware(appointment_at)
+
+        return ProviderBlockedSlot.objects.filter(
+            provider_id=provider_id,
+            is_active=True,
+            starts_at__lte=appointment_at,
+            ends_at__gt=appointment_at,
+        ).exists()

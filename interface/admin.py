@@ -86,6 +86,7 @@ class ServiceRequestAdmin(admin.ModelAdmin):
         "marketing_service",
         "zone",
         "client_name",
+        "client_phone",
         "client_email",
         "hair_length",
         "meche_provided",
@@ -93,16 +94,19 @@ class ServiceRequestAdmin(admin.ModelAdmin):
         "inspiration_pictures_count",
     )
     list_filter = ("marketing_service", "zone")
-    search_fields = ("client_name", "client_email", "details", "inspiration_picture_urls")
+    search_fields = ("client_name", "client_phone", "client_email", "details", "inspiration_picture_urls")
     readonly_fields = ("inspiration_pictures_preview", "created_at")
     fields = (
         "marketing_service",
         "zone",
         "location_preference",
         "client_name",
+        "client_phone",
         "client_email",
+        "salon_area",
         "client_address",
         "desired_date",
+        "availabilities",
         "hair_length",
         "meche_provided",
         "details",

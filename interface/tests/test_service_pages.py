@@ -115,10 +115,11 @@ class ServicePagesTests(TestCase):
             {
                 "request_service": "1",
                 "client_name": "Client X",
-                "client_email": "test@example.com",
+                "client_phone": "+33612345678",
                 "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
+                "salon_area": "Capitole",
                 "desired_date": "2026-01-10T17:00",
-                "hair_length": "Épaules",
+                "hair_length": "epaule",
                 "meche_provided": "on",
                 "details": "Besoin urgent",
                 "inspiration_pictures": [
@@ -137,7 +138,9 @@ class ServicePagesTests(TestCase):
             request_record.location_preference, ServiceRequest.LOCATION_PREFERENCE_SALON
         )
         self.assertEqual(request_record.desired_date.strftime("%Y-%m-%d"), "2026-01-10")
-        self.assertEqual(request_record.hair_length, "Épaules")
+        self.assertEqual(request_record.client_phone, "+33612345678")
+        self.assertEqual(request_record.salon_area, "Capitole")
+        self.assertEqual(request_record.hair_length, "epaule")
         self.assertTrue(request_record.meche_provided)
         self.assertEqual(len(request_record.inspiration_picture_urls), 1)
 
@@ -162,6 +165,7 @@ class ServicePagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("Service nickel.", content)
+        self.assertNotIn("request-wizard-form", content)
 
 
     def test_home_renders_video_review_media(self):

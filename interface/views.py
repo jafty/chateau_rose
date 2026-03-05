@@ -38,6 +38,7 @@ from interface.models import (
     MarketingServiceZone,
     MarketingZone,
     QuickCheckoutPage,
+    ServiceRequest,
 )
 from interface.services import booking_requests
 from chateaurose.seo import build_base_url
@@ -83,6 +84,13 @@ def _first_form_error(form: forms.Form) -> str | None:
         if field_errors:
             return field_errors[0]
     return None
+
+
+def _friendly_domain_error_message(error: DomainError) -> str:
+    raw = str(error)
+    if "Selected slot is unavailable" in raw:
+        return "Ce créneau n'est plus disponible. Choisis un autre horaire."
+    return raw
 
 
 def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
@@ -133,8 +141,7 @@ def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
     booking_row = Booking.objects.filter(booking_id=booking.id).first()
     if booking_row:
         booking_row.estimated_price_cents = checkout.final_price_cents
-        booking_row.status = finalize_booking_uc.CONFIRMED
-        booking_row.save(update_fields=["estimated_price_cents", "status", "updated_at"])
+        booking_row.save(update_fields=["estimated_price_cents", "updated_at"])
 
     checkout.completed_at = timezone.now()
     checkout.is_active = False
@@ -142,31 +149,32 @@ def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
 
     notifier.notify(
         provider.id,
-        "Rendez-vous confirmé",
+        "Nouvelle demande à confirmer",
         "\n".join(
             [
-                "Bonne nouvelle ! Le paiement de réservation a bien été validé.",
+                "Une demande rapide a été sécurisée (empreinte bancaire validée).",
+                "Le créneau n'est pas encore confirmé : confirme manuellement depuis ton espace.",
                 f"Client·e : {checkout.client_name} ({checkout.client_email})",
                 f"Prestation : {checkout.service.name}",
                 f"Date : {checkout.desired_date.isoformat()}",
-                f"ID réservation : {booking.id}",
+                f"ID demande : {booking.id}",
             ]
         ),
     )
     client_confirmation_lines = [
-        f"Merci {checkout.client_name} ! Ton rendez-vous pour {checkout.service.name} est confirmé.",
-        "Le montant de réservation a bien été reçu.",
+        f"Merci {checkout.client_name} ! Ta demande pour {checkout.service.name} est bien enregistrée.",
+        "Ton empreinte bancaire est validée, mais le rendez-vous reste en attente de confirmation.",
         "",
         "Récapitulatif :",
         f"- Prestation : {checkout.service.name}",
-        f"- Date : {checkout.desired_date.isoformat()}",
-        f"- Montant déjà réglé : {booking_requests.format_price(checkout.reservation_fee_cents)}",
+        f"- Date demandée : {checkout.desired_date.isoformat()}",
+        f"- Montant qui sera débité à la confirmation : {booking_requests.format_price(checkout.reservation_fee_cents)}",
         f"- Reste à payer le jour J : {booking_requests.format_price(max(checkout.final_price_cents - checkout.reservation_fee_cents, 0))}",
-        f"- ID réservation : {booking.id}",
+        f"- ID demande : {booking.id}",
     ]
     notifier.notify(
         checkout.client_email,
-        "Rendez-vous confirmé",
+        "Demande en attente de confirmation",
         "\n".join(client_confirmation_lines),
     )
 
@@ -380,7 +388,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
                 request.session["provider_request_message"] = f"Demande envoyée. ID: {booking.id}"
                 return redirect(f"{request.path}#booking-wizard")
             except DomainError as exc:
-                error = str(exc)
+                error = _friendly_domain_error_message(exc)
         else:
             error = _first_form_error(form)
 
@@ -480,9 +488,9 @@ def quick_checkout_page(request, checkout_id):
                 checkout.save(update_fields=["client_address", "updated_at"])
             try:
                 booking = _complete_quick_checkout(checkout, payment_auth_id)
-                return redirect("interface:quick_checkout_confirmation", booking_id=booking.id)
+                return redirect("interface:client_confirmation", booking_id=booking.id)
             except DomainError as exc:
-                error = str(exc)
+                error = _friendly_domain_error_message(exc)
 
     return render(
         request,
@@ -668,7 +676,7 @@ def provider_payment_return(request):
         headline = "Empreinte bancaire confirmée"
         tone = "success"
         if completed_booking_id:
-            message = "Le paiement a été validé et ton rendez-vous est déjà confirmé."
+            message = "Ton empreinte bancaire est validée. La demande est envoyée et reste en attente de confirmation manuelle."
         else:
             message = (
                 "Ton empreinte bancaire a bien été enregistrée. Tu peux maintenant finaliser ta demande."
@@ -695,7 +703,7 @@ def provider_payment_return(request):
         else:
             action_url = reverse("interface:provider_detail", args=[provider_id])
             if completed_booking_id:
-                action_url = reverse("interface:quick_checkout_confirmation", args=[completed_booking_id])
+                action_url = reverse("interface:client_confirmation", args=[completed_booking_id])
             elif status in success_statuses and intent_id:
                 action_url = f"{action_url}?payment_auth_id={intent_id}"
 
@@ -831,18 +839,23 @@ def _notify_service_request(record) -> None:
     desired_date = timezone.localtime(record.desired_date).strftime("%d/%m/%Y %H:%M")
     zone_name = record.zone.name if record.zone else "Non précisé"
     location_preference = record.get_location_preference_display()
+    availability_labels = dict(ServiceRequest.AVAILABILITY_CHOICES)
+    availabilities = ", ".join(availability_labels.get(item, item) for item in (record.availabilities or [])) or "Non précisées"
     subject = f"Nouvelle demande rapide - {record.marketing_service.name}"
     body_lines = [
         f"Service : {record.marketing_service.name}",
-        f"Client·e : {record.client_name} ({record.client_email})",
+        f"Client·e : {record.client_name} (WhatsApp: {record.client_phone})",
+        f"Email : {record.client_email or 'Non communiqué'}",
         f"Date souhaitée : {desired_date}",
         f"Lieu préféré : {location_preference}",
+        f"Secteur salon : {record.salon_area or 'Non communiqué'}",
         f"Zone : {zone_name}",
         f"Adresse : {record.client_address or 'Non communiquée'}",
+        f"Disponibilités : {availabilities}",
         f"Longueur cheveux : {record.hair_length or 'Non précisée'}",
         f"Mèches déjà fournies : {'Oui' if record.meche_provided else 'Non'}",
-        f"Photos : {", ".join(record.inspiration_picture_urls) if record.inspiration_picture_urls else 'Non communiquées'}",
-        "Détails :",
+        f"Photos : {', '.join(record.inspiration_picture_urls) if record.inspiration_picture_urls else 'Non communiquées'}",
+        "Détails techniques :",
         record.details or "Aucun détail supplémentaire.",
     ]
     notifier.notify("japhet.situmonana@gmail.com", subject, "\n".join(body_lines))

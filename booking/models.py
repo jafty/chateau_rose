@@ -267,6 +267,35 @@ class ProviderZone(models.Model):
         return f"{self.provider} - {self.zone}"
 
 
+
+
+class ProviderBlockedSlot(models.Model):
+    SOURCE_MANUAL = "manual"
+    SOURCE_EXTERNAL_BOOKED = "external_booked"
+    SOURCE_CHOICES = (
+        (SOURCE_MANUAL, "Blocage manuel"),
+        (SOURCE_EXTERNAL_BOOKED, "Créneau déjà pris (agenda externe)"),
+    )
+
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="blocked_slots")
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+    reason = models.CharField(max_length=255, blank=True)
+    source = models.CharField(max_length=32, choices=SOURCE_CHOICES, default=SOURCE_MANUAL)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("starts_at",)
+
+    def __str__(self):
+        return f"{self.provider.name} indisponible du {self.starts_at} au {self.ends_at}"
+
+    def clean(self):
+        super().clean()
+        if self.ends_at <= self.starts_at:
+            raise ValidationError("La fin du créneau bloqué doit être après le début.")
+
 class ProviderMarketingService(models.Model):
     provider = models.ForeignKey(
         Provider, on_delete=models.CASCADE, related_name="provider_marketing_services"
