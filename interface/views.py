@@ -20,6 +20,7 @@ from booking.models import Booking, Provider, Service, ServiceCategory, Zone
 from chateaurose.domain.exceptions import DomainError, ValidationError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
 from chateaurose.domain.services.pricing import estimate_service_price_cents
+from chateaurose.domain.use_cases import expire_booking as expire_booking_uc
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
 from chateaurose.domain.use_cases import request_haircut, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
@@ -732,16 +733,28 @@ def provider_action(request, booking_id):
         return HttpResponseBadRequest("Méthode non autorisée")
     decision = request.POST.get("decision")
     provider_id = request.POST.get("provider_id")
-    final_booking = finalize_booking_uc.execute(
-        booking_id=booking_id,
-        actor="provider",
-        decision=decision,
-        now=timezone.now(),
-        booking_repository=repo,
-        payment_gateway=payment_gateway,
-        provider_directory=provider_directory,
-        notifier=notifier,
-    )
+    now = timezone.now()
+    try:
+        final_booking = finalize_booking_uc.execute(
+            booking_id=booking_id,
+            actor="provider",
+            decision=decision,
+            now=now,
+            booking_repository=repo,
+            payment_gateway=payment_gateway,
+            provider_directory=provider_directory,
+            notifier=notifier,
+        )
+    except finalize_booking_uc.InvalidState as exc:
+        if str(exc) != "Booking has expired":
+            raise
+        final_booking = expire_booking_uc.execute(
+            booking_id=booking_id,
+            now=now,
+            booking_repository=repo,
+            payment_gateway=payment_gateway,
+            notifier=notifier,
+        )
     return redirect("interface:home")
 
 
@@ -749,17 +762,35 @@ def client_action(request, booking_id):
     if request.method != "POST":
         return HttpResponseBadRequest("Méthode non autorisée")
     decision = request.POST.get("decision")
-    final_booking = finalize_booking_uc.execute(
-        booking_id=booking_id,
-        actor="client",
-        decision=decision,
-        now=timezone.now(),
-        booking_repository=repo,
-        payment_gateway=payment_gateway,
-        provider_directory=provider_directory,
-        notifier=notifier,
-    )
-    return redirect("interface:client_confirmation", booking_id=final_booking.id)
+    now = timezone.now()
+    expired = False
+    try:
+        final_booking = finalize_booking_uc.execute(
+            booking_id=booking_id,
+            actor="client",
+            decision=decision,
+            now=now,
+            booking_repository=repo,
+            payment_gateway=payment_gateway,
+            provider_directory=provider_directory,
+            notifier=notifier,
+        )
+    except finalize_booking_uc.InvalidState as exc:
+        if str(exc) != "Booking has expired":
+            raise
+        final_booking = expire_booking_uc.execute(
+            booking_id=booking_id,
+            now=now,
+            booking_repository=repo,
+            payment_gateway=payment_gateway,
+            notifier=notifier,
+        )
+        expired = True
+
+    target_url = reverse("interface:client_confirmation", args=[final_booking.id])
+    if expired:
+        target_url = f"{target_url}?status=expired"
+    return redirect(target_url)
 
 
 def client_confirmation(request, booking_id):
@@ -775,6 +806,7 @@ def client_confirmation(request, booking_id):
     )
     is_confirmed = booking.status == finalize_booking_uc.CONFIRMED
     is_cancelled = booking.status == finalize_booking_uc.CANCELLED
+    show_expired_notice = request.GET.get("status") == "expired"
     is_salon = booking.location_preference == "salon"
     client_moves = is_salon
     return render(
@@ -786,6 +818,7 @@ def client_confirmation(request, booking_id):
             "effective_price": effective_price,
             "is_confirmed": is_confirmed,
             "is_cancelled": is_cancelled,
+            "show_expired_notice": show_expired_notice,
             "client_moves": client_moves,
             "provider_email": booking.provider.contact_email or "Non communiqué",
             "provider_phone": booking.provider.contact_phone or "Non communiqué",
