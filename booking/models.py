@@ -1,3 +1,4 @@
+from datetime import date
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -278,8 +279,21 @@ class ProviderBlockedSlot(models.Model):
     )
 
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="blocked_slots")
-    starts_at = models.DateTimeField()
-    ends_at = models.DateTimeField()
+    starts_at = models.DateTimeField(null=True, blank=True)
+    ends_at = models.DateTimeField(null=True, blank=True)
+    is_recurring = models.BooleanField(
+        default=False,
+        help_text="Active pour bloquer un créneau récurrent (hebdomadaire).",
+    )
+    weekdays = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="Jours récurrents (0=lundi … 6=dimanche), séparés par des virgules.",
+    )
+    starts_time = models.TimeField(null=True, blank=True)
+    ends_time = models.TimeField(null=True, blank=True)
+    recurrence_starts_on = models.DateField(null=True, blank=True)
+    recurrence_ends_on = models.DateField(null=True, blank=True)
     reason = models.CharField(max_length=255, blank=True)
     source = models.CharField(max_length=32, choices=SOURCE_CHOICES, default=SOURCE_MANUAL)
     is_active = models.BooleanField(default=True)
@@ -293,8 +307,55 @@ class ProviderBlockedSlot(models.Model):
 
     def clean(self):
         super().clean()
-        if self.ends_at <= self.starts_at:
-            raise ValidationError("La fin du créneau bloqué doit être après le début.")
+        if self.is_recurring:
+            if not self.weekdays:
+                raise ValidationError("Les jours sont requis pour un blocage récurrent.")
+            if not self.starts_time or not self.ends_time:
+                raise ValidationError("L'heure de début et de fin sont requises pour un blocage récurrent.")
+            if self.starts_time == self.ends_time:
+                raise ValidationError("L'heure de fin doit être différente de l'heure de début.")
+            if self.recurrence_starts_on and self.recurrence_ends_on:
+                if self.recurrence_ends_on < self.recurrence_starts_on:
+                    raise ValidationError("La fin de récurrence doit être après le début.")
+        else:
+            if not self.starts_at or not self.ends_at:
+                raise ValidationError("Le début et la fin sont requis pour un blocage ponctuel.")
+            if self.ends_at <= self.starts_at:
+                raise ValidationError("La fin du créneau bloqué doit être après le début.")
+
+    @property
+    def parsed_weekdays(self) -> set[int]:
+        days = set()
+        for raw_day in self.weekdays.split(","):
+            raw_day = raw_day.strip()
+            if not raw_day:
+                continue
+            try:
+                day = int(raw_day)
+            except ValueError:
+                continue
+            if 0 <= day <= 6:
+                days.add(day)
+        return days
+
+    def matches_recurrence(self, appointment_date: date, appointment_time) -> bool:
+        if not self.is_recurring or not self.starts_time or not self.ends_time:
+            return False
+
+        if self.recurrence_starts_on and appointment_date < self.recurrence_starts_on:
+            return False
+        if self.recurrence_ends_on and appointment_date > self.recurrence_ends_on:
+            return False
+
+        weekdays = self.parsed_weekdays
+        if not weekdays or appointment_date.weekday() not in weekdays:
+            return False
+
+        if self.starts_time < self.ends_time:
+            return self.starts_time <= appointment_time < self.ends_time
+
+        # Overnight recurring block (e.g. 22:00 -> 02:00)
+        return appointment_time >= self.starts_time or appointment_time < self.ends_time
 
 class ProviderMarketingService(models.Model):
     provider = models.ForeignKey(
