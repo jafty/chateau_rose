@@ -287,11 +287,75 @@ class BookingAdmin(admin.ModelAdmin):
 
 @admin.register(ProviderBlockedSlot)
 class ProviderBlockedSlotAdmin(admin.ModelAdmin):
+    class ProviderBlockedSlotAdminForm(forms.ModelForm):
+        BLOCK_TYPE_ONE_TIME = "one_time"
+        BLOCK_TYPE_RECURRING = "recurring"
+        BLOCK_TYPE_CHOICES = (
+            (BLOCK_TYPE_ONE_TIME, "Ponctuel (date + heure de début/fin)"),
+            (BLOCK_TYPE_RECURRING, "Récurrent hebdomadaire (jours + plage horaire)"),
+        )
+
+        block_type = forms.ChoiceField(
+            label="Type de blocage",
+            choices=BLOCK_TYPE_CHOICES,
+            widget=forms.RadioSelect,
+            help_text=(
+                "Choisis 'Ponctuel' pour bloquer un créneau unique, ou 'Récurrent' "
+                "pour bloquer des jours chaque semaine."
+            ),
+        )
+
+        class Meta:
+            model = ProviderBlockedSlot
+            fields = "__all__"
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            is_recurring = bool(self.instance and self.instance.pk and self.instance.is_recurring)
+
+            if self.data:
+                is_recurring = self.data.get("block_type") == self.BLOCK_TYPE_RECURRING
+
+            self.fields["block_type"].initial = (
+                self.BLOCK_TYPE_RECURRING if is_recurring else self.BLOCK_TYPE_ONE_TIME
+            )
+            self.fields["starts_at"].help_text = "Obligatoire uniquement pour un blocage ponctuel."
+            self.fields["ends_at"].help_text = "Obligatoire uniquement pour un blocage ponctuel."
+            self.fields["weekdays"].help_text = (
+                "Obligatoire uniquement en récurrent. Valeurs: 0=lundi, ..., 6=dimanche. "
+                "Exemple: 0,2,4"
+            )
+            self.fields["starts_time"].help_text = "Obligatoire uniquement en récurrent."
+            self.fields["ends_time"].help_text = "Obligatoire uniquement en récurrent."
+            self.fields["recurrence_starts_on"].help_text = "Optionnel: date de début de la récurrence."
+            self.fields["recurrence_ends_on"].help_text = "Optionnel: date de fin de la récurrence."
+
+        def clean(self):
+            cleaned_data = super().clean()
+            block_type = cleaned_data.get("block_type", self.BLOCK_TYPE_ONE_TIME)
+            is_recurring = block_type == self.BLOCK_TYPE_RECURRING
+            cleaned_data["is_recurring"] = is_recurring
+            self.instance.is_recurring = is_recurring
+
+            if is_recurring:
+                cleaned_data["starts_at"] = None
+                cleaned_data["ends_at"] = None
+            else:
+                cleaned_data["weekdays"] = ""
+                cleaned_data["starts_time"] = None
+                cleaned_data["ends_time"] = None
+                cleaned_data["recurrence_starts_on"] = None
+                cleaned_data["recurrence_ends_on"] = None
+
+            return cleaned_data
+
+    form = ProviderBlockedSlotAdminForm
     list_display = ("provider", "is_recurring", "starts_at", "ends_at", "starts_time", "ends_time", "source", "is_active")
     list_filter = ("provider", "is_recurring", "source", "is_active")
     search_fields = ("provider__name", "reason")
     fields = (
         "provider",
+        "block_type",
         "is_recurring",
         "starts_at",
         "ends_at",
@@ -304,3 +368,4 @@ class ProviderBlockedSlotAdmin(admin.ModelAdmin):
         "reason",
         "is_active",
     )
+    readonly_fields = ("is_recurring",)
