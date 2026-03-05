@@ -1,4 +1,3 @@
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -114,17 +113,10 @@ class ServicePagesTests(TestCase):
             url,
             {
                 "request_service": "1",
-                "client_name": "Client X",
                 "client_phone": "+33612345678",
                 "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
-                "salon_area": "Capitole",
-                "desired_date": "2026-01-10T17:00",
-                "hair_length": "epaule",
-                "meche_provided": "on",
                 "details": "Besoin urgent",
-                "inspiration_pictures": [
-                    SimpleUploadedFile("insp.jpg", b"hair", content_type="image/jpeg")
-                ],
+                "availabilities": ["evening", "weekend"],
             },
         )
 
@@ -137,12 +129,9 @@ class ServicePagesTests(TestCase):
         self.assertEqual(
             request_record.location_preference, ServiceRequest.LOCATION_PREFERENCE_SALON
         )
-        self.assertEqual(request_record.desired_date.strftime("%Y-%m-%d"), "2026-01-10")
+        self.assertIsNone(request_record.desired_date)
         self.assertEqual(request_record.client_phone, "+33612345678")
-        self.assertEqual(request_record.salon_area, "Capitole")
-        self.assertEqual(request_record.hair_length, "epaule")
-        self.assertTrue(request_record.meche_provided)
-        self.assertEqual(len(request_record.inspiration_picture_urls), 1)
+        self.assertEqual(request_record.availabilities, ["evening", "weekend"])
 
     def test_home_displays_featured_review(self):
         ClientReview.objects.create(

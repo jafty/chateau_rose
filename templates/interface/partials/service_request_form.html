@@ -26,17 +26,7 @@
         {% endif %}
 
         <div class="form-field full-width">
-            <label for="id_client_phone">Numéro WhatsApp <span class="required-mark">*</span></label>
-            {{ request_form.client_phone }}
-        </div>
-
-        <div class="form-field full-width">
-            <label for="id_client_name">Nom <span class="required-mark">*</span></label>
-            {{ request_form.client_name }}
-        </div>
-
-        <div class="form-field full-width">
-            <label style="margin-bottom: 12px; display:block;">Où veux-tu réaliser la prestation ? <span class="required-mark">*</span></label>
+            <label style="margin-bottom: 12px; display:block;">Lieu / Préférence <span class="required-mark">*</span></label>
             <div class="location-choice" role="radiogroup" aria-label="Lieu préféré">
                 {% for option in request_form.location_preference %}
                     <label class="choice-pill">
@@ -47,18 +37,18 @@
             </div>
         </div>
 
-        <div class="form-field full-width" data-salon-area-field hidden>
-            <label for="id_salon_area">Secteur du salon <span class="required-mark">*</span></label>
-            {{ request_form.salon_area }}
+        <div class="form-field full-width">
+            <label for="id_details">Explique ta demande <span class="required-mark">*</span></label>
+            {{ request_form.details }}
         </div>
 
         <div class="form-field full-width">
-            <label for="id_desired_date">Date / heure idéale <span class="required-mark">*</span></label>
-            {{ request_form.desired_date }}
+            <label for="id_client_phone">Numéro WhatsApp <span class="required-mark">*</span></label>
+            {{ request_form.client_phone }}
         </div>
 
         <div class="form-field full-width">
-            <label style="margin-bottom: 8px; display:block;">Disponibilités</label>
+            <label style="margin-bottom: 8px; display:block;">Disponibilités <span class="required-mark">*</span></label>
             <div class="availability-pills" aria-label="Disponibilités">
                 {% for option in request_form.availabilities %}
                     <label class="availability-pill">
@@ -69,27 +59,8 @@
             </div>
         </div>
 
-        <div class="form-field full-width">
-            <label for="id_hair_length">Longueur des cheveux</label>
-            {{ request_form.hair_length }}
-        </div>
-
-        <div class="form-field full-width">
-            <label for="id_details">Détails techniques</label>
-            {{ request_form.details }}
-        </div>
-
-        <div class="form-field full-width">
-            <label for="id_inspiration_pictures">Photos (optionnel)</label>
-            <div class="file-upload-wrapper">
-                {{ request_form.inspiration_pictures }}
-                <label class="file-upload-label" for="id_inspiration_pictures">Choisir des photos</label>
-                <div class="file-upload-info" id="file-label-inspiration">Aucune photo sélectionnée</div>
-            </div>
-        </div>
-
         <div class="wizard-actions full-width">
-            <button type="submit" class="btn">Envoyer ma demande</button>
+            <button type="submit" class="btn">Recevoir des pros disponibles</button>
         </div>
     </form>
 </div>
@@ -99,42 +70,15 @@
         if (!forms.length) return;
 
         forms.forEach((form) => {
-            const container = form.closest('.request-card');
-            if (!container) return;
             const preferenceInputs = form.querySelectorAll('input[name="location_preference"]');
             const locationChoiceLabels = form.querySelectorAll('.location-choice .choice-pill');
             const availabilityLabels = form.querySelectorAll('.availability-pills .availability-pill');
-            const salonAreaField = form.querySelector('[data-salon-area-field]');
-
-            const inspirationInput = form.querySelector('#id_inspiration_pictures');
-            const inspirationLabel = container.querySelector('#file-label-inspiration');
-
-            const updateInspirationLabel = () => {
-                if (!inspirationInput || !inspirationLabel) return;
-                const { files } = inspirationInput;
-                if (!files || !files.length) {
-                    inspirationLabel.textContent = 'Aucune photo sélectionnée';
-                    return;
-                }
-                inspirationLabel.textContent = files.length === 1
-                    ? files[0].name
-                    : `${files.length} photos sélectionnées`;
-            };
 
             const syncLocationFields = () => {
-                const selected = form.querySelector('input[name="location_preference"]:checked')?.value;
-                const isSalon = selected === 'salon';
-
                 locationChoiceLabels.forEach((label) => {
                     const input = label.querySelector('input[type="radio"]');
                     label.classList.toggle('is-selected', Boolean(input && input.checked));
                 });
-
-                if (salonAreaField) {
-                    salonAreaField.hidden = !isSalon;
-                    const input = salonAreaField.querySelector('input');
-                    if (input) input.required = isSalon;
-                }
             };
 
             const syncAvailabilityFields = () => {
@@ -143,11 +87,6 @@
                     label.classList.toggle('is-selected', Boolean(input && input.checked));
                 });
             };
-
-            if (inspirationInput) {
-                inspirationInput.addEventListener('change', updateInspirationLabel);
-                updateInspirationLabel();
-            }
 
             if (preferenceInputs.length) {
                 preferenceInputs.forEach((input) => input.addEventListener('change', syncLocationFields));

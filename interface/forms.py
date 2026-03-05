@@ -3,7 +3,7 @@ from datetime import datetime
 from django import forms
 from django.utils import timezone
 
-from booking.models import Provider, Zone
+from booking.models import Provider
 from chateaurose.infrastructure.provider_catalog import SALON_LOCATION_LABEL
 from interface.models import MarketingService, ServiceRequest
 
@@ -39,89 +39,41 @@ class ServiceRequestForm(forms.ModelForm):
         queryset=MarketingService.objects.all(),
         label="Service",
     )
-    zone = forms.ModelChoiceField(
-        queryset=Zone.objects.all(),
-        required=False,
-        label="Secteur (si tu te déplaces en salon)",
-    )
     location_preference = forms.ChoiceField(
         label="Où veux-tu réaliser la prestation ?",
         choices=ServiceRequest.LOCATION_PREFERENCE_CHOICES,
         initial=ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
         widget=forms.RadioSelect,
     )
-    salon_area = forms.CharField(
-        label="Secteur du salon",
-        required=False,
-        widget=forms.TextInput(attrs={"placeholder": "Ex. Toulouse centre / Capitole"}),
-    )
     availabilities = forms.MultipleChoiceField(
         label="Disponibilités",
-        required=False,
+        required=True,
         choices=ServiceRequest.AVAILABILITY_CHOICES,
         widget=forms.CheckboxSelectMultiple,
-    )
-    hair_length = forms.ChoiceField(
-        label="Longueur des cheveux",
-        required=False,
-        choices=(
-            ("", "Choisir"),
-            ("court", "Court"),
-            ("epaule", "Épaule"),
-            ("milieu_dos", "Milieu du dos"),
-            ("fesses", "Fesses"),
-        ),
-    )
-    inspiration_pictures = MultipleFileField(
-        label="Ajoute une ou plusieurs photos (inspiration ou cheveux actuels)",
-        required=False,
-        widget=MultiFileInput(attrs={"multiple": True, "accept": "image/*"}),
-    )
-    desired_date = forms.DateTimeField(
-        label="Date / heure idéale",
-        input_formats=["%Y-%m-%dT%H:%M"],
-        widget=forms.DateTimeInput(
-            attrs={
-                "type": "datetime-local",
-                "inputmode": "numeric",
-                "placeholder": "Ex. 22/03/2026 14:30",
-            },
-            format="%Y-%m-%dT%H:%M",
-        ),
-        help_text="Sélectionne ton créneau idéal.",
     )
 
     class Meta:
         model = ServiceRequest
         fields = [
             "marketing_service",
-            "zone",
             "location_preference",
-            "desired_date",
-            "client_name",
             "client_phone",
-            "client_address",
-            "availabilities",
-            "hair_length",
-            "meche_provided",
             "details",
+            "availabilities",
         ]
         widgets = {
             "details": forms.Textarea(attrs={"rows": 4}),
         }
         labels = {
-            "client_name": "Ton nom",
-            "client_phone": "Numéro WhatsApp",
-            "client_address": "Adresse complète",
+            "client_phone": "Ton numéro WhatsApp",
+            "details": "Explique ta demande",
             "availabilities": "Tes disponibilités",
-            "hair_length": "Longueur des cheveux",
-            "meche_provided": "Mèches déjà fournies",
-            "details": "Détails techniques",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["inspiration_pictures"].widget.attrs.update({"multiple": True, "accept": "image/*"})
+        self.fields["details"].required = True
+        self.fields["details"].widget.attrs.setdefault("placeholder", "Exemple : knotless braids S vers Saint-Cyprien, idéalement le 10 mars à 20:00.")
 
     def clean_client_phone(self):
         phone = "".join(char for char in (self.cleaned_data.get("client_phone") or "") if char.isdigit() or char == "+")
@@ -131,24 +83,7 @@ class ServiceRequestForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        client_address = (cleaned_data.get("client_address") or "").strip()
-        salon_area = (cleaned_data.get("salon_area") or "").strip()
-        location_preference = cleaned_data.get("location_preference")
-
-        if location_preference == ServiceRequest.LOCATION_PREFERENCE_SALON and not salon_area:
-            self.add_error("salon_area", "Précise le secteur du salon pour mieux qualifier la demande.")
-
-        cleaned_data["salon_area"] = salon_area
-        cleaned_data["client_address"] = client_address
         return cleaned_data
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.salon_area = self.cleaned_data.get("salon_area", "")
-        if commit:
-            instance.save()
-            self.save_m2m()
-        return instance
 
 
 class ProviderBookingRequestForm(forms.Form):

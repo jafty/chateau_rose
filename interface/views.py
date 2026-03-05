@@ -869,7 +869,7 @@ def _zone_options(active_zone=None):
 
 
 def _notify_service_request(record) -> None:
-    desired_date = timezone.localtime(record.desired_date).strftime("%d/%m/%Y %H:%M")
+    desired_date = timezone.localtime(record.desired_date).strftime("%d/%m/%Y %H:%M") if record.desired_date else "Non précisée"
     zone_name = record.zone.name if record.zone else "Non précisé"
     location_preference = record.get_location_preference_display()
     availability_labels = dict(ServiceRequest.AVAILABILITY_CHOICES)
@@ -877,18 +877,13 @@ def _notify_service_request(record) -> None:
     subject = f"Nouvelle demande rapide - {record.marketing_service.name}"
     body_lines = [
         f"Service : {record.marketing_service.name}",
-        f"Client·e : {record.client_name} (WhatsApp: {record.client_phone})",
+        f"Contact WhatsApp : {record.client_phone}",
         f"Email : {record.client_email or 'Non communiqué'}",
         f"Date souhaitée : {desired_date}",
         f"Lieu préféré : {location_preference}",
-        f"Secteur salon : {record.salon_area or 'Non communiqué'}",
         f"Zone : {zone_name}",
-        f"Adresse : {record.client_address or 'Non communiquée'}",
         f"Disponibilités : {availabilities}",
-        f"Longueur cheveux : {record.hair_length or 'Non précisée'}",
-        f"Mèches déjà fournies : {'Oui' if record.meche_provided else 'Non'}",
-        f"Photos : {', '.join(record.inspiration_picture_urls) if record.inspiration_picture_urls else 'Non communiquées'}",
-        "Détails techniques :",
+        "Détails de la demande :",
         record.details or "Aucun détail supplémentaire.",
     ]
     notifier.notify("japhet.situmonana@gmail.com", subject, "\n".join(body_lines))
@@ -929,10 +924,6 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
         form.fields["marketing_service"].initial = service_meta
         form.fields["marketing_service"].widget = forms.HiddenInput()
         form.fields["marketing_service"].required = False
-    if zone:
-        form.fields["zone"].initial = zone
-        form.fields["zone"].widget = forms.HiddenInput()
-        form.fields["zone"].required = False
 
     if request.method == "POST" and request.POST.get("request_service") == "1":
         if form.is_valid():
@@ -940,8 +931,7 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
             record.marketing_service = service_meta or form.cleaned_data.get("marketing_service")
             if zone:
                 record.zone = zone
-            inspiration_paths = booking_requests.save_inspiration_pictures(form.cleaned_data.get("inspiration_pictures") or [])
-            record.inspiration_picture_urls = inspiration_paths
+            record.inspiration_picture_urls = []
             record.save()
             _notify_service_request(record)
             request.session["service_request_success"] = True
