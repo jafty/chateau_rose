@@ -194,9 +194,12 @@ class ServiceRequest(models.Model):
     AVAILABILITY_CHOICES = (
         ("morning", "Matin"),
         ("afternoon", "Après-midi"),
-        ("evening", "Soir"),
-        ("weekday", "Semaine"),
-        ("weekend", "Week-end"),
+        ("anytime", "Tout le temps"),
+        ("weekday_evening", "Semaine (soir)"),
+        ("weekday_day", "Semaine (journée)"),
+        ("weekend_full", "Week-end (toute la journée)"),
+        ("weekend_morning", "Week-end (matin)"),
+        ("weekend_afternoon", "Week-end (après-midi)"),
     )
 
     marketing_service = models.ForeignKey(
