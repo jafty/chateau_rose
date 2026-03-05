@@ -116,7 +116,7 @@ class ServicePagesTests(TestCase):
                 "client_phone": "+33612345678",
                 "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
                 "details": "Besoin urgent",
-                "availabilities": ["evening", "weekend"],
+                "availabilities": ["weekday_evening", "weekend_full"],
             },
         )
 
@@ -131,7 +131,7 @@ class ServicePagesTests(TestCase):
         )
         self.assertIsNone(request_record.desired_date)
         self.assertEqual(request_record.client_phone, "+33612345678")
-        self.assertEqual(request_record.availabilities, ["evening", "weekend"])
+        self.assertEqual(request_record.availabilities, ["weekday_evening", "weekend_full"])
 
     def test_home_displays_featured_review(self):
         ClientReview.objects.create(
