@@ -19,6 +19,27 @@ class _PaymentStub:
 
 
 
+
+
+class _CatalogBlockedSlotStub:
+    def get_service(self, provider_id, service_id):
+        return {
+            "id": str(service_id),
+            "provider_id": str(provider_id),
+            "name": "Tresses",
+            "base_price_cents": 5000,
+            "hair_length_adjustments": {"long": 2000},
+            "general_adjustments": {},
+            "meche_bonus_cents": 0,
+            "at_home_bonus_cents": 0,
+            "deposit_percentage": 25,
+            "deposit_cents": None,
+        }
+
+    def provider_has_blocked_slot(self, provider_id, desired_date):
+        return True
+
+
 class _PaymentReturnStub:
     def __init__(self, status):
         self.status = status
@@ -265,3 +286,34 @@ class QuickCheckoutViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(stub.calls[0]["amount_cents"], 3000)
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_payment_intent_rejects_blocked_slot_before_payment_confirmation(self):
+        from interface import views
+
+        payment_stub = _PaymentStub()
+        catalog_stub = _CatalogBlockedSlotStub()
+        original_gateway = views.payment_gateway
+        original_catalog = views.provider_catalog
+        views.payment_gateway = payment_stub
+        views.provider_catalog = catalog_stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+        self.addCleanup(setattr, views, "provider_catalog", original_catalog)
+
+        response = self.client.post(
+            reverse("interface:provider_payment_intent"),
+            data={
+                "provider_id": self.provider.id,
+                "service_id": self.service.id,
+                "hair_length": "long",
+                "general_adjustments": [],
+                "meche": False,
+                "location_preference": "salon",
+                "desired_date": "2026-03-15T10:00",
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertContains(response, "n'est plus disponible", status_code=409)
+        self.assertEqual(payment_stub.calls, [])

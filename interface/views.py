@@ -579,6 +579,7 @@ def provider_payment_intent(request):
     general_adjustments = payload.get("general_adjustments") or []
     meche = payload.get("meche")
     location_preference = payload.get("location_preference")
+    desired_date = payload.get("desired_date")
     quick_checkout_id = payload.get("quick_checkout_id")
 
     quick_checkout = None
@@ -593,8 +594,12 @@ def provider_payment_intent(request):
 
         amount_cents = quick_checkout.reservation_fee_cents
     else:
-        if not all([provider_id, service_id]) or meche is None:
+        if not all([provider_id, service_id, desired_date]) or meche is None:
             return JsonResponse({"error": "Informations manquantes."}, status=400)
+
+        has_blocked_slot = getattr(provider_catalog, "provider_has_blocked_slot", None)
+        if callable(has_blocked_slot) and has_blocked_slot(provider_id, desired_date):
+            return JsonResponse({"error": "Ce créneau n'est plus disponible. Choisis un autre horaire."}, status=409)
 
         try:
             service = provider_catalog.get_service(provider_id, service_id)
