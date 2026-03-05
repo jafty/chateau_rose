@@ -56,9 +56,26 @@ class DjangoProviderCatalog:
         if timezone.is_naive(appointment_at):
             appointment_at = timezone.make_aware(appointment_at)
 
-        return ProviderBlockedSlot.objects.filter(
+        if ProviderBlockedSlot.objects.filter(
             provider_id=provider_id,
             is_active=True,
+            is_recurring=False,
             starts_at__lte=appointment_at,
             ends_at__gt=appointment_at,
-        ).exists()
+        ).exists():
+            return True
+
+        local_appointment = timezone.localtime(appointment_at)
+        appointment_date = local_appointment.date()
+        appointment_time = local_appointment.time()
+
+        recurring_slots = ProviderBlockedSlot.objects.filter(
+            provider_id=provider_id,
+            is_active=True,
+            is_recurring=True,
+        )
+
+        return any(
+            blocked_slot.matches_recurrence(appointment_date, appointment_time)
+            for blocked_slot in recurring_slots
+        )

@@ -287,8 +287,20 @@ class BookingAdmin(admin.ModelAdmin):
 
 @admin.register(ProviderBlockedSlot)
 class ProviderBlockedSlotAdmin(admin.ModelAdmin):
-    list_display = ("provider", "starts_at", "ends_at", "source", "is_active")
-    list_filter = ("provider", "source", "is_active")
+    list_display = ("provider", "is_recurring", "starts_at", "ends_at", "starts_time", "ends_time", "source", "is_active")
+    list_filter = ("provider", "is_recurring", "source", "is_active")
     search_fields = ("provider__name", "reason")
-    fields = ("provider", "starts_at", "ends_at", "source", "reason", "is_active")
-
+    fields = (
+        "provider",
+        "is_recurring",
+        "starts_at",
+        "ends_at",
+        "weekdays",
+        "starts_time",
+        "ends_time",
+        "recurrence_starts_on",
+        "recurrence_ends_on",
+        "source",
+        "reason",
+        "is_active",
+    )
