@@ -22,6 +22,9 @@ class _PaymentStub:
 
 
 class _CatalogBlockedSlotStub:
+    def __init__(self, reason=None):
+        self.reason = reason
+
     def get_service(self, provider_id, service_id):
         return {
             "id": str(service_id),
@@ -36,8 +39,8 @@ class _CatalogBlockedSlotStub:
             "deposit_cents": None,
         }
 
-    def provider_has_blocked_slot(self, provider_id, desired_date):
-        return True
+    def get_blocked_slot_details(self, provider_id, desired_date):
+        return {"reason": self.reason}
 
 
 class _PaymentReturnStub:
@@ -316,4 +319,38 @@ class QuickCheckoutViewTests(TestCase):
 
         self.assertEqual(response.status_code, 409)
         self.assertContains(response, "n'est plus disponible", status_code=409)
+        self.assertEqual(payment_stub.calls, [])
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_payment_intent_rejects_blocked_slot_with_reason(self):
+        from interface import views
+
+        payment_stub = _PaymentStub()
+        catalog_stub = _CatalogBlockedSlotStub(reason="Maëlle n'est pas disponible en semaine")
+        original_gateway = views.payment_gateway
+        original_catalog = views.provider_catalog
+        views.payment_gateway = payment_stub
+        views.provider_catalog = catalog_stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+        self.addCleanup(setattr, views, "provider_catalog", original_catalog)
+
+        response = self.client.post(
+            reverse("interface:provider_payment_intent"),
+            data={
+                "provider_id": self.provider.id,
+                "service_id": self.service.id,
+                "hair_length": "long",
+                "general_adjustments": [],
+                "meche": False,
+                "location_preference": "salon",
+                "desired_date": "2026-03-15T10:00",
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.assertJSONEqual(
+            response.content,
+            {"error": "Créneau non disponible : Maëlle n'est pas disponible en semaine"},
+        )
         self.assertEqual(payment_stub.calls, [])

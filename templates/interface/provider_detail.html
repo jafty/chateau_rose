@@ -451,11 +451,20 @@
         }
 
         const csrfToken = form?.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
+        const desiredDateInput = form?.querySelector('input[name="desired_date"]');
+        const desiredDateError = document.getElementById('desired-date-error');
+        let desiredDateValidationRequestId = 0;
 
         const showPaymentError = (message) => {
             if (!paymentError) return;
             paymentError.textContent = message || '';
             paymentError.hidden = !message;
+        };
+
+        const showDesiredDateError = (message) => {
+            if (!desiredDateError) return;
+            desiredDateError.textContent = message || '';
+            desiredDateError.hidden = !message;
         };
 
         const buildReturnUrl = () => {
@@ -526,6 +535,28 @@
             return payload;
         };
 
+        const validateDesiredDateAvailability = async ({ silent = false } = {}) => {
+            if (checkoutOnly) return true;
+            if (!desiredDateInput || !desiredDateInput.value) {
+                if (!silent) showDesiredDateError('');
+                return true;
+            }
+
+            const requestId = ++desiredDateValidationRequestId;
+
+            try {
+                await fetchPaymentIntent();
+                if (requestId !== desiredDateValidationRequestId) return false;
+                if (!silent) showDesiredDateError('');
+                return true;
+            } catch (error) {
+                if (requestId !== desiredDateValidationRequestId) return false;
+                const message = error?.message || "Ce créneau n'est plus disponible. Choisis un autre horaire.";
+                if (!silent) showDesiredDateError(message);
+                return false;
+            }
+        };
+
         const mountPaymentElement = async () => {
             if (!stripePublicKey || !paymentElementContainer) return;
             const { client_secret } = await fetchPaymentIntent();
@@ -580,17 +611,34 @@
         };
 
         nextButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                if (validateCurrentStep() && currentStep < totalSteps) {
-                    currentStep += 1;
-                    updateWizardUI();
-                    const wizardTop = document.getElementById('booking-wizard');
-                    if (wizardTop) {
-                        window.scrollTo({ top: wizardTop.offsetTop - 100, behavior: 'smooth' });
+            button.addEventListener('click', async () => {
+                if (!validateCurrentStep() || currentStep >= totalSteps) {
+                    return;
+                }
+
+                if (currentStep === 3) {
+                    const isAvailable = await validateDesiredDateAvailability();
+                    if (!isAvailable) {
+                        return;
                     }
+                }
+
+                currentStep += 1;
+                updateWizardUI();
+                const wizardTop = document.getElementById('booking-wizard');
+                if (wizardTop) {
+                    window.scrollTo({ top: wizardTop.offsetTop - 100, behavior: 'smooth' });
                 }
             });
         });
+
+
+        if (desiredDateInput) {
+            desiredDateInput.addEventListener('change', () => {
+                showDesiredDateError('');
+                validateDesiredDateAvailability();
+            });
+        }
 
         prevButtons.forEach((button) => {
             button.addEventListener('click', () => {

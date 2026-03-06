@@ -1,10 +1,15 @@
 from datetime import datetime
+from typing import TypedDict
 
 from booking.models import Provider, ProviderBlockedSlot, Service, Zone
 from django.utils import timezone
 from chateaurose.domain.exceptions import NotFound
 
 SALON_LOCATION_LABEL = "Salon"
+
+
+class BlockedSlotDetails(TypedDict):
+    reason: str | None
 
 
 class DjangoProviderCatalog:
@@ -47,23 +52,24 @@ class DjangoProviderCatalog:
 
         return Zone.objects.filter(providers__id=provider_id, name=zone_name).exists()
 
-    def provider_has_blocked_slot(self, provider_id: str, desired_date: str) -> bool:
+    def get_blocked_slot_details(self, provider_id: str, desired_date: str) -> BlockedSlotDetails | None:
         try:
             appointment_at = datetime.fromisoformat(str(desired_date).replace("Z", "+00:00"))
         except ValueError:
-            return False
+            return None
 
         if timezone.is_naive(appointment_at):
             appointment_at = timezone.make_aware(appointment_at)
 
-        if ProviderBlockedSlot.objects.filter(
+        punctual_slot = ProviderBlockedSlot.objects.filter(
             provider_id=provider_id,
             is_active=True,
             is_recurring=False,
             starts_at__lte=appointment_at,
             ends_at__gt=appointment_at,
-        ).exists():
-            return True
+        ).order_by("starts_at").first()
+        if punctual_slot:
+            return {"reason": punctual_slot.reason or None}
 
         local_appointment = timezone.localtime(appointment_at)
         appointment_date = local_appointment.date()
@@ -75,7 +81,10 @@ class DjangoProviderCatalog:
             is_recurring=True,
         )
 
-        return any(
-            blocked_slot.matches_recurrence(appointment_date, appointment_time)
-            for blocked_slot in recurring_slots
-        )
+        for blocked_slot in recurring_slots:
+            if blocked_slot.matches_recurrence(appointment_date, appointment_time):
+                return {"reason": blocked_slot.reason or None}
+        return None
+
+    def provider_has_blocked_slot(self, provider_id: str, desired_date: str) -> bool:
+        return self.get_blocked_slot_details(provider_id, desired_date) is not None
