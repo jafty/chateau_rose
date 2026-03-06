@@ -597,8 +597,17 @@ def provider_payment_intent(request):
         if not all([provider_id, service_id, desired_date]) or meche is None:
             return JsonResponse({"error": "Informations manquantes."}, status=400)
 
-        has_blocked_slot = getattr(provider_catalog, "provider_has_blocked_slot", None)
-        if callable(has_blocked_slot) and has_blocked_slot(provider_id, desired_date):
+        blocked_slot_details_getter = getattr(provider_catalog, "get_blocked_slot_details", None)
+        if callable(blocked_slot_details_getter):
+            blocked_slot_details = blocked_slot_details_getter(provider_id, desired_date)
+        else:
+            has_blocked_slot = getattr(provider_catalog, "provider_has_blocked_slot", None)
+            blocked_slot_details = {"reason": None} if callable(has_blocked_slot) and has_blocked_slot(provider_id, desired_date) else None
+
+        if blocked_slot_details is not None:
+            reason = (blocked_slot_details.get("reason") or "").strip() if isinstance(blocked_slot_details, dict) else ""
+            if reason:
+                return JsonResponse({"error": f"Créneau non disponible : {reason}"}, status=409)
             return JsonResponse({"error": "Ce créneau n'est plus disponible. Choisis un autre horaire."}, status=409)
 
         try:
