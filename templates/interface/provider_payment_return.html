@@ -3,21 +3,23 @@
 {% block title %}{{ headline }} | Château Rose{% endblock %}
 
 {% block content %}
-<section class="container page-hero">
-    <div class="paper-card">
+<section class="thank-you-section">
+    <div class="container thank-you-shell">
+    <div class="paper-card thank-you-card">
         <span class="pill">Empreinte bancaire</span>
-        <h1 style="margin: 14px 0 12px;">{{ headline }}</h1>
+        <h1>{{ headline }}</h1>
         <p class="lead">{{ message }}</p>
         {% if not status_checked %}
             <p class="meta-line" style="margin-top: 12px;">
                 Statut détecté : {{ status|default:"inconnu" }}.
             </p>
         {% endif %}
-        <div style="margin-top: 20px;">
+        <div>
             <a class="btn {% if tone == 'error' %}secondary{% endif %}" href="{{ action_url }}">
                 {{ action_label }}
             </a>
         </div>
+    </div>
     </div>
 </section>
 {% endblock %}
