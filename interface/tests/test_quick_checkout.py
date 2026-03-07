@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from booking.models import Booking, Provider, Service
-from interface.models import QuickCheckoutPage
+from interface.models import Interaction, QuickCheckoutPage
 
 
 class _PaymentStub:
@@ -151,6 +151,10 @@ class QuickCheckoutViewTests(TestCase):
         self.checkout.refresh_from_db()
         self.assertFalse(self.checkout.is_active)
         self.assertIsNotNone(self.checkout.completed_at)
+
+        interaction = Interaction.objects.get(kind=Interaction.KIND_PROVIDER_APPOINTMENT_REQUEST)
+        self.assertEqual(interaction.contact_email, "lea@example.com")
+        self.assertEqual(interaction.metadata.get("booking_id"), booking.booking_id)
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_client_confirmation_page_renders_pending_summary_after_quick_checkout(self):

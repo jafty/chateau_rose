@@ -40,6 +40,7 @@ from interface.models import (
     MarketingZone,
     QuickCheckoutPage,
     ServiceRequest,
+    Interaction,
 )
 from interface.services import booking_requests
 from chateaurose.seo import build_base_url
@@ -53,6 +54,33 @@ provider_directory = DjangoProviderDirectory()
 
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
 SUPPORT_EMAIL = "japhet@chateau-rose.fr"
+
+
+def _create_interaction(
+    *,
+    kind: str,
+    source_label: str,
+    contact_name: str = "",
+    contact_email: str = "",
+    contact_phone: str = "",
+    subject: str = "",
+    message: str = "",
+    next_action: str = "",
+    metadata: dict | None = None,
+    service_request: ServiceRequest | None = None,
+) -> None:
+    Interaction.objects.create(
+        kind=kind,
+        source_label=source_label,
+        contact_name=contact_name,
+        contact_email=contact_email,
+        contact_phone=contact_phone,
+        subject=subject,
+        message=message,
+        next_action=next_action,
+        metadata=metadata or {},
+        service_request=service_request,
+    )
 
 
 def _notify_provider_question(provider: Provider, question_form: ProviderQuestionForm) -> None:
@@ -69,6 +97,17 @@ def _notify_provider_question(provider: Provider, question_form: ProviderQuestio
         "Question :",
         message,
     ]
+    _create_interaction(
+        kind=Interaction.KIND_PROVIDER_QUESTION,
+        source_label=f"Profil prestataire · {provider.name}",
+        contact_name=client_name,
+        contact_email=client_email,
+        subject=email_subject,
+        message=message,
+        next_action="Répondre à la question client",
+        metadata={"provider_id": provider.id, "provider_name": provider.name},
+    )
+
     notifier.notify(
         SUPPORT_EMAIL,
         email_subject,
@@ -388,6 +427,20 @@ def provider_detail(request, provider_id, quick_checkout=None):
                     clock=type("Clock", (), {"now": timezone.now}),
                     operations_email=SUPPORT_EMAIL,
                 )
+                _create_interaction(
+                    kind=Interaction.KIND_PROVIDER_APPOINTMENT_REQUEST,
+                    source_label=f"Demande de réservation · {provider.name}",
+                    contact_name=form.cleaned_data.get("client_name") or "",
+                    contact_email=form.cleaned_data.get("client_email") or "",
+                    subject=f"Demande RDV {booking.id}",
+                    message=form.cleaned_data.get("free_text") or "",
+                    next_action="Vérifier et confirmer la demande dans le tableau prestataires",
+                    metadata={
+                        "booking_id": booking.id,
+                        "provider_id": provider.id,
+                        "provider_name": provider.name,
+                    },
+                )
                 request.session["provider_request_message"] = f"Demande envoyée. ID: {booking.id}"
                 thank_you_url = reverse("interface:thank_you_provider_booking")
                 return redirect(f"{thank_you_url}?provider={provider.name}")
@@ -492,6 +545,21 @@ def quick_checkout_page(request, checkout_id):
                 checkout.save(update_fields=["client_address", "updated_at"])
             try:
                 booking = _complete_quick_checkout(checkout, payment_auth_id)
+                _create_interaction(
+                    kind=Interaction.KIND_PROVIDER_APPOINTMENT_REQUEST,
+                    source_label=f"Demande rapide checkout · {provider.name}",
+                    contact_name=checkout.client_name,
+                    contact_email=checkout.client_email,
+                    subject=f"Demande RDV rapide {booking.id}",
+                    message=checkout.free_text or "",
+                    next_action="Confirmer le rendez-vous côté prestataire",
+                    metadata={
+                        "booking_id": booking.id,
+                        "provider_id": provider.id,
+                        "provider_name": provider.name,
+                        "quick_checkout_id": checkout.id,
+                    },
+                )
                 thank_you_url = reverse("interface:thank_you_provider_booking")
                 return redirect(f"{thank_you_url}?provider={provider.name}")
             except DomainError as exc:
@@ -904,7 +972,29 @@ def _notify_service_request(record) -> None:
         "Détails de la demande :",
         record.details or "Aucun détail supplémentaire.",
     ]
-    notifier.notify("japhet.situmonana@gmail.com", subject, "\n".join(body_lines))
+    _create_interaction(
+        kind=Interaction.KIND_QUICK_REQUEST,
+        source_label="Demande rapide",
+        contact_name=record.client_name,
+        contact_email=record.client_email,
+        contact_phone=record.client_phone,
+        subject=subject,
+        message=record.details or "",
+        next_action="Contacter la cliente / le client rapidement",
+        metadata={
+            "service": record.marketing_service.name,
+            "zone": zone_name,
+            "location_preference": location_preference,
+            "availabilities": record.availabilities or [],
+        },
+        service_request=record,
+    )
+    notifier.notify(
+        "japhet.situmonana@gmail.com",
+        subject,
+        "\n".join(body_lines),
+        reply_to=record.client_email or "japhet.situmonana@gmail.com",
+    )
 
 
 def _get_homepage_reviews(limit: int = 6) -> list[ClientReview]:

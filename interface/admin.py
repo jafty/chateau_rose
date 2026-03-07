@@ -17,6 +17,7 @@ from interface.models import (
     MarketingServiceZone,
     MarketingZone,
     ServiceRequest,
+    Interaction,
     ProviderBookingDraft,
     QuickCheckoutPage,
 )
@@ -141,6 +142,30 @@ class ServiceRequestAdmin(admin.ModelAdmin):
     def _resolve_inspiration_url(self, url: str) -> str:
         return resolve_stored_media_url(url) or ""
 
+
+@admin.register(Interaction)
+class InteractionAdmin(admin.ModelAdmin):
+    list_display = (
+        "kind",
+        "status",
+        "source_label",
+        "contact_name",
+        "contact_email",
+        "created_at",
+        "updated_at",
+    )
+    list_filter = ("kind", "status", "created_at")
+    search_fields = (
+        "source_label",
+        "contact_name",
+        "contact_email",
+        "contact_phone",
+        "subject",
+        "message",
+        "next_action",
+        "notes",
+    )
+    readonly_fields = ("created_at", "updated_at")
 
 @admin.register(ClientReview)
 class ClientReviewAdmin(admin.ModelAdmin):
