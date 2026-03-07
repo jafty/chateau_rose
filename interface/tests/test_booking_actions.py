@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -79,7 +80,7 @@ class BookingActionTests(TestCase):
             estimated_price_cents=9000,
             payment_auth_id="pi_auth_expired",
             status="SUBMITTED",
-            created_at=timezone.now() - timedelta(hours=49),
+            created_at=timezone.now() - timedelta(hours=73),
         )
 
         response = self.client.post(
@@ -99,4 +100,58 @@ class BookingActionTests(TestCase):
         self.assertEqual(len(notifier_stub.messages), 2)
 
         confirmation = self.client.get(reverse("interface:client_confirmation", args=[booking.booking_id]), data={"status": "expired"})
-        self.assertContains(confirmation, "Cette demande a expiré après 48h sans confirmation")
+        self.assertContains(confirmation, "Cette demande a expiré après 72h sans confirmation")
+
+    def test_admin_cancel_can_cancel_expired_uncaptured_booking(self):
+        from interface import views
+
+        payment_stub = _PaymentGatewayStub()
+        notifier_stub = _NotifierStub()
+
+        original_gateway = views.payment_gateway
+        original_notifier = views.notifier
+        views.payment_gateway = payment_stub
+        views.notifier = notifier_stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+        self.addCleanup(setattr, views, "notifier", original_notifier)
+
+        user_model = get_user_model()
+        admin = user_model.objects.create_user(
+            username="admin-cancel",
+            email="admin@example.com",
+            password="testpass123",
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+
+        booking = Booking.objects.create(
+            booking_id="BK-ADMIN-EXPIRED-1",
+            provider=self.provider,
+            service=self.service,
+            client_name="Léa",
+            client_email="lea@example.com",
+            location="Paris",
+            location_preference="salon",
+            client_address="",
+            desired_date=(timezone.now() + timedelta(days=2)).isoformat(),
+            hair_length="long",
+            general_adjustments=[],
+            meche=False,
+            current_hair_picture="current.jpg",
+            inspiration_pictures=[],
+            free_text="",
+            estimated_price_cents=9000,
+            payment_auth_id="pi_auth_admin_expired",
+            status="SUBMITTED",
+            created_at=timezone.now() - timedelta(hours=73),
+        )
+
+        response = self.client.post(reverse("interface:cancel_booking_admin", args=[booking.booking_id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("providers:booking_detail", args=[booking.booking_id]))
+
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, "CANCELLED")
+        self.assertEqual(payment_stub.released, ["pi_auth_admin_expired"])
+        self.assertEqual(len(notifier_stub.messages), 2)

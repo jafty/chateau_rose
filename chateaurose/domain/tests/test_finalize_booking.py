@@ -527,7 +527,7 @@ def test_finalize_booking_rejects_if_expired():
             booking_id="booking_expired",
             actor="provider",
             decision="confirm",
-            now=created_at + timedelta(hours=49),
+            now=created_at + timedelta(hours=73),
             booking_repository=repo,
             payment_gateway=payments,
             provider_directory=provider_directory,
@@ -536,6 +536,51 @@ def test_finalize_booking_rejects_if_expired():
 
     assert payments.capture_calls == []
     assert payments.release_calls == []
+
+
+def test_admin_can_cancel_uncaptured_booking_even_if_expired():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+    payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
+
+    created_at = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    booking = BookingRequest(
+        id="booking_admin_expired",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Saint-Cyprien",
+        location_preference="domicile",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        client_address="5 place du Capitole, 31000 Toulouse",
+        payment_auth_id="auth_admin_expired",
+        status="SUBMITTED",
+        created_at=created_at,
+    )
+    repo.add(booking)
+
+    updated = finalize_booking.execute(
+        booking_id="booking_admin_expired",
+        actor="admin",
+        decision="cancel",
+        now=created_at + timedelta(hours=73),
+        booking_repository=repo,
+        payment_gateway=payments,
+        provider_directory=provider_directory,
+        notifier=notifier,
+    )
+
+    assert updated.status == finalize_booking.CANCELLED
+    assert payments.capture_calls == []
+    assert payments.release_calls == [{"auth_id": "auth_admin_expired"}]
+    assert len(notifier.messages) == 2
 
 
 def test_confirm_schedules_client_reminder_24h_before():

@@ -12,7 +12,11 @@ from django.urls import reverse_lazy
 
 from booking.models import Booking, Provider
 from chateaurose.domain.exceptions import DomainError
-from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc, update_proposal
+from chateaurose.domain.use_cases import (
+    expire_booking as expire_booking_uc,
+    finalize_booking as finalize_booking_uc,
+    update_proposal,
+)
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
@@ -25,6 +29,17 @@ payment_gateway = StripePaymentGateway()
 provider_directory = DjangoProviderDirectory()
 logger = logging.getLogger(__name__)
 SUPPORT_EMAIL = "japhet@chateau-rose.fr"
+
+
+def _expire_visible_open_bookings(*, bookings, now):
+    for booking in bookings:
+        expire_booking_uc.execute(
+            booking_id=booking.booking_id,
+            now=now,
+            booking_repository=repo,
+            payment_gateway=payment_gateway,
+            notifier=notifier,
+        )
 
 
 def _format_price_from_cents(amount_cents: int) -> str:
@@ -82,6 +97,18 @@ def index(request):
         return HttpResponseForbidden("Accès réservé aux prestataires enregistrés.")
 
     if admin_mode:
+        open_bookings = Booking.objects.filter(
+            status__in=(expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION)
+        )
+    else:
+        open_bookings = Booking.objects.filter(
+            provider=provider,
+            status__in=(expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION),
+        )
+
+    _expire_visible_open_bookings(bookings=open_bookings.iterator(), now=timezone.now())
+
+    if admin_mode:
         bookings = Booking.objects.order_by("-created_at").select_related("service", "provider")
     else:
         bookings = (
@@ -119,6 +146,16 @@ def booking_detail(request, booking_id):
         )
 
     acting_provider = booking.provider if admin_mode else provider
+
+    if booking.status in (expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION):
+        expire_booking_uc.execute(
+            booking_id=booking.booking_id,
+            now=timezone.now(),
+            booking_repository=repo,
+            payment_gateway=payment_gateway,
+            notifier=notifier,
+        )
+        booking.refresh_from_db()
 
     message = None
     error = None
