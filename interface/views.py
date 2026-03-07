@@ -1349,8 +1349,8 @@ def cancel_booking_admin(request, booking_id):
     try:
         finalized = finalize_booking_uc.execute(
             booking_id=booking_id,
-            actor="provider",
-            decision="reject",
+            actor="admin",
+            decision="cancel",
             now=timezone.now(),
             booking_repository=repo,
             payment_gateway=payment_gateway,

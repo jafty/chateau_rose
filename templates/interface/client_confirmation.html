@@ -7,7 +7,7 @@
     <div class="paper-card">
         <h1 class="section-title">Statut de ta demande</h1>
         {% if show_expired_notice %}
-            <p class="meta-line" style="margin: 0 0 12px; color: #8a5a00;">Cette demande a expiré après 48h sans confirmation. L'empreinte bancaire a été libérée automatiquement.</p>
+            <p class="meta-line" style="margin: 0 0 12px; color: #8a5a00;">Cette demande a expiré après 72h sans confirmation. L'empreinte bancaire a été libérée automatiquement.</p>
         {% endif %}
         {% if is_confirmed %}
             <p class="lead">Merci {{ booking.client_name }}, ton rendez-vous est confirmé.</p>

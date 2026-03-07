@@ -7,13 +7,13 @@ from chateaurose.domain.tests.stubs.payment_gateway import InMemoryPaymentGatewa
 from chateaurose.domain.use_cases import expire_booking
 
 
-def test_expire_booking_after_48h_releases_and_notifies():
+def test_expire_booking_after_72h_releases_and_notifies():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
 
     created_at = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
-    now = created_at + timedelta(hours=49)
+    now = created_at + timedelta(hours=73)
 
     booking = BookingRequest(
         id="booking_5",
@@ -85,7 +85,7 @@ def test_expire_booking_after_48h_releases_and_notifies():
     ]
 
 
-def test_not_expired_before_48h():
+def test_not_expired_before_72h():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()

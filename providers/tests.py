@@ -1,9 +1,34 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from booking.models import Booking, Provider, Service
+
+
+class _PaymentGatewayStub:
+    def __init__(self):
+        self.released = []
+
+    def release_auth(self, auth_id: str):
+        self.released.append(auth_id)
+
+
+class _NotifierStub:
+    def __init__(self):
+        self.messages = []
+
+    def notify(self, recipient, subject, body, reply_to=None):
+        self.messages.append(
+            {
+                "recipient": recipient,
+                "subject": subject,
+                "body": body,
+                "reply_to": reply_to,
+            }
+        )
 
 
 @override_settings(
@@ -67,6 +92,31 @@ class ProviderDashboardTests(TestCase):
         detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
         self.assertContains(response, detail_url)
         self.assertContains(response, booking.booking_id)
+
+    def test_dashboard_auto_expires_stale_open_booking(self):
+        from providers import views
+
+        payment_stub = _PaymentGatewayStub()
+        notifier_stub = _NotifierStub()
+
+        original_gateway = views.payment_gateway
+        original_notifier = views.notifier
+        views.payment_gateway = payment_stub
+        views.notifier = notifier_stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+        self.addCleanup(setattr, views, "notifier", original_notifier)
+
+        booking = self._create_booking(status="SUBMITTED")
+        booking.created_at = timezone.now() - timedelta(hours=73)
+        booking.save(update_fields=["created_at"])
+
+        response = self.client.get(reverse("providers:providers_index"))
+
+        self.assertEqual(response.status_code, 200)
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, "CANCELLED")
+        self.assertEqual(payment_stub.released, ["auth_1"])
+        self.assertEqual(len(notifier_stub.messages), 2)
 
 
     def test_provider_can_propose_update_from_detail(self):

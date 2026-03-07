@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import InvalidState
+from chateaurose.domain.use_cases.expire_booking import EXPIRATION_DELAY
 
 CONFIRMED = "CONFIRMED"
 CANCELLED = "CANCELLED"
@@ -71,8 +72,8 @@ def execute(
 
     effective_now = now or booking.created_at
 
-    # Expired guard (48h)
-    if now is not None and now - booking.created_at >= timedelta(hours=48):
+    # Expired guard: applies to participant decisions, not to admin force-cancel.
+    if actor in ("provider", "client") and now is not None and now - booking.created_at >= EXPIRATION_DELAY:
         raise InvalidState("Booking has expired")
 
     if booking.status in (CONFIRMED, CANCELLED):
@@ -356,6 +357,53 @@ def execute(
             )
         else:
             raise InvalidState("Invalid state for client decision")
+    elif actor == "admin":
+        if decision == "cancel" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION):
+            booking.status = CANCELLED
+            payment_gateway.release_auth(booking.payment_auth_id)
+            notifier.notify(
+                booking.provider_id,
+                "Demande annulée",
+                "\n".join(
+                    [
+                        f"Bonjour {provider_name},",
+                        "",
+                        "La demande a été annulée par l'équipe Château Rose.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {location_label}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage),
+                        "",
+                        "À bientôt,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
+            )
+            notifier.notify(
+                booking.client_contact["email"],
+                "Demande annulée",
+                "\n".join(
+                    [
+                        f"Bonjour {booking.client_contact['name']},",
+                        "",
+                        "Ta demande a été annulée par l'équipe Château Rose.",
+                        "Récapitulatif :",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {location_label}",
+                        f"- Tarif : {formatted_price}",
+                        "",
+                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage),
+                        "",
+                        "Si tu veux, tu peux déposer une nouvelle demande.",
+                        "À bientôt,",
+                        "L'équipe Château Rose",
+                    ]
+                ),
+            )
+        else:
+            raise InvalidState("Invalid state for admin decision")
     else:
         raise InvalidState("Unknown actor")
 

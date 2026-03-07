@@ -6,6 +6,7 @@ from chateaurose.domain.exceptions import InvalidState
 SUBMITTED = "SUBMITTED"
 PENDING_CLIENT_VALIDATION = "PENDING_CLIENT_VALIDATION"
 CANCELLED = "CANCELLED"
+EXPIRATION_DELAY = timedelta(hours=72)
 
 
 def execute(
@@ -21,7 +22,7 @@ def execute(
     if booking.status in (CANCELLED,):
         return booking
 
-    if booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION) and now - booking.created_at >= timedelta(hours=48):
+    if booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION) and now - booking.created_at >= EXPIRATION_DELAY:
         booking.status = CANCELLED
         booking.updated_at = now
         payment_gateway.release_auth(booking.payment_auth_id)
