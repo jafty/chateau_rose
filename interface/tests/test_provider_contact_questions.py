@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from booking.models import Provider
+from interface.models import Interaction
 
 
 class ProviderQuestionViewTests(TestCase):
@@ -34,3 +35,10 @@ class ProviderQuestionViewTests(TestCase):
         self.assertEqual(recipient, "japhet@chateau-rose.fr")
         self.assertEqual(subject, "Question depuis le profil de Nina")
         self.assertIn("Destinataire : Château Rose", body)
+        self.assertEqual(notify_mock.call_args.kwargs["reply_to"], "aya@example.com")
+
+        interaction = Interaction.objects.get()
+        self.assertEqual(interaction.kind, Interaction.KIND_PROVIDER_QUESTION)
+        self.assertEqual(interaction.contact_name, "Aya")
+        self.assertEqual(interaction.contact_email, "aya@example.com")
+        self.assertEqual(interaction.next_action, "Répondre à la question client")

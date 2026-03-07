@@ -206,6 +206,7 @@ def signup(request):
                 recipient="japhet.situmonana@gmail.com",
                 subject=subject,
                 body=body,
+                reply_to=cleaned["email"],
             )
             return redirect(f"{reverse('providers:signup')}?sent=1")
     else:

@@ -239,6 +239,57 @@ class ServiceRequest(models.Model):
         return f"Demande {self.marketing_service.name} ({self.client_name or self.client_phone or 'sans contact'})"
 
 
+class Interaction(models.Model):
+    KIND_PROVIDER_QUESTION = "provider_question"
+    KIND_QUICK_REQUEST = "quick_request"
+    KIND_PROVIDER_APPOINTMENT_REQUEST = "provider_appointment_request"
+    KIND_CHOICES = (
+        (KIND_PROVIDER_QUESTION, "Question prestataire"),
+        (KIND_QUICK_REQUEST, "Demande rapide"),
+        (KIND_PROVIDER_APPOINTMENT_REQUEST, "Demande RDV prestataire"),
+    )
+
+    STATUS_NEW = "new"
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_WAITING_CLIENT = "waiting_client"
+    STATUS_WAITING_PROVIDER = "waiting_provider"
+    STATUS_DONE = "done"
+    STATUS_CHOICES = (
+        (STATUS_NEW, "Nouveau"),
+        (STATUS_IN_PROGRESS, "En cours"),
+        (STATUS_WAITING_CLIENT, "En attente client"),
+        (STATUS_WAITING_PROVIDER, "En attente prestataire"),
+        (STATUS_DONE, "Traité"),
+    )
+
+    kind = models.CharField(max_length=64, choices=KIND_CHOICES)
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=STATUS_NEW)
+    source_label = models.CharField(max_length=255, blank=True)
+    contact_name = models.CharField(max_length=255, blank=True)
+    contact_email = models.EmailField(blank=True)
+    contact_phone = models.CharField(max_length=32, blank=True)
+    subject = models.CharField(max_length=255, blank=True)
+    message = models.TextField(blank=True)
+    next_action = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    service_request = models.ForeignKey(
+        ServiceRequest,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="interactions",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.get_kind_display()} · {self.contact_name or self.contact_email or 'sans contact'}"
+
+
 class ProviderBookingDraft(models.Model):
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     provider = models.ForeignKey(

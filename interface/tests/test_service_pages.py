@@ -1,8 +1,10 @@
+from unittest.mock import patch
+
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from booking.models import Provider, ProviderMarketingService, ProviderZone, Zone
-from interface.models import ClientReview, MarketingService, MarketingServiceZone, MarketingZone, ServiceRequest
+from interface.models import ClientReview, Interaction, MarketingService, MarketingServiceZone, MarketingZone, ServiceRequest
 
 
 @override_settings(
@@ -132,6 +134,33 @@ class ServicePagesTests(TestCase):
         self.assertIsNone(request_record.desired_date)
         self.assertEqual(request_record.client_phone, "+33612345678")
         self.assertEqual(request_record.availabilities, ["weekday_evening", "weekend_full"])
+
+
+    def test_service_page_creates_quick_request_interaction_and_sets_reply_to(self):
+        url = reverse("interface:service_page", args=["tresses"])
+
+        with patch("interface.views.notifier.notify") as notify_mock:
+            response = self.client.post(
+                url,
+                {
+                    "request_service": "1",
+                    "client_phone": "+33612345678",
+                    "client_email": "client@example.com",
+                    "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
+                    "details": "Besoin urgent",
+                    "availabilities": ["weekday_evening"],
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("interface:thank_you_quick_request"))
+        notify_mock.assert_called_once()
+        self.assertEqual(notify_mock.call_args.kwargs["reply_to"], "japhet.situmonana@gmail.com")
+
+        interaction = Interaction.objects.get(kind=Interaction.KIND_QUICK_REQUEST)
+        self.assertEqual(interaction.contact_phone, "+33612345678")
+        self.assertEqual(interaction.contact_email, "")
+        self.assertEqual(interaction.next_action, "Contacter la cliente / le client rapidement")
 
     def test_home_displays_featured_review(self):
         ClientReview.objects.create(
