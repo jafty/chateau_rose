@@ -63,6 +63,7 @@ def test_provider_proposes_update_moves_to_pending_client_validation_and_notifie
         {
             "recipient": client["email"],
             "subject": "Proposition de rendez-vous",
+            "reply_to": "amandine@example.com",
             "body": "\n".join(
                 [
                     "Bonjour Sarah,",

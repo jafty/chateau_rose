@@ -52,7 +52,7 @@ provider_directory = DjangoProviderDirectory()
 
 
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
-SUPPORT_EMAIL = "japhet.situmonana@gmail.com"
+SUPPORT_EMAIL = "japhet@chateau-rose.fr"
 
 
 def _notify_provider_question(provider: Provider, question_form: ProviderQuestionForm) -> None:
@@ -201,6 +201,8 @@ def home(request):
         return service_request_redirect
 
     request_form, request_success = _build_service_request_form(request, service_meta=None, zone=None)
+    if request_form == "redirect":
+        return redirect("interface:thank_you_quick_request")
     if request_form is None:
         return redirect(f"{request.path}?anchor=service-request")
     homepage_reviews = _get_homepage_reviews()
@@ -333,7 +335,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
         if question_form.is_valid():
             _notify_provider_question(provider, question_form)
             request.session["provider_question_message"] = "Question envoyée. Nous revenons vers toi rapidement."
-            return redirect(f"{request.path}#provider-question")
+            return redirect("interface:thank_you_question")
         question_error = _first_form_error(question_form)
 
     if request.method == "POST" and request.POST.get("question_form") != "1":
@@ -387,7 +389,8 @@ def provider_detail(request, provider_id, quick_checkout=None):
                     operations_email=SUPPORT_EMAIL,
                 )
                 request.session["provider_request_message"] = f"Demande envoyée. ID: {booking.id}"
-                return redirect(f"{request.path}#booking-wizard")
+                thank_you_url = reverse("interface:thank_you_provider_booking")
+                return redirect(f"{thank_you_url}?provider={provider.name}")
             except DomainError as exc:
                 error = _friendly_domain_error_message(exc)
         else:
@@ -489,7 +492,8 @@ def quick_checkout_page(request, checkout_id):
                 checkout.save(update_fields=["client_address", "updated_at"])
             try:
                 booking = _complete_quick_checkout(checkout, payment_auth_id)
-                return redirect("interface:client_confirmation", booking_id=booking.id)
+                thank_you_url = reverse("interface:thank_you_provider_booking")
+                return redirect(f"{thank_you_url}?provider={provider.name}")
             except DomainError as exc:
                 error = _friendly_domain_error_message(exc)
 
@@ -949,7 +953,7 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
             record.save()
             _notify_service_request(record)
             request.session["service_request_success"] = True
-            return None, False
+            return "redirect", False
 
     return form, request_success
 
@@ -1055,6 +1059,8 @@ def service_page(request, service_slug: str):
     request_form, request_success = _build_service_request_form(
         request, service_meta, zone=None
     )
+    if request_form == "redirect":
+        return redirect("interface:thank_you_quick_request")
     if request_form is None:
         return redirect(f"{request.path}?anchor=service-request")
     service_content = _to_service_content(service_meta)
@@ -1123,6 +1129,8 @@ def service_city_page(request, service_slug: str, city_slug: str):
     request_form, request_success = _build_service_request_form(
         request, service_meta, zone=zone
     )
+    if request_form == "redirect":
+        return redirect("interface:thank_you_quick_request")
     if request_form is None:
         return redirect(f"{request.path}?anchor=service-request")
 
@@ -1185,6 +1193,8 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     request_form, request_success = _build_service_request_form(
         request, service_meta, zone=zone
     )
+    if request_form == "redirect":
+        return redirect("interface:thank_you_quick_request")
     if request_form is None:
         return redirect(f"{request.path}?anchor=service-request")
 
@@ -1217,6 +1227,50 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
         },
     )
 
+
+
+def thank_you_question(request):
+    return render(request, "interface/thank_you_question.html")
+
+
+def thank_you_quick_request(request):
+    return render(request, "interface/thank_you_quick_request.html")
+
+
+def thank_you_provider_booking(request):
+    provider_name = request.GET.get("provider", "").strip()
+    return render(
+        request,
+        "interface/thank_you_provider_booking.html",
+        {"provider_name": provider_name},
+    )
+
+
+def cancel_booking_admin(request, booking_id):
+    if not request.user.is_authenticated or not request.user.is_staff:
+        return HttpResponseForbidden("Accès réservé au staff")
+    if request.method != "POST":
+        return HttpResponseBadRequest("Méthode non autorisée")
+
+    booking = get_object_or_404(Booking, booking_id=booking_id)
+    if booking.status in (finalize_booking_uc.CANCELLED, finalize_booking_uc.CONFIRMED):
+        return redirect(reverse("providers:booking_detail", args=[booking.booking_id]))
+
+    try:
+        finalized = finalize_booking_uc.execute(
+            booking_id=booking_id,
+            actor="provider",
+            decision="reject",
+            now=timezone.now(),
+            booking_repository=repo,
+            payment_gateway=payment_gateway,
+            provider_directory=provider_directory,
+            notifier=notifier,
+        )
+    except finalize_booking_uc.InvalidState:
+        return HttpResponseBadRequest("Impossible d'annuler cette demande.")
+
+    return redirect(reverse("providers:booking_detail", args=[finalized.id]))
 
 def legal(request):
     return render(request, "interface/legal.html")

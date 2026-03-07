@@ -240,6 +240,16 @@
                 </div>
             {% endif %}
 
+            {% if admin_mode and booking.status != "CONFIRMED" and booking.status != "CANCELLED" %}
+                <div class="paper-card booking-danger-zone">
+                    <p class="meta-line">Action admin</p>
+                    <form method="post" action="{% url 'interface:cancel_booking_admin' booking.booking_id %}">
+                        {% csrf_token %}
+                        <button class="btn danger" type="submit">Annuler la demande (admin)</button>
+                    </form>
+                </div>
+            {% endif %}
+
             <div class="booking-help-box">
                 <strong>Besoin d'aide ?</strong><br />
                 Une empreinte bancaire a été réalisée côté client. En confirmant, les frais de réservation sont débités.

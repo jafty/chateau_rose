@@ -26,11 +26,11 @@ class ProviderQuestionViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            f"{reverse('interface:provider_detail', args=[provider.id])}#provider-question",
+            reverse("interface:thank_you_question"),
             fetch_redirect_response=False,
         )
         notify_mock.assert_called_once()
         recipient, subject, body = notify_mock.call_args[0]
-        self.assertEqual(recipient, "japhet.situmonana@gmail.com")
+        self.assertEqual(recipient, "japhet@chateau-rose.fr")
         self.assertEqual(subject, "Question depuis le profil de Nina")
         self.assertIn("Destinataire : Château Rose", body)
