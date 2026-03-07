@@ -17,6 +17,7 @@ def execute(
     new_date: str | None,
     client_control_url: str | None,
     counter_proposal_message: str | None = None,
+    reply_to_email: str | None = None,
     now=None,
     booking_repository,
     provider_directory,
@@ -102,5 +103,6 @@ def execute(
         booking.client_contact["email"],
         "Proposition de rendez-vous",
         "\n".join(message_lines),
+        reply_to=reply_to_email or provider_contact.get("email"),
     )
     return booking

@@ -24,6 +24,7 @@ notifier = EmailNotifier()
 payment_gateway = StripePaymentGateway()
 provider_directory = DjangoProviderDirectory()
 logger = logging.getLogger(__name__)
+SUPPORT_EMAIL = "japhet@chateau-rose.fr"
 
 
 def _format_price_from_cents(amount_cents: int) -> str:
@@ -146,6 +147,7 @@ def booking_detail(request, booking_id):
                     provider_directory=provider_directory,
                     client_control_url=client_control_url,
                     counter_proposal_message=counter_proposal_message,
+                    reply_to_email=acting_provider.contact_email or SUPPORT_EMAIL,
                 )
                 message = "Proposition envoyée à la personne cliente."
             elif action in ("confirm", "reject"):

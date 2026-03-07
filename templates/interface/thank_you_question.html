@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+    <div class="container" style="max-width:720px;">
+        <div class="paper-card" style="text-align:center;">
+            <h1>Merci pour ta question ✨</h1>
+            <p>On l'a bien reçue et on revient vers toi rapidement.</p>
+            <p><a class="btn" href="{% url 'interface:provider_list' %}">Voir d'autres prestataires</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

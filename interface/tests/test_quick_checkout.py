@@ -134,7 +134,7 @@ class QuickCheckoutViewTests(TestCase):
 
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
-    def test_quick_checkout_submit_redirects_to_client_confirmation_and_keeps_booking_pending(self):
+    def test_quick_checkout_submit_redirects_to_thank_you_page_and_keeps_booking_pending(self):
         response = self.client.post(
             reverse("interface:quick_checkout_page", args=[self.checkout.id]),
             data={"payment_auth_id": "pi_auth_1"},
@@ -144,7 +144,8 @@ class QuickCheckoutViewTests(TestCase):
         booking = Booking.objects.get()
         self.assertRedirects(
             response,
-            reverse("interface:client_confirmation", args=[booking.booking_id]),
+            reverse("interface:thank_you_provider_booking") + f"?provider={self.provider.name}",
+            fetch_redirect_response=False,
         )
         self.assertEqual(booking.status, "SUBMITTED")
         self.checkout.refresh_from_db()

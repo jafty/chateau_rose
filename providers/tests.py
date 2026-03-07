@@ -299,6 +299,33 @@ class ProviderAdminModeTests(TestCase):
         self.assertContains(response, self.provider.name)
         self.assertContains(response, self.booking.booking_id)
 
+
+    def test_staff_can_cancel_pending_client_validation_booking(self):
+        from interface import views
+
+        class _GatewayStub:
+            def release_auth(self, _auth_id):
+                return None
+
+            def capture_auth(self, _auth_id):
+                return None
+
+        original_gateway = views.payment_gateway
+        views.payment_gateway = _GatewayStub()
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+
+        self.booking.status = "PENDING_CLIENT_VALIDATION"
+        self.booking.save(update_fields=["status"])
+
+        response = self.client.post(
+            reverse("interface:cancel_booking_admin", args=[self.booking.booking_id]),
+            follow=True,
+        )
+
+        self.booking.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.booking.status, "CANCELLED")
+
     def test_staff_without_provider_can_manage_booking_detail(self):
         detail_url = reverse("providers:booking_detail", args=[self.booking.booking_id])
         response = self.client.post(

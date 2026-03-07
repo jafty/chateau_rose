@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="section">
+    <div class="container" style="max-width:760px;">
+        <div class="paper-card" style="text-align:center;">
+            <h1>Demande de RDV envoyée 💌</h1>
+            {% if provider_name %}
+                <p>Ta demande a bien été transmise à {{ provider_name }}.</p>
+            {% else %}
+                <p>Ta demande a bien été transmise au profil partenaire.</p>
+            {% endif %}
+            <p>Tu recevras une confirmation dès que la prestataire ou le prestataire valide le créneau.</p>
+            <p><a class="btn" href="{% url 'interface:home' %}">Retour à l'accueil</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}
