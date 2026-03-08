@@ -515,7 +515,8 @@ def quick_checkout_page(request, checkout_id):
 
     provider = checkout.provider
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
-    require_payment_auth = bool(stripe_public_key)
+    requires_reservation_fee = checkout.reservation_fee_cents > 0
+    require_payment_auth = bool(stripe_public_key) and requires_reservation_fee
     message = None
     error = None
     payment_message = None
@@ -532,6 +533,8 @@ def quick_checkout_page(request, checkout_id):
 
     if request.method == "POST":
         payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
+        if not requires_reservation_fee:
+            payment_auth_id = f"free_quick_checkout_{checkout.id}"
         client_address_value = (request.POST.get("client_address") or "").strip()
         if not is_domicile:
             client_address_value = ""
@@ -576,6 +579,8 @@ def quick_checkout_page(request, checkout_id):
             "payment_message": payment_message,
             "payment_auth_id": prefilled_payment_auth_id,
             "stripe_public_key": stripe_public_key,
+            "require_payment_auth": require_payment_auth,
+            "requires_reservation_fee": requires_reservation_fee,
             "quick_checkout_id": checkout.id,
             "final_price_cents": checkout.final_price_cents,
             "reservation_fee_cents": checkout.reservation_fee_cents,

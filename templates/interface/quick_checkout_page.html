@@ -6,8 +6,12 @@
 {% block content %}
 <section class="page-shell" style="max-width: 820px; margin-top: 28px; margin-bottom: 36px;">
     <div class="paper-card" style="margin-bottom: 16px;">
-        <h1 class="provider-page-title" style="margin-bottom: 6px;">Finaliser ton paiement</h1>
-        <p class="lead" style="margin: 0;">Finalise ta demande avec une empreinte bancaire sécurisée. Le rendez-vous sera confirmé manuellement par {{ provider.name }}.</p>
+        <h1 class="provider-page-title" style="margin-bottom: 6px;">Finaliser ta demande</h1>
+        {% if requires_reservation_fee %}
+            <p class="lead" style="margin: 0;">Finalise ta demande avec une empreinte bancaire sécurisée. Le rendez-vous sera confirmé manuellement par {{ provider.name }}.</p>
+        {% else %}
+            <p class="lead" style="margin: 0;">Ton rendez-vous est offert (aucun frais de réservation). Il sera confirmé manuellement par {{ provider.name }}.</p>
+        {% endif %}
     </div>
 
     {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
@@ -47,15 +51,25 @@
 
             <section class="quick-checkout-card full-width" aria-label="Paiement rapide">
                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Sécuriser le rendez-vous</h4>
-                <div class="secure-badge" style="background: #ecfdf3; border: 1px solid #9fe3b5; color: #12542d;">
-                    <span style="font-size: 1.5rem;" aria-hidden="true">🔐</span>
-                    <div>
-                        <strong>Empreinte bancaire sécurisée · Montant qui sera débité uniquement à la confirmation : <span id="deposit-amount-inline">{{ reservation_fee_cents|cents_to_euros }}</span>.</strong><br>
-                        Ces frais sont <strong>déduits du prix total</strong>. Aucun débit immédiat tant que le créneau n'est pas confirmé. Le reste ({{ remaining_price_cents|cents_to_euros }}) sera réglé directement à {{ provider.name }} le jour du rendez-vous.
+                {% if requires_reservation_fee %}
+                    <div class="secure-badge" style="background: #ecfdf3; border: 1px solid #9fe3b5; color: #12542d;">
+                        <span style="font-size: 1.5rem;" aria-hidden="true">🔐</span>
+                        <div>
+                            <strong>Empreinte bancaire sécurisée · Montant qui sera débité uniquement à la confirmation : <span id="deposit-amount-inline">{{ reservation_fee_cents|cents_to_euros }}</span>.</strong><br>
+                            Ces frais sont <strong>déduits du prix total</strong>. Aucun débit immédiat tant que le créneau n'est pas confirmé. Le reste ({{ remaining_price_cents|cents_to_euros }}) sera réglé directement à {{ provider.name }} le jour du rendez-vous.
+                        </div>
                     </div>
-                </div>
+                {% else %}
+                    <div class="secure-badge" style="background: #ecfdf3; border: 1px solid #9fe3b5; color: #12542d;">
+                        <span style="font-size: 1.5rem;" aria-hidden="true">🎁</span>
+                        <div>
+                            <strong>Réservation offerte · Aucun frais de réservation à payer.</strong><br>
+                            Ta demande est transmise directement à {{ provider.name }} pour validation manuelle du créneau. Le montant à régler le jour du rendez-vous reste {{ remaining_price_cents|cents_to_euros }}.
+                        </div>
+                    </div>
+                {% endif %}
 
-                {% if stripe_public_key %}
+                {% if stripe_public_key and require_payment_auth %}
                     <div class="form-field full-width" style="margin-top: 14px;">
                         <label>Saisir la carte pour valider l'empreinte bancaire</label>
                         <p class="field-hint" id="deposit-payment-hint">Montant bloqué à titre d'empreinte : {{ reservation_fee_cents|cents_to_euros }} (déduits du total si confirmé).</p>
@@ -64,7 +78,11 @@
                     </div>
                 {% endif %}
 
-                <p class="meta-line" style="margin-top: 12px; color: #2e7d32; font-weight: 600;">✅ Paiement sécurisé par Stripe. Ta demande sera ensuite validée manuellement selon la disponibilité réelle du créneau.</p>
+                {% if require_payment_auth %}
+                    <p class="meta-line" style="margin-top: 12px; color: #2e7d32; font-weight: 600;">✅ Paiement sécurisé par Stripe. Ta demande sera ensuite validée manuellement selon la disponibilité réelle du créneau.</p>
+                {% else %}
+                    <p class="meta-line" style="margin-top: 12px; color: #2e7d32; font-weight: 600;">✅ Aucun paiement en ligne requis pour cette demande. {{ provider.name }} confirmera ensuite selon la disponibilité réelle du créneau.</p>
+                {% endif %}
                 <div class="wizard-actions full-width">
                     <button type="submit" class="btn">Valider</button>
                 </div>
