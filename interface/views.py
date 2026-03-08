@@ -222,7 +222,7 @@ def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
 
 
 def home(request):
-    providers = Provider.objects.all().order_by("homepage_order", "id")
+    providers = Provider.objects.visible_on_website().order_by("homepage_order", "id")
     zones = Zone.objects.all()
     services = list(MarketingService.objects.all())
     services_by_slug = {service.slug: service for service in services}
@@ -270,7 +270,7 @@ def home(request):
 
 def city_page(request, city_slug: str):
     zone = _get_zone_or_404(city_slug)
-    providers = list(Provider.objects.filter(zones__slug=zone.slug).distinct())
+    providers = list(Provider.objects.visible_on_website().filter(zones__slug=zone.slug).distinct())
     services = list(MarketingService.objects.all())
 
     city_copy = CITY_PAGE_COPY.get(zone.slug, {})
@@ -322,12 +322,12 @@ def zone_search(request):
 
 
 def provider_list(request):
-    providers = Provider.objects.all()
+    providers = Provider.objects.visible_on_website()
     return render(request, "interface/provider_list.html", {"providers": providers})
 
 
 def at_home_provider_list(request):
-    providers = Provider.objects.filter(
+    providers = Provider.objects.visible_on_website().filter(
         location_mode__in=[
             Provider.LOCATION_MODE_CLIENT_HOME_ONLY,
             Provider.LOCATION_MODE_HYBRID,
@@ -1145,7 +1145,7 @@ def _build_service_schema(request, service_name: str, zone_name: str | None):
 def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
     providers = list(
-        Provider.objects.filter(marketing_services__slug=service_slug).distinct()
+        Provider.objects.visible_on_website().filter(marketing_services__slug=service_slug).distinct()
     )
     service_request_redirect = _build_service_request_redirect(request)
     if service_request_redirect:
@@ -1212,7 +1212,7 @@ def service_city_page(request, service_slug: str, city_slug: str):
     highlights = marketing_content.highlights
 
     providers = list(
-        Provider.objects.filter(
+        Provider.objects.visible_on_website().filter(
             marketing_services__slug=service_slug,
             zones__slug=zone.slug,
         ).distinct()
@@ -1276,7 +1276,7 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     highlights = marketing_content.highlights
 
     providers = list(
-        Provider.objects.filter(
+        Provider.objects.visible_on_website().filter(
             marketing_services__slug=service_slug,
             zones__slug=zone.slug,
         ).distinct()

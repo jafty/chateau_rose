@@ -26,6 +26,19 @@ def _should_compress_image(instance: models.Model, field_name: str) -> bool:
     return image_field.name != previous_field.name
 
 
+class ProviderQuerySet(models.QuerySet):
+    def visible_on_website(self):
+        return self.filter(is_visible_on_website=True)
+
+
+class ProviderManager(models.Manager):
+    def get_queryset(self):
+        return ProviderQuerySet(self.model, using=self._db)
+
+    def visible_on_website(self):
+        return self.get_queryset().visible_on_website()
+
+
 class Provider(models.Model):
     LOCATION_MODE_SALON_ONLY = "salon_only"
     LOCATION_MODE_CLIENT_HOME_ONLY = "client_home_only"
@@ -112,6 +125,15 @@ class Provider(models.Model):
         default=0,
         help_text="Ordre d'affichage sur la page d'accueil (plus petit = affiché en premier).",
     )
+    is_visible_on_website = models.BooleanField(
+        default=True,
+        help_text=(
+            "Décoche pour masquer ce profil des listes publiques du site "
+            "(accueil, pages service, listes de prestataires)."
+        ),
+    )
+
+    objects = ProviderManager()
 
     def __str__(self):
         return self.name

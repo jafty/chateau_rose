@@ -48,6 +48,7 @@ class ProviderResource(resources.ModelResource):
             "location_mode",
             "categorized_services_enabled",
             "homepage_order",
+            "is_visible_on_website",
             "user",
         )
         export_order = fields
