@@ -91,6 +91,31 @@ class QuickCheckoutViewTests(TestCase):
         self.assertContains(response, "Valider")
         self.assertContains(response, f'data-quick-checkout-id="{self.checkout.id}"')
 
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_quick_checkout_page_hides_payment_form_when_reservation_fee_is_zero(self):
+        self.checkout.reservation_fee_cents = 0
+        self.checkout.save(update_fields=["reservation_fee_cents", "updated_at"])
+
+        response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Réservation offerte")
+        self.assertNotContains(response, "Saisir la carte pour valider l'empreinte bancaire")
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_quick_checkout_submit_works_without_payment_auth_when_reservation_fee_is_zero(self):
+        self.checkout.reservation_fee_cents = 0
+        self.checkout.save(update_fields=["reservation_fee_cents", "updated_at"])
+
+        response = self.client.post(
+            reverse("interface:quick_checkout_page", args=[self.checkout.id]),
+            data={},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        booking = Booking.objects.get()
+        self.assertTrue(booking.payment_auth_id.startswith("free_quick_checkout_"))
+
 
 
 
