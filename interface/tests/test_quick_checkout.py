@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -255,6 +256,69 @@ class QuickCheckoutViewTests(TestCase):
         self.checkout.refresh_from_db()
         self.assertTrue(self.checkout.is_active)
         self.assertIsNone(self.checkout.completed_at)
+
+
+class QuickCheckoutModelValidationTests(TestCase):
+    def setUp(self):
+        self.provider = Provider.objects.create(name="Diva", salon_zone="Paris")
+        self.other_provider = Provider.objects.create(name="Mila", salon_zone="Lyon")
+        self.service = Service.objects.create(
+            provider=self.provider,
+            name="Tresses",
+            slug="tresses",
+            base_price_cents=5000,
+        )
+        self.checkout = QuickCheckoutPage.objects.create(
+            provider=self.provider,
+            service=self.service,
+            client_name="Léa",
+            client_email="lea@example.com",
+            desired_date=timezone.now() + timedelta(days=3),
+            location_preference="salon",
+            final_price_cents=12000,
+            reservation_fee_cents=3000,
+        )
+
+    def _build_checkout(self, **overrides):
+        payload = {
+            "provider": self.provider,
+            "service": self.service,
+            "client_name": "Léa",
+            "client_email": "lea@example.com",
+            "desired_date": timezone.now() + timedelta(days=2),
+            "location_preference": "salon",
+            "final_price_cents": 12000,
+            "reservation_fee_cents": 3000,
+        }
+        payload.update(overrides)
+        return QuickCheckoutPage(**payload)
+
+    def test_full_clean_requires_client_address_for_domicile(self):
+        checkout = self._build_checkout(location_preference="domicile", client_address="")
+
+        with self.assertRaises(ValidationError) as exc_info:
+            checkout.full_clean()
+
+        self.assertIn("client_address", exc_info.exception.message_dict)
+
+    def test_full_clean_requires_provider_salon_zone_for_salon_booking(self):
+        self.provider.salon_zone = ""
+        self.provider.save(update_fields=["salon_zone"])
+
+        checkout = self._build_checkout(location_preference="salon")
+
+        with self.assertRaises(ValidationError) as exc_info:
+            checkout.full_clean()
+
+        self.assertIn("provider", exc_info.exception.message_dict)
+
+    def test_full_clean_requires_service_to_match_provider(self):
+        checkout = self._build_checkout(provider=self.other_provider)
+
+        with self.assertRaises(ValidationError) as exc_info:
+            checkout.full_clean()
+
+        self.assertIn("service", exc_info.exception.message_dict)
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_uses_fixed_quick_checkout_price(self):
