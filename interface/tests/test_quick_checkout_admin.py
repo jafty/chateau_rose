@@ -60,6 +60,32 @@ class QuickCheckoutPageAdminFormTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("provider_salon_zone", form.errors)
 
+    def test_form_accepts_salon_booking_when_provider_zone_is_filled_in_form(self):
+        self.provider.salon_zone = ""
+        self.provider.save(update_fields=["salon_zone"])
+
+        form_class = self.admin.get_form(None, self.checkout)
+        form = form_class(
+            data={
+                "provider": self.provider.id,
+                "service": self.service.id,
+                "client_name": "Léa",
+                "client_email": "lea@example.com",
+                "desired_date_0": (timezone.now() + timedelta(days=3)).strftime("%Y-%m-%d"),
+                "desired_date_1": "10:30:00",
+                "location_preference": "salon",
+                "provider_salon_zone": "Toulouse centre",
+                "client_address": "",
+                "free_text": "",
+                "final_price_cents": 12000,
+                "reservation_fee_cents": 3000,
+                "is_active": "on",
+            },
+            instance=self.checkout,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
     def test_form_updates_provider_salon_zone(self):
         form_class = self.admin.get_form(None, self.checkout)
         form = form_class(

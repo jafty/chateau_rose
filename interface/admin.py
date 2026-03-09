@@ -218,6 +218,14 @@ class QuickCheckoutPageAdmin(admin.ModelAdmin):
             cleaned_data = super().clean()
             location_preference = cleaned_data.get("location_preference")
             salon_zone = (cleaned_data.get("provider_salon_zone") or "").strip()
+            provider = cleaned_data.get("provider") or getattr(self.instance, "provider", None)
+
+            # Keep the in-memory provider aligned before model validation runs.
+            # QuickCheckoutPage.clean() checks provider.salon_zone for salon bookings.
+            if provider is not None:
+                provider.salon_zone = salon_zone
+                self.instance.provider = provider
+
             if location_preference == "salon" and not salon_zone:
                 self.add_error(
                     "provider_salon_zone",
@@ -229,9 +237,16 @@ class QuickCheckoutPageAdmin(admin.ModelAdmin):
             instance = super().save(commit=commit)
             provider = instance.provider
             salon_zone = (self.cleaned_data.get("provider_salon_zone") or "").strip()
-            if provider and provider.salon_zone != salon_zone:
-                provider.salon_zone = salon_zone
-                provider.save(update_fields=["salon_zone"])
+            if provider and provider.pk:
+                current_salon_zone = (
+                    type(provider).objects.filter(pk=provider.pk)
+                    .values_list("salon_zone", flat=True)
+                    .first()
+                    or ""
+                ).strip()
+                if current_salon_zone != salon_zone:
+                    provider.salon_zone = salon_zone
+                    provider.save(update_fields=["salon_zone"])
             return instance
 
     form = Form
