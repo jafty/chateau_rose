@@ -159,6 +159,16 @@ class QuickCheckoutViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "adresse complète pour le rendez-vous à domicile")
 
+    def test_quick_checkout_summary_displays_note_when_present(self):
+        self.checkout.free_text = "Merci de prévoir un créneau calme"
+        self.checkout.save(update_fields=["free_text", "updated_at"])
+
+        response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Note")
+        self.assertContains(response, "Merci de prévoir un créneau calme")
+
     def test_quick_checkout_summary_shows_fee_and_hides_location_label(self):
         response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
 
