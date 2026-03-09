@@ -1,5 +1,6 @@
 import uuid
 
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from interface.validators import validate_absolute_or_root_relative_url
@@ -339,6 +340,23 @@ class QuickCheckoutPage(models.Model):
 
     def __str__(self):
         return f"Checkout rapide {self.provider.name} / {self.client_email}"
+
+    def clean(self):
+        super().clean()
+
+        errors = {}
+
+        if self.provider_id and self.service_id and self.service.provider_id != self.provider_id:
+            errors["service"] = "Le service sélectionné doit appartenir à la/au prestataire choisi·e."
+
+        if self.location_preference == "domicile" and not (self.client_address or "").strip():
+            errors["client_address"] = "L'adresse cliente est obligatoire pour un rendez-vous à domicile."
+
+        if self.location_preference == "salon" and not ((self.provider.salon_zone if self.provider_id else "") or "").strip():
+            errors["provider"] = "La zone du salon de la/du prestataire est obligatoire pour un rendez-vous en salon."
+
+        if errors:
+            raise ValidationError(errors)
 
 
 class ClientReview(models.Model):
