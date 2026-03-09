@@ -78,6 +78,15 @@ class QuickCheckoutViewTests(TestCase):
             reservation_fee_cents=3000,
         )
 
+    def test_quick_checkout_page_stays_accessible_when_provider_is_hidden_on_website(self):
+        self.provider.is_visible_on_website = False
+        self.provider.save(update_fields=["is_visible_on_website"])
+
+        response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Finaliser ta demande")
+
     def test_quick_checkout_page_renders_summary_and_payment_step(self):
         response = self.client.get(reverse("interface:quick_checkout_page", args=[self.checkout.id]))
 

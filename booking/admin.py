@@ -57,6 +57,7 @@ class ProviderAdminForm(forms.ModelForm):
             "location_mode",
             "categorized_services_enabled",
             "homepage_order",
+            "is_visible_on_website",
             "user",
             "zones",
             "marketing_services",
@@ -115,9 +116,10 @@ class ProviderAdmin(ImportExportModelAdmin):
         "location_mode",
         "categorized_services_enabled",
         "homepage_order",
+        "is_visible_on_website",
         "user",
     )
-    list_filter = ("location_mode",)
+    list_filter = ("location_mode", "is_visible_on_website")
     inlines = []
     resource_class = ProviderResource
 

@@ -284,6 +284,32 @@ class ServicePagesTests(TestCase):
 
 
 
+
+    def test_hidden_provider_is_excluded_from_public_provider_lists(self):
+        self.provider_b.is_visible_on_website = False
+        self.provider_b.save()
+
+        response = self.client.get(reverse("interface:provider_list"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(self.provider_a.name, content)
+        self.assertNotIn(self.provider_b.name, content)
+
+    def test_hidden_provider_is_excluded_from_service_pages(self):
+        ProviderMarketingService.objects.create(
+            provider=self.provider_b, service=self.marketing_service
+        )
+        self.provider_b.is_visible_on_website = False
+        self.provider_b.save()
+
+        response = self.client.get(reverse("interface:service_page", args=["tresses"]))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(self.provider_a.name, content)
+        self.assertNotIn(self.provider_b.name, content)
+
     def test_home_uses_homepage_order_for_provider_cards(self):
         self.provider_a.homepage_order = 10
         self.provider_a.save()
