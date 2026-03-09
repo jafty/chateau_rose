@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.utils.html import format_html, format_html_join
 
@@ -197,13 +198,63 @@ class ProviderBookingDraftAdmin(admin.ModelAdmin):
 
 @admin.register(QuickCheckoutPage)
 class QuickCheckoutPageAdmin(admin.ModelAdmin):
+    class Form(forms.ModelForm):
+        provider_salon_zone = forms.CharField(
+            required=False,
+            label="Zone salon prestataire",
+            help_text="Modifie aussi la zone salon de la fiche prestataire.",
+        )
+
+        class Meta:
+            model = QuickCheckoutPage
+            fields = "__all__"
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            provider = getattr(self.instance, "provider", None)
+            self.fields["provider_salon_zone"].initial = (getattr(provider, "salon_zone", "") or "").strip()
+
+        def clean(self):
+            cleaned_data = super().clean()
+            location_preference = cleaned_data.get("location_preference")
+            salon_zone = (cleaned_data.get("provider_salon_zone") or "").strip()
+            if location_preference == "salon" and not salon_zone:
+                self.add_error(
+                    "provider_salon_zone",
+                    "La zone du salon est obligatoire quand le lieu du rendez-vous est « en salon ».",
+                )
+            return cleaned_data
+
+        def save(self, commit=True):
+            instance = super().save(commit=commit)
+            provider = instance.provider
+            salon_zone = (self.cleaned_data.get("provider_salon_zone") or "").strip()
+            if provider and provider.salon_zone != salon_zone:
+                provider.salon_zone = salon_zone
+                provider.save(update_fields=["salon_zone"])
+            return instance
+
+    form = Form
     list_display = ("provider", "service", "client_email", "final_price_cents", "reservation_fee_cents", "is_active", "expires_at", "created_at")
     list_filter = ("is_active", "provider", "service")
     search_fields = ("client_email", "client_name", "provider__name", "service__name")
-    readonly_fields = ("provider_salon_zone", "created_at", "updated_at", "completed_at")
-
-    @admin.display(description="Zone salon prestataire")
-    def provider_salon_zone(self, obj):
-        if not obj.provider_id:
-            return "-"
-        return obj.provider.salon_zone or "Non renseignée (à compléter sur la fiche prestataire)."
+    readonly_fields = ("created_at", "updated_at", "completed_at")
+    fields = (
+        "provider",
+        "service",
+        "client_name",
+        "client_email",
+        "desired_date",
+        "hair_length",
+        "location_preference",
+        "provider_salon_zone",
+        "client_address",
+        "free_text",
+        "final_price_cents",
+        "reservation_fee_cents",
+        "is_active",
+        "expires_at",
+        "completed_at",
+        "created_at",
+        "updated_at",
+    )

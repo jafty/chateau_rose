@@ -31,5 +31,11 @@
             <dt>Frais de réservation</dt>
             <dd>{{ quick_checkout.reservation_fee_cents|cents_to_euros }} (déduits du prix final)</dd>
         </div>
+        {% if quick_checkout.free_text %}
+        <div style="grid-column: 1 / -1;">
+            <dt>Note</dt>
+            <dd>{{ quick_checkout.free_text|linebreaksbr }}</dd>
+        </div>
+        {% endif %}
     </dl>
 </section>
