@@ -12,16 +12,24 @@
             Nous te recontactons très vite pour confirmer la prestataire idéale.
         </div>
     {% endif %}
+    {% if request_form.errors %}
+        <div class="alert" role="alert" style="margin-bottom:16px;">
+            <strong>On n'a pas pu envoyer ta demande.</strong><br>
+            Vérifie les champs en rouge puis réessaie.
+        </div>
+    {% endif %}
     <form method="post" action="{{ form_action|default:'' }}" class="request-single-form provider-form-grid" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="request_service" value="1" />
 
         {% if request_form.marketing_service.is_hidden %}
             {{ request_form.marketing_service }}
+                {% if request_form.marketing_service.errors %}<p class="form-field-error">{{ request_form.marketing_service.errors.0 }}</p>{% endif %}
         {% else %}
             <div class="form-field full-width">
                 <label for="id_marketing_service">Service <span class="required-mark">*</span></label>
                 {{ request_form.marketing_service }}
+                {% if request_form.marketing_service.errors %}<p class="form-field-error">{{ request_form.marketing_service.errors.0 }}</p>{% endif %}
             </div>
         {% endif %}
 
@@ -35,16 +43,19 @@
                     </label>
                 {% endfor %}
             </div>
+            {% if request_form.location_preference.errors %}<p class="form-field-error">{{ request_form.location_preference.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="form-field full-width">
             <label for="id_details">Explique ta demande <span class="required-mark">*</span></label>
             {{ request_form.details }}
+            {% if request_form.details.errors %}<p class="form-field-error">{{ request_form.details.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="form-field full-width">
             <label for="id_client_phone">Numéro / WhatsApp <span class="required-mark">*</span></label>
             {{ request_form.client_phone }}
+            {% if request_form.client_phone.errors %}<p class="form-field-error">{{ request_form.client_phone.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="form-field full-width">
@@ -57,6 +68,7 @@
                     </label>
                 {% endfor %}
             </div>
+            {% if request_form.availabilities.errors %}<p class="form-field-error">{{ request_form.availabilities.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="wizard-actions full-width">

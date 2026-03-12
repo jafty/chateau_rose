@@ -1030,7 +1030,8 @@ def _build_service_request_redirect(request):
 
 
 def _build_service_request_form(request, service_meta: MarketingService | None, zone):
-    form = ServiceRequestForm(request.POST or None, request.FILES or None)
+    is_request_submission = request.method == "POST" and request.POST.get("request_service") == "1"
+    form = ServiceRequestForm(request.POST if is_request_submission else None, request.FILES if is_request_submission else None)
     request_success = request.session.pop("service_request_success", False)
 
     if service_meta:
@@ -1038,17 +1039,16 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
         form.fields["marketing_service"].widget = forms.HiddenInput()
         form.fields["marketing_service"].required = False
 
-    if request.method == "POST" and request.POST.get("request_service") == "1":
-        if form.is_valid():
-            record = form.save(commit=False)
-            record.marketing_service = service_meta or form.cleaned_data.get("marketing_service")
-            if zone:
-                record.zone = zone
-            record.inspiration_picture_urls = []
-            record.save()
-            _notify_service_request(record)
-            request.session["service_request_success"] = True
-            return "redirect", False
+    if is_request_submission and form.is_valid():
+        record = form.save(commit=False)
+        record.marketing_service = service_meta or form.cleaned_data.get("marketing_service")
+        if zone:
+            record.zone = zone
+        record.inspiration_picture_urls = []
+        record.save()
+        _notify_service_request(record)
+        request.session["service_request_success"] = True
+        return "redirect", False
 
     return form, request_success
 
