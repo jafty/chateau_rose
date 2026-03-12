@@ -33,3 +33,10 @@
 - Media persistence: uploads are ephemeral on container filesystems; move to a volume or object storage for durable files. For hero/marketing visuals, commit static assets or serve from a CDN so staging pages aren't empty between deploys.
 - Seed data: create Zones (using allowed slugs), Providers, Services (with hair-length adjustments and mèche bonus), ProviderZones, and staff provider users for actions.
 - Ensure migrations are run on each Railway environment after model changes.
+
+
+## Product decision guardrails
+- For any change touching conversion flows (homepage quick request, booking, checkout, payment, lead capture), prefer reliability and clarity over cleverness: no silent failure, explicit success/error feedback, and preserve user input whenever possible.
+- When a prompt conflicts with UX quality or conversion safety, choose the implementation that reduces drop-off and risk first, then explain the tradeoff in commit/PR notes.
+- Keep taxonomy and form options precise and actionable (avoid vague availability labels that degrade matching quality).
+- Avoid technical debt in critical funnels: add/adjust tests for regressions on submission, redirects, and notifications whenever behavior changes.

@@ -43,11 +43,11 @@ class ServiceRequestFormTests(TestCase):
                 "location_preference": ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
                 "client_phone": "06 12 34 56 78",
                 "details": "Vanilles à domicile",
-                "availabilities": ["morning", "weekend_full"],
+                "availabilities": ["weekday_morning", "weekend_morning"],
             }
         )
 
         self.assertTrue(form.is_valid(), form.errors)
         instance = form.save()
         self.assertEqual(instance.client_phone, "0612345678")
-        self.assertEqual(instance.availabilities, ["morning", "weekend_full"])
+        self.assertEqual(instance.availabilities, ["weekday_morning", "weekend_morning"])

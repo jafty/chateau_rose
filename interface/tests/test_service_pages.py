@@ -118,7 +118,7 @@ class ServicePagesTests(TestCase):
                 "client_phone": "+33612345678",
                 "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
                 "details": "Besoin urgent",
-                "availabilities": ["weekday_evening", "weekend_full"],
+                "availabilities": ["weekday_evening", "weekend_morning"],
             },
         )
 
@@ -133,7 +133,7 @@ class ServicePagesTests(TestCase):
         )
         self.assertIsNone(request_record.desired_date)
         self.assertEqual(request_record.client_phone, "+33612345678")
-        self.assertEqual(request_record.availabilities, ["weekday_evening", "weekend_full"])
+        self.assertEqual(request_record.availabilities, ["weekday_evening", "weekend_morning"])
 
 
     def test_service_page_creates_quick_request_interaction_and_sets_reply_to(self):
@@ -161,6 +161,24 @@ class ServicePagesTests(TestCase):
         self.assertEqual(interaction.contact_phone, "+33612345678")
         self.assertEqual(interaction.contact_email, "")
         self.assertEqual(interaction.next_action, "Contacter la cliente / le client rapidement")
+
+
+    def test_home_quick_request_validation_error_keeps_user_on_form_with_feedback(self):
+        response = self.client.post(
+            reverse("interface:home"),
+            {
+                "request_service": "1",
+                "client_phone": "",
+                "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
+                "details": "",
+                "availabilities": [],
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "On n'a pas pu envoyer ta demande.")
+        self.assertContains(response, "Ce champ est obligatoire.")
+        self.assertEqual(ServiceRequest.objects.count(), 0)
 
     def test_home_displays_featured_review(self):
         ClientReview.objects.create(

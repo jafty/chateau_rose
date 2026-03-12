@@ -3317,6 +3317,13 @@ footer {
 }
 
 
+
+.form-field-error {
+    color: #b42318;
+    font-size: 0.9rem;
+    margin: 8px 0 0;
+}
+
 .request-disclaimer {
     margin-top: 8px;
     font-size: 0.92rem;
