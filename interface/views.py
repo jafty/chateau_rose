@@ -378,6 +378,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
         question_error = _first_form_error(question_form)
 
     if request.method == "POST" and request.POST.get("question_form") != "1":
+        prefilled_payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
         form = ProviderBookingRequestForm(
             request.POST,
             request.FILES,

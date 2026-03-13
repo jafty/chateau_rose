@@ -10,7 +10,15 @@ from django.urls import reverse
 from booking.models import Booking, Provider, ProviderZone, Service, Zone
 
 
-@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+@override_settings(
+    MEDIA_ROOT=tempfile.mkdtemp(),
+    STRIPE_PUBLIC_KEY="",
+    STRIPE_SECRET_KEY="",
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    },
+)
 class ProviderRequestUploadTests(TestCase):
     def setUp(self):
         self.addCleanup(lambda: shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True))
@@ -49,12 +57,13 @@ class ProviderRequestUploadTests(TestCase):
                 "meche": "on",
                 "free_text": "Merci",
                 "location_preference": "domicile",
+                "payment_auth_id": "pi_test_auth",
                 "current_hair_picture_file": current_file,
                 "inspiration_pictures": [insp1, insp2],
             },
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         booking = Booking.objects.get()
         # Current hair picture path stored and file exists
         self.assertTrue(booking.current_hair_picture)
@@ -79,11 +88,34 @@ class ProviderRequestUploadTests(TestCase):
                 "location_preference": "salon",
                 "desired_date": "2026-01-01T12:00",
                 "hair_length": "medium",
+                "payment_auth_id": "pi_test_auth",
                 "current_hair_picture_file": current_file,
             },
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         booking = Booking.objects.get()
         self.assertEqual(booking.location, "Paris 10e")
         self.assertFalse(booking.meche)
+
+    def test_invalid_form_keeps_existing_payment_auth_id_visible(self):
+        url = reverse("interface:provider_detail", args=[self.provider.id])
+
+        response = self.client.post(
+            url,
+            data={
+                "service_id": self.service.id,
+                "client_name": "Alice",
+                "client_email": "test@example.com",
+                "location": self.zone.name,
+                "client_address": "",
+                "desired_date": "2026-01-01",
+                "hair_length": "medium",
+                "location_preference": "domicile",
+                "payment_auth_id": "pi_auth_saved",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="pi_auth_saved"')
+        self.assertEqual(Booking.objects.count(), 0)

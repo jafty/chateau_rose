@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.utils.html import format_html, format_html_join
 
 from import_export.admin import ImportExportModelAdmin
 
@@ -25,6 +26,7 @@ from .models import (
     Zone,
 )
 from interface.models import MarketingService
+from interface.services.booking_requests import resolve_stored_media_url
 
 
 class ProviderAdminForm(forms.ModelForm):
@@ -283,8 +285,76 @@ class ProviderMarketingServiceAdmin(ImportExportModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ("booking_id", "provider", "service", "status", "created_at")
+    list_display = ("booking_id", "provider", "service", "status", "created_at", "inspiration_pictures_count")
     list_filter = ("status", "provider")
+    search_fields = ("booking_id", "client_name", "client_email", "payment_auth_id")
+    readonly_fields = ("current_hair_picture_preview", "inspiration_pictures_preview")
+    fields = (
+        "booking_id",
+        "provider",
+        "service",
+        "status",
+        "client_name",
+        "client_email",
+        "location",
+        "location_preference",
+        "client_address",
+        "desired_date",
+        "hair_length",
+        "general_adjustments",
+        "meche",
+        "free_text",
+        "estimated_price_cents",
+        "proposed_price_cents",
+        "proposed_date",
+        "payment_auth_id",
+        "current_hair_picture",
+        "current_hair_picture_preview",
+        "inspiration_pictures",
+        "inspiration_pictures_preview",
+        "created_at",
+        "updated_at",
+        "client_reminder_sent_at",
+    )
+
+    @admin.display(description="Photos")
+    def inspiration_pictures_count(self, obj):
+        return len(obj.inspiration_pictures or [])
+
+    @admin.display(description="Aperçu photo cheveux")
+    def current_hair_picture_preview(self, obj):
+        url = self._resolve_media_url(obj.current_hair_picture)
+        if not url:
+            return "-"
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener">Ouvrir l\'image</a><br>'
+            '<img src="{}" alt="Photo cheveux" style="margin-top:4px;max-width:240px;max-height:240px;border-radius:8px;border:1px solid #ddd;" />',
+            url,
+            url,
+        )
+
+    @admin.display(description="Aperçu photos d'inspiration")
+    def inspiration_pictures_preview(self, obj):
+        urls = obj.inspiration_pictures or []
+        if not urls:
+            return "-"
+
+        resolved_urls = [self._resolve_media_url(url) for url in urls if url]
+        resolved_urls = [url for url in resolved_urls if url]
+        if not resolved_urls:
+            return "-"
+
+        return format_html(
+            '<div style="display:grid;gap:8px;">{}</div>',
+            format_html_join(
+                "",
+                '<div><a href="{}" target="_blank" rel="noopener">Ouvrir l\'image {}</a><br><img src="{}" alt="Inspiration {}" style="margin-top:4px;max-width:240px;max-height:240px;border-radius:8px;border:1px solid #ddd;" /></div>',
+                ((url, idx + 1, url, idx + 1) for idx, url in enumerate(resolved_urls)),
+            ),
+        )
+
+    def _resolve_media_url(self, url: str) -> str:
+        return resolve_stored_media_url(url) or ""
 
 
 @admin.register(ProviderBlockedSlot)
