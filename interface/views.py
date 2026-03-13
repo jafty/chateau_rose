@@ -53,7 +53,7 @@ provider_directory = DjangoProviderDirectory()
 
 
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
-SUPPORT_EMAIL = "japhet@chateau-rose.fr"
+SUPPORT_EMAIL = (getattr(settings, "OPERATIONS_EMAIL", "") or "japhet.situmonana@gmail.com").strip()
 
 
 def _create_interaction(

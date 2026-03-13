@@ -32,7 +32,7 @@ class ProviderQuestionViewTests(TestCase):
         )
         notify_mock.assert_called_once()
         recipient, subject, body = notify_mock.call_args[0]
-        self.assertEqual(recipient, "japhet@chateau-rose.fr")
+        self.assertEqual(recipient, "japhet.situmonana@gmail.com")
         self.assertEqual(subject, "Question depuis le profil de Nina")
         self.assertIn("Destinataire : Château Rose", body)
         self.assertEqual(notify_mock.call_args.kwargs["reply_to"], "aya@example.com")

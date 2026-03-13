@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.conf import settings
 from django.urls import reverse
 from django.urls import reverse_lazy
 
@@ -28,7 +29,7 @@ notifier = EmailNotifier()
 payment_gateway = StripePaymentGateway()
 provider_directory = DjangoProviderDirectory()
 logger = logging.getLogger(__name__)
-SUPPORT_EMAIL = "japhet@chateau-rose.fr"
+SUPPORT_EMAIL = (getattr(settings, "OPERATIONS_EMAIL", "") or "japhet.situmonana@gmail.com").strip()
 
 
 def _expire_visible_open_bookings(*, bookings, now):
@@ -240,7 +241,7 @@ def signup(request):
                 ]
             )
             notifier.notify(
-                recipient="japhet.situmonana@gmail.com",
+                recipient=SUPPORT_EMAIL,
                 subject=subject,
                 body=body,
                 reply_to=cleaned["email"],
