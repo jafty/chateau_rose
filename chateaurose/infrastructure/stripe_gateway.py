@@ -38,4 +38,12 @@ class StripePaymentGateway:
     def release_auth(self, auth_id: str) -> None:
         if auth_id.startswith(self.FREE_AUTH_PREFIX):
             return
-        stripe.PaymentIntent.cancel(auth_id)
+        try:
+            stripe.PaymentIntent.cancel(auth_id)
+        except stripe.InvalidRequestError as exc:
+            is_already_cancelled = (
+                getattr(exc, "code", None) == "payment_intent_unexpected_state"
+                and "status of canceled" in str(exc)
+            )
+            if not is_already_cancelled:
+                raise
