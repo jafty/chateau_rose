@@ -186,7 +186,7 @@ BUSINESS_CITY = os.environ.get("BUSINESS_CITY", "Toulouse")
 BUSINESS_COUNTRY = os.environ.get("BUSINESS_COUNTRY", "FR")
 BUSINESS_PHONE = os.environ.get("BUSINESS_PHONE", "+33 6 49 49 14 49")
 DEFAULT_OG_IMAGE_PATH = os.environ.get(
-    "DEFAULT_OG_IMAGE_PATH", "/static/assets/cork_background.jpg"
+    "DEFAULT_OG_IMAGE_PATH", "/static/assets/cr_logo.svg"
 )
 
 EMAIL_BACKEND = os.environ.get(

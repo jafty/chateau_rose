@@ -1095,6 +1095,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .scroll-rail {
     --rail-offset: clamp(20px, 6vw, 40px);
     margin-inline: calc(var(--rail-offset) * -1);
+    overflow-x: hidden;
 }
 
 .scroll-rail-topbar {
