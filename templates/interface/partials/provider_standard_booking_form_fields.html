@@ -2,7 +2,7 @@
                                 <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">1. Choisis ta prestation</h4>
 
                                 <div class="form-field full-width">
-                                    <label for="service_id">Service souhaité <span class="required-mark">*</span></label>
+                                    <label for="service_id">Service sélectionné <span class="required-mark">*</span></label>
                                     <select name="service_id" id="service_id" required>
                                             <option value="" selected disabled>-- Choisis une prestation --</option>
                                         {% if provider.categorized_services_enabled and service_categories %}
@@ -31,7 +31,7 @@
                                 </div>
 
                                 <div class="form-field full-width" data-general-adjustment-field hidden>
-                                    <label>Suppléments (optionnel)</label>
+                                    <label>Options (facultatif)</label>
                                     <div id="general_adjustments" class="supplements-list"></div>
                                     <input type="hidden" name="general_adjustments" id="general_adjustments_input" value="[]">
                                 </div>
@@ -40,24 +40,24 @@
                                     <div class="form-field checkbox-field full-width" style="margin-top: 10px;" data-meche-field hidden>
                                         <label for="meche" style="background: white; padding: 10px; border: 1px dashed #ccc; width: 100%;">
                                             <input type="checkbox" name="meche" id="meche">
-                                            <span>J'ai besoin que les mèches soient fournies</span>
+                                            <span>Je veux que les mèches soient fournies</span>
                                         </label>
                                     </div>
                                 {% else %}
                                     <div class="form-field full-width" style="margin-top: 10px;" data-meche-warning hidden>
                                         <div style="background: #fff7e6; border: 1px solid #ffd8a8; border-radius: 8px; padding: 12px; color: #7a4b00;">
-                                            ⚠️ Ce profil ne fournit pas les mèches. Si besoin, pense à apporter tes propres mèches.
+                                            ⚠️ Cette prestation ne comprend pas les mèches. Pense à apporter les tiennes pour éviter toute surprise.
                                         </div>
                                     </div>
                                 {% endif %}
 
                                 <div class="wizard-actions full-width">
-                                    <button type="button" class="btn btn-next">Continuer</button>
+                                    <button type="button" class="btn btn-next">Vérifier la dispo pour ce prix</button>
                                 </div>
                             </fieldset>
 
                             <fieldset class="wizard-step" data-step="2" {% if is_quick_checkout %}hidden{% endif %}>
-                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">2. Tes photos et tes coordonnées</h4>
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">2. Tes photos et tes infos</h4>
                                 <p class="meta-line" style="margin-bottom: 12px;">Ajoute les éléments utiles pour aider la prestataire à confirmer ta demande.</p>
 
                                 <div class="form-field full-width">
@@ -94,12 +94,12 @@
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                                    <button type="button" class="btn btn-next">Choisir le créneau</button>
+                                    <button type="button" class="btn btn-next">Passer à mes créneaux</button>
                                 </div>
                             </fieldset>
 
                             <fieldset class="wizard-step" data-step="3" {% if is_quick_checkout %}hidden{% endif %}>
-                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">3. Choisis le créneau</h4>
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">3. Choisis ton créneau</h4>
 
                                 <div class="form-field full-width">
                                     <label for="desired_date">Date & heure souhaitées <span class="required-mark">*</span></label>
@@ -165,19 +165,19 @@
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                                    <button type="button" class="btn btn-next">Continuer</button>
+                                    <button type="button" class="btn btn-next">Voir le récapitulatif</button>
                                 </div>
                             </fieldset>
 
 
                             <fieldset class="wizard-step" data-step="4">
-                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">4. Finaliser la demande</h4>
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">4. Valide ta demande</h4>
 
                                 <div class="secure-badge">
                                     <span style="font-size: 1.5rem;">🔒</span>
                                     <div>
                                         <strong>Frais de réservation : <span id="deposit-amount-inline">-- €</span> (déduits du total).</strong><br>
-                                        Aucun débit immédiat : les frais sont prélevés uniquement après confirmation du rendez-vous.<br>
+                                        Zéro débit surprise : les frais sont prélevés uniquement après confirmation du rendez-vous.<br>
                                         Le reste est réglé directement à {{ provider.name }} le jour J.
                                     </div>
                                 </div>
@@ -185,7 +185,7 @@
                                 {% if stripe_public_key %}
                                     <div class="form-field full-width">
                                         <label>Saisir la carte pour garantir le créneau</label>
-                                        <p class="field-hint" id="deposit-payment-hint">Frais de réservation estimés : -- € (empreinte bancaire).</p>
+                                        <p class="field-hint" id="deposit-payment-hint">Frais de réservation estimés : -- € (aucun débit tant que le rendez-vous n’est pas confirmé).</p>
                                         <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
                                         <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
                                     </div>
@@ -194,13 +194,13 @@
                                 <div class="form-field checkbox-field full-width" style="margin-top: 15px;">
                                     <label>
                                         <input type="checkbox" required>
-                                        <span style="font-size: 0.9rem;">J'accepte que cette empreinte serve de caution en cas d'absence injustifiée (No-show).</span>
+                                        <span style="font-size: 0.9rem;">J’accepte que cette empreinte serve de garantie en cas d’absence injustifiée (no-show).</span>
                                     </label>
                                 </div>
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                                    <button type="submit" class="btn">Envoyer ma demande</button>
+                                    <button type="submit" class="btn">Envoyer ma demande gratuitement</button>
                                 </div>
                             </fieldset>
 
