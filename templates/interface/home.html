@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="form-section" id="service-request">
     <div class="container">
         <div class="paper-form">
-            {% include "interface/partials/service_request_form.html" with title="Pas le temps de chercher ?" lead="Dis-nous de quoi t'as besoin et on te trouvera le coiffeur idéal." %}
+            {% include "interface/partials/service_request_form.html" with title="Recevoir une proposition rapide" lead="Décris ton besoin en 2 minutes et reçois une proposition claire par email." %}
         </div>
     </div>
 </section>
@@ -386,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         {% if providers|length > 3 %}
             <div class="homepage-providers-cta">
-                <a href="{% url 'interface:provider_list' %}" class="btn">Voir les prestataires</a>
+                <a href="{% url 'interface:provider_list' %}" class="btn">Voir les profils & tarifs</a>
                 <a href="{% url 'interface:at_home_provider_list' %}" class="btn secondary">Voir les profils à domicile</a>
             </div>
         {% endif %}

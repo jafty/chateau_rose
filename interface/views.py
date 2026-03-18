@@ -969,12 +969,13 @@ def _notify_service_request(record) -> None:
     subject = f"Nouvelle demande rapide - {record.marketing_service.name}"
     body_lines = [
         f"Service : {record.marketing_service.name}",
-        f"Contact WhatsApp : {record.client_phone}",
         f"Email : {record.client_email or 'Non communiqué'}",
+        f"Contact WhatsApp : {record.client_phone or 'Non communiqué'}",
         f"Date souhaitée : {desired_date}",
         f"Lieu préféré : {location_preference}",
         f"Zone : {zone_name}",
         f"Disponibilités : {availabilities}",
+        f"Photo jointe : {'Oui' if record.inspiration_picture_urls else 'Non'}",
         "Détails de la demande :",
         record.details or "Aucun détail supplémentaire.",
     ]
@@ -1045,7 +1046,11 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
         record.marketing_service = service_meta or form.cleaned_data.get("marketing_service")
         if zone:
             record.zone = zone
-        record.inspiration_picture_urls = []
+        picture = form.cleaned_data.get("inspiration_picture")
+        if picture:
+            record.inspiration_picture_urls = booking_requests.save_inspiration_pictures([picture])
+        else:
+            record.inspiration_picture_urls = []
         record.save()
         _notify_service_request(record)
         request.session["service_request_success"] = True

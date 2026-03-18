@@ -84,6 +84,7 @@ class ServiceResource(resources.ModelResource):
             "category",
             "name",
             "slug",
+            "image_url",
             "base_price_cents",
             "hair_length_adjustments",
             "general_adjustments",

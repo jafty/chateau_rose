@@ -3,7 +3,7 @@
         <div>
             <h2 style="margin-bottom:6px;">{{ title }}</h2>
             <p class="lead" style="margin:0;">{{ lead }}</p>
-            <p class="request-disclaimer">Les demandes via ce formulaire sont traitées sous 24 à 48h. Pour une prise de RDV plus rapide, <a href="/prestataires/">réserve directement auprès d'un prestataire</a>.</p>
+            <p class="request-disclaimer">Reçois une proposition par email que tu peux valider avant de payer. Pour aller plus vite, tu peux aussi <a href="/prestataires/">partir d'un profil prestataire</a>.</p>
         </div>
     </div>
     {% if request_success %}
@@ -47,15 +47,29 @@
         </div>
 
         <div class="form-field full-width">
-            <label for="id_details">Explique ta demande <span class="required-mark">*</span></label>
+            <label for="id_client_email">Ton email <span class="required-mark">*</span></label>
+            {{ request_form.client_email }}
+            {% if request_form.client_email.errors %}<p class="form-field-error">{{ request_form.client_email.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-field full-width">
+            <label for="id_client_phone">Ton numéro WhatsApp (optionnel)</label>
+            {{ request_form.client_phone }}
+            <p class="meta-line" style="margin: 0;">On l'utilise seulement si un échange rapide est utile pour finaliser ta demande.</p>
+            {% if request_form.client_phone.errors %}<p class="form-field-error">{{ request_form.client_phone.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-field full-width">
+            <label for="id_details">Décris rapidement ce que tu veux <span class="required-mark">*</span></label>
             {{ request_form.details }}
             {% if request_form.details.errors %}<p class="form-field-error">{{ request_form.details.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="form-field full-width">
-            <label for="id_client_phone">Numéro / WhatsApp <span class="required-mark">*</span></label>
-            {{ request_form.client_phone }}
-            {% if request_form.client_phone.errors %}<p class="form-field-error">{{ request_form.client_phone.errors.0 }}</p>{% endif %}
+            <label for="{{ request_form.inspiration_picture.id_for_label }}">Photo de référence (optionnel)</label>
+            {{ request_form.inspiration_picture }}
+            <p class="meta-line" style="margin: 0;">Une photo aide à envoyer une proposition plus juste, sans t'obliger à téléphoner.</p>
+            {% if request_form.inspiration_picture.errors %}<p class="form-field-error">{{ request_form.inspiration_picture.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="form-field full-width">
@@ -72,7 +86,7 @@
         </div>
 
         <div class="wizard-actions full-width">
-            <button type="submit" class="btn request-cta">Recevoir des propositions de RDV</button>
+            <button type="submit" class="btn request-cta">Recevoir ma proposition par email</button>
         </div>
     </form>
 </div>
