@@ -52,19 +52,19 @@
                                 {% endif %}
 
                                 <div class="wizard-actions full-width">
-                                    <button type="button" class="btn btn-next">Voir le tarif estimé</button>
+                                    <button type="button" class="btn btn-next">Continuer</button>
                                 </div>
                             </fieldset>
 
                             <fieldset class="wizard-step" data-step="2" {% if is_quick_checkout %}hidden{% endif %}>
-                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">2. Tes photos & tes coordonnées</h4>
-                                <p class="meta-line" style="margin-bottom: 12px;">On collecte le minimum utile pour confirmer une estimation sérieuse sans échange compliqué.</p>
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">2. Tes photos et tes coordonnées</h4>
+                                <p class="meta-line" style="margin-bottom: 12px;">Ajoute les éléments utiles pour aider la prestataire à confirmer ta demande.</p>
 
                                 <div class="form-field full-width">
                                     <label>Photo de tes cheveux actuels <span class="required-mark">*</span></label>
                                     <div class="file-upload-wrapper">
                                         <input type="file" name="current_hair_picture_file" id="current_hair_picture_file" accept="image/*" required onchange="updateFileLabel(this)">
-                                        <span class="file-upload-label">📸 Ajouter une photo actuelle</span>
+                                        <span class="file-upload-label">📸 Ajouter une photo de tes cheveux</span>
                                         <span class="file-upload-info" id="file-label-current">Aucun fichier sélectionné</span>
                                     </div>
                                 </div>
@@ -73,14 +73,14 @@
                                     <label>Photos d'inspiration (Optionnel)</label>
                                     <div class="file-upload-wrapper">
                                         <input type="file" name="inspiration_pictures" id="inspiration_pictures" accept="image/*" multiple onchange="updateFileLabel(this, 'file-label-inspo')">
-                                        <span class="file-upload-label">✨ Ajouter des inspirations</span>
+                                        <span class="file-upload-label">✨ Ajouter des photos d'inspiration</span>
                                         <span class="file-upload-info" id="file-label-inspo">Aucun fichier sélectionné</span>
                                     </div>
                                 </div>
 
                                 <div class="form-field full-width">
-                                    <label for="free_text">Un petit mot pour {{ provider.name }} ?</label>
-                                    <textarea name="free_text" id="free_text" placeholder="Ex: J'ai le cuir chevelu sensible, je suis dispo plutôt le matin..."></textarea>
+                                    <label for="free_text">Précisions pour {{ provider.name }}</label>
+                                    <textarea name="free_text" id="free_text" placeholder="Ex. : cuir chevelu sensible, préférence pour un créneau le matin, style recherché..."></textarea>
                                 </div>
 
                                 <div class="form-field full-width">
@@ -94,12 +94,12 @@
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                                    <button type="button" class="btn btn-next">Vérifier les disponibilités</button>
+                                    <button type="button" class="btn btn-next">Choisir le créneau</button>
                                 </div>
                             </fieldset>
 
                             <fieldset class="wizard-step" data-step="3" {% if is_quick_checkout %}hidden{% endif %}>
-                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">3. Vérifie les disponibilités</h4>
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">3. Choisis le créneau</h4>
 
                                 <div class="form-field full-width">
                                     <label for="desired_date">Date & heure souhaitées <span class="required-mark">*</span></label>
@@ -165,13 +165,13 @@
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                                    <button type="button" class="btn btn-next">Passer à la confirmation</button>
+                                    <button type="button" class="btn btn-next">Continuer</button>
                                 </div>
                             </fieldset>
 
 
                             <fieldset class="wizard-step" data-step="4">
-                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">4. Envoyer la demande</h4>
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">4. Finaliser la demande</h4>
 
                                 <div class="secure-badge">
                                     <span style="font-size: 1.5rem;">🔒</span>
