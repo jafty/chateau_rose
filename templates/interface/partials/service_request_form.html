@@ -28,6 +28,7 @@
         </div>
 
         <fieldset class="wizard-step active" data-request-step="1">
+            <div class="form-step-message" data-request-step-message hidden></div>
             <h4 style="margin-bottom: 0.35rem; color: var(--rose-accent);">1. Les essentiels</h4>
             <p class="meta-line" style="margin: 0 0 0.4rem;">Choisis la prestation, le lieu et les créneaux qui te conviennent le mieux.</p>
 
@@ -69,11 +70,12 @@
             </div>
 
             <div class="wizard-actions full-width">
-                <button type="button" class="btn btn-next" data-request-next>Continuer</button>
+                <button type="button" class="btn btn-next" data-request-next>Continuer vers mes coordonnées</button>
             </div>
         </fieldset>
 
         <fieldset class="wizard-step" data-request-step="2">
+            <div class="form-step-message" data-request-step-message hidden></div>
             <h4 style="margin-bottom: 0.35rem; color: var(--rose-accent);">2. Où te répondre ?</h4>
             <p class="meta-line" style="margin: 0 0 0.4rem;">On utilise ton email pour t'envoyer la proposition adaptée à ta demande.</p>
 
@@ -92,11 +94,12 @@
 
             <div class="wizard-actions full-width">
                 <button type="button" class="btn btn-prev btn-secondary" data-request-prev>Retour</button>
-                <button type="button" class="btn btn-next" data-request-next>Continuer avec mes détails</button>
+                <button type="button" class="btn btn-next" data-request-next>Continuer vers ma demande</button>
             </div>
         </fieldset>
 
         <fieldset class="wizard-step" data-request-step="3">
+            <div class="form-step-message" data-request-step-message hidden></div>
             <h4 style="margin-bottom: 0.35rem; color: var(--rose-accent);">3. Décris ta demande</h4>
             <p class="meta-line" style="margin: 0 0 0.4rem;">Explique le rendu souhaité, la longueur, les inspirations ou toute précision utile.</p>
 
@@ -136,6 +139,7 @@
             const locationChoiceLabels = form.querySelectorAll('.location-choice .choice-pill');
             const availabilityLabels = form.querySelectorAll('.availability-pills .availability-pill');
             const nextButtons = form.querySelectorAll('[data-request-next]');
+            const stepMessages = form.querySelectorAll('[data-request-step-message]');
             const prevButtons = form.querySelectorAll('[data-request-prev]');
             const emailInput = form.querySelector('input[name="client_email"]');
             const fileInput = form.querySelector('input[type="file"][name="inspiration_picture"]');
@@ -185,9 +189,18 @@
                 }
             };
 
+            const setStepMessage = (message = '') => {
+                stepMessages.forEach((node) => {
+                    const isCurrent = Number.parseInt(node.closest('[data-request-step]')?.dataset.requestStep || '0', 10) === currentStep;
+                    node.hidden = !(message && isCurrent);
+                    node.textContent = isCurrent ? message : '';
+                });
+            };
+
             const validateStep = () => {
                 const currentPanel = form.querySelector(`[data-request-step="${currentStep}"]`);
                 if (!currentPanel) return true;
+                setStepMessage('');
 
                 if (currentStep === 1) {
                     const serviceField = currentPanel.querySelector('select[name="marketing_service"]');
@@ -195,14 +208,17 @@
                     const hasLocation = Array.from(currentPanel.querySelectorAll('input[name="location_preference"]')).some((input) => input.checked);
 
                     if (serviceField && !serviceField.value) {
+                        setStepMessage('Choisis une prestation pour passer à l’étape suivante.');
                         serviceField.reportValidity();
                         return false;
                     }
                     if (!hasLocation) {
+                        setStepMessage('Choisis si tu préfères à domicile ou chez la ou le prestataire.');
                         currentPanel.querySelector('input[name="location_preference"]')?.reportValidity();
                         return false;
                     }
                     if (!hasAvailability) {
+                        setStepMessage('Ajoute au moins une disponibilité pour qu’on puisse te proposer un créneau.');
                         currentPanel.querySelector('input[name="availabilities"]')?.reportValidity();
                         return false;
                     }
@@ -215,6 +231,8 @@
                 });
                 for (const field of fields) {
                     if (!field.checkValidity()) {
+                        const message = field.validationMessage || 'Il manque une information pour continuer.';
+                        setStepMessage(message.charAt(0).toUpperCase() + message.slice(1));
                         field.reportValidity();
                         return false;
                     }
@@ -234,6 +252,7 @@
             prevButtons.forEach((button) => {
                 button.addEventListener('click', () => {
                     currentStep = Math.max(currentStep - 1, 1);
+                    setStepMessage('');
                     syncProgress();
                 });
             });
