@@ -119,3 +119,13 @@ class ProviderRequestUploadTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'value="pi_auth_saved"')
         self.assertEqual(Booking.objects.count(), 0)
+
+    def test_provider_detail_renders_service_card_with_service_image(self):
+        self.service.image_url = "https://cdn.example.com/services/tresses.jpg"
+        self.service.save(update_fields=["image_url"])
+
+        response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.service.image_url)
+        self.assertContains(response, f'alt="{self.service.name} réalisée par {self.provider.name}"')

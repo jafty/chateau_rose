@@ -13,7 +13,7 @@ class ServiceRequestFormTests(TestCase):
             data={
                 "marketing_service": self.service.id,
                 "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
-                "client_phone": "+33612345678",
+                "client_email": "client@example.com",
                 "details": "Knotless braids taille S.",
                 "availabilities": ["weekday_evening"],
             }
@@ -26,13 +26,14 @@ class ServiceRequestFormTests(TestCase):
             data={
                 "marketing_service": self.service.id,
                 "location_preference": ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
-                "client_phone": "06 12 34 56 78",
+                "client_email": "",
                 "details": "",
                 "availabilities": [],
             }
         )
 
         self.assertFalse(form.is_valid())
+        self.assertIn("client_email", form.errors)
         self.assertIn("details", form.errors)
         self.assertIn("availabilities", form.errors)
 
@@ -41,6 +42,7 @@ class ServiceRequestFormTests(TestCase):
             data={
                 "marketing_service": self.service.id,
                 "location_preference": ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
+                "client_email": "client@example.com",
                 "client_phone": "06 12 34 56 78",
                 "details": "Vanilles à domicile",
                 "availabilities": ["weekday_morning", "weekend_morning"],
@@ -51,3 +53,17 @@ class ServiceRequestFormTests(TestCase):
         instance = form.save()
         self.assertEqual(instance.client_phone, "0612345678")
         self.assertEqual(instance.availabilities, ["weekday_morning", "weekend_morning"])
+
+    def test_phone_is_optional(self):
+        form = ServiceRequestForm(
+            data={
+                "marketing_service": self.service.id,
+                "location_preference": ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
+                "client_email": "client@example.com",
+                "client_phone": "",
+                "details": "Vanilles à domicile",
+                "availabilities": ["weekday_morning"],
+            }
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)

@@ -1,10 +1,10 @@
 <fieldset class="wizard-step active" data-step="1" {% if is_quick_checkout %}hidden{% endif %}>
-                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Choix de la coiffure</h4>
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">1. Choisis ta prestation</h4>
 
                                 <div class="form-field full-width">
                                     <label for="service_id">Service souhaité <span class="required-mark">*</span></label>
                                     <select name="service_id" id="service_id" required>
-                                        <option value="" selected disabled>-- Choisis un service --</option>
+                                            <option value="" selected disabled>-- Choisis une prestation --</option>
                                         {% if provider.categorized_services_enabled and service_categories %}
                                             {% for category in service_categories %}
                                                 <optgroup label="{{ category.name }}">
@@ -52,19 +52,19 @@
                                 {% endif %}
 
                                 <div class="wizard-actions full-width">
-                                    <button type="button" class="btn btn-next">Continuer</button>
+                                    <button type="button" class="btn btn-next">Voir le tarif estimé</button>
                                 </div>
                             </fieldset>
 
                             <fieldset class="wizard-step" data-step="2" {% if is_quick_checkout %}hidden{% endif %}>
-                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Tes cheveux & inspirations</h4>
-                                <p class="meta-line" style="margin-bottom: 12px;">On enregistre ton email dès cette étape pour éviter toute perte si tu t'arrêtes avant le paiement.</p>
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">2. Tes photos & tes coordonnées</h4>
+                                <p class="meta-line" style="margin-bottom: 12px;">On collecte le minimum utile pour confirmer une estimation sérieuse sans échange compliqué.</p>
 
                                 <div class="form-field full-width">
                                     <label>Photo de tes cheveux actuels <span class="required-mark">*</span></label>
                                     <div class="file-upload-wrapper">
                                         <input type="file" name="current_hair_picture_file" id="current_hair_picture_file" accept="image/*" required onchange="updateFileLabel(this)">
-                                        <span class="file-upload-label">📸 Prendre ou choisir une photo</span>
+                                        <span class="file-upload-label">📸 Ajouter une photo actuelle</span>
                                         <span class="file-upload-info" id="file-label-current">Aucun fichier sélectionné</span>
                                     </div>
                                 </div>
@@ -73,7 +73,7 @@
                                     <label>Photos d'inspiration (Optionnel)</label>
                                     <div class="file-upload-wrapper">
                                         <input type="file" name="inspiration_pictures" id="inspiration_pictures" accept="image/*" multiple onchange="updateFileLabel(this, 'file-label-inspo')">
-                                        <span class="file-upload-label">✨ Ajouter des modèles</span>
+                                        <span class="file-upload-label">✨ Ajouter des inspirations</span>
                                         <span class="file-upload-info" id="file-label-inspo">Aucun fichier sélectionné</span>
                                     </div>
                                 </div>
@@ -84,7 +84,7 @@
                                 </div>
 
                                 <div class="form-field full-width">
-                                    <label>Ton Prénom/Nom <span class="required-mark">*</span></label>
+                                    <label>Ton prénom / nom <span class="required-mark">*</span></label>
                                     <input type="text" name="client_name" id="client_name" required autocomplete="name">
                                 </div>
                                 <div class="form-field full-width">
@@ -94,15 +94,15 @@
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                                    <button type="button" class="btn btn-next">Continuer</button>
+                                    <button type="button" class="btn btn-next">Vérifier les disponibilités</button>
                                 </div>
                             </fieldset>
 
                             <fieldset class="wizard-step" data-step="3" {% if is_quick_checkout %}hidden{% endif %}>
-                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Infos pratiques</h4>
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">3. Vérifie les disponibilités</h4>
 
                                 <div class="form-field full-width">
-                                    <label for="desired_date">Date & Heure souhaitées <span class="required-mark">*</span></label>
+                                    <label for="desired_date">Date & heure souhaitées <span class="required-mark">*</span></label>
                                     <input type="datetime-local" name="desired_date" id="desired_date" required>
                                     <div class="alert error" id="desired-date-error" hidden style="margin-top: 10px;"></div>
                                 </div>
@@ -165,19 +165,19 @@
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                                    <button type="button" class="btn btn-next">Continuer</button>
+                                    <button type="button" class="btn btn-next">Passer à la confirmation</button>
                                 </div>
                             </fieldset>
 
 
                             <fieldset class="wizard-step" data-step="4">
-                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">Sécuriser le rendez-vous</h4>
+                                <h4 style="margin-bottom: 1rem; color: var(--rose-accent);">4. Envoyer la demande</h4>
 
                                 <div class="secure-badge">
                                     <span style="font-size: 1.5rem;">🔒</span>
                                     <div>
                                         <strong>Frais de réservation : <span id="deposit-amount-inline">-- €</span> (déduits du total).</strong><br>
-                                        Aucun débit immédiat : les frais de réservation sont prélevés uniquement après confirmation du rendez-vous.<br>
+                                        Aucun débit immédiat : les frais sont prélevés uniquement après confirmation du rendez-vous.<br>
                                         Le reste est réglé directement à {{ provider.name }} le jour J.
                                     </div>
                                 </div>
@@ -200,7 +200,7 @@
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                                    <button type="submit" class="btn">Valider</button>
+                                    <button type="submit" class="btn">Envoyer ma demande</button>
                                 </div>
                             </fieldset>
 

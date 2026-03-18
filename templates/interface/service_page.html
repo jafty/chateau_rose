@@ -159,9 +159,9 @@
 
 
             <div class="btn-group">
-                <a href="#service-request" class="btn">Je réserve cette coiffure</a>
+                <a href="#service-request" class="btn">Recevoir une proposition</a>
                 {% if providers %}
-                    <a href="#providers-list" class="btn secondary">Voir les profils disponibles</a>
+                    <a href="#providers-list" class="btn secondary">Voir les profils & tarifs</a>
                 {% endif %}
             </div>
         </div>
@@ -263,7 +263,7 @@
 
         <!-- Formulaire de demande rapide (Ancre) -->
         <div style="margin-top: 60px;" id="service-request">
-            {% include "interface/partials/service_request_form.html" with title="Pas le temps de chercher ?" lead="Dis-nous de quoi t'as besoin et on te trouvera la coiffeuse ou le coiffeur idéal selon tes besoins" %}
+            {% include "interface/partials/service_request_form.html" with title="Recevoir une proposition rapide" lead="Décris ton besoin et on t'envoie une proposition adaptée par email." %}
         </div>
 
     </div>
@@ -348,7 +348,7 @@
         
         <!-- Bouton secondaire Sidebar -->
         <a href="#service-request" class="btn secondary" style="width: 100%; text-align: center; font-size: 0.8rem;">
-            Je cherche un modèle
+            Recevoir une proposition
         </a>
     </aside>
 

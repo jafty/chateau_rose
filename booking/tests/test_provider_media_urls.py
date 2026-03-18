@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from booking.models import Provider, ProviderPhoto
+from booking.models import Provider, ProviderPhoto, Service
 
 
 class ProviderMediaUrlValidationTests(TestCase):
@@ -19,6 +19,11 @@ class ProviderMediaUrlValidationTests(TestCase):
         with self.assertRaises(ValidationError):
             provider.full_clean()
 
+    def test_service_image_url_accepts_relative_static(self):
+        provider = Provider.objects.create(name="Service Owner")
+        service = Service(provider=provider, name="Tresses", image_url="static/services/tresses.jpg", base_price_cents=4500)
+        service.full_clean()
+
 
 class ProviderMediaResolutionTests(TestCase):
     def test_provider_photo_resolved_url_uses_video_when_media_kind_is_video(self):
@@ -31,3 +36,14 @@ class ProviderMediaResolutionTests(TestCase):
 
         self.assertTrue(photo.is_video)
         self.assertEqual(photo.resolved_url, "https://cdn.example.com/gallery/video.mp4")
+
+    def test_service_resolved_image_uses_its_own_image_url_before_provider_cover(self):
+        provider = Provider.objects.create(name="Image Owner", profile_image_url="https://cdn.example.com/provider.jpg")
+        service = Service.objects.create(
+            provider=provider,
+            name="Vanilles",
+            base_price_cents=3000,
+            image_url="https://cdn.example.com/services/vanilles.jpg",
+        )
+
+        self.assertEqual(service.resolved_image, "https://cdn.example.com/services/vanilles.jpg")

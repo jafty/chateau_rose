@@ -180,6 +180,16 @@ class Service(models.Model):
     )
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, default="", blank=True)
+    image = models.ImageField(upload_to="providers/services/", blank=True, null=True)
+    image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text=(
+            "Upload an image or provide an absolute URL, /root-relative path, "
+            "or relative static asset path."
+        ),
+    )
     base_price_cents = models.IntegerField()
     hair_length_adjustments = models.JSONField(default=dict, blank=True)
     general_adjustments = models.JSONField(default=dict, blank=True)
@@ -192,10 +202,23 @@ class Service(models.Model):
     def __str__(self):
         return f"{self.name} ({self.provider})"
 
+    @property
+    def resolved_image(self):
+        if self.image:
+            return self.image.url
+        if self.image_url:
+            return self.image_url
+        return self.provider.resolved_cover_image or self.provider.resolved_profile_image
+
     def clean(self):
         super().clean()
         if self.category and self.category.provider_id != self.provider_id:
             raise ValidationError("La catégorie doit appartenir à la même prestataire.")
+
+    def save(self, *args, **kwargs):
+        if _should_compress_image(self, "image"):
+            compress_image_field(self.image, max_px=900, quality=80)
+        return super().save(*args, **kwargs)
 
 
 class ServiceCategory(models.Model):

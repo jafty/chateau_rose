@@ -169,6 +169,8 @@ class ServiceAdminForm(forms.ModelForm):
             "category",
             "name",
             "slug",
+            "image",
+            "image_url",
             "base_price_cents",
             "hair_length_adjustments",
             "general_adjustments",
@@ -205,11 +207,22 @@ class ServiceAdminForm(forms.ModelForm):
 
 @admin.register(Service)
 class ServiceAdmin(ImportExportModelAdmin):
-    list_display = ("name", "slug", "provider", "category", "base_price_cents")
+    list_display = ("name", "slug", "provider", "category", "base_price_cents", "image_preview")
     list_filter = ("provider", "category")
     search_fields = ("name", "slug")
     resource_class = ServiceResource
     form = ServiceAdminForm
+
+    @admin.display(description="Image")
+    def image_preview(self, obj):
+        image_url = obj.resolved_image
+        if not image_url:
+            return "—"
+        return format_html(
+            '<img src="{}" alt="{}" style="max-width:64px;max-height:64px;border-radius:8px;border:1px solid #ddd;" />',
+            image_url,
+            obj.name,
+        )
 
 
 class ServiceCategoryAdminForm(forms.ModelForm):

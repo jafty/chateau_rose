@@ -51,12 +51,25 @@ class ServiceRequestForm(forms.ModelForm):
         choices=ServiceRequest.AVAILABILITY_CHOICES,
         widget=forms.CheckboxSelectMultiple,
     )
+    client_email = forms.EmailField(
+        label="Ton email",
+        required=True,
+    )
+    client_phone = forms.CharField(
+        label="Ton numéro WhatsApp (optionnel)",
+        required=False,
+    )
+    inspiration_picture = forms.ImageField(
+        label="Photo de référence (optionnel)",
+        required=False,
+    )
 
     class Meta:
         model = ServiceRequest
         fields = [
             "marketing_service",
             "location_preference",
+            "client_email",
             "client_phone",
             "details",
             "availabilities",
@@ -65,20 +78,29 @@ class ServiceRequestForm(forms.ModelForm):
             "details": forms.Textarea(attrs={"rows": 4}),
         }
         labels = {
-            "client_phone": "Ton numéro WhatsApp",
-            "details": "Explique ta demande",
+            "client_phone": "Ton numéro WhatsApp (optionnel)",
+            "details": "Décris ta demande",
             "availabilities": "Tes disponibilités",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["details"].required = True
-        self.fields["details"].widget.attrs.setdefault("placeholder", "Exemple : knotless braids S vers Saint-Cyprien (cheveux longueur épaule), idéalement le 10 mars à 20:00. Disponible tous les samedis matin.")
+        self.fields["client_email"].widget.attrs.setdefault("autocomplete", "email")
+        self.fields["client_phone"].widget.attrs.setdefault("autocomplete", "tel")
+        self.fields["details"].widget.attrs.setdefault(
+            "placeholder",
+            "Exemple : knotless braids S, longueur milieu du dos, pour la semaine prochaine. Je veux surtout un rendu naturel.",
+        )
 
     def clean_client_phone(self):
-        phone = "".join(char for char in (self.cleaned_data.get("client_phone") or "") if char.isdigit() or char == "+")
+        raw_phone = (self.cleaned_data.get("client_phone") or "").strip()
+        if not raw_phone:
+            return ""
+
+        phone = "".join(char for char in raw_phone if char.isdigit() or char == "+")
         if len(phone.replace("+", "")) < 8:
-            raise forms.ValidationError("Merci de renseigner un numéro WhatsApp valide.")
+            raise forms.ValidationError("Merci de renseigner un numéro valide ou laisse ce champ vide.")
         return phone
 
     def clean(self):
