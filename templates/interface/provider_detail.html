@@ -8,7 +8,7 @@
     .provider-hero-card { display: grid; gap: 18px; }
     .provider-service-grid {
         display: grid;
-        gap: 16px;
+        gap: 18px;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
     .provider-service-card,
@@ -17,6 +17,13 @@
         border-radius: 12px;
         background: #fff;
         box-shadow: var(--shadow-paper);
+    }
+    .provider-services-card {
+        background: linear-gradient(180deg, #fff8fa 0%, #ffffff 100%);
+        border: 1px solid rgba(223, 172, 182, 0.45);
+        border-radius: 16px;
+        box-shadow: var(--shadow-paper);
+        padding: clamp(1.25rem, 3vw, 1.75rem);
     }
     .provider-service-card {
         display: grid;
@@ -40,15 +47,18 @@
     .provider-service-card p { margin: 0; color: var(--ink-secondary); }
     .provider-service-card .service-price { white-space: nowrap; }
     .provider-service-card__media {
-        aspect-ratio: 4 / 3;
-        background: #f8f1f3;
+        aspect-ratio: 4 / 5;
+        background: linear-gradient(180deg, #fdf1f4 0%, #f8ede8 100%);
         overflow: hidden;
     }
     .provider-service-card__media img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
+        object-position: center top;
         display: block;
+        background: linear-gradient(180deg, #fdf1f4 0%, #f8ede8 100%);
+        padding: 10px;
     }
     .provider-service-card__content {
         padding: 18px 20px 20px;
@@ -56,10 +66,23 @@
         gap: 10px;
     }
     .provider-service-card button {
-        margin-top: 4px;
-        justify-self: start;
+        margin-top: auto;
+        justify-self: stretch;
         border-radius: 8px;
         padding: 10px 14px;
+        background: #fff0f3;
+        color: var(--rose-accent);
+        border-color: transparent;
+        box-shadow: none;
+    }
+    .provider-service-card:hover button {
+        background: var(--rose-accent);
+        color: #fff;
+    }
+    .provider-hero-media .tape {
+        width: 58px;
+        height: 18px;
+        top: -8px;
     }
     .provider-highlights-card {
         padding: 22px;
@@ -70,32 +93,6 @@
         align-items: center;
         gap: 10px;
         margin-bottom: 14px;
-    }
-    .provider-highlights-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: 14px;
-    }
-    .provider-highlights-list li {
-        position: relative;
-        padding-left: 30px;
-        color: var(--ink-secondary);
-        line-height: 1.5;
-    }
-    .provider-highlights-list li::before {
-        content: "✦";
-        position: absolute;
-        left: 0;
-        top: 0;
-        color: var(--rose-accent);
-        font-size: 1rem;
-    }
-    .provider-highlights-list strong {
-        display: block;
-        margin-bottom: 2px;
-        color: var(--ink-primary);
     }
 </style>
 {% endblock %}
@@ -114,8 +111,8 @@
             <h1 class="provider-page-title">{{ provider.name }}</h1>
             <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p>
             <div class="provider-header-ctas">
-                <a href="#services-list" class="btn">Voir / estimer les tarifs</a>
-                <a href="#booking-wizard" class="btn secondary">Vérifier les disponibilités</a>
+                <a href="#services-list" class="btn">Voir les tarifs et réserver</a>
+                <a href="#booking-wizard" class="btn secondary">Voir les créneaux</a>
             </div>
         </div>
         <div class="hero-media polaroid provider-hero-media">
@@ -146,7 +143,6 @@
                         <span class="tag">Coiffure afro</span>
                     {% endfor %}
                 </div>
-                <a href="#booking-wizard" class="btn provider-sidebar-booking-cta">Réserver avec {{ provider.name }}</a>
             </div>
             <div class="paper-card provider-sidebar-card">
                 <h4 class="section-title provider-section-title">Disponibilités</h4>
@@ -187,25 +183,125 @@
             <section class="content-section">
                 <div class="provider-highlights-card">
                     <h3 class="provider-highlights-title">💡 Bon à savoir</h3>
-                    <ul class="provider-highlights-list">
-                        <li>
-                            <strong>Disponibilités</strong>
-                            {{ provider.availabilities|default:"Renseigne tes préférences de créneaux dans le formulaire pour recevoir une réponse adaptée."|sanitize_marketing_html }}
-                        </li>
-                        <li>
-                            <strong>Lieu</strong>
-                            {{ provider.location_mode_label }}{% if provider.salon_zone %} — zone salon : {{ provider.salon_zone }}{% endif %}.
-                        </li>
-                        <li>
-                            <strong>Réservation</strong>
-                            Ajoute les détails utiles et une photo si besoin pour aider {{ provider.name }} à confirmer la prestation la plus adaptée.
-                        </li>
-                    </ul>
+                    <div class="provider-note">
+                        {{ provider.additional_info|default:"Ajoute ici les informations utiles à lire avant réservation : mèches à prévoir, moyens de paiement, détails pratiques ou précisions importantes."|sanitize_marketing_html }}
+                    </div>
                 </div>
             </section>
 
+            <section class="content-section" id="services-list">
+                <div class="paper-card provider-services-card">
+                    <h3 class="section-title provider-section-title">Choisis ta prestation</h3>
+                    <p class="meta-line provider-pricing-note">Sélectionne une coiffure pour estimer ton tarif et vérifier les créneaux disponibles.</p>
+                    {% if provider.categorized_services_enabled and service_categories %}
+                        <div class="service-category-accordion">
+                            {% for category in service_categories %}
+                                <details class="service-category-item" {% if forloop.first %}open{% endif %}>
+                                    <summary class="service-category-summary">
+                                        <h4 class="service-category-title">{{ category.name }}</h4>
+                                        <span class="service-category-line"></span>
+                                        <span class="service-category-icon" aria-hidden="true"></span>
+                                    </summary>
+                                    <div class="provider-service-grid">
+                                        {% for service in category.services %}
+                                            <article class="provider-service-card">
+                                                <div class="provider-service-card__media">
+                                                    <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
+                                                </div>
+                                                <div class="provider-service-card__content">
+                                                    <div class="provider-service-card__top">
+                                                        <h4>{{ service.name }}</h4>
+                                                        <span class="service-price"><small>À partir de</small> {{ service.price_display }}</span>
+                                                    </div>
+                                                    <p>Tarif indicatif de départ, ajusté ensuite selon la longueur, les options et le lieu si besoin.</p>
+                                                    <button type="button" class="btn secondary" data-service-card="{{ service.id }}">Voir le tarif et réserver</button>
+                                                </div>
+                                            </article>
+                                        {% endfor %}
+                                    </div>
+                                </details>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="provider-service-grid">
+                            {% for service in services %}
+                                <article class="provider-service-card">
+                                    <div class="provider-service-card__media">
+                                        <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
+                                    </div>
+                                    <div class="provider-service-card__content">
+                                        <div class="provider-service-card__top">
+                                            <h4>{{ service.name }}</h4>
+                                            <span class="service-price"><small>À partir de</small> {{ service.price_display }}</span>
+                                        </div>
+                                        <p>Tarif indicatif de départ, ajusté ensuite selon la longueur, les options et le lieu si besoin.</p>
+                                        <button type="button" class="btn secondary" data-service-card="{{ service.id }}">Voir le tarif et réserver</button>
+                                    </div>
+                                </article>
+                            {% empty %}
+                                <p class="meta-line" style="margin: 0;">Tarifs à confirmer avec la prestataire ou le prestataire.</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+
             <section class="content-section">
-                <h3 class="section-title provider-section-title">Prestations</h3>
+            {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
+            {% if payment_message %}<div class="alert success">{{ payment_message }}</div>{% endif %}
+            {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+
+                <div class="provider-form-card inline-form-card" id="booking-wizard">
+                    <h3 class="section-title provider-section-title" style="text-align:center;">Voir les tarifs et réserver</h3>
+
+                    {% if not is_quick_checkout %}
+                    <div class="step-progress">
+                        <div class="step-indicator active" data-step-indicator="1">1</div>
+                        <div class="step-indicator" data-step-indicator="2">2</div>
+                        <div class="step-indicator" data-step-indicator="3">3</div>
+                        <div class="step-indicator" data-step-indicator="4">4</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="provider-form-layout">
+                        <form
+                            method="post"
+                            enctype="multipart/form-data"
+                            class="provider-form-grid"
+                            id="provider-request-form"
+                            data-payment-intent-url="{% url 'interface:provider_payment_intent' %}"
+                            data-payment-return-url="{% url 'interface:provider_payment_return' %}"
+                            data-stripe-public-key="{{ stripe_public_key }}"
+                        >
+                            {% csrf_token %}
+
+                            {% include "interface/partials/provider_standard_booking_form_fields.html" %}
+                        </form>
+
+                        {% if not is_quick_checkout %}
+                        <aside class="provider-form-aside">
+                            <div class="sticky-price-bar" id="sticky-price-bar">
+                                <span class="total-label">Estimation totale</span>
+                                <span class="total-amount" id="final-price-display">...</span>
+                                <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher ton estimation.</p>
+                                <p class="meta-line" id="general-adjustments-display" hidden></p>
+                                <div class="deposit-summary">
+                                    <span class="deposit-label">Frais de réservation (déduits)</span>
+                                    <span class="deposit-amount" id="deposit-amount-display">-- €</span>
+                                    <p class="meta-line" id="deposit-details-display">Zéro débit surprise : frais demandés uniquement après validation.</p>
+                                </div>
+                                <span class="sr-only" id="sticky-price-value">-- €</span>
+                            </div>
+                        </aside>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </section>
+
+            <section class="content-section">
+                <h3 class="section-title provider-section-title">Réalisations</h3>
                 <div class="paper-card provider-gallery-card">
                     {% if provider.photos.all %}
                         <div class="photo-grid provider-gallery-grid" data-gallery-grid>
@@ -263,123 +359,6 @@
                 </div>
             </section>
 
-            <section class="content-section" id="services-list">
-                <div class="paper-card provider-services-card">
-                    <h3 class="section-title provider-section-title">Services et tarifs</h3>
-                    <p class="meta-line provider-pricing-note">Choisis une prestation pour préparer ta demande et retrouver directement le bon service dans le formulaire.</p>
-                    {% if provider.categorized_services_enabled and service_categories %}
-                        <div class="service-category-accordion">
-                            {% for category in service_categories %}
-                                <details class="service-category-item" {% if forloop.first %}open{% endif %}>
-                                    <summary class="service-category-summary">
-                                        <h4 class="service-category-title">{{ category.name }}</h4>
-                                        <span class="service-category-line"></span>
-                                        <span class="service-category-icon" aria-hidden="true"></span>
-                                    </summary>
-                                    <div class="provider-service-grid">
-                                        {% for service in category.services %}
-                                            <article class="provider-service-card">
-                                                <div class="provider-service-card__media">
-                                                    <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
-                                                </div>
-                                                <div class="provider-service-card__content">
-                                                    <div class="provider-service-card__top">
-                                                        <h4>{{ service.name }}</h4>
-                                                        <span class="service-price"><small>À partir de</small> {{ service.price_display }}</span>
-                                                    </div>
-                                                    <p>Prix indicatif de départ, ajusté ensuite selon la longueur, les options et le lieu si nécessaire.</p>
-                                                    <button type="button" class="btn secondary" data-service-card="{{ service.id }}">Estimer et réserver</button>
-                                                </div>
-                                            </article>
-                                        {% endfor %}
-                                    </div>
-                                </details>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="provider-service-grid">
-                            {% for service in services %}
-                                <article class="provider-service-card">
-                                    <div class="provider-service-card__media">
-                                        <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
-                                    </div>
-                                    <div class="provider-service-card__content">
-                                        <div class="provider-service-card__top">
-                                            <h4>{{ service.name }}</h4>
-                                            <span class="service-price"><small>À partir de</small> {{ service.price_display }}</span>
-                                        </div>
-                                        <p>Prix indicatif de départ, ajusté ensuite selon la longueur, les options et le lieu si nécessaire.</p>
-                                        <button type="button" class="btn secondary" data-service-card="{{ service.id }}">Estimer et réserver</button>
-                                    </div>
-                                </article>
-                            {% empty %}
-                                <p class="meta-line" style="margin: 0;">Tarifs à confirmer avec la prestataire ou le prestataire.</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-            </section>
-
-            {% if provider.additional_info %}
-                <section class="content-section">
-                    <div class="paper-card provider-services-card">
-                        <h3 class="section-title provider-section-title">Informations supplémentaires</h3>
-                        <p class="provider-note">{{ provider.additional_info|sanitize_marketing_html }}</p>
-                    </div>
-                </section>
-            {% endif %}
-
-            <section class="content-section">
-            {% if message %}<div class="alert success">{{ message }}</div>{% endif %}
-            {% if payment_message %}<div class="alert success">{{ payment_message }}</div>{% endif %}
-            {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
-
-                <div class="provider-form-card inline-form-card" id="booking-wizard">
-                    <h3 class="section-title provider-section-title" style="text-align:center;">Estimer le tarif et envoyer ta demande</h3>
-
-                    {% if not is_quick_checkout %}
-                    <div class="step-progress">
-                        <div class="step-indicator active" data-step-indicator="1">1</div>
-                        <div class="step-indicator" data-step-indicator="2">2</div>
-                        <div class="step-indicator" data-step-indicator="3">3</div>
-                        <div class="step-indicator" data-step-indicator="4">4</div>
-                    </div>
-                    {% endif %}
-
-                    <div class="provider-form-layout">
-                        <form
-                            method="post"
-                            enctype="multipart/form-data"
-                            class="provider-form-grid"
-                            id="provider-request-form"
-                            data-payment-intent-url="{% url 'interface:provider_payment_intent' %}"
-                            data-payment-return-url="{% url 'interface:provider_payment_return' %}"
-                            data-stripe-public-key="{{ stripe_public_key }}"
-                        >
-                            {% csrf_token %}
-
-                            {% include "interface/partials/provider_standard_booking_form_fields.html" %}
-                        </form>
-
-                        {% if not is_quick_checkout %}
-                        <aside class="provider-form-aside">
-                            <div class="sticky-price-bar" id="sticky-price-bar">
-                                <span class="total-label">Estimation totale</span>
-                                <span class="total-amount" id="final-price-display">...</span>
-                                <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher ton estimation.</p>
-                                <p class="meta-line" id="general-adjustments-display" hidden></p>
-                                <div class="deposit-summary">
-                                    <span class="deposit-label">Frais de réservation (déduits)</span>
-                                    <span class="deposit-amount" id="deposit-amount-display">-- €</span>
-                                    <p class="meta-line" id="deposit-details-display">Empreinte bancaire, aucun débit immédiat.</p>
-                                </div>
-                                <span class="sr-only" id="sticky-price-value">-- €</span>
-                            </div>
-                        </aside>
-                        {% endif %}
-                    </div>
-                </div>
-            </section>
 
         </div>
     </div>
