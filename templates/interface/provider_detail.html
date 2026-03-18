@@ -45,18 +45,21 @@
         box-shadow: none;
     }
     .provider-service-card {
-        display: grid;
+        display: flex;
+        flex-direction: column;
         align-content: start;
         align-self: start;
         min-height: 100%;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        transition: all 0.3s ease;
         overflow: hidden;
         padding: 0;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     }
     .provider-service-card:hover {
-        transform: translateY(-3px);
-        border-color: rgba(223, 172, 182, 0.9);
-        box-shadow: var(--shadow-lifted);
+        transform: translateY(-4px);
+        border-color: var(--rose-accent);
+        box-shadow: 0 12px 24px rgba(223, 172, 182, 0.2);
     }
     .provider-service-card__top {
         display: grid;
@@ -76,35 +79,42 @@
         font-size: 0.68rem;
     }
     .provider-service-card__media {
-        aspect-ratio: 4 / 5;
-        background: linear-gradient(180deg, #fdf1f4 0%, #f8ede8 100%);
+        height: 180px;
+        width: 100%;
+        background: #fdf8f6;
         overflow: hidden;
+        position: relative;
     }
     .provider-service-card__media img {
         width: 100%;
         height: 100%;
-        object-fit: contain;
-        object-position: center top;
+        object-fit: cover;
+        object-position: center;
         display: block;
-        background: linear-gradient(180deg, #fdf1f4 0%, #f8ede8 100%);
-        padding: 10px;
+        transition: transform 0.3s ease;
+    }
+    .provider-service-card:hover .provider-service-card__media img {
+        transform: scale(1.05);
     }
     .provider-service-card__content {
         padding: 16px;
-        display: grid;
+        display: flex;
+        flex-direction: column;
         gap: 12px;
+        flex: 1;
     }
     .provider-service-card button {
         margin-top: auto;
         justify-self: stretch;
         width: 100%;
         border-radius: 8px;
-        padding: 10px 14px;
+        padding: 10px;
         font-size: 0.9rem;
         background: #fff0f3;
         color: var(--rose-accent);
-        border-color: transparent;
+        border: none;
         box-shadow: none;
+        transition: all 0.2s ease;
     }
     .provider-service-card:hover button {
         background: var(--rose-accent);
