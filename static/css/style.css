@@ -13,8 +13,8 @@
     --shadow-lifted: 0 20px 40px -10px rgba(74, 59, 50, 0.12);
     --shadow-soft: 0 12px 24px -6px rgba(74, 59, 50, 0.08);
     --shadow-hover: var(--shadow-lifted);
-    --radius-sm: 10px;
-    --radius-md: 16px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
 }
 
 * {
@@ -3221,7 +3221,7 @@ footer {
     background: #fff;
     color: var(--ink-primary);
     padding: 16px 18px;
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: var(--shadow-paper);
     display: grid;
     gap: 8px;
@@ -3361,4 +3361,56 @@ footer {
 .availability-pill.is-selected {
     background: rgba(178, 89, 138, 0.12);
     border-color: var(--rose-accent);
+}
+
+
+.request-step-progress {
+    max-width: 320px;
+    margin-bottom: 1.5rem;
+}
+
+.request-card .step-indicator {
+    width: 28px;
+    height: 28px;
+}
+
+.request-upload-wrapper {
+    height: 116px;
+    border-radius: 10px;
+}
+
+.request-field-note {
+    font-size: 0.84rem;
+}
+
+.provider-form-card,
+.provider-service-card,
+.location-choice .choice-pill,
+.choice-toggle,
+.gallery-thumb,
+.file-upload-wrapper,
+.quick-checkout-summary,
+.quick-checkout-summary__grid div {
+    border-radius: 10px;
+}
+
+.provider-form-grid input:not([type="checkbox"]),
+.provider-form-grid select,
+.provider-form-grid textarea,
+.inline-form-card input,
+.inline-form-card select,
+.inline-form-card textarea,
+.info-card input,
+.info-card select,
+.info-card textarea,
+.zone-search__input,
+.zone-search__dropdown,
+.zone-toggle,
+.provider-form-grid .estimation-box {
+    border-radius: 8px;
+}
+
+.provider-sidebar-card,
+.paper-card {
+    border-radius: 12px;
 }

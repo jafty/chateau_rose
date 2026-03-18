@@ -90,8 +90,9 @@ class ServiceRequestForm(forms.ModelForm):
         self.fields["client_phone"].widget.attrs.setdefault("autocomplete", "tel")
         self.fields["details"].widget.attrs.setdefault(
             "placeholder",
-            "Exemple : knotless braids S, longueur milieu du dos, pour la semaine prochaine. Je veux surtout un rendu naturel.",
+            "Exemple : des knotless braids taille moyenne, longueur milieu du dos, avec un rendu naturel et soigné pour la semaine prochaine.",
         )
+        self.fields["inspiration_picture"].widget.attrs.setdefault("class", "request-file-input")
 
     def clean_client_phone(self):
         raw_phone = (self.cleaned_data.get("client_phone") or "").strip()
