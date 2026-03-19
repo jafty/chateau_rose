@@ -3266,6 +3266,10 @@ footer {
     margin-bottom: 0.25rem;
 }
 
+.form-step-message[hidden] {
+    display: none;
+}
+
 .city-discovery {
     padding: 64px 0 72px;
     text-align: center;
