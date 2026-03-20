@@ -5,208 +5,405 @@
 
 {% block extra_head %}
 <style>
-    .provider-hero-card { display: grid; gap: 18px; }
-    .provider-service-grid {
+    .provider-profile {
+        padding: clamp(2rem, 4vw, 4rem) 0 4rem;
+        gap: 2rem;
+    }
+    .provider-page-header {
         display: grid;
-        gap: 18px;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        align-items: stretch;
-        width: 100%;
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.95fr);
+        gap: clamp(1.5rem, 3vw, 2.5rem);
+        align-items: center;
+        margin-bottom: clamp(2rem, 5vw, 3.5rem);
     }
-    @media (max-width: 1200px) {
-        .provider-service-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
+    .provider-hero-card,
+    .provider-sidebar-card,
+    .provider-highlights-card,
+    .provider-form-card,
+    .provider-gallery-card,
+    .provider-form-aside .sticky-price-bar {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(74, 59, 50, 0.08);
+        border-radius: 16px;
+        box-shadow: 0 10px 28px rgba(74, 59, 50, 0.10), 0 2px 10px rgba(74, 59, 50, 0.05);
     }
-    @media (max-width: 900px) {
-        .provider-service-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
+    .provider-hero-card {
+        padding: clamp(1.75rem, 4vw, 3rem);
+        gap: 1.25rem;
     }
-    @media (max-width: 640px) {
-        .provider-service-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-    .provider-service-card,
-    .provider-highlights-card {
-        border: 1px solid rgba(74, 59, 50, 0.09);
-        border-radius: 12px;
+    .provider-hero-badges { display:flex; flex-wrap:wrap; gap:0.75rem; }
+    .provider-hero-badges .pill {
+        border-radius: 999px;
+        padding: 0.55rem 0.95rem;
+        font-size: 0.74rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 800;
         background: #fff;
-        box-shadow: var(--shadow-paper);
+        border: 1px solid rgba(74, 59, 50, 0.09);
+        box-shadow: 0 3px 10px rgba(74,59,50,0.06);
     }
-    .provider-services-card {
-        display: grid;
-        gap: 1rem;
-        padding: 0;
-        background: transparent;
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
-    }
-    .provider-service-card {
-        display: flex;
-        flex-direction: column;
-        align-content: start;
-        align-self: start;
-        min-height: 100%;
-        transition: all 0.3s ease;
-        overflow: hidden;
-        padding: 0;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    }
-    .provider-service-card:hover {
-        transform: translateY(-4px);
-        border-color: var(--rose-accent);
-        box-shadow: 0 12px 24px rgba(223, 172, 182, 0.2);
-    }
-    .provider-service-card__top {
-        display: grid;
-        gap: 8px;
-        align-items: start;
-    }
-    .provider-service-card h4 {
+    .provider-hero-badges .pill:last-child { background: #f5f2ef; color: var(--ink-secondary); }
+    .provider-page-title {
         margin: 0;
-        font-size: 0.98rem;
-        line-height: 1.35;
+        font-size: clamp(3rem, 6vw, 4.8rem);
+        line-height: 0.95;
     }
-    .provider-service-card .service-price {
-        white-space: nowrap;
-        font-size: 0.92rem;
+    .provider-hero-card .lead {
+        margin: 0;
+        max-width: 48rem;
+        font-size: 1.05rem;
+        line-height: 1.8;
+        color: var(--ink-secondary);
     }
-    .provider-service-card .service-price small {
-        font-size: 0.68rem;
+    .provider-header-ctas { margin-top: 0.25rem; }
+    .provider-header-ctas .btn,
+    .provider-service-card button,
+    .wizard-actions .btn,
+    .gallery-more-card {
+        border-radius: 999px;
+        font-weight: 700;
     }
-    .provider-service-card__media {
-        height: 180px;
-        width: 100%;
-        background: #fdf8f6;
-        overflow: hidden;
+    .provider-header-ctas .btn { padding-inline: 1.5rem; }
+    .provider-hero-collage {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        padding: 0.75rem;
+    }
+    .provider-hero-polaroid,
+    .provider-avatar-polaroid,
+    .provider-service-card,
+    .gallery-thumb,
+    .gallery-more-card {
         position: relative;
+        background: #fff;
+        border: 1px solid rgba(74, 59, 50, 0.08);
+        box-shadow: 0 14px 30px rgba(74, 59, 50, 0.12);
     }
-    @media (max-width: 640px) {
-        .provider-service-card__media {
-            height: auto;
-            aspect-ratio: 1 / 1;
-        }
+    .provider-hero-polaroid,
+    .provider-avatar-polaroid {
+        padding: 0.55rem 0.55rem 2.2rem;
+        overflow: visible;
     }
-    .provider-service-card__media img {
+    .provider-hero-polaroid:nth-child(1) { transform: rotate(-3deg) translateY(1rem); }
+    .provider-hero-polaroid:nth-child(2) { transform: rotate(2deg); }
+    .provider-hero-polaroid:nth-child(3) { transform: rotate(3deg) translateY(-0.5rem); }
+    .provider-hero-polaroid:nth-child(4) { transform: rotate(-2deg); }
+    .provider-hero-polaroid:hover,
+    .provider-avatar-polaroid:hover,
+    .provider-service-card:hover,
+    .gallery-thumb:hover,
+    .gallery-more-card:hover {
+        transform: translateY(-4px) rotate(0deg) !important;
+        z-index: 2;
+        box-shadow: 0 22px 42px rgba(74, 59, 50, 0.18);
+    }
+    .provider-hero-polaroid img,
+    .provider-avatar-polaroid img,
+    .provider-service-card__media img,
+    .gallery-thumb img,
+    .gallery-thumb video {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: center;
         display: block;
-        transition: transform 0.3s ease;
+        filter: sepia(8%) contrast(0.96);
+        transition: transform 0.3s ease, filter 0.3s ease;
     }
-    .provider-service-card:hover .provider-service-card__media img {
-        transform: scale(1.05);
+    .provider-hero-polaroid:hover img,
+    .provider-avatar-polaroid:hover img,
+    .provider-service-card:hover .provider-service-card__media img,
+    .gallery-thumb:hover img,
+    .gallery-thumb:hover video {
+        filter: none;
+        transform: scale(1.04);
     }
-    .provider-service-card__content {
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        flex: 1;
-    }
-    .provider-service-card button {
-        margin-top: auto;
-        justify-self: stretch;
-        width: 100%;
-        border-radius: 8px;
-        padding: 10px;
-        font-size: 0.9rem;
-        background: var(--rose-accent);
-        color: #fff;
-        border: none;
-        box-shadow: none;
-        transition: all 0.2s ease;
-    }
-    .provider-service-card:hover button {
-        background: #c98a96;
-        color: #fff;
-    }
-    .provider-hero-media .tape {
-        width: 58px;
+    .provider-hero-polaroid .tape,
+    .provider-avatar-polaroid .tape,
+    .provider-service-card .tape,
+    .gallery-thumb .tape,
+    .gallery-more-card .tape {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        width: 64px;
         height: 18px;
-        top: -8px;
+        transform: translateX(-50%) rotate(-2deg);
+        background: rgba(255,255,255,0.55);
+        backdrop-filter: blur(2px);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+        z-index: 3;
     }
-    .provider-highlights-card {
-        padding: 22px;
-        background: linear-gradient(180deg, rgba(255, 250, 250, 0.98), rgba(255, 255, 255, 1));
+    .provider-hero-polaroid:nth-child(2) .tape,
+    .provider-service-card:nth-child(even) .tape,
+    .gallery-thumb:nth-child(even) .tape { left: auto; right: 0.8rem; transform: rotate(4deg); }
+    .provider-hero-polaroid:nth-child(3) .tape,
+    .provider-service-card:nth-child(3n) .tape,
+    .gallery-thumb:nth-child(3n) .tape { left: 1rem; transform: rotate(-4deg); }
+    .provider-hero-polaroid-media { aspect-ratio: 4 / 5; overflow: hidden; background: #f4efea; }
+    .provider-hero-polaroid-title,
+    .provider-hero-polaroid-placeholder,
+    .provider-avatar-caption {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0.6rem;
+        text-align: center;
+        font-family: 'Permanent Marker', cursive;
+        font-size: 0.95rem;
+        color: var(--ink-primary);
     }
-    .provider-highlights-title {
+    .provider-layout {
+        display: grid;
+        grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+        gap: 2rem;
+        align-items: start;
+    }
+    .provider-sidebar { display:grid; gap:1.25rem; }
+    .provider-avatar-polaroid { width: min(100%, 320px); margin: 0 auto; }
+    .provider-avatar-polaroid img { aspect-ratio: 1 / 1; }
+    .provider-tag-cloud {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0.45rem;
         display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 14px;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 0 0.6rem;
+    }
+    .provider-tag-cloud .tag {
+        font-size: 0.62rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 800;
+        padding: 0.2rem 0.5rem;
+        border: 1px solid rgba(74,59,50,0.14);
+        background: #f7f5f2;
+    }
+    .provider-sidebar-card { padding: 1.5rem; }
+    .provider-section-title { margin-bottom: 0.5rem; font-size: clamp(2rem, 3vw, 2.5rem); }
+    .provider-card-title {
+        margin: 0 0 0.85rem;
+        display:flex;
+        align-items:center;
+        gap:0.55rem;
+        font-size: 1.55rem;
+    }
+    .provider-card-title .icon { color: var(--rose-accent); }
+    .provider-note, .provider-card-copy { color: var(--ink-secondary); line-height: 1.7; }
+    .provider-highlights-card {
+        padding: clamp(1.5rem, 3vw, 2.25rem);
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(249,246,243,0.96));
+    }
+    .provider-highlights-grid { display:grid; gap:1.5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .provider-highlights-column h4 { margin:0 0 0.65rem; font-size:1.05rem; }
+    .provider-highlights-column .provider-note ul { padding-left: 1.1rem; margin: 0; }
+    .provider-services-card { gap: 1rem; }
+    .provider-services-heading { display:flex; justify-content:space-between; align-items:end; gap:1rem; flex-wrap:wrap; margin-bottom: 0.5rem; }
+    .provider-service-grid { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+    .provider-service-card {
+        display:flex;
+        flex-direction:column;
+        padding: 0.45rem 0.45rem 0.9rem;
+        cursor:pointer;
+        overflow: visible;
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .provider-service-card:nth-child(4n+1) { transform: rotate(1deg); }
+    .provider-service-card:nth-child(4n+2) { transform: rotate(-2deg); }
+    .provider-service-card:nth-child(4n+3) { transform: rotate(2deg); }
+    .provider-service-card:nth-child(4n+4) { transform: rotate(-1deg); }
+    .provider-service-card__media { aspect-ratio: 1 / 1; background:#f4efea; overflow:hidden; }
+    .provider-service-card__content {
+        display:flex;
+        flex-direction:column;
+        flex:1;
+        gap:0.4rem;
+        padding: 0.75rem 0.4rem 0 0.4rem;
+        text-align:center;
+    }
+    .provider-service-card h4 { margin: 0; font-size: 1.22rem; line-height:1.2; }
+    .service-price { color: var(--ink-secondary); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .service-price strong, .service-price .price-value { color: var(--rose-accent); font-size: 1.3rem; letter-spacing: 0; text-transform:none; }
+    .service-price small { display:none; }
+    .provider-service-card button { width:100%; margin-top:auto; padding:0.75rem 1rem; }
+    .service-category-item { border-top: none; padding-top: 0; }
+    .service-category-summary { margin-bottom: 0.8rem; }
+    .provider-form-card {
+        padding: clamp(1.5rem, 4vw, 2.4rem);
+        background: rgba(255, 249, 249, 0.97);
+        border: 2px dashed #f1c6d6;
+    }
+    .provider-form-layout { display:grid; grid-template-columns: minmax(0, 1.8fr) minmax(250px, 0.9fr); gap: 1.5rem; align-items:start; }
+    .provider-form-grid { display:grid; gap:1rem; }
+    .sticky-price-bar { top: 100px; }
+    .provider-gallery-card { padding: 1rem; }
+    .provider-gallery-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+    .gallery-thumb,
+    .gallery-more-card {
+        border-radius: 0;
+        padding: 0.45rem;
+        overflow: visible;
+        aspect-ratio: 4 / 3;
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .gallery-thumb:nth-child(4n+1), .gallery-more-card:nth-child(4n+1) { transform: rotate(-1deg); }
+    .gallery-thumb:nth-child(4n+2), .gallery-more-card:nth-child(4n+2) { transform: rotate(2deg); }
+    .gallery-thumb:nth-child(4n+3), .gallery-more-card:nth-child(4n+3) { transform: rotate(-2deg); }
+    .gallery-thumb:nth-child(4n+4), .gallery-more-card:nth-child(4n+4) { transform: rotate(1deg); }
+    .gallery-thumb img, .gallery-thumb video { aspect-ratio: 4 / 3; }
+    .gallery-thumb__overlay { border-radius: 0; margin: 0.45rem; inset: 0; }
+    .gallery-more-card {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:#f3f0eb;
+        color: var(--ink-secondary);
+        font-family: 'Permanent Marker', cursive;
+        font-size: 1rem;
+        text-decoration:none;
+    }
+    .gallery-more-card:hover { color: var(--ink-primary); }
+    .wizard-step h4 {
+        margin-bottom: 0.5rem;
+        color: var(--rose-accent);
+        font-size: clamp(1.8rem, 3vw, 2.2rem);
+    }
+    .provider-form-grid .form-field label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+    .provider-form-grid select,
+    .provider-form-grid input,
+    .provider-form-grid textarea,
+    .payment-element {
+        border-radius: 12px;
+        border: 1px solid #ddd5d0;
+        background: rgba(255,255,255,0.98);
+    }
+    .file-upload-wrapper { border-radius: 14px; }
+    .choice-pill { border-radius: 14px; }
+    .secure-badge { border-radius: 16px; }
+    @media (max-width: 1200px) {
+        .provider-page-header,
+        .provider-layout,
+        .provider-form-layout { grid-template-columns: 1fr; }
+        .provider-service-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .provider-gallery-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .provider-sidebar { position: static; }
+        .provider-avatar-polaroid { width: min(100%, 380px); }
+    }
+    @media (max-width: 900px) {
+        .provider-highlights-grid,
+        .provider-service-grid,
+        .provider-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 640px) {
-        #services-list,
-        #services-list .provider-services-card {
-            padding-inline: clamp(6px, 3vw, 12px);
-        }
+        .provider-page-title { font-size: clamp(2.6rem, 12vw, 3.6rem); }
+        .provider-hero-collage,
+        .provider-highlights-grid,
+        .provider-service-grid,
+        .provider-gallery-grid { grid-template-columns: 1fr; }
+        .provider-hero-polaroid:nth-child(n),
+        .provider-service-card:nth-child(n),
+        .gallery-thumb:nth-child(n),
+        .gallery-more-card:nth-child(n) { transform: none; }
+        .provider-header-ctas .btn, .wizard-actions .btn { width: 100%; justify-content:center; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <section class="page-shell provider-profile">
-    <div class="provider-page-header hero-grid">
-        <div class="hero-content hero-card provider-hero-card">
+    <div class="provider-page-header">
+        <div class="provider-hero-card">
             <div class="provider-hero-badges">
-                <span class="pill">
-                    <span class="verified-pill-icon" aria-hidden="true">✓</span>
-                    Prestataire vérifié
-                </span>
-                <span class="pill" style="background:white; color:var(--ink-secondary);">{{ provider.location_mode_label }}</span>
+                <span class="pill"><span class="verified-pill-icon" aria-hidden="true">✓</span> Prestataire vérifié</span>
+                <span class="pill">{{ provider.location_mode_label }}</span>
             </div>
-            <h1 class="provider-page-title">{{ provider.name }}</h1>
+            <h1 class="provider-page-title">{{ provider.name }}.</h1>
             <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p>
             <div class="provider-header-ctas">
                 <a href="#services-list" class="btn">Voir les tarifs et réserver</a>
-                <a href="#booking-wizard" class="btn secondary">Voir les créneaux</a>
             </div>
         </div>
-        <div class="hero-media polaroid provider-hero-media">
-            <span class="tape top-center" aria-hidden="true"></span>
-            {% if provider.resolved_cover_image %}
-                <img src="{{ provider.resolved_cover_image }}" alt="Réalisation de {{ provider.name }}" loading="eager" fetchpriority="high" decoding="async">
-            {% elif provider.resolved_profile_image %}
-                <img src="{{ provider.resolved_profile_image }}" alt="Photo de {{ provider.name }}" loading="eager" fetchpriority="high" decoding="async">
+        <div class="provider-hero-collage" aria-label="Aperçu des réalisations de {{ provider.name }}">
+            {% if provider.photos.all %}
+                {% for photo in provider.photos.all|slice:":4" %}
+                    {% if photo.resolved_url and not photo.is_video %}
+                        <figure class="provider-hero-polaroid">
+                            <span class="tape" aria-hidden="true"></span>
+                            <div class="provider-hero-polaroid-media">
+                                <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="eager" decoding="async">
+                            </div>
+                            <figcaption class="provider-hero-polaroid-title">{{ photo.caption|default:provider.name|truncatechars:22 }}</figcaption>
+                        </figure>
+                    {% endif %}
+                {% endfor %}
             {% else %}
-                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Réalisation coiffure afro" loading="eager" fetchpriority="high" decoding="async">
+                <figure class="provider-hero-polaroid">
+                    <span class="tape" aria-hidden="true"></span>
+                    <div class="provider-hero-polaroid-media">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Réalisation de {{ provider.name }}" loading="eager" decoding="async">
+                    </div>
+                    <figcaption class="provider-hero-polaroid-title">Réalisations</figcaption>
+                </figure>
+                <figure class="provider-hero-polaroid">
+                    <span class="tape" aria-hidden="true"></span>
+                    <div class="provider-hero-polaroid-media">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffures de {{ provider.name }}" loading="eager" decoding="async">
+                    </div>
+                    <figcaption class="provider-hero-polaroid-title">Coiffures</figcaption>
+                </figure>
+                <figure class="provider-hero-polaroid">
+                    <span class="tape" aria-hidden="true"></span>
+                    <div class="provider-hero-polaroid-media">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses de {{ provider.name }}" loading="eager" decoding="async">
+                    </div>
+                    <figcaption class="provider-hero-polaroid-title">Tresses</figcaption>
+                </figure>
+                <figure class="provider-hero-polaroid">
+                    <span class="tape" aria-hidden="true"></span>
+                    <div class="provider-hero-polaroid-media">
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Locks de {{ provider.name }}" loading="eager" decoding="async">
+                    </div>
+                    <figcaption class="provider-hero-polaroid-title">Locks</figcaption>
+                </figure>
             {% endif %}
-            <span>Réalisations de {{ provider.name }}</span>
         </div>
     </div>
 
     <div class="provider-layout">
         <aside class="provider-sidebar">
-            <div class="profile-photo-frame">
+            <div class="provider-avatar-polaroid">
+                <span class="tape" aria-hidden="true"></span>
                 {% if provider.resolved_profile_image %}
                     <img src="{{ provider.resolved_profile_image }}" alt="Photo de {{ provider.name }}" loading="lazy" decoding="async">
                 {% else %}
                     <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portrait prestataire coiffure afro" loading="lazy" decoding="async">
                 {% endif %}
                 <div class="provider-tag-cloud">
-                    {% for service in provider.marketing_services.all|slice:":6" %}
+                    {% for service in provider.marketing_services.all|slice:":3" %}
                         <span class="tag">{{ service.name }}</span>
                     {% empty %}
                         <span class="tag">Coiffure afro</span>
                     {% endfor %}
                 </div>
             </div>
-            <div class="paper-card provider-sidebar-card">
-                <h4 class="section-title provider-section-title">Disponibilités</h4>
-                <p class="provider-note">
+            <div class="provider-sidebar-card">
+                <h4 class="provider-card-title"><span class="icon" aria-hidden="true">🕒</span> Disponibilités</h4>
+                <div class="provider-card-copy provider-note">
                     {{ provider.availabilities|default:"Indique tes créneaux et tes rythmes de réponse pour faciliter la prise de rendez-vous."|sanitize_marketing_html }}
-                </p>
+                </div>
             </div>
             {% if zones %}
                 {% with featured_zones=zones|slice:":8" remainder_zones=zones|slice:"8:" %}
-                    <div class="paper-card provider-sidebar-card">
-                        <h4 class="section-title provider-section-title">Zones desservies</h4>
+                    <div class="provider-sidebar-card">
+                        <h4 class="provider-card-title"><span class="icon" aria-hidden="true">📍</span> Zones desservies</h4>
                         <p class="meta-line">Lieux proposés : {{ provider.location_mode_label }}</p>
                         <div class="zone-accordion">
                             <div class="chips" data-featured-zones>
@@ -235,17 +432,36 @@
         <div class="provider-main">
             <section class="content-section">
                 <div class="provider-highlights-card">
-                    <h3 class="provider-highlights-title">💡 Bon à savoir</h3>
-                    <div class="provider-note">
-                        {{ provider.additional_info|default:"Ajoute ici les informations utiles à lire avant réservation : mèches à prévoir, moyens de paiement, détails pratiques ou précisions importantes."|sanitize_marketing_html }}
+                    <h3 class="provider-card-title"><span class="icon" aria-hidden="true">ℹ️</span> Bon à savoir</h3>
+                    <div class="provider-highlights-grid">
+                        <div class="provider-highlights-column">
+                            <h4>Avant le rendez-vous</h4>
+                            <div class="provider-note">
+                                {{ provider.additional_info|default:"Ajoute ici les informations utiles à lire avant réservation : mèches à prévoir, moyens de paiement, détails pratiques ou précisions importantes."|sanitize_marketing_html }}
+                            </div>
+                        </div>
+                        <div class="provider-highlights-column">
+                            <h4>Réservation</h4>
+                            <div class="provider-note">
+                                <ul>
+                                    <li>Choisis une prestation pour obtenir une estimation immédiate.</li>
+                                    <li>Ajoute une photo de tes cheveux pour aider la prestataire à confirmer.</li>
+                                    <li>Le récapitulatif affiche clairement les frais de réservation déduits du total.</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <section class="content-section" id="services-list">
                 <div class="provider-services-card">
-                    <h3 class="section-title provider-section-title">Choisis ta prestation</h3>
-                    <p class="meta-line provider-pricing-note">Sélectionne une coiffure pour estimer ton tarif et vérifier les créneaux disponibles.</p>
+                    <div class="provider-services-heading">
+                        <div>
+                            <h3 class="section-title provider-section-title">Choisis ta prestation</h3>
+                            <p class="meta-line provider-pricing-note">Sélectionne une coiffure pour estimer ton tarif et vérifier les créneaux disponibles.</p>
+                        </div>
+                    </div>
                     {% if provider.categorized_services_enabled and service_categories %}
                         <div class="service-category-accordion">
                             {% for category in service_categories %}
@@ -258,13 +474,14 @@
                                     <div class="provider-service-grid">
                                         {% for service in category.services %}
                                             <article class="provider-service-card">
+                                                <span class="tape" aria-hidden="true"></span>
                                                 <div class="provider-service-card__media">
                                                     <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
                                                 </div>
                                                 <div class="provider-service-card__content">
                                                     <div class="provider-service-card__top">
                                                         <h4>{{ service.name }}</h4>
-                                                        <span class="service-price"><small>À partir de</small> {{ service.price_display }}</span>
+                                                        <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
                                                     </div>
                                                     <button type="button" class="btn secondary" data-service-card="{{ service.id }}">Voir le tarif et réserver</button>
                                                 </div>
@@ -278,13 +495,14 @@
                         <div class="provider-service-grid">
                             {% for service in services %}
                                 <article class="provider-service-card">
+                                    <span class="tape" aria-hidden="true"></span>
                                     <div class="provider-service-card__media">
                                         <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
                                     </div>
                                     <div class="provider-service-card__content">
                                         <div class="provider-service-card__top">
                                             <h4>{{ service.name }}</h4>
-                                            <span class="service-price"><small>À partir de</small> {{ service.price_display }}</span>
+                                            <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
                                         </div>
                                         <button type="button" class="btn secondary" data-service-card="{{ service.id }}">Voir le tarif et réserver</button>
                                     </div>
@@ -353,10 +571,10 @@
 
             <section class="content-section">
                 <h3 class="section-title provider-section-title">Réalisations</h3>
-                <div class="paper-card provider-gallery-card">
+                <div class="provider-gallery-card">
                     {% if provider.photos.all %}
                         <div class="photo-grid provider-gallery-grid" data-gallery-grid>
-                            {% for photo in provider.photos.all %}
+                            {% for photo in provider.photos.all|slice:":7" %}
                                 {% if photo.resolved_url %}
                                     <button
                                         type="button"
@@ -366,6 +584,7 @@
                                         data-gallery-caption="{{ photo.caption|default:provider.name }}"
                                         data-gallery-kind="{% if photo.is_video %}video{% else %}image{% endif %}"
                                     >
+                                        <span class="tape" aria-hidden="true"></span>
                                         {% if photo.is_video %}
                                             <video src="{{ photo.resolved_url }}" muted playsinline preload="metadata" aria-label="{{ photo.caption|default:provider.name }}"></video>
                                             <span class="gallery-thumb__play" aria-hidden="true">▶</span>
@@ -376,18 +595,27 @@
                                     </button>
                                 {% endif %}
                             {% endfor %}
+                            {% if provider.photos.all|length > 7 %}
+                                <button type="button" class="gallery-more-card" data-gallery-index="7" data-gallery-src="{{ provider.photos.all.7.resolved_url|default:provider.photos.all.0.resolved_url }}" data-gallery-caption="Voir plus de réalisations de {{ provider.name }}">
+                                    <span class="tape" aria-hidden="true"></span>
+                                    +{{ provider.photos.all|length|add:"-7" }} voir tout
+                                </button>
+                            {% endif %}
                         </div>
                     {% else %}
                         <div class="photo-grid provider-gallery-grid" data-gallery-grid>
                             <button type="button" class="gallery-thumb" data-gallery-index="0" data-gallery-src="{% static 'demo_pictures/provider-placeholder.svg' %}" data-gallery-caption="Inspiration coiffure afro">
+                                <span class="tape" aria-hidden="true"></span>
                                 <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Inspiration coiffure afro" loading="lazy" decoding="async">
                                 <span class="gallery-thumb__overlay">Zoomer</span>
                             </button>
                             <button type="button" class="gallery-thumb" data-gallery-index="1" data-gallery-src="{% static 'demo_pictures/provider-placeholder.svg' %}" data-gallery-caption="Tresses et coiffures afro">
+                                <span class="tape" aria-hidden="true"></span>
                                 <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses et coiffures afro" loading="lazy" decoding="async">
                                 <span class="gallery-thumb__overlay">Zoomer</span>
                             </button>
                             <button type="button" class="gallery-thumb" data-gallery-index="2" data-gallery-src="{% static 'demo_pictures/provider-placeholder.svg' %}" data-gallery-caption="Coiffure protectrice afro">
+                                <span class="tape" aria-hidden="true"></span>
                                 <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure protectrice afro" loading="lazy" decoding="async">
                                 <span class="gallery-thumb__overlay">Zoomer</span>
                             </button>
