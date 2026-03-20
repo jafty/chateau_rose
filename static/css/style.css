@@ -2547,7 +2547,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .inline-form-card h3 {
-    color: var(--rose-accent);
+    color: var(--ink-primary);
     margin-bottom: 10px;
 }
 
