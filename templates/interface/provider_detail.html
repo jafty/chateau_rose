@@ -64,7 +64,17 @@
         border-radius: 999px;
         font-weight: 700;
     }
-    .provider-header-ctas .btn { padding-inline: 1.5rem; }
+    .provider-header-ctas .btn {
+        padding-inline: 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+    .provider-cta-icon {
+        width: 0.95rem;
+        height: 0.95rem;
+        flex: 0 0 auto;
+    }
     .provider-hero-collage {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -161,7 +171,11 @@
         align-items: start;
     }
     .provider-sidebar { display:grid; gap:1.25rem; }
-    .provider-avatar-polaroid { width: min(100%, 320px); margin: 0 auto; }
+    .provider-avatar-polaroid {
+        width: min(100%, 320px);
+        margin: 0 auto;
+        transform: none !important;
+    }
     .provider-avatar-polaroid img { aspect-ratio: 1 / 1; }
     .provider-tag-cloud {
         position: absolute;
@@ -192,7 +206,12 @@
         gap:0.55rem;
         font-size: 1.55rem;
     }
-    .provider-card-title .icon { color: var(--rose-accent); }
+    .provider-card-title .icon {
+        width: 1.2rem;
+        height: 1.2rem;
+        color: var(--rose-accent);
+        flex: 0 0 auto;
+    }
     .provider-note, .provider-card-copy { color: var(--ink-secondary); line-height: 1.7; }
     .provider-highlights-card {
         padding: clamp(1.5rem, 3vw, 2.25rem);
@@ -203,6 +222,35 @@
     .provider-highlights-column .provider-note ul { padding-left: 1.1rem; margin: 0; }
     .provider-services-card { gap: 1rem; }
     .provider-services-heading { display:flex; justify-content:space-between; align-items:end; gap:1rem; flex-wrap:wrap; margin-bottom: 0.5rem; }
+    .provider-services-heading > div {
+        display: inline-block;
+        padding: 1rem 1.25rem;
+        background: rgba(255, 252, 248, 0.95);
+        border: 1px solid rgba(74, 59, 50, 0.08);
+        box-shadow: 0 10px 24px rgba(74, 59, 50, 0.08);
+        max-width: 44rem;
+    }
+    .provider-category-tabs {
+        display: flex;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+    }
+    .provider-category-tab {
+        border: 1px solid #e5e7eb;
+        background: #fff;
+        color: var(--ink-secondary);
+        border-radius: 999px;
+        padding: 0.7rem 1.2rem;
+        font-size: 0.85rem;
+        font-weight: 800;
+        transition: 0.2s ease;
+    }
+    .provider-category-tab.is-active {
+        background: var(--ink-primary);
+        color: #fff;
+        border-color: var(--ink-primary);
+    }
+    .provider-category-panel[hidden] { display: none; }
     .provider-service-grid { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
     .provider-service-card {
         display:flex;
@@ -211,6 +259,7 @@
         cursor:pointer;
         overflow: visible;
         transition: transform .25s ease, box-shadow .25s ease;
+        border-radius: 0;
     }
     .provider-service-card:nth-child(4n+1) { transform: rotate(1deg); }
     .provider-service-card:nth-child(4n+2) { transform: rotate(-2deg); }
@@ -229,7 +278,20 @@
     .service-price { color: var(--ink-secondary); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
     .service-price strong, .service-price .price-value { color: var(--rose-accent); font-size: 1.3rem; letter-spacing: 0; text-transform:none; }
     .service-price small { display:none; }
-    .provider-service-card button { width:100%; margin-top:auto; padding:0.75rem 1rem; }
+    .provider-service-card button {
+        width:100%;
+        margin-top:auto;
+        padding:0.75rem 1rem;
+        background: var(--rose-accent);
+        color: #fff;
+        border: 1px solid var(--rose-accent);
+        box-shadow: 0 6px 14px rgba(223, 172, 182, 0.28);
+    }
+    .provider-service-card button:hover {
+        background: #c98a96;
+        border-color: #c98a96;
+        color: #fff;
+    }
     .service-category-item { border-top: none; padding-top: 0; }
     .service-category-summary { margin-bottom: 0.8rem; }
     .provider-form-card {
@@ -267,6 +329,13 @@
         text-decoration:none;
     }
     .gallery-more-card:hover { color: var(--ink-primary); }
+    .wizard-heading {
+        margin: 0 0 2rem;
+        text-align: center;
+        color: var(--ink-primary);
+        font-size: clamp(2.1rem, 3vw, 3rem);
+        font-weight: 700;
+    }
     .wizard-step h4 {
         margin-bottom: 0.5rem;
         color: var(--rose-accent);
@@ -313,6 +382,8 @@
         .gallery-thumb:nth-child(n),
         .gallery-more-card:nth-child(n) { transform: none; }
         .provider-header-ctas .btn, .wizard-actions .btn { width: 100%; justify-content:center; }
+        .provider-category-tabs { width: 100%; }
+        .provider-category-tab { width: 100%; text-align: center; }
     }
 </style>
 {% endblock %}
@@ -328,7 +399,13 @@
             <h1 class="provider-page-title">{{ provider.name }}.</h1>
             <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p>
             <div class="provider-header-ctas">
-                <a href="#services-list" class="btn">Voir les tarifs et réserver</a>
+                <a href="#services-list" class="btn">
+                    Voir les tarifs et réserver
+                    <svg class="provider-cta-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14"></path>
+                        <path d="m19 12-7 7-7-7"></path>
+                    </svg>
+                </a>
             </div>
         </div>
         <div class="provider-hero-collage" aria-label="Aperçu des réalisations de {{ provider.name }}">
@@ -395,7 +472,13 @@
                 </div>
             </div>
             <div class="provider-sidebar-card">
-                <h4 class="provider-card-title"><span class="icon" aria-hidden="true">🕒</span> Disponibilités</h4>
+                <h4 class="provider-card-title">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 7v5l3 2"></path>
+                    </svg>
+                    Disponibilités
+                </h4>
                 <div class="provider-card-copy provider-note">
                     {{ provider.availabilities|default:"Indique tes créneaux et tes rythmes de réponse pour faciliter la prise de rendez-vous."|sanitize_marketing_html }}
                 </div>
@@ -403,7 +486,13 @@
             {% if zones %}
                 {% with featured_zones=zones|slice:":8" remainder_zones=zones|slice:"8:" %}
                     <div class="provider-sidebar-card">
-                        <h4 class="provider-card-title"><span class="icon" aria-hidden="true">📍</span> Zones desservies</h4>
+                        <h4 class="provider-card-title">
+                            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 21s6-5.33 6-11a6 6 0 1 0-12 0c0 5.67 6 11 6 11Z"></path>
+                                <circle cx="12" cy="10" r="2.5"></circle>
+                            </svg>
+                            Zones desservies
+                        </h4>
                         <p class="meta-line">Lieux proposés : {{ provider.location_mode_label }}</p>
                         <div class="zone-accordion">
                             <div class="chips" data-featured-zones>
@@ -432,7 +521,14 @@
         <div class="provider-main">
             <section class="content-section">
                 <div class="provider-highlights-card">
-                    <h3 class="provider-card-title"><span class="icon" aria-hidden="true">ℹ️</span> Bon à savoir</h3>
+                    <h3 class="provider-card-title">
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 10v6"></path>
+                            <path d="M12 7h.01"></path>
+                        </svg>
+                        Bon à savoir
+                    </h3>
                     <div class="provider-highlights-grid">
                         <div class="provider-highlights-column">
                             <h4>Avant le rendez-vous</h4>
@@ -463,14 +559,22 @@
                         </div>
                     </div>
                     {% if provider.categorized_services_enabled and service_categories %}
+                        <div class="provider-category-tabs" role="tablist" aria-label="Catégories de prestations">
+                            {% for category in service_categories %}
+                                <button
+                                    type="button"
+                                    class="provider-category-tab{% if forloop.first %} is-active{% endif %}"
+                                    data-category-tab="{{ category.name|slugify }}"
+                                    role="tab"
+                                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                                >
+                                    {{ category.name }}
+                                </button>
+                            {% endfor %}
+                        </div>
                         <div class="service-category-accordion">
                             {% for category in service_categories %}
-                                <details class="service-category-item" {% if forloop.first %}open{% endif %}>
-                                    <summary class="service-category-summary">
-                                        <h4 class="service-category-title">{{ category.name }}</h4>
-                                        <span class="service-category-line"></span>
-                                        <span class="service-category-icon" aria-hidden="true"></span>
-                                    </summary>
+                                <div class="provider-category-panel" data-category-panel="{{ category.name|slugify }}" {% if not forloop.first %}hidden{% endif %}>
                                     <div class="provider-service-grid">
                                         {% for service in category.services %}
                                             <article class="provider-service-card">
@@ -483,12 +587,12 @@
                                                         <h4>{{ service.name }}</h4>
                                                         <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
                                                     </div>
-                                                    <button type="button" class="btn secondary" data-service-card="{{ service.id }}">Voir le tarif et réserver</button>
+                                                    <button type="button" class="btn secondary" data-service-card="{{ service.id }}">Estimer ce tarif</button>
                                                 </div>
                                             </article>
                                         {% endfor %}
                                     </div>
-                                </details>
+                                </div>
                             {% endfor %}
                         </div>
                     {% else %}
@@ -499,12 +603,12 @@
                                     <div class="provider-service-card__media">
                                         <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
                                     </div>
-                                    <div class="provider-service-card__content">
-                                        <div class="provider-service-card__top">
-                                            <h4>{{ service.name }}</h4>
-                                            <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
-                                        </div>
-                                        <button type="button" class="btn secondary" data-service-card="{{ service.id }}">Voir le tarif et réserver</button>
+                                        <div class="provider-service-card__content">
+                                            <div class="provider-service-card__top">
+                                                <h4>{{ service.name }}</h4>
+                                                <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
+                                            </div>
+                                        <button type="button" class="btn secondary" data-service-card="{{ service.id }}">Estimer ce tarif</button>
                                     </div>
                                 </article>
                             {% empty %}
@@ -522,7 +626,7 @@
             {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
 
                 <div class="provider-form-card inline-form-card" id="booking-wizard">
-                    <h3 class="section-title provider-section-title" style="text-align:center;">Voir les tarifs et réserver</h3>
+                    <h3 class="wizard-heading">Estimer les tarifs</h3>
 
                     {% if not is_quick_checkout %}
                     <div class="step-progress">
@@ -675,6 +779,8 @@
 
         const serviceSelect = document.getElementById('service_id');
         const serviceCards = document.querySelectorAll('[data-service-card]');
+        const categoryTabs = document.querySelectorAll('[data-category-tab]');
+        const categoryPanels = document.querySelectorAll('[data-category-panel]');
         const hairLengthSelect = document.getElementById('hair_length');
         const generalAdjustmentsContainer = document.getElementById('general_adjustments');
         const generalAdjustmentsInput = document.getElementById('general_adjustments_input');
@@ -753,6 +859,23 @@
         serviceCards.forEach((card) => {
             card.addEventListener('click', () => selectServiceFromCard(card.dataset.serviceCard));
         });
+
+        if (categoryTabs.length && categoryPanels.length) {
+            const activateCategory = (slug) => {
+                categoryTabs.forEach((tab) => {
+                    const active = tab.dataset.categoryTab === slug;
+                    tab.classList.toggle('is-active', active);
+                    tab.setAttribute('aria-selected', active ? 'true' : 'false');
+                });
+                categoryPanels.forEach((panel) => {
+                    panel.hidden = panel.dataset.categoryPanel !== slug;
+                });
+            };
+
+            categoryTabs.forEach((tab) => {
+                tab.addEventListener('click', () => activateCategory(tab.dataset.categoryTab));
+            });
+        }
 
         const serviceFromQuery = new URLSearchParams(window.location.search).get('service_id');
         if (serviceFromQuery) {
