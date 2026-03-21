@@ -8,7 +8,9 @@
     .provider-profile {
         padding: clamp(2rem, 4vw, 4rem) 0 4rem;
         gap: 2rem;
-        --provider-mobile-card-max: min(100%, 38rem);
+        --provider-surface-radius: 16px;
+        --provider-surface-padding: clamp(1.5rem, 3vw, 2.25rem);
+        --provider-stack-gap: clamp(1rem, 2vw, 1.5rem);
     }
     .provider-page-header {
         display: grid;
@@ -25,12 +27,19 @@
     .provider-form-aside .sticky-price-bar {
         background: rgba(255, 255, 255, 0.96);
         border: 1px solid rgba(74, 59, 50, 0.08);
-        border-radius: 16px;
+        border-radius: var(--provider-surface-radius);
         box-shadow: 0 10px 28px rgba(74, 59, 50, 0.10), 0 2px 10px rgba(74, 59, 50, 0.05);
     }
+    .provider-surface-stack {
+        display: grid;
+        gap: var(--provider-stack-gap);
+    }
+    .provider-surface-stack > * { margin: 0; }
     .provider-hero-card {
         padding: clamp(2.25rem, 4vw, 3.25rem);
-        gap: 1.25rem;
+    }
+    .provider-hero-content {
+        --provider-stack-gap: clamp(1rem, 2.4vw, 1.75rem);
     }
     .provider-hero-badges { display:flex; flex-wrap:wrap; gap:0.75rem; }
     .provider-hero-badges .pill {
@@ -46,12 +55,11 @@
     }
     .provider-hero-badges .pill:last-child { background: #f5f2ef; color: var(--ink-secondary); }
     .provider-page-title {
-        margin: 0;
-        font-size: clamp(3rem, 6vw, 4.8rem);
-        line-height: 0.95;
+        font-size: clamp(2.35rem, 4.4vw, 3.6rem);
+        line-height: 1.08;
+        max-width: 14ch;
     }
     .provider-hero-card .lead {
-        margin: 0;
         max-width: 48rem;
         font-size: 1.05rem;
         line-height: 1.8;
@@ -170,7 +178,7 @@
         gap: 2rem;
         align-items: start;
     }
-    .provider-sidebar { display:grid; gap:1.25rem; }
+    .provider-sidebar { display:grid; gap:1.25rem; align-content:start; }
     .provider-avatar-polaroid {
         width: min(100%, 320px);
         margin: 0 auto;
@@ -199,7 +207,10 @@
         border: 1px solid rgba(74,59,50,0.14);
         background: #f7f5f2;
     }
-    .provider-sidebar-card { padding: 1.5rem; }
+    .provider-sidebar-card {
+        padding: var(--provider-surface-padding);
+        width: 100%;
+    }
     .provider-section-title { margin-bottom: 0.5rem; font-size: clamp(2rem, 3vw, 2.5rem); }
     .provider-card-title {
         margin: 0 0 0.85rem;
@@ -406,29 +417,30 @@
     }
     @media (max-width: 640px) {
         .provider-profile {
-            --provider-mobile-card-max: 34rem;
             --provider-mobile-surface-inset: clamp(10px, 4vw, 18px);
+            --provider-surface-padding: clamp(1rem, 4vw, 1.35rem);
+            --provider-stack-gap: 1rem;
         }
         .provider-profile.page-shell {
             padding-inline: var(--provider-mobile-surface-inset);
         }
-        .provider-page-title { font-size: clamp(2.6rem, 12vw, 3.6rem); }
+        .provider-page-title { font-size: clamp(2.2rem, 10vw, 3rem); max-width: none; }
         .provider-page-header,
         .provider-layout,
         .provider-sidebar,
         .provider-main,
-        .content-section,
-        .provider-hero-card,
-        .provider-hero-collage,
-        .provider-sidebar-card,
-        .provider-highlights-card,
-        .provider-services-card,
-        .provider-services-heading,
-        .provider-form-card,
-        .provider-gallery-card {
-            width: auto;
-            max-width: var(--provider-mobile-card-max);
-            margin-inline: auto;
+        .content-section {
+            width: 100%;
+            max-width: none;
+            margin-inline: 0;
+        }
+        .provider-page-header > *,
+        .provider-layout > *,
+        .provider-sidebar > *,
+        .provider-main > * {
+            width: 100%;
+            max-width: none;
+            margin-inline: 0;
         }
         .provider-main {
             gap: 1.25rem;
@@ -444,17 +456,20 @@
         .provider-service-card:nth-child(n),
         .gallery-thumb:nth-child(n),
         .gallery-more-card:nth-child(n) { transform: none; }
+        .provider-hero-card,
         .provider-highlights-card,
         .provider-services-heading,
-        .provider-form-card {
-            padding-inline: 1rem;
-        }
+        .provider-form-card,
         .provider-sidebar-card,
         .provider-gallery-card {
-            padding-inline: 1rem;
+            padding-inline: var(--provider-surface-padding);
         }
         .provider-gallery-card {
-            padding-block: 1rem;
+            padding-block: var(--provider-surface-padding);
+        }
+        .provider-avatar-polaroid {
+            width: 100%;
+            max-width: none;
         }
         .provider-service-card__content {
             padding-inline: 0.3rem;
@@ -469,12 +484,12 @@
 {% block content %}
 <section class="page-shell provider-profile">
     <div class="provider-page-header">
-        <div class="provider-hero-card">
+        <div class="provider-hero-card provider-surface-stack provider-hero-content">
             <div class="provider-hero-badges">
                 <span class="pill"><span class="verified-pill-icon" aria-hidden="true">✓</span> Prestataire vérifié</span>
                 <span class="pill">{{ provider.location_mode_label }}</span>
             </div>
-            <h1 class="provider-page-title">{{ provider.name }}.</h1>
+            <h1 class="provider-page-title">{{ provider.display_h1 }}</h1>
             <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p>
             <div class="provider-header-ctas">
                 <a href="#services-list" class="btn">
@@ -542,7 +557,7 @@
                     {% endfor %}
                 </div>
             </div>
-            <div class="provider-sidebar-card">
+            <div class="provider-sidebar-card provider-surface-stack">
                 <h4 class="provider-card-title">
                     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="9"></circle>
@@ -556,7 +571,7 @@
             </div>
             {% if zones %}
                 {% with featured_zones=zones|slice:":8" remainder_zones=zones|slice:"8:" %}
-                    <div class="provider-sidebar-card">
+                    <div class="provider-sidebar-card provider-surface-stack">
                         <h4 class="provider-card-title">
                             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M12 21s6-5.33 6-11a6 6 0 1 0-12 0c0 5.67 6 11 6 11Z"></path>

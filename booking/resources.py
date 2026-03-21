@@ -35,6 +35,7 @@ class ProviderResource(resources.ModelResource):
             "id",
             "name",
             "description",
+            "seo_h1",
             "availabilities",
             "additional_info",
             "contact_phone",

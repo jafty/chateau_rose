@@ -51,6 +51,11 @@ class Provider(models.Model):
 
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    seo_h1 = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Texte H1 affiché sur la page prestataire à la place du prénom si renseigné.",
+    )
     availabilities = models.TextField(
         blank=True,
         help_text="Disponibilités proposées pour la clientèle.",
@@ -137,6 +142,10 @@ class Provider(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def display_h1(self):
+        return (self.seo_h1 or "").strip() or self.name
 
     @property
     def resolved_profile_image(self):
