@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from booking.models import Booking, Provider, ProviderZone, Service, Zone
+from booking.models import Booking, Provider, ProviderPhoto, ProviderZone, Service, Zone
 
 
 @override_settings(
@@ -129,3 +129,33 @@ class ProviderRequestUploadTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.service.image_url)
         self.assertContains(response, f'alt="{self.service.name} réalisée par {self.provider.name}"')
+
+    def test_provider_detail_hero_uses_first_four_valid_image_photos(self):
+        ProviderPhoto.objects.create(
+            provider=self.provider,
+            media_kind=ProviderPhoto.MEDIA_VIDEO,
+            video_url="https://cdn.example.com/gallery/intro.mp4",
+            caption="Intro vidéo",
+            order=0,
+        )
+        for index in range(5):
+            ProviderPhoto.objects.create(
+                provider=self.provider,
+                image_url=f"https://cdn.example.com/gallery/look-{index}.jpg",
+                caption=f"Look {index}",
+                order=index + 1,
+            )
+
+        response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        hero_section = content.split('<div class="provider-hero-collage"', 1)[1].split(
+            '<div class="provider-layout stack-card-grid">',
+            1,
+        )[0]
+        self.assertEqual(content.count('class="provider-hero-polaroid"'), 4)
+        self.assertNotIn("intro.mp4", hero_section)
+        self.assertIn("look-0.jpg", hero_section)
+        self.assertIn("look-3.jpg", hero_section)
+        self.assertNotIn("look-4.jpg", hero_section)
