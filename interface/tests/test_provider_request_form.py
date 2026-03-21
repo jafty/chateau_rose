@@ -51,7 +51,7 @@ class ProviderBookingRequestFormTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn(
-            "Merci de choisir si tu préfères venir au salon ou demander un déplacement.",
+            "Merci de choisir si tu préfères venir chez la prestataire ou demander un déplacement.",
             form.non_field_errors(),
         )
 

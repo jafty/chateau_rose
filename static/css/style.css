@@ -61,7 +61,16 @@ a:hover { color: var(--rose-accent); }
 .page-shell {
     width: min(1200px, 100%);
     margin-inline: auto;
-    padding-inline: max(var(--page-gutter), clamp(20px, 6vw, 40px));
+    padding-inline: var(--page-gutter);
+}
+
+.stack-card-grid {
+    display: grid;
+    gap: clamp(1rem, 2.2vw, 1.5rem);
+}
+
+.stack-card-grid > * {
+    min-width: 0;
 }
 
 .thank-you-section {
@@ -1116,8 +1125,8 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 .scroll-rail {
     --rail-offset: clamp(20px, 6vw, 40px);
-    margin-inline: calc(var(--rail-offset) * -1);
-    overflow-x: hidden;
+    width: 100%;
+    overflow-x: clip;
 }
 
 .scroll-rail-topbar {
@@ -2310,11 +2319,17 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     .providers-section,
     .provider-hero,
     .page-hero.providers-hero {
-        padding-inline: clamp(16px, 5vw, 22px);
+        padding-block: 24px;
     }
 
     .provider-main .provider-section-title {
-        margin-inline: clamp(6px, 3vw, 12px);
+        margin-inline: 0;
+    }
+
+    .stack-card-grid,
+    .provider-sidebar,
+    .provider-main {
+        gap: 1rem;
     }
 
     .provider-page-header,
@@ -2323,12 +2338,22 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     .provider-main .paper-card,
     .provider-main .provider-form-card,
     .provider-sidebar > .paper-card,
-    .provider-sidebar > .profile-photo-frame {
-        margin-inline: clamp(6px, 3vw, 12px);
+    .provider-sidebar > .profile-photo-frame,
+    .request-card,
+    .quick-checkout-card,
+    .quick-checkout-summary {
+        margin-inline: 0;
+        width: 100%;
     }
 
-    .request-card {
-        margin-inline: clamp(6px, 3vw, 12px);
+    .scroll-rail {
+        --rail-offset: 0px;
+    }
+
+    .scroll-rail-topbar,
+    .story-scroll,
+    .providers-scroll {
+        padding-inline: 0;
     }
 }
 

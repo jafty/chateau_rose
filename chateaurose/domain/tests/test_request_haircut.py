@@ -104,7 +104,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
                     "Paiement :",
                     "- Empreinte bancaire validée : 20,00 € (pas encore débités)",
                     "- Débit des frais de réservation uniquement après confirmation : 20,00 €",
-                    "- Reste à régler directement au salon/prestataire : 70,00 €",
+                    "- Reste à régler chez la prestataire : 70,00 €",
                     "Message : Je suis dispo surtout les vendredis soir",
                     "",
                     "Pour répondre et proposer un créneau, ouvre la demande :",
@@ -131,7 +131,7 @@ def test_request_haircut_submitted_with_auth_and_notification():
                     "Paiement :",
                     "- Empreinte bancaire déjà validée : 20,00 € (pas encore débités)",
                     "- Montant qui sera débité à la confirmation : 20,00 €",
-                    "- Reste à régler directement au salon/prestataire : 70,00 €",
+                    "- Reste à régler chez la prestataire : 70,00 €",
                     "- Ton message : Je suis dispo surtout les vendredis soir",
                 ]
             ),
