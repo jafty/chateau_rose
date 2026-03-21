@@ -116,7 +116,7 @@ class ProviderBookingRequestForm(forms.Form):
     location = forms.CharField(label="Lieu de prestation", required=False)
     client_address = forms.CharField(label="Adresse complète", required=False)
     location_preference = forms.ChoiceField(
-        choices=(("salon", "En salon / chez la pro"), ("domicile", "À domicile")),
+        choices=(("salon", "Chez la prestataire"), ("domicile", "À domicile")),
         required=False,
     )
     desired_date = forms.CharField(label="Date souhaitée")
@@ -173,7 +173,7 @@ class ProviderBookingRequestForm(forms.Form):
                     location_preference = location_preference or "domicile"
                 else:
                     raise forms.ValidationError(
-                        "Merci de choisir si tu préfères venir au salon ou demander un déplacement."
+                        "Merci de choisir si tu préfères venir chez la prestataire ou demander un déplacement."
                     )
             else:
                 location_preference = location_preference or "domicile"
@@ -181,11 +181,11 @@ class ProviderBookingRequestForm(forms.Form):
         if location_preference == "salon":
             if not self.provider or not self.provider.salon_zone:
                 raise forms.ValidationError(
-                    "Le lieu au salon n'est pas encore renseigné par la prestataire ou le prestataire."
+                    "Le lieu chez la prestataire n'est pas encore renseigné."
                 )
             if not self.provider.salon_address:
                 raise forms.ValidationError(
-                    "L'adresse du salon doit être renseignée pour confirmer un rendez-vous."
+                    "L'adresse de la prestataire doit être renseignée pour confirmer un rendez-vous."
                 )
         elif not client_address:
             raise forms.ValidationError("Merci d'indiquer ton adresse complète.")

@@ -76,7 +76,7 @@ def test_provider_proposes_update_moves_to_pending_client_validation_and_notifie
                     "Paiement :",
                     "- Empreinte bancaire déjà validée : 27,00 € (pas encore débités)",
                     "- Montant débité si tu acceptes : 27,00 €",
-                    "- Reste à régler directement au salon/prestataire : 63,00 €",
+                    "- Reste à régler chez la prestataire : 63,00 €",
                     "",
                     "Tu peux accepter ou refuser la proposition depuis ton espace de suivi :",
                     "https://example.com/booking/booking_1/",

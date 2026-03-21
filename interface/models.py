@@ -252,13 +252,19 @@ class Interaction(models.Model):
     STATUS_IN_PROGRESS = "in_progress"
     STATUS_WAITING_CLIENT = "waiting_client"
     STATUS_WAITING_PROVIDER = "waiting_provider"
+    STATUS_NO_RESPONSE = "no_response"
+    STATUS_CANCELLED = "cancelled"
+    STATUS_APPOINTMENT_SECURED = "appointment_secured"
     STATUS_DONE = "done"
     STATUS_CHOICES = (
         (STATUS_NEW, "Nouveau"),
         (STATUS_IN_PROGRESS, "En cours"),
         (STATUS_WAITING_CLIENT, "En attente client"),
         (STATUS_WAITING_PROVIDER, "En attente prestataire"),
-        (STATUS_DONE, "Traité"),
+        (STATUS_NO_RESPONSE, "Sans réponse"),
+        (STATUS_CANCELLED, "Annulé"),
+        (STATUS_APPOINTMENT_SECURED, "Rendez-vous sécurisé"),
+        (STATUS_DONE, "Rendez-vous honoré"),
     )
 
     kind = models.CharField(max_length=64, choices=KIND_CHOICES)

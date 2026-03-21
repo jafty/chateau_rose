@@ -463,8 +463,7 @@
                             <div class="provider-hero-polaroid-media">
                                 <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="eager" decoding="async">
                             </div>
-                            <figcaption class="provider-hero-polaroid-title">{{ photo.caption|default:provider.name|truncatechars:22 }}</figcaption>
-                        </figure>
+                                                    </figure>
                     {% endif %}
                 {% endfor %}
             {% else %}
@@ -473,34 +472,30 @@
                     <div class="provider-hero-polaroid-media">
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Réalisation de {{ provider.name }}" loading="eager" decoding="async">
                     </div>
-                    <figcaption class="provider-hero-polaroid-title">Réalisations</figcaption>
-                </figure>
+                                    </figure>
                 <figure class="provider-hero-polaroid">
                     <span class="tape" aria-hidden="true"></span>
                     <div class="provider-hero-polaroid-media">
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffures de {{ provider.name }}" loading="eager" decoding="async">
                     </div>
-                    <figcaption class="provider-hero-polaroid-title">Coiffures</figcaption>
-                </figure>
+                                    </figure>
                 <figure class="provider-hero-polaroid">
                     <span class="tape" aria-hidden="true"></span>
                     <div class="provider-hero-polaroid-media">
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses de {{ provider.name }}" loading="eager" decoding="async">
                     </div>
-                    <figcaption class="provider-hero-polaroid-title">Tresses</figcaption>
-                </figure>
+                                    </figure>
                 <figure class="provider-hero-polaroid">
                     <span class="tape" aria-hidden="true"></span>
                     <div class="provider-hero-polaroid-media">
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Locks de {{ provider.name }}" loading="eager" decoding="async">
                     </div>
-                    <figcaption class="provider-hero-polaroid-title">Locks</figcaption>
-                </figure>
+                                    </figure>
             {% endif %}
         </div>
     </div>
 
-    <div class="provider-layout">
+    <div class="provider-layout stack-card-grid">
         <aside class="provider-sidebar">
             <div class="provider-avatar-polaroid">
                 <span class="tape" aria-hidden="true"></span>
@@ -588,7 +583,7 @@
                                 <ul>
                                     <li>Choisis une prestation pour obtenir une estimation immédiate.</li>
                                     <li>Ajoute une photo de tes cheveux pour aider la prestataire à confirmer.</li>
-                                    <li>Le récapitulatif affiche clairement les frais de réservation déduits du total.</li>
+                                    <li>Le récapitulatif affiche clairement les frais de réservation déduits du total à régler chez la prestataire.</li>
                                 </ul>
                             </div>
                         </div>
@@ -635,7 +630,7 @@
                                                         <h4>{{ service.name }}</h4>
                                                         <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
                                                     </div>
-                                                    <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Estimer ce tarif</button>
+                                                    <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Voir le tarif estimé</button>
                                                 </div>
                                             </article>
                                         {% endfor %}
@@ -656,11 +651,11 @@
                                                 <h4>{{ service.name }}</h4>
                                                 <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
                                             </div>
-                                        <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Estimer ce tarif</button>
+                                        <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Voir le tarif estimé</button>
                                     </div>
                                 </article>
                             {% empty %}
-                                <p class="meta-line" style="margin: 0;">Tarifs à confirmer avec la prestataire ou le prestataire.</p>
+                                <p class="meta-line" style="margin: 0;">Tarifs à confirmer avec la prestataire.</p>
                             {% endfor %}
                         </div>
                     {% endif %}
@@ -674,7 +669,7 @@
             {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
 
                 <div class="provider-form-card inline-form-card" id="booking-wizard">
-                    <h3 class="wizard-heading">Estimer les tarifs</h3>
+                    <h3 class="wizard-heading">Voir le tarif estimé</h3>
 
                     {% if not is_quick_checkout %}
                     <div class="step-progress">
@@ -1425,7 +1420,7 @@
                     ? '+ mèches fournies'
                     : 'sans mèches fournies'
                 : 'mèches non fournies';
-            const locationText = atHomeAdj > 0 ? `à domicile (+${formatPrice(atHomeAdj)})` : "en salon";
+            const locationText = atHomeAdj > 0 ? `à domicile (+${formatPrice(atHomeAdj)})` : "chez la prestataire";
             const remainingStr = formatPrice(Math.max(totalCents - depositCents, 0));
             if (Number.isFinite(fixedPriceCents)) {
                 finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). À payer après acompte : ${remainingStr}.`;

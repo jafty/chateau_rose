@@ -96,7 +96,7 @@
                     <p><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
                     {% if booking.status == "CONFIRMED" %}
                         <p><strong>Frais de réservation débités :</strong> {{ payment_summary.reservation_fee }}</p>
-                        <p><strong>Reste à régler au salon/prestataire :</strong> {{ payment_summary.remaining }}</p>
+                        <p><strong>Reste à régler chez la prestataire :</strong> {{ payment_summary.remaining }}</p>
                     {% else %}
                         <p><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }} (pas encore débités)</p>
                         <p><strong>Montant débité à la confirmation :</strong> {{ payment_summary.reservation_fee }}</p>

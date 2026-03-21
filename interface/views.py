@@ -836,6 +836,7 @@ def provider_action(request, booking_id):
             payment_gateway=payment_gateway,
             provider_directory=provider_directory,
             notifier=notifier,
+            operations_email=SUPPORT_EMAIL,
         )
     except finalize_booking_uc.InvalidState as exc:
         if str(exc) != "Booking has expired":
@@ -866,6 +867,7 @@ def client_action(request, booking_id):
             payment_gateway=payment_gateway,
             provider_directory=provider_directory,
             notifier=notifier,
+            operations_email=SUPPORT_EMAIL,
         )
     except finalize_booking_uc.InvalidState as exc:
         if str(exc) != "Booking has expired":

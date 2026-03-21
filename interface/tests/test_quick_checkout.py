@@ -174,7 +174,7 @@ class QuickCheckoutViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Frais de réservation")
-        self.assertNotContains(response, "Chez la/le prestataire ou en salon")
+        self.assertNotContains(response, "Chez la prestataire")
         self.assertNotContains(response, "Paris")
 
 

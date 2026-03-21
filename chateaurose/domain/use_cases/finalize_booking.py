@@ -22,13 +22,13 @@ def _payment_lines(total_cents: int, *, captured: bool, deposit_percentage: int 
         return [
             "Paiement :",
             f"- Frais de réservation débités : {_format_euros(reservation_fee_cents)}",
-            f"- Reste à régler directement au salon/prestataire : {_format_euros(remaining_cents)}",
+            f"- Reste à régler chez la prestataire : {_format_euros(remaining_cents)}",
         ]
     return [
         "Paiement :",
         f"- Empreinte bancaire déjà validée : {_format_euros(reservation_fee_cents)} (pas encore débités)",
         f"- Montant qui sera débité à la confirmation : {_format_euros(reservation_fee_cents)}",
-        f"- Reste à régler directement au salon/prestataire après confirmation : {_format_euros(remaining_cents)}",
+        f"- Reste à régler chez la prestataire après confirmation : {_format_euros(remaining_cents)}",
     ]
 
 
@@ -67,6 +67,7 @@ def execute(
     provider_directory,
     notifier,
     reminder_gateway=None,
+    operations_email: str | None = None,
 ) -> BookingRequest:
     booking = booking_repository.get(booking_id)
 
@@ -105,12 +106,12 @@ def execute(
             booking.status = CONFIRMED
             payment_gateway.capture_auth(booking.payment_auth_id)
             provider_location_lines = (
-                ["La personne cliente se déplace au salon."]
+                ["La personne cliente se déplace chez toi."]
                 if is_salon
                 else [f"Adresse de la personne cliente : {client_address}", provider_address_note]
             )
             client_location_lines = (
-                [f"Adresse du salon : {salon_address}", client_address_note]
+                [f"Adresse de la prestataire : {salon_address}", client_address_note]
                 if is_salon
                 else ["Le profil partenaire se déplace jusqu'à toi."]
             )
@@ -182,6 +183,31 @@ def execute(
                             ]
                         ),
                     )
+            if operations_email:
+                notifier.notify(
+                    operations_email,
+                    "Acompte débité · rendez-vous confirmé",
+                    "\n".join(
+                        [
+                            "Un rendez-vous vient d'être confirmé et l'acompte a été débité.",
+                            f"- ID demande : {booking.id}",
+                            f"- Prestataire : {provider_name}",
+                            f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
+                            f"- Date : {effective_date}",
+                            f"- Lieu : {location_label}",
+                            f"- Tarif total : {formatted_price}",
+                            *[
+                                line.replace("directement au salon/prestataire", "chez la prestataire")
+                                for line in _payment_lines(
+                                    effective_price_cents,
+                                    captured=True,
+                                    deposit_percentage=deposit_percentage,
+                                )
+                            ],
+                        ]
+                    ),
+                    reply_to=booking.client_contact["email"],
+                )
         elif decision == "reject" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION):
             booking.status = CANCELLED
             payment_gateway.release_auth(booking.payment_auth_id)
@@ -212,7 +238,7 @@ def execute(
                     [
                         f"Bonjour {booking.client_contact['name']},",
                         "",
-                        "La demande a été refusée par la prestataire ou le prestataire.",
+                        "La demande a été refusée par la prestataire.",
                         "Récapitulatif :",
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
@@ -234,12 +260,12 @@ def execute(
             booking.status = CONFIRMED
             payment_gateway.capture_auth(booking.payment_auth_id)
             provider_location_lines = (
-                ["La personne cliente se déplace au salon."]
+                ["La personne cliente se déplace chez toi."]
                 if is_salon
                 else [f"Adresse de la personne cliente : {client_address}", provider_address_note]
             )
             client_location_lines = (
-                [f"Adresse du salon : {salon_address}", client_address_note]
+                [f"Adresse de la prestataire : {salon_address}", client_address_note]
                 if is_salon
                 else ["Le profil partenaire se déplace jusqu'à toi."]
             )
@@ -311,6 +337,31 @@ def execute(
                             ]
                         ),
                     )
+            if operations_email:
+                notifier.notify(
+                    operations_email,
+                    "Acompte débité · rendez-vous confirmé",
+                    "\n".join(
+                        [
+                            "Une proposition a été acceptée et l'acompte a été débité.",
+                            f"- ID demande : {booking.id}",
+                            f"- Prestataire : {provider_name}",
+                            f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
+                            f"- Date : {effective_date}",
+                            f"- Lieu : {location_label}",
+                            f"- Tarif total : {formatted_price}",
+                            *[
+                                line.replace("directement au salon/prestataire", "chez la prestataire")
+                                for line in _payment_lines(
+                                    effective_price_cents,
+                                    captured=True,
+                                    deposit_percentage=deposit_percentage,
+                                )
+                            ],
+                        ]
+                    ),
+                    reply_to=booking.client_contact["email"],
+                )
         elif decision == "refuse" and booking.status == PENDING_CLIENT_VALIDATION:
             booking.status = CANCELLED
             payment_gateway.release_auth(booking.payment_auth_id)

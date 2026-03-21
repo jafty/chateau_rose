@@ -86,7 +86,7 @@ def execute(
         "Paiement :",
         f"- Empreinte bancaire déjà validée : {_format_euros(reservation_fee_cents)} (pas encore débités)",
         f"- Montant débité si tu acceptes : {_format_euros(reservation_fee_cents)}",
-        f"- Reste à régler directement au salon/prestataire : {_format_euros(remaining_cents)}",
+        f"- Reste à régler chez la prestataire : {_format_euros(remaining_cents)}",
         "",
         "Tu peux accepter ou refuser la proposition depuis ton espace de suivi :",
         client_control_url,
