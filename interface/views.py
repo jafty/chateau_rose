@@ -475,6 +475,14 @@ def provider_detail(request, provider_id, quick_checkout=None):
                 {"name": "Autres services", "services": unassigned_services}
             )
 
+    provider_photos = list(provider.photos.all())
+    hero_photos = [
+        photo
+        for photo in provider_photos
+        if photo.media_kind == photo.MEDIA_IMAGE and photo.resolved_url
+    ][:4]
+    gallery_photos = [photo for photo in provider_photos if photo.resolved_url]
+
     return render(
         request,
         "interface/provider_detail.html",
@@ -483,6 +491,8 @@ def provider_detail(request, provider_id, quick_checkout=None):
             "services": services,
             "service_categories": service_categories,
             "zones": zones,
+            "hero_photos": hero_photos,
+            "gallery_photos": gallery_photos,
             "message": message,
             "question_message": question_message,
             "error": error,

@@ -8,6 +8,7 @@
     .provider-profile {
         padding: clamp(2rem, 4vw, 4rem) 0 4rem;
         gap: 2rem;
+        --provider-mobile-card-max: min(100%, 38rem);
     }
     .provider-page-header {
         display: grid;
@@ -404,12 +405,32 @@
         .provider-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 640px) {
+        .provider-profile {
+            --provider-mobile-card-max: min(100%, 34rem);
+        }
         .provider-page-title { font-size: clamp(2.6rem, 12vw, 3.6rem); }
+        .provider-page-header,
+        .provider-layout,
+        .provider-sidebar,
+        .provider-main,
+        .content-section,
+        .provider-hero-card,
+        .provider-hero-collage,
+        .provider-sidebar-card,
+        .provider-highlights-card,
+        .provider-services-card,
+        .provider-services-heading,
+        .provider-form-card,
+        .provider-gallery-card {
+            width: 100%;
+            max-width: var(--provider-mobile-card-max);
+            margin-inline: auto;
+        }
         .provider-main {
             gap: 1.25rem;
         }
         .content-section {
-            padding-inline: clamp(6px, 3vw, 12px);
+            padding-inline: 0;
         }
         .provider-hero-collage,
         .provider-highlights-grid,
@@ -423,6 +444,13 @@
         .provider-services-heading,
         .provider-form-card {
             padding-inline: 1rem;
+        }
+        .provider-sidebar-card,
+        .provider-gallery-card {
+            padding-inline: 1rem;
+        }
+        .provider-gallery-card {
+            padding-block: 1rem;
         }
         .provider-service-card__content {
             padding-inline: 0.3rem;
@@ -455,16 +483,14 @@
             </div>
         </div>
         <div class="provider-hero-collage" aria-label="Aperçu des réalisations de {{ provider.name }}">
-            {% if provider.photos.all %}
-                {% for photo in provider.photos.all|slice:":4" %}
-                    {% if photo.resolved_url and not photo.is_video %}
-                        <figure class="provider-hero-polaroid">
-                            <span class="tape" aria-hidden="true"></span>
-                            <div class="provider-hero-polaroid-media">
-                                <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="eager" decoding="async">
-                            </div>
-                                                    </figure>
-                    {% endif %}
+            {% if hero_photos %}
+                {% for photo in hero_photos %}
+                    <figure class="provider-hero-polaroid">
+                        <span class="tape" aria-hidden="true"></span>
+                        <div class="provider-hero-polaroid-media">
+                            <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="eager" decoding="async">
+                        </div>
+                    </figure>
                 {% endfor %}
             {% else %}
                 <figure class="provider-hero-polaroid">
@@ -472,25 +498,25 @@
                     <div class="provider-hero-polaroid-media">
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Réalisation de {{ provider.name }}" loading="eager" decoding="async">
                     </div>
-                                    </figure>
+                </figure>
                 <figure class="provider-hero-polaroid">
                     <span class="tape" aria-hidden="true"></span>
                     <div class="provider-hero-polaroid-media">
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffures de {{ provider.name }}" loading="eager" decoding="async">
                     </div>
-                                    </figure>
+                </figure>
                 <figure class="provider-hero-polaroid">
                     <span class="tape" aria-hidden="true"></span>
                     <div class="provider-hero-polaroid-media">
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Tresses de {{ provider.name }}" loading="eager" decoding="async">
                     </div>
-                                    </figure>
+                </figure>
                 <figure class="provider-hero-polaroid">
                     <span class="tape" aria-hidden="true"></span>
                     <div class="provider-hero-polaroid-media">
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Locks de {{ provider.name }}" loading="eager" decoding="async">
                     </div>
-                                    </figure>
+                </figure>
             {% endif %}
         </div>
     </div>
@@ -719,33 +745,31 @@
             <section class="content-section">
                 <h3 class="section-title provider-section-title">Réalisations</h3>
                 <div class="provider-gallery-card">
-                    {% if provider.photos.all %}
+                    {% if gallery_photos %}
                         <div class="photo-grid provider-gallery-grid" data-gallery-grid>
-                            {% for photo in provider.photos.all|slice:":7" %}
-                                {% if photo.resolved_url %}
-                                    <button
-                                        type="button"
-                                        class="gallery-thumb"
-                                        data-gallery-index="{{ forloop.counter0 }}"
-                                        data-gallery-src="{{ photo.resolved_url }}"
-                                        data-gallery-caption="{{ photo.caption|default:provider.name }}"
-                                        data-gallery-kind="{% if photo.is_video %}video{% else %}image{% endif %}"
-                                    >
-                                        <span class="tape" aria-hidden="true"></span>
-                                        {% if photo.is_video %}
-                                            <video src="{{ photo.resolved_url }}" muted playsinline preload="metadata" aria-label="{{ photo.caption|default:provider.name }}"></video>
-                                            <span class="gallery-thumb__play" aria-hidden="true">▶</span>
-                                        {% else %}
-                                            <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="lazy" decoding="async">
-                                        {% endif %}
-                                        <span class="gallery-thumb__overlay">Zoomer</span>
-                                    </button>
-                                {% endif %}
-                            {% endfor %}
-                            {% if provider.photos.all|length > 7 %}
-                                <button type="button" class="gallery-more-card" data-gallery-index="7" data-gallery-src="{{ provider.photos.all.7.resolved_url|default:provider.photos.all.0.resolved_url }}" data-gallery-caption="Voir plus de réalisations de {{ provider.name }}">
+                            {% for photo in gallery_photos|slice:":7" %}
+                                <button
+                                    type="button"
+                                    class="gallery-thumb"
+                                    data-gallery-index="{{ forloop.counter0 }}"
+                                    data-gallery-src="{{ photo.resolved_url }}"
+                                    data-gallery-caption="{{ photo.caption|default:provider.name }}"
+                                    data-gallery-kind="{% if photo.is_video %}video{% else %}image{% endif %}"
+                                >
                                     <span class="tape" aria-hidden="true"></span>
-                                    +{{ provider.photos.all|length|add:"-7" }} voir tout
+                                    {% if photo.is_video %}
+                                        <video src="{{ photo.resolved_url }}" muted playsinline preload="metadata" aria-label="{{ photo.caption|default:provider.name }}"></video>
+                                        <span class="gallery-thumb__play" aria-hidden="true">▶</span>
+                                    {% else %}
+                                        <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="lazy" decoding="async">
+                                    {% endif %}
+                                    <span class="gallery-thumb__overlay">Zoomer</span>
+                                </button>
+                            {% endfor %}
+                            {% if gallery_photos|length > 7 %}
+                                <button type="button" class="gallery-more-card" data-gallery-index="7" data-gallery-src="{{ gallery_photos.7.resolved_url|default:gallery_photos.0.resolved_url }}" data-gallery-caption="Voir plus de réalisations de {{ provider.name }}">
+                                    <span class="tape" aria-hidden="true"></span>
+                                    +{{ gallery_photos|length|add:"-7" }} voir tout
                                 </button>
                             {% endif %}
                         </div>
