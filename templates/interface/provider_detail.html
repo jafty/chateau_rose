@@ -647,84 +647,8 @@
             </section>
 
             <section class="content-section" id="services-list">
-                <div class="provider-services-card">
-                    <div class="provider-services-heading">
-                        <div>
-                            <h3 class="section-title provider-section-title">Choisis ta prestation</h3>
-                            <p class="meta-line provider-pricing-note">Sélectionne une coiffure pour estimer ton tarif et vérifier les créneaux disponibles.</p>
-                        </div>
-                        {% if provider.categorized_services_enabled and service_categories %}
-                        <div class="provider-category-tabs" role="tablist" aria-label="Catégories de prestations">
-                            {% for category in service_categories %}
-                                <a
-                                    href="?category={{ category.name|slugify }}#services-list"
-                                    class="provider-category-tab{% if selected_category_slug == category.name|slugify %} is-active{% endif %}"
-                                    role="tab"
-                                    aria-selected="{% if selected_category_slug == category.name|slugify %}true{% else %}false{% endif %}"
-                                >
-                                    {{ category.name }}
-                                </a>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% if provider.categorized_services_enabled and service_categories %}
-                        <div class="service-category-accordion">
-                            {% for category in visible_service_categories %}
-                                <div class="provider-category-panel">
-                                    <div class="provider-service-grid">
-                                        {% for service in category.services %}
-                                            <article class="provider-service-card">
-                                                <span class="tape" aria-hidden="true"></span>
-                                                <div class="provider-service-card__media">
-                                                    <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
-                                                </div>
-                                                <div class="provider-service-card__content">
-                                                    <div class="provider-service-card__top">
-                                                        <h4>{{ service.name }}</h4>
-                                                        <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
-                                                    </div>
-                                                    <a
-                                                        href="?category={{ category.name|slugify }}&service_id={{ service.id }}#booking-wizard"
-                                                        class="btn btn-accent provider-service-card__button"
-                                                        data-service-card="{{ service.id }}"
-                                                    >
-                                                        Voir le tarif estimé
-                                                    </a>
-                                                </div>
-                                            </article>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="provider-service-grid">
-                            {% for service in services %}
-                                <article class="provider-service-card">
-                                    <span class="tape" aria-hidden="true"></span>
-                                    <div class="provider-service-card__media">
-                                        <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
-                                    </div>
-                                        <div class="provider-service-card__content">
-                                            <div class="provider-service-card__top">
-                                                <h4>{{ service.name }}</h4>
-                                                <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
-                                            </div>
-                                        <a
-                                            href="?service_id={{ service.id }}#booking-wizard"
-                                            class="btn btn-accent provider-service-card__button"
-                                            data-service-card="{{ service.id }}"
-                                        >
-                                            Voir le tarif estimé
-                                        </a>
-                                    </div>
-                                </article>
-                            {% empty %}
-                                <p class="meta-line" style="margin: 0;">Tarifs à confirmer avec la prestataire.</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+                <div class="provider-services-card" id="provider-services-section">
+                    {% include "interface/partials/provider_services_section.html" %}
                 </div>
             </section>
 
@@ -854,6 +778,7 @@
     </div>
 </section>
 <script src="https://js.stripe.com/v3"></script>
+<script src="https://unpkg.com/htmx.org@2.0.4"></script>
 <script>
     const updateFileLabel = (input, labelId = null) => {
         const displayId = labelId || 'file-label-current';
@@ -885,7 +810,6 @@
         const totalSteps = steps.length;
 
         const serviceSelect = document.getElementById('service_id');
-        const serviceCards = document.querySelectorAll('[data-service-card]');
         const hairLengthSelect = document.getElementById('hair_length');
         const generalAdjustmentsContainer = document.getElementById('general_adjustments');
         const generalAdjustmentsInput = document.getElementById('general_adjustments_input');
@@ -961,11 +885,17 @@
             scrollToBooking();
         };
 
-        serviceCards.forEach((card) => {
-            card.addEventListener('click', (event) => {
-                event.preventDefault();
-                selectServiceFromCard(card.dataset.serviceCard);
+        const bindServiceCards = () => {
+            document.querySelectorAll('[data-service-card]').forEach((card) => {
+                card.addEventListener('click', () => selectServiceFromCard(card.dataset.serviceCard));
             });
+        };
+        bindServiceCards();
+
+        document.body.addEventListener('htmx:afterSwap', (event) => {
+            if (event.target && event.target.id === 'provider-services-section') {
+                bindServiceCards();
+            }
         });
 
         const serviceFromQuery = new URLSearchParams(window.location.search).get('service_id');
