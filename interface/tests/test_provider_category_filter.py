@@ -122,3 +122,11 @@ class ProviderCategoryFilterTests(TestCase):
             response,
             "<html",
         )
+
+    def test_provider_detail_script_uses_distinct_payment_payload_variables(self):
+        response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "const paymentPayload = buildPaymentPayload();")
+        self.assertContains(response, "const responsePayload = await response.json().catch(() => ({}));")
+        self.assertNotContains(response, "const payload = buildPaymentPayload();")

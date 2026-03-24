@@ -1040,9 +1040,9 @@
             if (!paymentIntentUrl) {
                 throw new Error("L'URL de paiement est indisponible.");
             }
-            const payload = buildPaymentPayload();
+            const paymentPayload = buildPaymentPayload();
             if (validateOnly) {
-                payload.validate_only = true;
+                paymentPayload.validate_only = true;
             }
             const response = await fetch(paymentIntentUrl, {
                 method: 'POST',
@@ -1050,14 +1050,14 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken,
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(paymentPayload),
             });
 
-            const payload = await response.json().catch(() => ({}));
+            const responsePayload = await response.json().catch(() => ({}));
             if (!response.ok) {
-                throw new Error(payload.error || "Impossible de préparer l'empreinte bancaire.");
+                throw new Error(responsePayload.error || "Impossible de préparer l'empreinte bancaire.");
             }
-            return payload;
+            return responsePayload;
         };
 
         const validateDesiredDateAvailability = async ({ silent = false } = {}) => {
