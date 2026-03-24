@@ -110,6 +110,14 @@ class ProviderCategoryFilterTests(TestCase):
             response,
             f'data-service-card="{self.second_service.id}"',
         )
+        self.assertContains(
+            response,
+            'id="provider-services-section"',
+        )
+        self.assertContains(
+            response,
+            'hx-push-url="false"',
+        )
         self.assertNotContains(
             response,
             "<html",
