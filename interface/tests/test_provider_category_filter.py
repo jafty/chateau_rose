@@ -78,3 +78,19 @@ class ProviderCategoryFilterTests(TestCase):
             response,
             f'data-service-card="{self.first_service.id}"',
         )
+
+    def test_service_card_link_keeps_category_and_prefills_service(self):
+        selected_slug = slugify(self.second_category.name)
+        response = self.client.get(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            {"category": selected_slug},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            (
+                f'href="?category={selected_slug}&service_id='
+                f'{self.second_service.id}#booking-wizard"'
+            ),
+        )

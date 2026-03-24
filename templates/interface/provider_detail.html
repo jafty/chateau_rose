@@ -684,7 +684,13 @@
                                                         <h4>{{ service.name }}</h4>
                                                         <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
                                                     </div>
-                                                    <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Voir le tarif estimé</button>
+                                                    <a
+                                                        href="?category={{ category.name|slugify }}&service_id={{ service.id }}#booking-wizard"
+                                                        class="btn btn-accent provider-service-card__button"
+                                                        data-service-card="{{ service.id }}"
+                                                    >
+                                                        Voir le tarif estimé
+                                                    </a>
                                                 </div>
                                             </article>
                                         {% endfor %}
@@ -705,7 +711,13 @@
                                                 <h4>{{ service.name }}</h4>
                                                 <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
                                             </div>
-                                        <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Voir le tarif estimé</button>
+                                        <a
+                                            href="?service_id={{ service.id }}#booking-wizard"
+                                            class="btn btn-accent provider-service-card__button"
+                                            data-service-card="{{ service.id }}"
+                                        >
+                                            Voir le tarif estimé
+                                        </a>
                                     </div>
                                 </article>
                             {% empty %}
@@ -950,7 +962,10 @@
         };
 
         serviceCards.forEach((card) => {
-            card.addEventListener('click', () => selectServiceFromCard(card.dataset.serviceCard));
+            card.addEventListener('click', (event) => {
+                event.preventDefault();
+                selectServiceFromCard(card.dataset.serviceCard);
+            });
         });
 
         const serviceFromQuery = new URLSearchParams(window.location.search).get('service_id');
