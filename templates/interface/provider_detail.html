@@ -647,9 +647,7 @@
             </section>
 
             <section class="content-section" id="services-list">
-                <div class="provider-services-card" id="provider-services-section">
-                    {% include "interface/partials/provider_services_section.html" %}
-                </div>
+                {% include "interface/partials/provider_services_section.html" %}
             </section>
 
 
@@ -881,21 +879,15 @@
         const selectServiceFromCard = (serviceId) => {
             if (!serviceSelect) return;
             serviceSelect.value = String(serviceId);
-            serviceSelect.dispatchEvent(new Event('change'));
+            serviceSelect.dispatchEvent(new Event('change', { bubbles: true }));
             scrollToBooking();
         };
 
-        const bindServiceCards = () => {
-            document.querySelectorAll('[data-service-card]').forEach((card) => {
-                card.addEventListener('click', () => selectServiceFromCard(card.dataset.serviceCard));
-            });
-        };
-        bindServiceCards();
-
-        document.body.addEventListener('htmx:afterSwap', (event) => {
-            if (event.target && event.target.id === 'provider-services-section') {
-                bindServiceCards();
-            }
+        document.addEventListener('click', (event) => {
+            const trigger = event.target.closest('[data-service-card]');
+            if (!trigger) return;
+            event.preventDefault();
+            selectServiceFromCard(trigger.dataset.serviceCard);
         });
 
         const serviceFromQuery = new URLSearchParams(window.location.search).get('service_id');

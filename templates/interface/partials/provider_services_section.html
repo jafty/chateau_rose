@@ -1,3 +1,4 @@
+<div class="provider-services-card" id="provider-services-section">
 <div class="provider-services-heading">
     <div>
         <h3 class="section-title provider-section-title">Choisis ta prestation</h3>
@@ -8,11 +9,12 @@
         {% for category in service_categories %}
             <a
                 href="?category={{ category.name|slugify }}#services-list"
-                hx-get="?category={{ category.name|slugify }}"
+                hx-get="{{ request.path }}"
+                hx-vals='{"category":"{{ category.name|slugify }}"}'
                 hx-target="#provider-services-section"
                 hx-select="#provider-services-section"
                 hx-swap="outerHTML"
-                hx-push-url="true"
+                hx-push-url="false"
                 class="provider-category-tab{% if selected_category_slug == category.name|slugify %} is-active{% endif %}"
                 role="tab"
                 aria-selected="{% if selected_category_slug == category.name|slugify %}true{% else %}false{% endif %}"
@@ -68,3 +70,5 @@
         {% endfor %}
     </div>
 {% endif %}
+
+</div>
