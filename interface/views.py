@@ -14,6 +14,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.conf import settings
 from django.utils import timezone
+from django.utils.text import slugify
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 
@@ -500,6 +501,19 @@ def provider_detail(request, provider_id, quick_checkout=None):
                 {"name": "Autres services", "services": unassigned_services}
             )
 
+    selected_category_slug = (request.GET.get("category") or "").strip()
+    available_category_slugs = {
+        slugify(category["name"]): category for category in service_categories
+    }
+    if selected_category_slug not in available_category_slugs:
+        selected_category_slug = next(iter(available_category_slugs), "")
+
+    visible_service_categories = service_categories
+    if selected_category_slug:
+        visible_service_categories = [
+            available_category_slugs[selected_category_slug]
+        ]
+
     provider_photos = list(provider.photos.all())
     hero_photos = [
         photo
@@ -515,6 +529,8 @@ def provider_detail(request, provider_id, quick_checkout=None):
             "provider": provider,
             "services": services,
             "service_categories": service_categories,
+            "visible_service_categories": visible_service_categories,
+            "selected_category_slug": selected_category_slug,
             "zones": zones,
             "hero_photos": hero_photos,
             "gallery_photos": gallery_photos,

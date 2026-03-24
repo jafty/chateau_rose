@@ -257,6 +257,9 @@
         margin-top: 0.2rem;
     }
     .provider-category-tab {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         border: 1px solid rgba(223, 172, 182, 0.55);
         background: #fff;
         color: var(--rose-accent);
@@ -267,6 +270,8 @@
         letter-spacing: 0.04em;
         text-transform: uppercase;
         transition: 0.2s ease;
+        cursor: pointer;
+        text-decoration: none;
     }
     .provider-category-tab:hover {
         background: var(--rose-soft);
@@ -277,6 +282,10 @@
         background: var(--rose-accent);
         color: #fff;
         border-color: var(--rose-accent);
+    }
+    .provider-category-tab:focus-visible {
+        outline: 2px solid var(--rose-accent);
+        outline-offset: 2px;
     }
     .provider-category-panel[hidden] { display: none; }
     .provider-service-grid { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
@@ -330,6 +339,7 @@
         font-size: 0.72rem;
         font-weight: 800;
         letter-spacing: 0.03em;
+        cursor: pointer;
     }
     .service-category-item { border-top: none; padding-top: 0; }
     .service-category-summary { margin-bottom: 0.8rem; }
@@ -646,23 +656,22 @@
                         {% if provider.categorized_services_enabled and service_categories %}
                         <div class="provider-category-tabs" role="tablist" aria-label="Catégories de prestations">
                             {% for category in service_categories %}
-                                <button
-                                    type="button"
-                                    class="provider-category-tab{% if forloop.first %} is-active{% endif %}"
-                                    data-category-tab="{{ category.name|slugify }}"
+                                <a
+                                    href="?category={{ category.name|slugify }}#services-list"
+                                    class="provider-category-tab{% if selected_category_slug == category.name|slugify %} is-active{% endif %}"
                                     role="tab"
-                                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                                    aria-selected="{% if selected_category_slug == category.name|slugify %}true{% else %}false{% endif %}"
                                 >
                                     {{ category.name }}
-                                </button>
+                                </a>
                             {% endfor %}
                         </div>
                         {% endif %}
                     </div>
                     {% if provider.categorized_services_enabled and service_categories %}
                         <div class="service-category-accordion">
-                            {% for category in service_categories %}
-                                <div class="provider-category-panel" data-category-panel="{{ category.name|slugify }}" {% if not forloop.first %}hidden{% endif %}>
+                            {% for category in visible_service_categories %}
+                                <div class="provider-category-panel">
                                     <div class="provider-service-grid">
                                         {% for service in category.services %}
                                             <article class="provider-service-card">
@@ -865,8 +874,6 @@
 
         const serviceSelect = document.getElementById('service_id');
         const serviceCards = document.querySelectorAll('[data-service-card]');
-        const categoryTabs = document.querySelectorAll('[data-category-tab]');
-        const categoryPanels = document.querySelectorAll('[data-category-panel]');
         const hairLengthSelect = document.getElementById('hair_length');
         const generalAdjustmentsContainer = document.getElementById('general_adjustments');
         const generalAdjustmentsInput = document.getElementById('general_adjustments_input');
@@ -945,23 +952,6 @@
         serviceCards.forEach((card) => {
             card.addEventListener('click', () => selectServiceFromCard(card.dataset.serviceCard));
         });
-
-        if (categoryTabs.length && categoryPanels.length) {
-            const activateCategory = (slug) => {
-                categoryTabs.forEach((tab) => {
-                    const active = tab.dataset.categoryTab === slug;
-                    tab.classList.toggle('is-active', active);
-                    tab.setAttribute('aria-selected', active ? 'true' : 'false');
-                });
-                categoryPanels.forEach((panel) => {
-                    panel.hidden = panel.dataset.categoryPanel !== slug;
-                });
-            };
-
-            categoryTabs.forEach((tab) => {
-                tab.addEventListener('click', () => activateCategory(tab.dataset.categoryTab));
-            });
-        }
 
         const serviceFromQuery = new URLSearchParams(window.location.search).get('service_id');
         if (serviceFromQuery) {
