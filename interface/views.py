@@ -522,37 +522,37 @@ def provider_detail(request, provider_id, quick_checkout=None):
     ][:4]
     gallery_photos = [photo for photo in provider_photos if photo.resolved_url]
 
-    return render(
-        request,
-        "interface/provider_detail.html",
-        {
-            "provider": provider,
-            "services": services,
-            "service_categories": service_categories,
-            "visible_service_categories": visible_service_categories,
-            "selected_category_slug": selected_category_slug,
-            "zones": zones,
-            "hero_photos": hero_photos,
-            "gallery_photos": gallery_photos,
-            "message": message,
-            "question_message": question_message,
-            "error": error,
-            "question_error": question_error,
-            "question_form": question_form,
-            "pricing_data": json.dumps(pricing_data),
-            "default_starting_price": (
-                booking_requests.format_price(min(starting_prices)) if starting_prices else None
-            ),
-            "salon_location_label": salon_location_label,
-            "stripe_public_key": stripe_public_key,
-            "payment_auth_id": prefilled_payment_auth_id,
-            "payment_message": payment_message,
-            "fixed_price_cents": fixed_price_cents,
-            "quick_checkout": quick_checkout,
-            "is_quick_checkout": quick_checkout is not None,
-            "quick_checkout_id": quick_checkout.id if quick_checkout else "",
-        },
-    )
+    context = {
+        "provider": provider,
+        "services": services,
+        "service_categories": service_categories,
+        "visible_service_categories": visible_service_categories,
+        "selected_category_slug": selected_category_slug,
+        "zones": zones,
+        "hero_photos": hero_photos,
+        "gallery_photos": gallery_photos,
+        "message": message,
+        "question_message": question_message,
+        "error": error,
+        "question_error": question_error,
+        "question_form": question_form,
+        "pricing_data": json.dumps(pricing_data),
+        "default_starting_price": (
+            booking_requests.format_price(min(starting_prices)) if starting_prices else None
+        ),
+        "salon_location_label": salon_location_label,
+        "stripe_public_key": stripe_public_key,
+        "payment_auth_id": prefilled_payment_auth_id,
+        "payment_message": payment_message,
+        "fixed_price_cents": fixed_price_cents,
+        "quick_checkout": quick_checkout,
+        "is_quick_checkout": quick_checkout is not None,
+        "quick_checkout_id": quick_checkout.id if quick_checkout else "",
+    }
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "interface/partials/provider_services_section.html", context)
+
+    return render(request, "interface/provider_detail.html", context)
 
 
 def quick_checkout_page(request, checkout_id):

@@ -78,3 +78,39 @@ class ProviderCategoryFilterTests(TestCase):
             response,
             f'data-service-card="{self.first_service.id}"',
         )
+
+    def test_service_cards_remain_buttons_for_js_prefill(self):
+        selected_slug = slugify(self.second_category.name)
+        response = self.client.get(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            {"category": selected_slug},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'data-service-card="{self.second_service.id}"',
+        )
+        self.assertContains(
+            response,
+            'type="button" class="btn btn-accent provider-service-card__button"',
+        )
+
+    def test_htmx_request_returns_services_partial(self):
+        selected_slug = slugify(self.second_category.name)
+        response = self.client.get(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            {"category": selected_slug},
+            HTTP_HX_REQUEST="true",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "interface/partials/provider_services_section.html")
+        self.assertContains(
+            response,
+            f'data-service-card="{self.second_service.id}"',
+        )
+        self.assertNotContains(
+            response,
+            "<html",
+        )

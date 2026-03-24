@@ -1,0 +1,70 @@
+<div class="provider-services-heading">
+    <div>
+        <h3 class="section-title provider-section-title">Choisis ta prestation</h3>
+        <p class="meta-line provider-pricing-note">Sélectionne une coiffure pour estimer ton tarif et vérifier les créneaux disponibles.</p>
+    </div>
+    {% if provider.categorized_services_enabled and service_categories %}
+    <div class="provider-category-tabs" role="tablist" aria-label="Catégories de prestations">
+        {% for category in service_categories %}
+            <a
+                href="?category={{ category.name|slugify }}#services-list"
+                hx-get="?category={{ category.name|slugify }}"
+                hx-target="#provider-services-section"
+                hx-select="#provider-services-section"
+                hx-swap="outerHTML"
+                hx-push-url="true"
+                class="provider-category-tab{% if selected_category_slug == category.name|slugify %} is-active{% endif %}"
+                role="tab"
+                aria-selected="{% if selected_category_slug == category.name|slugify %}true{% else %}false{% endif %}"
+            >
+                {{ category.name }}
+            </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% if provider.categorized_services_enabled and service_categories %}
+    <div class="service-category-accordion">
+        {% for category in visible_service_categories %}
+            <div class="provider-category-panel">
+                <div class="provider-service-grid">
+                    {% for service in category.services %}
+                        <article class="provider-service-card">
+                            <span class="tape" aria-hidden="true"></span>
+                            <div class="provider-service-card__media">
+                                <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
+                            </div>
+                            <div class="provider-service-card__content">
+                                <div class="provider-service-card__top">
+                                    <h4>{{ service.name }}</h4>
+                                    <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
+                                </div>
+                                <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Voir le tarif estimé</button>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="provider-service-grid">
+        {% for service in services %}
+            <article class="provider-service-card">
+                <span class="tape" aria-hidden="true"></span>
+                <div class="provider-service-card__media">
+                    <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
+                </div>
+                    <div class="provider-service-card__content">
+                        <div class="provider-service-card__top">
+                            <h4>{{ service.name }}</h4>
+                            <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
+                        </div>
+                    <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Voir le tarif estimé</button>
+                </div>
+            </article>
+        {% empty %}
+            <p class="meta-line" style="margin: 0;">Tarifs à confirmer avec la prestataire.</p>
+        {% endfor %}
+    </div>
+{% endif %}
