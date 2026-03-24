@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 
 from django import forms
@@ -44,6 +45,8 @@ from interface.models import (
 )
 from interface.services import booking_requests
 from chateaurose.seo import build_base_url
+
+logger = logging.getLogger(__name__)
 
 repo = DjangoBookingRepository()
 notifier = EmailNotifier()
@@ -131,6 +134,24 @@ def _friendly_domain_error_message(error: DomainError) -> str:
     if "Selected slot is unavailable" in raw:
         return "Ce créneau n'est plus disponible. Choisis un autre horaire."
     return raw
+
+
+def _release_payment_auth_safely(payment_auth_id: str | None) -> None:
+    auth_id = (payment_auth_id or "").strip()
+    if not auth_id:
+        return
+    try:
+        payment_gateway.release_auth(auth_id)
+    except Exception:
+        logger.exception("Failed to release payment auth %s after booking failure", auth_id)
+
+
+def _provider_configuration_blocks_salon_booking(provider: Provider, location_preference: str | None) -> bool:
+    requested_preference = (location_preference or "").strip()
+    is_salon_request = requested_preference == "salon" or provider.location_mode == Provider.LOCATION_MODE_SALON_ONLY
+    if not is_salon_request:
+        return False
+    return not provider.salon_zone or not provider.salon_address
 
 
 def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
@@ -446,8 +467,12 @@ def provider_detail(request, provider_id, quick_checkout=None):
                 thank_you_url = reverse("interface:thank_you_provider_booking")
                 return redirect(f"{thank_you_url}?provider={provider.name}")
             except DomainError as exc:
+                _release_payment_auth_safely(form.cleaned_data.get("payment_auth_id"))
                 error = _friendly_domain_error_message(exc)
         else:
+            if _provider_configuration_blocks_salon_booking(provider, request.POST.get("location_preference")):
+                _release_payment_auth_safely(prefilled_payment_auth_id)
+                prefilled_payment_auth_id = ""
             error = _first_form_error(form)
 
     service_categories = []
@@ -577,6 +602,7 @@ def quick_checkout_page(request, checkout_id):
                 thank_you_url = reverse("interface:thank_you_provider_booking")
                 return redirect(f"{thank_you_url}?provider={provider.name}")
             except DomainError as exc:
+                _release_payment_auth_safely(payment_auth_id)
                 error = _friendly_domain_error_message(exc)
 
     return render(
@@ -669,6 +695,7 @@ def provider_payment_intent(request):
     location_preference = payload.get("location_preference")
     desired_date = payload.get("desired_date")
     quick_checkout_id = payload.get("quick_checkout_id")
+    validate_only = bool(payload.get("validate_only"))
 
     quick_checkout = None
     if quick_checkout_id:
@@ -727,6 +754,9 @@ def provider_payment_intent(request):
         if amount_cents is None:
             return JsonResponse({"error": "Acompte non défini."}, status=400)
 
+    if validate_only:
+        return JsonResponse({"ok": True, "amount_cents": amount_cents})
+
     intent = payment_gateway.create_payment_intent(
         amount_cents=amount_cents,
         currency="EUR",
@@ -773,6 +803,7 @@ def provider_payment_return(request):
                 booking = _complete_quick_checkout(checkout, intent_id)
                 completed_booking_id = booking.id
             except DomainError:
+                _release_payment_auth_safely(intent_id)
                 completed_booking_id = ""
 
     if status in success_statuses:

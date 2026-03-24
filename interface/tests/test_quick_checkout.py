@@ -52,6 +52,15 @@ class _PaymentReturnStub:
         return {"id": intent_id, "status": self.status}
 
 
+class _PaymentReturnReleaseStub(_PaymentReturnStub):
+    def __init__(self, status):
+        super().__init__(status)
+        self.released = []
+
+    def release_auth(self, auth_id):
+        self.released.append(auth_id)
+
+
 @override_settings(
     STORAGES={
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -267,6 +276,33 @@ class QuickCheckoutViewTests(TestCase):
         self.assertTrue(self.checkout.is_active)
         self.assertIsNone(self.checkout.completed_at)
 
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_payment_return_releases_auth_when_quick_checkout_completion_fails(self):
+        from interface import views
+
+        self.checkout.location_preference = "domicile"
+        self.checkout.client_address = ""
+        self.checkout.save(update_fields=["location_preference", "client_address", "updated_at"])
+
+        gateway_stub = _PaymentReturnReleaseStub("succeeded")
+        original_gateway = views.payment_gateway
+        views.payment_gateway = gateway_stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+
+        response = self.client.get(
+            reverse("interface:provider_payment_return"),
+            data={
+                "provider_id": self.provider.id,
+                "quick_checkout_id": self.checkout.id,
+                "payment_intent": "pi_success_fail_submit",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Tu peux maintenant finaliser ta demande.")
+        self.assertEqual(Booking.objects.count(), 0)
+        self.assertEqual(gateway_stub.released, ["pi_success_fail_submit"])
+
 
 class QuickCheckoutModelValidationTests(TestCase):
     def setUp(self):
@@ -466,4 +502,26 @@ class QuickCheckoutModelValidationTests(TestCase):
             response.content,
             {"error": "Créneau non disponible : Maëlle n'est pas disponible en semaine"},
         )
+        self.assertEqual(payment_stub.calls, [])
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_payment_intent_validate_only_does_not_create_payment_intent(self):
+        from interface import views
+
+        payment_stub = _PaymentStub()
+        original_gateway = views.payment_gateway
+        views.payment_gateway = payment_stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+
+        response = self.client.post(
+            reverse("interface:provider_payment_intent"),
+            data={
+                "quick_checkout_id": self.checkout.id,
+                "validate_only": True,
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(response.content, {"ok": True, "amount_cents": 3000})
         self.assertEqual(payment_stub.calls, [])
