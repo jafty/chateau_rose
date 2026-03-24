@@ -1109,9 +1109,13 @@
             };
         };
 
-        const fetchPaymentIntent = async () => {
+        const fetchPaymentIntent = async ({ validateOnly = false } = {}) => {
             if (!paymentIntentUrl) {
                 throw new Error("L'URL de paiement est indisponible.");
+            }
+            const payload = buildPaymentPayload();
+            if (validateOnly) {
+                payload.validate_only = true;
             }
             const response = await fetch(paymentIntentUrl, {
                 method: 'POST',
@@ -1119,7 +1123,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken,
                 },
-                body: JSON.stringify(buildPaymentPayload()),
+                body: JSON.stringify(payload),
             });
 
             const payload = await response.json().catch(() => ({}));
@@ -1139,7 +1143,7 @@
             const requestId = ++desiredDateValidationRequestId;
 
             try {
-                await fetchPaymentIntent();
+                await fetchPaymentIntent({ validateOnly: true });
                 if (requestId !== desiredDateValidationRequestId) return false;
                 if (!silent) showDesiredDateError('');
                 return true;

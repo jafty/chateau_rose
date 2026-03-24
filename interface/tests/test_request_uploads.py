@@ -10,6 +10,14 @@ from django.urls import reverse
 from booking.models import Booking, Provider, ProviderPhoto, ProviderZone, Service, Zone
 
 
+class _ReleaseAuthStub:
+    def __init__(self):
+        self.released = []
+
+    def release_auth(self, auth_id):
+        self.released.append(auth_id)
+
+
 @override_settings(
     MEDIA_ROOT=tempfile.mkdtemp(),
     STRIPE_PUBLIC_KEY="",
@@ -119,6 +127,36 @@ class ProviderRequestUploadTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'value="pi_auth_saved"')
         self.assertEqual(Booking.objects.count(), 0)
+
+    @override_settings(STRIPE_PUBLIC_KEY="pk_test", STRIPE_SECRET_KEY="sk_test")
+    def test_salon_configuration_error_releases_existing_payment_auth(self):
+        from interface import views
+
+        self.provider.salon_address = ""
+        self.provider.save(update_fields=["salon_address"])
+
+        gateway_stub = _ReleaseAuthStub()
+        original_gateway = views.payment_gateway
+        views.payment_gateway = gateway_stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+
+        response = self.client.post(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            data={
+                "service_id": self.service.id,
+                "client_name": "Alice",
+                "client_email": "test@example.com",
+                "location_preference": "salon",
+                "desired_date": "2026-01-01T12:00",
+                "hair_length": "medium",
+                "payment_auth_id": "pi_auth_to_release",
+                "current_hair_picture": "existing.jpg",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'value="pi_auth_to_release"')
+        self.assertEqual(gateway_stub.released, ["pi_auth_to_release"])
 
     def test_provider_detail_renders_service_card_with_service_image(self):
         self.service.image_url = "https://cdn.example.com/services/tresses.jpg"
