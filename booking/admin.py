@@ -1,6 +1,7 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 
 from import_export.admin import ImportExportModelAdmin
@@ -25,7 +26,7 @@ from .models import (
     ServiceCategory,
     Zone,
 )
-from interface.models import MarketingService
+from interface.models import MarketingService, ProviderBookingDraft
 from interface.services.booking_requests import resolve_stored_media_url
 
 
@@ -125,6 +126,53 @@ class ProviderAdmin(ImportExportModelAdmin):
     list_filter = ("location_mode", "is_visible_on_website")
     inlines = []
     resource_class = ProviderResource
+    actions = ("generate_lead_prefill_links",)
+
+    @admin.action(description="Générer un lien de brouillon prérempli (lead)")
+    def generate_lead_prefill_links(self, request, queryset):
+        generated_count = 0
+        for provider in queryset:
+            draft = ProviderBookingDraft.objects.create(
+                provider=provider,
+                source=ProviderBookingDraft.SOURCE_ADMIN,
+                created_by=request.user if getattr(request.user, "is_authenticated", False) else None,
+                client_name="",
+                client_email="",
+                payload={
+                    "service_id": "",
+                    "service_name": "",
+                    "client_name": "",
+                    "client_email": "",
+                    "desired_date": "",
+                    "location_preference": "",
+                    "location": "",
+                    "client_address": "",
+                    "hair_length": "",
+                    "general_adjustments": [],
+                    "meche": False,
+                    "free_text": "",
+                    "current_hair_picture": "",
+                    "inspiration_pictures": [],
+                },
+            )
+            provider_link = (
+                reverse("interface:provider_detail", args=[provider.id])
+                + f"?recap={draft.token}#booking-wizard"
+            )
+            self.message_user(
+                request,
+                format_html(
+                    "{} · lien lead prérempli : <a href='{}' target='_blank' rel='noopener'>{}</a>",
+                    provider.name,
+                    provider_link,
+                    provider_link,
+                ),
+                level=messages.SUCCESS,
+            )
+            generated_count += 1
+
+        if generated_count == 0:
+            self.message_user(request, "Aucun prestataire sélectionné.", level=messages.WARNING)
 
 
 class ProviderPhotoInline(admin.TabularInline):
