@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Ton récapitulatif | Château Rose{% endblock %}
+
+{% block content %}
+<section class="thank-you-section">
+    <div class="container thank-you-shell">
+        <div class="paper-card thank-you-card" style="max-width: 760px; text-align: left;">
+            <h1 style="margin-bottom: 10px;">Vérifie ton récapitulatif</h1>
+            <p style="margin-bottom: 20px;">Tu peux corriger les infos, puis sécuriser ton créneau en validant l'empreinte bancaire.</p>
+
+            <div class="meta-line" style="margin-bottom: 14px;">
+                Prestataire : <strong>{{ provider.name }}</strong>
+            </div>
+            <ul style="margin: 0 0 20px 18px; line-height: 1.7;">
+                <li><strong>Prestation :</strong> {{ payload.service_name|default:"Non renseignée" }}</li>
+                <li><strong>Date souhaitée :</strong> {{ payload.desired_date|default:"Non renseignée" }}</li>
+                <li><strong>Lieu :</strong>
+                    {% if payload.location_preference == "salon" %}
+                        Chez la prestataire
+                    {% else %}
+                        À domicile
+                    {% endif %}
+                </li>
+                {% if payload.location_preference != "salon" %}
+                    <li><strong>Adresse :</strong> {{ payload.client_address|default:"Non renseignée" }}</li>
+                {% endif %}
+                <li><strong>Nom :</strong> {{ payload.client_name|default:"Non renseigné" }}</li>
+                <li><strong>Email :</strong> {{ payload.client_email|default:"Non renseigné" }}</li>
+                <li><strong>Précisions :</strong> {{ payload.free_text|default:"Aucune précision" }}</li>
+            </ul>
+
+            <div class="secure-badge" style="margin: 12px 0 18px;">
+                <span style="font-size: 1.5rem;">🔒</span>
+                <div>
+                    <strong>Total estimé : {{ total_price }}</strong><br>
+                    Empreinte à la validation : {{ deposit_price }} (déduits du total).<br>
+                    Reste à payer le jour J : {{ remaining_price }}.
+                </div>
+            </div>
+
+            {% if error %}<div class="alert error" style="margin-bottom:16px;">{{ error }}</div>{% endif %}
+
+            {% if is_completed %}
+                <div class="alert success" style="margin-bottom: 16px;">Cette demande a déjà été envoyée ✅</div>
+            {% endif %}
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <form method="post" action="" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit">
+                    <button type="submit" class="btn secondary">Modifier ce récapitulatif</button>
+                </form>
+            </div>
+
+            {% if not is_completed %}
+            <form method="post" id="recap-confirm-form" style="margin-top:16px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="confirm">
+                <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
+                {% if stripe_public_key %}
+                    <div class="form-field full-width" style="margin-bottom:14px;">
+                        <label>Saisis ta carte pour sécuriser ton créneau</label>
+                        <p class="meta-line" id="payment-hint" style="margin-top:6px;">Aucun débit avant confirmation finale par la prestataire.</p>
+                        <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
+                        <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
+                    </div>
+                {% endif %}
+                <button type="submit" class="btn">Sécuriser mon créneau</button>
+            </form>
+            {% endif %}
+
+            <p class="meta-line" style="margin-top: 16px;">Tu as aussi reçu ce lien par email, tu peux y revenir quand tu veux.</p>
+        </div>
+    </div>
+</section>
+{% if stripe_public_key and not is_completed %}
+<script src="https://js.stripe.com/v3"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const form = document.getElementById('recap-confirm-form');
+    const paymentElementContainer = document.getElementById('payment-element');
+    const paymentError = document.getElementById('payment-error');
+    const paymentAuthInput = document.getElementById('payment_auth_id');
+    if (!form || !paymentElementContainer || !paymentAuthInput) return;
+
+    const stripe = Stripe('{{ stripe_public_key|escapejs }}');
+    let elements = null;
+    let currentClientSecret = null;
+    const showError = (message = '') => {
+        if (!paymentError) return;
+        paymentError.textContent = message;
+        paymentError.hidden = !message;
+    };
+
+    const payload = {
+        provider_id: '{{ provider_id }}',
+        service_id: '{{ service_id }}',
+        desired_date: '{{ payload.desired_date|escapejs }}',
+        hair_length: '{{ payload.hair_length|default:""|escapejs }}',
+        location_preference: '{{ payload.location_preference|default:"salon"|escapejs }}',
+        meche: {{ payload.meche|yesno:"true,false" }},
+        general_adjustments: {{ payload.general_adjustments|default:"[]"|safe }},
+    };
+
+    const response = await fetch('{{ payment_intent_url }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': form.querySelector('input[name="csrfmiddlewaretoken"]').value,
+        },
+        body: JSON.stringify(payload),
+    });
+    const paymentData = await response.json().catch(() => ({}));
+    if (!response.ok || !paymentData.client_secret) {
+        showError(paymentData.error || "Impossible de préparer l'empreinte bancaire.");
+        return;
+    }
+
+    currentClientSecret = paymentData.client_secret;
+    elements = stripe.elements({ clientSecret: currentClientSecret });
+    const paymentElement = elements.create('payment');
+    paymentElement.mount('#payment-element');
+
+    form.addEventListener('submit', async (event) => {
+        if (paymentAuthInput.value) return;
+        event.preventDefault();
+        showError('');
+        const { error, paymentIntent } = await stripe.confirmPayment({
+            elements,
+            redirect: 'if_required',
+        });
+        if (error) {
+            showError(error.message || "Erreur de paiement.");
+            return;
+        }
+        if (paymentIntent?.id) {
+            paymentAuthInput.value = paymentIntent.id;
+            form.submit();
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

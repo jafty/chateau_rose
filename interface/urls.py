@@ -19,6 +19,11 @@ urlpatterns = [
         name="at_home_provider_list",
     ),
     path("prestataires/<int:provider_id>/", views.provider_detail, name="provider_detail"),
+    path(
+        "recapitulatif/<uuid:token>/",
+        views.provider_booking_recap,
+        name="provider_booking_recap",
+    ),
     path("checkout-rapide/<int:checkout_id>/", views.quick_checkout_page, name="quick_checkout_page"),
     path(
         "checkout-rapide/confirmation/<str:booking_id>/",

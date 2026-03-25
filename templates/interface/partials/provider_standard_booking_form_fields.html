@@ -174,38 +174,20 @@
                                 <h4>4. Valide ta demande</h4>
 
                                 <div class="secure-badge">
-                                    <span style="font-size: 1.5rem;">🔒</span>
+                                    <span style="font-size: 1.5rem;">🧾</span>
                                     <div>
-                                        <strong>Frais de réservation : <span id="deposit-amount-inline">-- €</span> (déduits du total).</strong><br>
-                                        Zéro débit surprise : les frais sont prélevés uniquement après confirmation du rendez-vous.<br>
-                                        Le reste est réglé directement à {{ provider.name }} le jour J.
+                                        <strong>Dernière étape : vérifie ton récapitulatif.</strong><br>
+                                        Tu verras ensuite le montant estimé et l'empreinte bancaire pour sécuriser le créneau.
                                     </div>
-                                </div>
-
-                                {% if stripe_public_key %}
-                                    <div class="form-field full-width">
-                                        <label>Saisir la carte pour garantir le créneau</label>
-                                        <p class="field-hint" id="deposit-payment-hint">Frais de réservation estimés : -- € (aucun débit tant que le rendez-vous n’est pas confirmé).</p>
-                                        <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
-                                        <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
-                                    </div>
-                                {% endif %}
-
-                                <div class="form-field checkbox-field full-width" style="margin-top: 15px;">
-                                    <label>
-                                        <input type="checkbox" required>
-                                        <span style="font-size: 0.9rem;">J’accepte que cette empreinte serve de garantie en cas d’absence injustifiée (no-show).</span>
-                                    </label>
                                 </div>
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
-                                    <button type="submit" class="btn">Envoyer ma demande gratuitement</button>
+                                    <button type="submit" class="btn">Vérifier puis sécuriser mon créneau</button>
                                 </div>
                             </fieldset>
 
                             <input type="hidden" name="provider_id" value="{{ provider.id }}">
-                            <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="{{ payment_auth_id }}">
                             <input type="hidden" name="current_hair_picture" id="current_hair_picture" value="">
                             <input type="hidden" name="quick_checkout_id" id="quick_checkout_id" value="{{ quick_checkout_id|default:'' }}">
                             

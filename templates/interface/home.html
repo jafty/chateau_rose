@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Réserve ta coiffure afro à Toulouse en moins de 2 minutes | Château Rose{% endblock %}
+{% block title %}Coiffure afro à Toulouse | Demande rapide & tarifs | Château Rose{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -180,11 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="hero home-hero">
     <div class="container hero-grid">
         <div class="hero-content hero-card">
-            <h1 class="hero-title">Réserve ta coiffure <span>afro</span> à Toulouse sans galère.</h1>
-            <p class="hero-text">En deux minutes tu poses ton rendez-vous, tu échanges directement avec la prestataire et tu reçois une réponse rapide et fiable.</p>
+            <h1 class="hero-title">Ta coiffure <span>afro</span> à Toulouse, sans galère.</h1>
+            <p class="hero-text">Tu fais une demande rapide, on te trouve la bonne prestataire et on t'envoie une proposition claire par email ou WhatsApp.</p>
             <div class="hero-actions">
-                <a href="#service-request" class="btn">Prendre rendez-vous</a>
-                <a href="#providers" class="btn secondary">Voir les prestataires</a>
+                <a href="#service-request" class="btn">Demande rapide</a>
+                <a href="#providers" class="btn secondary">Voir les tarifs</a>
             </div>
             <a href="#happy-clients" class="trust-indicator" aria-label="Voir les avis clients et résultats">
                 <span class="trust-icon" aria-hidden="true">✓</span>
@@ -369,7 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="form-section" id="service-request">
     <div class="container">
         <div class="paper-form">
-            {% include "interface/partials/service_request_form.html" with title="Recevoir une proposition rapide" lead="Décris ton besoin en 2 minutes et reçois une proposition claire par email." %}
+            {% include "interface/partials/service_request_form.html" with title="Recevoir une proposition rapide" lead="Décris ton besoin et reçois une proposition claire par email ou WhatsApp." %}
         </div>
     </div>
 </section>
@@ -377,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="providers-section" id="providers">
     <div class="container">
         <h2 class="section-title">Nos As de la coiffure afro à Toulouse</h2>
+        <p class="section-subtitle">Pour voir un tarif précis, choisis d'abord une prestataire. Chaque profil affiche ses prix selon la prestation.</p>
         <div class="homepage-providers-grid" aria-label="Top 3 des prestataires">
             {% for provider in providers|slice:":3" %}
                 {% include "interface/partials/provider_card.html" with provider=provider %}
