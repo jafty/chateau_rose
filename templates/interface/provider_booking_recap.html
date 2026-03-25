@@ -7,36 +7,56 @@
     <div class="container thank-you-shell">
         <div class="paper-card thank-you-card" style="max-width: 760px; text-align: left;">
             <h1 style="margin-bottom: 10px;">Vérifie ton récapitulatif</h1>
-            <p style="margin-bottom: 20px;">Tu peux corriger les infos, puis sécuriser ton créneau en validant l'empreinte bancaire.</p>
+            <p style="margin-bottom: 20px;">Corrige si besoin, puis sécurise ton créneau en 30 secondes.</p>
 
             <div class="meta-line" style="margin-bottom: 14px;">
                 Prestataire : <strong>{{ provider.name }}</strong>
             </div>
-            <ul style="margin: 0 0 20px 18px; line-height: 1.7;">
-                <li><strong>Prestation :</strong> {{ payload.service_name|default:"Non renseignée" }}</li>
-                <li><strong>Date souhaitée :</strong> {{ payload.desired_date|default:"Non renseignée" }}</li>
-                <li><strong>Lieu :</strong>
-                    {% if payload.location_preference == "salon" %}
-                        Chez la prestataire
-                    {% else %}
-                        À domicile
-                    {% endif %}
-                </li>
+
+            <div style="display:grid; gap: 12px; margin-bottom: 20px;">
+                <div class="summary-row"><strong>Prestation</strong><span>{{ payload.service_name|default:"Non renseignée" }}</span></div>
+                <div class="summary-row"><strong>Date souhaitée</strong><span>{{ desired_date_display }}</span></div>
+                <div class="summary-row">
+                    <strong>Lieu</strong>
+                    <span>
+                        {% if payload.location_preference == "salon" %}
+                            Chez la prestataire
+                        {% else %}
+                            À domicile
+                        {% endif %}
+                    </span>
+                </div>
                 {% if payload.location_preference != "salon" %}
-                    <li><strong>Adresse :</strong> {{ payload.client_address|default:"Non renseignée" }}</li>
+                    <div class="summary-row"><strong>Adresse</strong><span>{{ payload.client_address|default:"Non renseignée" }}</span></div>
                 {% endif %}
-                <li><strong>Nom :</strong> {{ payload.client_name|default:"Non renseigné" }}</li>
-                <li><strong>Email :</strong> {{ payload.client_email|default:"Non renseigné" }}</li>
-                <li><strong>Précisions :</strong> {{ payload.free_text|default:"Aucune précision" }}</li>
-            </ul>
+                <div class="summary-row"><strong>Nom</strong><span>{{ payload.client_name|default:"Non renseigné" }}</span></div>
+                <div class="summary-row"><strong>Email</strong><span>{{ payload.client_email|default:"Non renseigné" }}</span></div>
+                <div class="summary-row"><strong>Précisions</strong><span>{{ payload.free_text|default:"Aucune précision" }}</span></div>
+            </div>
 
             <div class="secure-badge" style="margin: 12px 0 18px;">
                 <span style="font-size: 1.5rem;">🔒</span>
                 <div>
-                    <strong>Total estimé : {{ total_price }}</strong><br>
-                    Empreinte à la validation : {{ deposit_price }} (déduits du total).<br>
-                    Reste à payer le jour J : {{ remaining_price }}.
+                    <strong>Seuls les frais de réservation sont sécurisés maintenant : {{ deposit_price }}</strong><br>
+                    Ce montant est <strong>déduit du prix final</strong>. Aucun débit immédiat sans confirmation.
                 </div>
+            </div>
+            <div class="pricing-grid">
+                <article class="pricing-card pricing-card--primary">
+                    <p class="meta-line">À sécuriser maintenant</p>
+                    <p class="pricing-amount">{{ deposit_price }}</p>
+                    <p class="meta-line">Empreinte bancaire uniquement, débitée après confirmation.</p>
+                </article>
+                <article class="pricing-card">
+                    <p class="meta-line">Estimation totale</p>
+                    <p class="pricing-amount">{{ total_price }}</p>
+                    <p class="meta-line">Montant indicatif selon les options choisies.</p>
+                </article>
+                <article class="pricing-card">
+                    <p class="meta-line">À régler le jour J</p>
+                    <p class="pricing-amount">{{ remaining_price }}</p>
+                    <p class="meta-line">Paiement direct à {{ provider.name }} après déduction.</p>
+                </article>
             </div>
 
             {% if error %}<div class="alert error" style="margin-bottom:16px;">{{ error }}</div>{% endif %}
@@ -49,7 +69,7 @@
                 <form method="post" action="" style="display:inline;">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="edit">
-                    <button type="submit" class="btn secondary">Modifier ce récapitulatif</button>
+                    <button type="submit" class="btn secondary">Modifier ma demande</button>
                 </form>
             </div>
 
@@ -66,7 +86,7 @@
                         <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
                     </div>
                 {% endif %}
-                <button type="submit" class="btn">Sécuriser mon créneau</button>
+                <button type="submit" class="btn">Sécuriser ce créneau</button>
             </form>
             {% endif %}
 
@@ -74,6 +94,40 @@
         </div>
     </div>
 </section>
+<style>
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(163, 124, 91, 0.07);
+    }
+    .summary-row span {
+        text-align: right;
+    }
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin: 14px 0 18px;
+    }
+    .pricing-card {
+        border: 1px solid rgba(163, 124, 91, 0.24);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+    }
+    .pricing-card--primary {
+        border-color: rgba(31, 133, 73, 0.45);
+        background: rgba(31, 133, 73, 0.09);
+    }
+    .pricing-amount {
+        margin: 4px 0;
+        font-size: 1.35rem;
+        font-weight: 700;
+    }
+</style>
 {% if stripe_public_key and not is_completed %}
 <script src="https://js.stripe.com/v3"></script>
 <script>

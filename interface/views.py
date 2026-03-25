@@ -1,6 +1,7 @@
 import json
 import logging
 import uuid
+from datetime import datetime
 
 from django import forms
 from django.contrib.auth.decorators import login_required
@@ -719,6 +720,11 @@ def provider_booking_recap(request, token):
 
     deposit_percentage = provider.deposit_percentage or 30
     deposit_cents = round(total_cents * deposit_percentage / 100)
+    desired_date_display = payload.get("desired_date") or "Non renseignée"
+    try:
+        desired_date_display = timezone.localtime(datetime.fromisoformat(str(payload.get("desired_date")))).strftime("%d/%m/%Y à %H:%M")
+    except (TypeError, ValueError):
+        pass
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
     require_payment_auth = bool(stripe_public_key)
     error = None
@@ -804,6 +810,7 @@ def provider_booking_recap(request, token):
             "total_price": booking_requests.format_price(total_cents),
             "deposit_price": booking_requests.format_price(deposit_cents),
             "remaining_price": booking_requests.format_price(max(total_cents - deposit_cents, 0)),
+            "desired_date_display": desired_date_display,
             "stripe_public_key": stripe_public_key,
             "require_payment_auth": require_payment_auth,
             "payment_intent_url": reverse("interface:provider_payment_intent"),

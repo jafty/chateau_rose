@@ -80,13 +80,13 @@ class ProviderBookingRecapFlowTests(TestCase):
 
         recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
         self.assertContains(recap_page, "Vérifie ton récapitulatif")
-        self.assertContains(recap_page, "Sécuriser mon créneau")
+        self.assertContains(recap_page, "Sécuriser ce créneau")
 
         prefill_page = self.client.get(
             reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={draft.token}"
         )
         self.assertContains(prefill_page, "Récapitulatif chargé")
-        self.assertContains(prefill_page, "Vérifier puis sécuriser mon créneau")
+        self.assertContains(prefill_page, "Voir mon récapitulatif")
 
         submission = self.client.post(
             reverse("interface:provider_booking_recap", args=[draft.token]),
