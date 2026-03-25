@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Coiffure afro à Toulouse | Demande rapide & tarifs | Château Rose{% endblock %}
+{% block title %}Coiffure afro à Toulouse | Réserve ton RDV | Château Rose{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -181,9 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="container hero-grid">
         <div class="hero-content hero-card">
             <h1 class="hero-title">Ta coiffure <span>afro</span> à Toulouse, sans galère.</h1>
-            <p class="hero-text">Tu fais une demande rapide, on te trouve la bonne prestataire et on t'envoie une proposition claire par email ou WhatsApp.</p>
+            <p class="hero-text">Tu nous dis la coiffure que tu veux, on te répond vite et on te cale un rendez-vous clair, sans prise de tête.</p>
             <div class="hero-actions">
-                <a href="#service-request" class="btn">Demande rapide</a>
+                <a href="#service-request" class="btn">Prends RDV en 30 secondes</a>
                 <a href="#providers" class="btn secondary">Voir les tarifs</a>
             </div>
             <a href="#happy-clients" class="trust-indicator" aria-label="Voir les avis clients et résultats">
@@ -226,24 +226,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <section class="steps-section" id="about">
     <div class="container">
-        <h2 class="section-title">Dépose ta demande en quelques minutes</h2>
-        <p class="section-subtitle">Un parcours simple, transparent et rapide pour trouver la bonne prestataire ou le bon prestataire en ville.</p>
+        <h2 class="section-title">Caler ton RDV en 4 étapes</h2>
+        <p class="section-subtitle">Tu remplis le formulaire en 30 secondes, puis on s'occupe du reste pour verrouiller ton créneau.</p>
         <div class="step-list" style="margin-top: 50px;">
             <div class="step-item">
-                <strong>Trouve rapidement</strong>
-                <p>Une prestataire ou un prestataire pour ta coiffure afro : tresses, locks, soins, perruque... N'importe où à Toulouse.</p>
+                <strong>Dis-nous ce que tu veux</strong>
+                <p>Style, longueur, zone, date souhaitée : tu nous donnes l'essentiel en quelques clics.</p>
             </div>
             <div class="step-item">
-                <strong>Bloque ton rendez-vous</strong>
-                <p>Tu donnes les infos clés, tu vois l'estimation et tu poses un acompte pour confirmer sans attendre.</p>
+                <strong>On te confirme le bon créneau</strong>
+                <p>On vérifie avec notre équipe et on te propose un rendez-vous qui colle à ta demande.</p>
             </div>
             <div class="step-item">
-                <strong>Échange direct</strong>
-                <p>La coiffeuse ou le coiffeur te répond vite, clarifie si besoin et t'envoie une proposition finale à valider.</p>
+                <strong>Tu sécurises la réservation</strong>
+                <p>Tu valides avec les frais de réservation : débit uniquement après notre confirmation de RDV.</p>
             </div>
             <div class="step-item">
-                <strong>Fais-toi coiffer</strong>
-                <p>Le jour J, tu arrives confié·e, tu paies selon ses modalités et tu repars avec la coupe de tes rêves.</p>
+                <strong>Tu viens, on gère le glow-up</strong>
+                <p>Le jour J, tu viens serein·e et tu règles le reste après la prestation.</p>
             </div>
         </div>
 
@@ -253,24 +253,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p style="color:var(--ink-secondary); margin-bottom:20px;">Des profils afro vérifiés qui se déplacent, t'accueillent chez eux ou chez elles, avec un brief clair dès le départ.</p>
                 <div class="benefit-list">
                     <div class="benefit-card">
-                        <span class="benefit-icon" aria-hidden="true">⚡</span>
+                        <span class="benefit-icon" aria-hidden="true">🕐</span>
                         <div>
-                            <strong>Réponse rapide</strong>
-                            <span>Une demande claire, des retours en quelques minutes pour réserver sans attendre.</span>
+                            <strong>Traitement rapide</strong>
+                            <span>On traite ta demande vite et on t'envoie une confirmation de RDV en moyenne sous 1h (heures d'ouverture).</span>
                         </div>
                     </div>
                     <div class="benefit-card">
-                        <span class="benefit-icon" aria-hidden="true">🤝</span>
+                        <span class="benefit-icon" aria-hidden="true">🧑🏾‍💼</span>
                         <div>
-                            <strong>Prestataires fiables</strong>
-                            <span>Des pros sélectionnés, notés et joignables facilement avant le rendez-vous.</span>
+                            <strong>Accompagnement Château Rose</strong>
+                            <span>Tu échanges avec nous pour cadrer ta demande et confirmer un créneau fiable.</span>
                         </div>
                     </div>
                     <div class="benefit-card">
                         <span class="benefit-icon" aria-hidden="true">🔒</span>
                         <div>
-                            <strong>Rendez-vous sécurisé</strong>
-                            <span>Acompte encadré et confirmation finale pour éviter les no-show.</span>
+                            <strong>Réservation sécurisée</strong>
+                            <span>Frais de réservation encadrés, débit seulement après notre confirmation de RDV.</span>
                         </div>
                     </div>
                 </div>
@@ -288,8 +288,10 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="story-section" id="happy-clients" aria-label="Stories et avis clients">
     <div class="container">
         <div class="story-header">
-            <h2 class="story-title">Les clients et clientes partagent leurs résultats en story</h2>
-            <p class="section-subtitle">Survole (ou touche sur mobile) une story pour lire l'avis associé.</p>
+            <div class="section-paper-head">
+                <h2 class="story-title">Les clients et clientes partagent leurs résultats en story</h2>
+                <p class="section-subtitle">Survole (ou touche sur mobile) une story pour lire l'avis associé.</p>
+            </div>
         </div>
         <div class="scroll-rail" data-scroll-rail>
             <div class="scroll-rail-topbar">
@@ -356,11 +358,11 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="reassurance-item">
             <span class="reassurance-icon" aria-hidden="true">🔒</span>
-            <span>Acompte sécurisé pour réserver</span>
+            <span>Frais de réservation sécurisés</span>
         </div>
         <div class="reassurance-item">
             <span class="reassurance-icon" aria-hidden="true">💬</span>
-            <span>Échange direct avec la prestataire</span>
+            <span>Échange direct avec l'équipe Château Rose</span>
         </div>
     </div>
 </section>
@@ -369,15 +371,17 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="form-section" id="service-request">
     <div class="container">
         <div class="paper-form">
-            {% include "interface/partials/service_request_form.html" with title="Recevoir une proposition rapide" lead="Décris ton besoin et reçois une proposition claire par email ou WhatsApp." %}
+            {% include "interface/partials/service_request_form.html" with title="Réserve ton RDV en 30 secondes" lead="Tu nous dis ce que tu veux, on te répond rapidement avec une confirmation de RDV par email ou WhatsApp." %}
         </div>
     </div>
 </section>
 
 <section class="providers-section" id="providers">
     <div class="container">
-        <h2 class="section-title">Nos As de la coiffure afro à Toulouse</h2>
-        <p class="section-subtitle">Pour voir un tarif précis, choisis d'abord une prestataire. Chaque profil affiche ses prix selon la prestation.</p>
+        <div class="section-paper-head">
+            <h2 class="section-title">Nos as de la coiffure afro à Toulouse</h2>
+            <p class="section-subtitle">Estime le prix en choisissant d'abord une prestataire : chaque profil affiche ses tarifs par prestation.</p>
+        </div>
         <div class="homepage-providers-grid" aria-label="Top 3 des prestataires">
             {% for provider in providers|slice:":3" %}
                 {% include "interface/partials/provider_card.html" with provider=provider %}

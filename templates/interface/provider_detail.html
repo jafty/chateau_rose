@@ -934,8 +934,6 @@
             setValue('location', recapPrefill.location || '');
             refreshEstimate();
         };
-        applyRecapPrefill();
-
         const syncLocationPreference = () => {
             let selected = document.querySelector('input[name="location_preference"]:checked')?.value;
             if (!selected && locationPreferenceInput) {
@@ -1465,6 +1463,8 @@
             updateGeneralAdjustments(serviceSelect.value);
             updateMecheField(serviceSelect.value);
         }
+
+        applyRecapPrefill();
 
         const galleryItems = Array.from(document.querySelectorAll('[data-gallery-index]')).map((item) => ({
             trigger: item,
