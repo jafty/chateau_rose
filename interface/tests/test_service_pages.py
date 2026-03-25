@@ -115,10 +115,8 @@ class ServicePagesTests(TestCase):
             url,
             {
                 "request_service": "1",
-                "client_email": "client@example.com",
-                "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
+                "client_phone": "0612345678",
                 "details": "Besoin urgent",
-                "availabilities": ["weekday_evening", "weekend_morning"],
             },
         )
 
@@ -129,12 +127,12 @@ class ServicePagesTests(TestCase):
         self.assertEqual(request_record.marketing_service, self.marketing_service)
         self.assertIsNone(request_record.zone)
         self.assertEqual(
-            request_record.location_preference, ServiceRequest.LOCATION_PREFERENCE_SALON
+            request_record.location_preference, ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME
         )
         self.assertIsNone(request_record.desired_date)
-        self.assertEqual(request_record.client_email, "client@example.com")
-        self.assertEqual(request_record.client_phone, "")
-        self.assertEqual(request_record.availabilities, ["weekday_evening", "weekend_morning"])
+        self.assertEqual(request_record.client_email, "")
+        self.assertEqual(request_record.client_phone, "0612345678")
+        self.assertEqual(request_record.availabilities, [])
 
 
     def test_service_page_creates_quick_request_interaction_and_sets_reply_to(self):
@@ -145,21 +143,22 @@ class ServicePagesTests(TestCase):
                 url,
                 {
                     "request_service": "1",
-                    "client_email": "client@example.com",
-                    "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
+                    "client_phone": "0612345678",
                     "details": "Besoin urgent",
-                    "availabilities": ["weekday_evening"],
                 },
             )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], reverse("interface:thank_you_quick_request"))
         notify_mock.assert_called_once()
-        self.assertEqual(notify_mock.call_args.kwargs["reply_to"], "client@example.com")
+        self.assertEqual(
+            notify_mock.call_args.kwargs["reply_to"],
+            "japhet.situmonana@gmail.com",
+        )
 
         interaction = Interaction.objects.get(kind=Interaction.KIND_QUICK_REQUEST)
-        self.assertEqual(interaction.contact_phone, "")
-        self.assertEqual(interaction.contact_email, "client@example.com")
+        self.assertEqual(interaction.contact_phone, "0612345678")
+        self.assertEqual(interaction.contact_email, "")
         self.assertEqual(interaction.next_action, "Contacter la cliente / le client rapidement")
 
 

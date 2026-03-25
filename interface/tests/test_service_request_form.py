@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from interface.forms import ServiceRequestForm
-from interface.models import MarketingService, ServiceRequest
+from interface.models import MarketingService
 
 
 class ServiceRequestFormTests(TestCase):
@@ -12,58 +12,49 @@ class ServiceRequestFormTests(TestCase):
         form = ServiceRequestForm(
             data={
                 "marketing_service": self.service.id,
-                "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
-                "client_email": "client@example.com",
+                "client_phone": "06 12 34 56 78",
                 "details": "Knotless braids taille S.",
-                "availabilities": ["weekday_evening"],
             }
         )
 
         self.assertTrue(form.is_valid(), form.errors)
 
-    def test_requires_details_and_availabilities(self):
+    def test_requires_details_and_phone(self):
         form = ServiceRequestForm(
             data={
-                "marketing_service": self.service.id,
-                "location_preference": ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
-                "client_email": "",
+                "marketing_service": "",
+                "client_phone": "",
                 "details": "",
-                "availabilities": [],
             }
         )
 
         self.assertFalse(form.is_valid())
-        self.assertIn("client_email", form.errors)
+        self.assertIn("marketing_service", form.errors)
+        self.assertIn("client_phone", form.errors)
         self.assertIn("details", form.errors)
-        self.assertIn("availabilities", form.errors)
 
     def test_sanitizes_whatsapp_number(self):
         form = ServiceRequestForm(
             data={
                 "marketing_service": self.service.id,
-                "location_preference": ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
-                "client_email": "client@example.com",
                 "client_phone": "06 12 34 56 78",
                 "details": "Vanilles à domicile",
-                "availabilities": ["weekday_morning", "weekend_morning"],
             }
         )
 
         self.assertTrue(form.is_valid(), form.errors)
         instance = form.save()
         self.assertEqual(instance.client_phone, "0612345678")
-        self.assertEqual(instance.availabilities, ["weekday_morning", "weekend_morning"])
+        self.assertEqual(instance.availabilities, [])
 
-    def test_phone_is_optional(self):
+    def test_phone_is_required(self):
         form = ServiceRequestForm(
             data={
                 "marketing_service": self.service.id,
-                "location_preference": ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
-                "client_email": "client@example.com",
                 "client_phone": "",
                 "details": "Vanilles à domicile",
-                "availabilities": ["weekday_morning"],
             }
         )
 
-        self.assertTrue(form.is_valid(), form.errors)
+        self.assertFalse(form.is_valid())
+        self.assertIn("client_phone", form.errors)

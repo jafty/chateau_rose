@@ -8,6 +8,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from booking.models import Booking, Provider, ProviderPhoto, ProviderZone, Service, Zone
+from interface.models import ProviderBookingDraft
 
 
 class _ReleaseAuthStub:
@@ -72,16 +73,17 @@ class ProviderRequestUploadTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        booking = Booking.objects.get()
+        draft = ProviderBookingDraft.objects.get()
+        self.assertEqual(response.url, reverse("interface:provider_booking_recap", args=[draft.token]))
         # Current hair picture path stored and file exists
-        self.assertTrue(booking.current_hair_picture)
-        self.assertTrue(os.path.exists(os.path.join(settings.MEDIA_ROOT, booking.current_hair_picture)))
+        self.assertTrue(draft.payload["current_hair_picture"])
+        self.assertTrue(os.path.exists(os.path.join(settings.MEDIA_ROOT, draft.payload["current_hair_picture"])))
         # Inspiration pictures stored as a list of paths, files exist
-        self.assertEqual(len(booking.inspiration_pictures), 2)
-        for path in booking.inspiration_pictures:
+        self.assertEqual(len(draft.payload["inspiration_pictures"]), 2)
+        for path in draft.payload["inspiration_pictures"]:
             self.assertTrue(os.path.exists(os.path.join(settings.MEDIA_ROOT, path)))
-        self.assertTrue(booking.meche)
-        self.assertEqual(booking.hair_length, "medium")
+        self.assertTrue(draft.payload["meche"])
+        self.assertEqual(draft.payload["hair_length"], "medium")
 
     def test_hybrid_provider_allows_salon_choice_without_zone(self):
         url = reverse("interface:provider_detail", args=[self.provider.id])
@@ -102,9 +104,9 @@ class ProviderRequestUploadTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        booking = Booking.objects.get()
-        self.assertEqual(booking.location, "Paris 10e")
-        self.assertFalse(booking.meche)
+        draft = ProviderBookingDraft.objects.get()
+        self.assertEqual(draft.payload["location"], "Paris 10e")
+        self.assertFalse(draft.payload["meche"])
 
     def test_invalid_form_keeps_existing_payment_auth_id_visible(self):
         url = reverse("interface:provider_detail", args=[self.provider.id])
@@ -125,8 +127,8 @@ class ProviderRequestUploadTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'value="pi_auth_saved"')
         self.assertEqual(Booking.objects.count(), 0)
+        self.assertEqual(ProviderBookingDraft.objects.count(), 0)
 
     @override_settings(STRIPE_PUBLIC_KEY="pk_test", STRIPE_SECRET_KEY="sk_test")
     def test_salon_configuration_error_releases_existing_payment_auth(self):
