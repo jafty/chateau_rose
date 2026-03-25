@@ -7,7 +7,7 @@
     <div class="container thank-you-shell">
         <div class="paper-card thank-you-card" style="max-width: 760px; text-align: left;">
             <h1 style="margin-bottom: 10px;">Vérifie ton récapitulatif</h1>
-            <p style="margin-bottom: 20px;">Corrige si besoin, puis sécurise ton créneau en 30 secondes.</p>
+            <p style="margin-bottom: 20px;">Tu fais ici une demande de rendez-vous avec empreinte bancaire, pas un paiement immédiat.</p>
 
             <div class="meta-line" style="margin-bottom: 14px;">
                 Prestataire : <strong>{{ provider.name }}</strong>
@@ -37,15 +37,15 @@
             <div class="secure-badge" style="margin: 12px 0 18px;">
                 <span style="font-size: 1.5rem;">🔒</span>
                 <div>
-                    <strong>Seuls les frais de réservation sont sécurisés maintenant : {{ deposit_price }}</strong><br>
-                    Ce montant est <strong>déduit du prix final</strong>. Aucun débit immédiat sans confirmation.
+                    <strong class="secure-badge-title">Aucun montant n'est débité maintenant.</strong><br>
+                    Une empreinte bancaire est posée pour <strong>{{ deposit_price }}</strong>. Les frais de réservation ne sont prélevés que si <strong>{{ provider.name }}</strong> confirme le rendez-vous.
                 </div>
             </div>
             <div class="pricing-grid">
                 <article class="pricing-card pricing-card--primary">
-                    <p class="meta-line">À sécuriser maintenant</p>
+                    <p class="meta-line">Empreinte bancaire pour demander le créneau</p>
                     <p class="pricing-amount">{{ deposit_price }}</p>
-                    <p class="meta-line">Empreinte bancaire uniquement, débitée après confirmation.</p>
+                    <p class="meta-line">Pas de débit immédiat. Débit uniquement après confirmation de la prestataire.</p>
                 </article>
                 <article class="pricing-card">
                     <p class="meta-line">Estimation totale</p>
@@ -124,8 +124,21 @@
     }
     .pricing-amount {
         margin: 4px 0;
-        font-size: 1.35rem;
+        font-size: 1.15rem;
+        font-weight: 600;
+    }
+    .pricing-card--primary .pricing-amount {
+        font-size: 1.45rem;
         font-weight: 700;
+    }
+    .pricing-card:not(.pricing-card--primary) .meta-line {
+        font-size: 0.9rem;
+        color: var(--ink-secondary);
+    }
+    .secure-badge-title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #155b32;
     }
 </style>
 {% if stripe_public_key and not is_completed %}

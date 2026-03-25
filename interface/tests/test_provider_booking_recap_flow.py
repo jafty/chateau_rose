@@ -87,6 +87,8 @@ class ProviderBookingRecapFlowTests(TestCase):
         )
         self.assertContains(prefill_page, "Récapitulatif chargé")
         self.assertContains(prefill_page, "Voir mon récapitulatif")
+        self.assertContains(prefill_page, 'JSON.parse(\'{')
+        self.assertNotContains(prefill_page, "client_name': 'Sarah")
 
         submission = self.client.post(
             reverse("interface:provider_booking_recap", args=[draft.token]),

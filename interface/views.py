@@ -591,7 +591,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
         "quick_checkout": quick_checkout,
         "is_quick_checkout": quick_checkout is not None,
         "quick_checkout_id": quick_checkout.id if quick_checkout else "",
-        "recap_prefill": recap_prefill,
+        "recap_prefill": json.dumps(recap_prefill),
         "recap_token": recap_token,
         "recap_message": recap_message,
     }
