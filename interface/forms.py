@@ -43,10 +43,6 @@ class ServiceRequestForm(forms.ModelForm):
         label="Ton numéro (WhatsApp ou téléphone)",
         required=True,
     )
-    inspiration_picture = forms.ImageField(
-        label="Photo de référence (optionnel)",
-        required=False,
-    )
 
     class Meta:
         model = ServiceRequest
@@ -73,7 +69,6 @@ class ServiceRequestForm(forms.ModelForm):
             "placeholder",
             "Exemple : knotless braids, semaine prochaine, chez moi / chez la coiffeuse, cheveux mi-longs.",
         )
-        self.fields["inspiration_picture"].widget.attrs.setdefault("class", "request-file-input")
 
     def clean_client_phone(self):
         raw_phone = (self.cleaned_data.get("client_phone") or "").strip()

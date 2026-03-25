@@ -185,7 +185,7 @@ def _build_recap_email_body(*, provider: Provider, recap_url: str, payload: dict
     return "\n".join(lines)
 
 
-def _create_provider_booking_recap(*, request, provider: Provider, form: ProviderBookingRequestForm):
+def _build_provider_booking_recap_payload(*, provider: Provider, form: ProviderBookingRequestForm) -> dict:
     current_hair_picture_file = form.cleaned_data.get("current_hair_picture_file")
     if current_hair_picture_file:
         current_picture = booking_requests.save_current_hair_picture(current_hair_picture_file)
@@ -200,7 +200,7 @@ def _create_provider_booking_recap(*, request, provider: Provider, form: Provide
     if service is None:
         raise ValidationError("Service non disponible.")
 
-    recap_payload = prepare_booking_recap.execute(
+    return prepare_booking_recap.execute(
         provider_id=provider.id,
         service_id=form.cleaned_data.get("service_id"),
         service_name=service.name,
@@ -217,8 +217,21 @@ def _create_provider_booking_recap(*, request, provider: Provider, form: Provide
         current_hair_picture=current_picture,
         inspiration_pictures=stored_inspiration_pictures,
     )
+
+
+def _create_provider_booking_recap(
+    *,
+    request,
+    provider: Provider,
+    form: ProviderBookingRequestForm,
+    source: str = ProviderBookingDraft.SOURCE_CLIENT,
+    created_by=None,
+):
+    recap_payload = _build_provider_booking_recap_payload(provider=provider, form=form)
     draft = ProviderBookingDraft.objects.create(
         provider=provider,
+        source=source,
+        created_by=created_by,
         client_email=recap_payload["client_email"],
         client_name=recap_payload["client_name"],
         payload=recap_payload,
@@ -231,6 +244,15 @@ def _create_provider_booking_recap(*, request, provider: Provider, form: Provide
         "Ton récapitulatif est prêt",
         _build_recap_email_body(provider=provider, recap_url=recap_url, payload=recap_payload),
     )
+    return draft
+
+
+def _update_provider_booking_recap(*, provider: Provider, form: ProviderBookingRequestForm, draft: ProviderBookingDraft):
+    recap_payload = _build_provider_booking_recap_payload(provider=provider, form=form)
+    draft.client_email = recap_payload["client_email"]
+    draft.client_name = recap_payload["client_name"]
+    draft.payload = recap_payload
+    draft.save(update_fields=["client_email", "client_name", "payload", "updated_at"])
     return draft
 
 
@@ -501,6 +523,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
 
     if request.method == "POST" and request.POST.get("question_form") != "1":
         prefilled_payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
+        recap_token_from_post = (request.POST.get("recap_token") or "").strip()
         form = ProviderBookingRequestForm(
             request.POST,
             request.FILES,
@@ -510,7 +533,26 @@ def provider_detail(request, provider_id, quick_checkout=None):
         )
         if form.is_valid():
             try:
-                recap = _create_provider_booking_recap(request=request, provider=provider, form=form)
+                existing_admin_draft = None
+                if recap_token_from_post:
+                    existing_admin_draft = ProviderBookingDraft.objects.filter(
+                        token=recap_token_from_post,
+                        provider=provider,
+                        source=ProviderBookingDraft.SOURCE_ADMIN,
+                        completed_at__isnull=True,
+                    ).first()
+                if existing_admin_draft:
+                    recap = _update_provider_booking_recap(
+                        provider=provider,
+                        form=form,
+                        draft=existing_admin_draft,
+                    )
+                else:
+                    recap = _create_provider_booking_recap(
+                        request=request,
+                        provider=provider,
+                        form=form,
+                    )
             except DomainError as exc:
                 error = _friendly_domain_error_message(exc)
             else:
@@ -1271,7 +1313,7 @@ def _build_service_request_redirect(request):
 
 def _build_service_request_form(request, service_meta: MarketingService | None, zone):
     is_request_submission = request.method == "POST" and request.POST.get("request_service") == "1"
-    form = ServiceRequestForm(request.POST if is_request_submission else None, request.FILES if is_request_submission else None)
+    form = ServiceRequestForm(request.POST if is_request_submission else None)
     request_success = request.session.pop("service_request_success", False)
 
     if service_meta:
@@ -1284,11 +1326,7 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
         record.marketing_service = service_meta or form.cleaned_data.get("marketing_service")
         if zone:
             record.zone = zone
-        picture = form.cleaned_data.get("inspiration_picture")
-        if picture:
-            record.inspiration_picture_urls = booking_requests.save_inspiration_pictures([picture])
-        else:
-            record.inspiration_picture_urls = []
+        record.inspiration_picture_urls = []
         record.save()
         _notify_service_request(record)
         request.session["service_request_success"] = True

@@ -1,5 +1,6 @@
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -121,3 +122,65 @@ class ProviderBookingRecapFlowTests(TestCase):
             response.url,
             reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={draft.token}#booking-wizard",
         )
+
+    def test_admin_seeded_draft_is_updated_in_place_when_client_completes_prefilled_form(self):
+        admin_user = get_user_model().objects.create_user(
+            username="admin_draft_user",
+            email="admin@example.com",
+            password="test12345",
+            is_staff=True,
+        )
+        seeded = ProviderBookingDraft.objects.create(
+            provider=self.provider,
+            source=ProviderBookingDraft.SOURCE_ADMIN,
+            created_by=admin_user,
+            client_name="",
+            client_email="",
+            payload={
+                "service_id": str(self.service.id),
+                "service_name": self.service.name,
+                "client_name": "",
+                "client_email": "",
+                "desired_date": "2026-04-02T10:00:00+00:00",
+                "location_preference": "domicile",
+                "location": self.zone.name,
+                "client_address": "10 rue de test, Toulouse",
+                "hair_length": "long",
+                "general_adjustments": [],
+                "meche": False,
+                "free_text": "",
+                "current_hair_picture": "",
+                "inspiration_pictures": [],
+            },
+        )
+
+        response = self.client.post(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            data={
+                "service_id": self.service.id,
+                "client_name": "Nouveau client",
+                "client_email": "nouveau@example.com",
+                "desired_date": "2026-04-03T11:30",
+                "location_preference": "domicile",
+                "location": self.zone.name,
+                "client_address": "42 avenue des tests, Toulouse",
+                "hair_length": "long",
+                "general_adjustments": "[]",
+                "meche": "",
+                "free_text": "Infos admin draft",
+                "current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair"),
+                "recap_token": str(seeded.token),
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response["Location"],
+            reverse("interface:provider_booking_recap", args=[seeded.token]),
+        )
+        self.assertEqual(ProviderBookingDraft.objects.count(), 1)
+        seeded.refresh_from_db()
+        self.assertEqual(seeded.source, ProviderBookingDraft.SOURCE_ADMIN)
+        self.assertEqual(seeded.client_name, "Nouveau client")
+        self.assertEqual(seeded.client_email, "nouveau@example.com")
+        self.assertEqual(seeded.payload["free_text"], "Infos admin draft")

@@ -186,14 +186,38 @@ class MarketingServiceImageAdmin(ImportExportModelAdmin):
 
 @admin.register(ProviderBookingDraft)
 class ProviderBookingDraftAdmin(admin.ModelAdmin):
-    list_display = ("provider", "client_email", "client_name", "updated_at", "completed_at")
-    list_filter = ("provider", "completed_at")
+    class Form(forms.ModelForm):
+        class Meta:
+            model = ProviderBookingDraft
+            fields = ("provider", "source", "client_name", "client_email", "payload")
+            widgets = {"payload": forms.Textarea(attrs={"rows": 8})}
+
+    form = Form
+    list_display = ("provider", "source", "client_email", "client_name", "updated_at", "completed_at")
+    list_filter = ("provider", "source", "completed_at")
     search_fields = ("client_email", "client_name", "provider__name")
-    readonly_fields = ("token", "provider", "client_email", "client_name", "payload", "created_at", "updated_at")
+    readonly_fields = ("token", "created_by", "created_at", "updated_at")
+    fields = (
+        "provider",
+        "source",
+        "client_name",
+        "client_email",
+        "payload",
+        "token",
+        "created_by",
+        "completed_at",
+        "created_at",
+        "updated_at",
+    )
 
     @admin.display(description="Statut")
     def status(self, obj):
         return "Complété" if obj.completed_at else "En attente"
+
+    def save_model(self, request, obj, form, change):
+        if not change and obj.source == ProviderBookingDraft.SOURCE_ADMIN and not obj.created_by_id:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(QuickCheckoutPage)
