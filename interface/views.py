@@ -193,6 +193,8 @@ def _create_provider_booking_recap(*, request, provider: Provider, form: Provide
         current_picture = (form.cleaned_data.get("current_hair_picture") or "").strip()
 
     stored_inspiration_pictures = booking_requests.save_inspiration_pictures(form.get_inspiration_files())
+    if not stored_inspiration_pictures:
+        stored_inspiration_pictures = form.cleaned_data.get("existing_inspiration_pictures") or []
 
     service = Service.objects.filter(provider=provider, id=form.cleaned_data.get("service_id")).first()
     if service is None:
@@ -732,7 +734,7 @@ def provider_booking_recap(request, token):
     if request.method == "POST":
         action = (request.POST.get("action") or "").strip() or "confirm"
         if action == "edit":
-            return redirect(f"{reverse('interface:provider_detail', args=[provider.id])}?recap={draft.token}")
+            return redirect(f"{reverse('interface:provider_detail', args=[provider.id])}?recap={draft.token}#booking-wizard")
         if draft.completed_at:
             thank_you_url = reverse("interface:thank_you_provider_booking")
             return redirect(f"{thank_you_url}?provider={provider.name}")
