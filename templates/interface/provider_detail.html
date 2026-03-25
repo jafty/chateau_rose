@@ -778,11 +778,15 @@
         const displayId = labelId || 'file-label-current';
         const displayEl = document.getElementById(displayId);
         if (!displayEl) return;
+        const currentPictureExistingLabel = document.getElementById('file-label-current-existing');
         if (input.files && input.files.length > 0) {
             const count = input.files.length;
             displayEl.textContent = count === 1 ? input.files[0].name : `${count} fichiers sélectionnés`;
             displayEl.style.color = 'var(--ink-primary)';
             displayEl.style.fontWeight = 'bold';
+            if (!labelId && currentPictureExistingLabel) {
+                currentPictureExistingLabel.hidden = true;
+            }
         } else {
             displayEl.textContent = 'Aucun fichier sélectionné';
         }
@@ -824,6 +828,7 @@
         const depositPaymentHint = document.getElementById('deposit-payment-hint');
 
         const currentHairPictureInput = document.getElementById('current_hair_picture');
+        const currentHairPictureFileInput = document.getElementById('current_hair_picture_file');
         const existingInspirationPicturesInput = document.getElementById('existing_inspiration_pictures');
         const currentPictureExistingLabel = document.getElementById('file-label-current-existing');
         const inspirationExistingLabel = document.getElementById('file-label-inspo-existing');
@@ -888,6 +893,15 @@
             selectServiceFromCard(serviceFromQuery);
         }
 
+        const syncCurrentHairPictureRequirement = () => {
+            if (!currentHairPictureFileInput) return;
+            const hasFile = Boolean(currentHairPictureFileInput.files && currentHairPictureFileInput.files.length > 0);
+            const hasExistingPicture = Boolean((currentHairPictureInput?.value || '').trim());
+            currentHairPictureFileInput.required = !hasFile && !hasExistingPicture;
+        };
+
+        currentHairPictureFileInput?.addEventListener('change', syncCurrentHairPictureRequirement);
+
         const applyRecapPrefill = () => {
             if (!Object.keys(recapPrefill).length) return;
             const setValue = (name, value) => {
@@ -946,6 +960,7 @@
                 }
             }
             setValue('location', recapPrefill.location || '');
+            syncCurrentHairPictureRequirement();
             refreshEstimate();
         };
         const syncLocationPreference = () => {
@@ -1479,6 +1494,7 @@
         }
 
         applyRecapPrefill();
+        syncCurrentHairPictureRequirement();
 
         const galleryItems = Array.from(document.querySelectorAll('[data-gallery-index]')).map((item) => ({
             trigger: item,
