@@ -39,25 +39,9 @@ class ServiceRequestForm(forms.ModelForm):
         queryset=MarketingService.objects.all(),
         label="Service",
     )
-    location_preference = forms.ChoiceField(
-        label="Où veux-tu réaliser la prestation ?",
-        choices=ServiceRequest.LOCATION_PREFERENCE_CHOICES,
-        initial=ServiceRequest.LOCATION_PREFERENCE_CLIENT_HOME,
-        widget=forms.RadioSelect,
-    )
-    availabilities = forms.MultipleChoiceField(
-        label="Disponibilités",
-        required=True,
-        choices=ServiceRequest.AVAILABILITY_CHOICES,
-        widget=forms.CheckboxSelectMultiple,
-    )
-    client_email = forms.EmailField(
-        label="Ton email",
-        required=True,
-    )
     client_phone = forms.CharField(
-        label="Ton numéro WhatsApp (optionnel)",
-        required=False,
+        label="Ton numéro (WhatsApp ou téléphone)",
+        required=True,
     )
     inspiration_picture = forms.ImageField(
         label="Photo de référence (optionnel)",
@@ -68,36 +52,33 @@ class ServiceRequestForm(forms.ModelForm):
         model = ServiceRequest
         fields = [
             "marketing_service",
-            "location_preference",
-            "client_email",
             "client_phone",
             "details",
-            "availabilities",
         ]
         widgets = {
             "details": forms.Textarea(attrs={"rows": 4}),
         }
         labels = {
-            "client_phone": "Ton numéro WhatsApp (optionnel)",
+            "client_phone": "Ton numéro (WhatsApp ou téléphone)",
             "details": "Décris ta demande",
-            "availabilities": "Tes disponibilités",
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["details"].required = True
-        self.fields["client_email"].widget.attrs.setdefault("autocomplete", "email")
+        self.fields["client_phone"].required = True
         self.fields["client_phone"].widget.attrs.setdefault("autocomplete", "tel")
+        self.fields["client_phone"].widget.attrs.setdefault("inputmode", "tel")
         self.fields["details"].widget.attrs.setdefault(
             "placeholder",
-            "Exemple : knotless braids taille moyenne, semaine prochaine, chez moi / chez la coiffeuse, rendu naturel et soigné.",
+            "Exemple : knotless braids, semaine prochaine, chez moi / chez la coiffeuse, cheveux mi-longs.",
         )
         self.fields["inspiration_picture"].widget.attrs.setdefault("class", "request-file-input")
 
     def clean_client_phone(self):
         raw_phone = (self.cleaned_data.get("client_phone") or "").strip()
         if not raw_phone:
-            return ""
+            raise forms.ValidationError("Merci de renseigner ton numéro.")
 
         phone = "".join(char for char in raw_phone if char.isdigit() or char == "+")
         if len(phone.replace("+", "")) < 8:

@@ -20,271 +20,35 @@
             Vérifie les champs en rouge puis réessaie.
         </div>
     {% endif %}
-    <form method="post" action="{{ form_action|default:'' }}" class="request-single-form provider-form-grid" enctype="multipart/form-data" data-request-wizard>
+    <form method="post" action="{{ form_action|default:'' }}" class="request-single-form provider-form-grid">
         {% csrf_token %}
         <input type="hidden" name="request_service" value="1" />
 
-        <div class="step-progress request-step-progress" aria-label="Progression du formulaire">
-            <div class="step-indicator active" data-request-step-indicator="1">1</div>
-            <div class="step-indicator" data-request-step-indicator="2">2</div>
-            <div class="step-indicator" data-request-step-indicator="3">3</div>
-        </div>
-
-        <fieldset class="wizard-step active" data-request-step="1">
-            <div class="form-step-message" data-request-step-message hidden></div>
-            <h4 style="margin-bottom: 0.35rem; color: var(--rose-accent);">1. Les essentiels</h4>
-            <p class="meta-line" style="margin: 0 0 0.4rem;">Choisis la prestation, le lieu et les créneaux qui te conviennent le mieux.</p>
-
-            {% if request_form.marketing_service.is_hidden %}
+        {% if request_form.marketing_service.is_hidden %}
+            {{ request_form.marketing_service }}
+            {% if request_form.marketing_service.errors %}<p class="form-field-error">{{ request_form.marketing_service.errors.0 }}</p>{% endif %}
+        {% else %}
+            <div class="form-field full-width">
+                <label for="id_marketing_service">Service <span class="required-mark">*</span></label>
                 {{ request_form.marketing_service }}
                 {% if request_form.marketing_service.errors %}<p class="form-field-error">{{ request_form.marketing_service.errors.0 }}</p>{% endif %}
-            {% else %}
-                <div class="form-field full-width">
-                    <label for="id_marketing_service">Service <span class="required-mark">*</span></label>
-                    {{ request_form.marketing_service }}
-                    {% if request_form.marketing_service.errors %}<p class="form-field-error">{{ request_form.marketing_service.errors.0 }}</p>{% endif %}
-                </div>
-            {% endif %}
-
-            <div class="form-field full-width">
-                <label style="margin-bottom: 12px; display:block;">Lieu <span class="required-mark">*</span></label>
-                <div class="location-choice" role="radiogroup" aria-label="Lieu préféré">
-                    {% for option in request_form.location_preference %}
-                        <label class="choice-pill">
-                            {{ option.tag }}
-                            <span>{{ option.choice_label }}</span>
-                        </label>
-                    {% endfor %}
-                </div>
-                {% if request_form.location_preference.errors %}<p class="form-field-error">{{ request_form.location_preference.errors.0 }}</p>{% endif %}
             </div>
+        {% endif %}
 
-            <div class="form-field full-width">
-                <label style="margin-bottom: 8px; display:block;">Disponibilités <span class="required-mark">*</span></label>
-                <div class="availability-pills" aria-label="Disponibilités">
-                    {% for option in request_form.availabilities %}
-                        <label class="availability-pill">
-                            {{ option.tag }}
-                            <span>{{ option.choice_label }}</span>
-                        </label>
-                    {% endfor %}
-                </div>
-                {% if request_form.availabilities.errors %}<p class="form-field-error">{{ request_form.availabilities.errors.0 }}</p>{% endif %}
-            </div>
+        <div class="form-field full-width">
+            <label for="id_client_phone">Ton numéro (WhatsApp ou téléphone) <span class="required-mark">*</span></label>
+            {{ request_form.client_phone }}
+            {% if request_form.client_phone.errors %}<p class="form-field-error">{{ request_form.client_phone.errors.0 }}</p>{% endif %}
+        </div>
 
-            <div class="wizard-actions full-width">
-                <button type="button" class="btn btn-next" data-request-next>Continuer vers mes coordonnées</button>
-            </div>
-        </fieldset>
+        <div class="form-field full-width">
+            <label for="id_details">Décris-nous ce que tu veux <span class="required-mark">*</span></label>
+            {{ request_form.details }}
+            {% if request_form.details.errors %}<p class="form-field-error">{{ request_form.details.errors.0 }}</p>{% endif %}
+        </div>
 
-        <fieldset class="wizard-step" data-request-step="2">
-            <div class="form-step-message" data-request-step-message hidden></div>
-            <h4 style="margin-bottom: 0.35rem; color: var(--rose-accent);">2. Où te répondre ?</h4>
-            <p class="meta-line" style="margin: 0 0 0.4rem;">On utilise ton email pour t'envoyer la proposition adaptée à ta demande.</p>
-
-            <div class="form-field full-width">
-                <label for="id_client_email">Ton email <span class="required-mark">*</span></label>
-                {{ request_form.client_email }}
-                {% if request_form.client_email.errors %}<p class="form-field-error">{{ request_form.client_email.errors.0 }}</p>{% endif %}
-            </div>
-
-            <div class="form-field full-width">
-                <label for="id_client_phone">Ton numéro WhatsApp (optionnel)</label>
-                {{ request_form.client_phone }}
-                <p class="meta-line request-field-note" style="margin: 0;">Uniquement si un échange rapide peut aider à finaliser ta demande.</p>
-                {% if request_form.client_phone.errors %}<p class="form-field-error">{{ request_form.client_phone.errors.0 }}</p>{% endif %}
-            </div>
-
-            <div class="wizard-actions full-width">
-                <button type="button" class="btn btn-prev btn-secondary" data-request-prev>Retour</button>
-                <button type="button" class="btn btn-next" data-request-next>Continuer vers ma demande</button>
-            </div>
-        </fieldset>
-
-        <fieldset class="wizard-step" data-request-step="3">
-            <div class="form-step-message" data-request-step-message hidden></div>
-            <h4 style="margin-bottom: 0.35rem; color: var(--rose-accent);">3. Décris ta demande</h4>
-            <p class="meta-line" style="margin: 0 0 0.4rem;">Explique le rendu souhaité, la longueur, les inspirations ou toute précision utile.</p>
-
-            <div class="form-field full-width">
-                <label for="id_details">Décris-nous ce que tu veux <span class="required-mark">*</span></label>
-                {{ request_form.details }}
-                {% if request_form.details.errors %}<p class="form-field-error">{{ request_form.details.errors.0 }}</p>{% endif %}
-            </div>
-
-            <div class="form-field full-width">
-                <label for="{{ request_form.inspiration_picture.id_for_label }}">Ajoute une photo si tu en as une</label>
-                <div class="file-upload-wrapper request-upload-wrapper">
-                    {{ request_form.inspiration_picture }}
-                    <span class="file-upload-label">📸 Ajouter une photo d'inspiration</span>
-                    <span class="file-upload-info" data-request-file-label>Aucun fichier sélectionné</span>
-                </div>
-                <p class="meta-line request-field-note" style="margin: 0;">Facultatif, mais très utile pour recevoir une proposition plus précise.</p>
-                {% if request_form.inspiration_picture.errors %}<p class="form-field-error">{{ request_form.inspiration_picture.errors.0 }}</p>{% endif %}
-            </div>
-
-            <div class="wizard-actions full-width">
-                <button type="button" class="btn btn-prev btn-secondary" data-request-prev>Retour</button>
-                <button type="submit" class="btn request-cta">Recevoir ma proposition</button>
-            </div>
-        </fieldset>
+        <div class="wizard-actions full-width">
+            <button type="submit" class="btn request-cta">Envoyer ma demande</button>
+        </div>
     </form>
 </div>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const forms = document.querySelectorAll('.request-card .request-single-form[data-request-wizard]');
-        if (!forms.length) return;
-
-        forms.forEach((form, formIndex) => {
-            const stepPanels = Array.from(form.querySelectorAll('[data-request-step]'));
-            const indicators = Array.from(form.querySelectorAll('[data-request-step-indicator]'));
-            const preferenceInputs = form.querySelectorAll('input[name="location_preference"]');
-            const locationChoiceLabels = form.querySelectorAll('.location-choice .choice-pill');
-            const availabilityLabels = form.querySelectorAll('.availability-pills .availability-pill');
-            const nextButtons = form.querySelectorAll('[data-request-next]');
-            const stepMessages = form.querySelectorAll('[data-request-step-message]');
-            const prevButtons = form.querySelectorAll('[data-request-prev]');
-            const emailInput = form.querySelector('input[name="client_email"]');
-            const fileInput = form.querySelector('input[type="file"][name="inspiration_picture"]');
-            const fileLabel = form.querySelector('[data-request-file-label]');
-            const storageKey = `chateau-rose-request-email-${form.id || form.dataset.requestWizard || formIndex}`;
-            let currentStep = 1;
-
-            const syncLocationFields = () => {
-                locationChoiceLabels.forEach((label) => {
-                    const input = label.querySelector('input[type="radio"]');
-                    label.classList.toggle('is-selected', Boolean(input && input.checked));
-                });
-            };
-
-            const syncAvailabilityFields = () => {
-                availabilityLabels.forEach((label) => {
-                    const input = label.querySelector('input[type="checkbox"]');
-                    label.classList.toggle('is-selected', Boolean(input && input.checked));
-                });
-            };
-
-            const syncProgress = () => {
-                stepPanels.forEach((panel, index) => {
-                    const stepNumber = index + 1;
-                    panel.classList.toggle('active', stepNumber === currentStep);
-                });
-                indicators.forEach((indicator, index) => {
-                    const stepNumber = index + 1;
-                    indicator.classList.toggle('active', stepNumber === currentStep);
-                    indicator.classList.toggle('completed', stepNumber < currentStep);
-                });
-            };
-
-            const saveEmailDraft = () => {
-                if (!emailInput) return;
-                const value = emailInput.value.trim();
-                if (value) {
-                    window.localStorage.setItem(storageKey, value);
-                }
-            };
-
-            const restoreEmailDraft = () => {
-                if (!emailInput || emailInput.value.trim()) return;
-                const savedValue = window.localStorage.getItem(storageKey);
-                if (savedValue) {
-                    emailInput.value = savedValue;
-                }
-            };
-
-            const setStepMessage = (message = '') => {
-                stepMessages.forEach((node) => {
-                    const isCurrent = Number.parseInt(node.closest('[data-request-step]')?.dataset.requestStep || '0', 10) === currentStep;
-                    node.hidden = !(message && isCurrent);
-                    node.textContent = isCurrent ? message : '';
-                });
-            };
-
-            const validateStep = () => {
-                const currentPanel = form.querySelector(`[data-request-step="${currentStep}"]`);
-                if (!currentPanel) return true;
-                setStepMessage('');
-
-                if (currentStep === 1) {
-                    const serviceField = currentPanel.querySelector('select[name="marketing_service"]');
-                    const hasAvailability = Array.from(currentPanel.querySelectorAll('input[name="availabilities"]')).some((input) => input.checked);
-                    const hasLocation = Array.from(currentPanel.querySelectorAll('input[name="location_preference"]')).some((input) => input.checked);
-
-                    if (serviceField && !serviceField.value) {
-                        setStepMessage('Choisis une prestation pour passer à l’étape suivante.');
-                        serviceField.reportValidity();
-                        return false;
-                    }
-                    if (!hasLocation) {
-                        setStepMessage('Choisis si tu préfères à domicile ou chez la ou le prestataire.');
-                        currentPanel.querySelector('input[name="location_preference"]')?.reportValidity();
-                        return false;
-                    }
-                    if (!hasAvailability) {
-                        setStepMessage('Ajoute au moins une disponibilité pour qu’on puisse te proposer un créneau.');
-                        currentPanel.querySelector('input[name="availabilities"]')?.reportValidity();
-                        return false;
-                    }
-                }
-
-                const fields = Array.from(currentPanel.querySelectorAll('select, input, textarea')).filter((field) => {
-                    if (field.type === 'hidden' || field.disabled) return false;
-                    if ((field.type === 'radio' || field.type === 'checkbox') && !field.required) return false;
-                    return true;
-                });
-                for (const field of fields) {
-                    if (!field.checkValidity()) {
-                        const message = field.validationMessage || 'Il manque une information pour continuer.';
-                        setStepMessage(message.charAt(0).toUpperCase() + message.slice(1));
-                        field.reportValidity();
-                        return false;
-                    }
-                }
-                return true;
-            };
-
-            nextButtons.forEach((button) => {
-                button.addEventListener('click', () => {
-                    if (!validateStep()) return;
-                    if (currentStep === 2) saveEmailDraft();
-                    currentStep = Math.min(currentStep + 1, stepPanels.length);
-                    syncProgress();
-                });
-            });
-
-            prevButtons.forEach((button) => {
-                button.addEventListener('click', () => {
-                    currentStep = Math.max(currentStep - 1, 1);
-                    setStepMessage('');
-                    syncProgress();
-                });
-            });
-
-            if (preferenceInputs.length) {
-                preferenceInputs.forEach((input) => input.addEventListener('change', syncLocationFields));
-                syncLocationFields();
-            }
-
-            availabilityLabels.forEach((label) => {
-                const input = label.querySelector('input[type="checkbox"]');
-                if (input) input.addEventListener('change', syncAvailabilityFields);
-            });
-            syncAvailabilityFields();
-
-            restoreEmailDraft();
-            emailInput?.addEventListener('blur', saveEmailDraft);
-            emailInput?.addEventListener('change', saveEmailDraft);
-
-            fileInput?.addEventListener('change', () => {
-                if (!fileLabel) return;
-                if (fileInput.files && fileInput.files.length) {
-                    fileLabel.textContent = fileInput.files[0].name;
-                    return;
-                }
-                fileLabel.textContent = 'Aucun fichier sélectionné';
-            });
-
-            syncProgress();
-        });
-    });
-</script>
