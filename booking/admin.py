@@ -1,6 +1,9 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.http import Http404, HttpResponseRedirect
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.utils.html import format_html, format_html_join
 
 from import_export.admin import ImportExportModelAdmin
@@ -25,7 +28,7 @@ from .models import (
     ServiceCategory,
     Zone,
 )
-from interface.models import MarketingService
+from interface.models import MarketingService, ProviderBookingDraft
 from interface.services.booking_requests import resolve_stored_media_url
 
 
@@ -125,6 +128,140 @@ class ProviderAdmin(ImportExportModelAdmin):
     list_filter = ("location_mode", "is_visible_on_website")
     inlines = []
     resource_class = ProviderResource
+    actions = ("generate_lead_prefill_links",)
+
+    class LeadPrefillForm(forms.Form):
+        LOCATION_CHOICES = (
+            ("", "Non défini"),
+            ("salon", "Chez la prestataire"),
+            ("domicile", "À domicile"),
+        )
+
+        service = forms.ModelChoiceField(queryset=Service.objects.none(), required=False, label="Service")
+        desired_date = forms.DateTimeField(
+            required=False,
+            label="Créneau souhaité",
+            widget=forms.DateTimeInput(attrs={"type": "datetime-local"}),
+            input_formats=["%Y-%m-%dT%H:%M"],
+        )
+        hair_length = forms.CharField(required=False, label="Longueur (slug)")
+        general_adjustments = forms.CharField(
+            required=False,
+            label="Suppléments (JSON liste)",
+            help_text='Exemple: ["wash"]',
+            widget=forms.TextInput(attrs={"placeholder": '["wash"]'}),
+        )
+        meche = forms.BooleanField(required=False, label="Mèches fournies")
+        location_preference = forms.ChoiceField(
+            choices=LOCATION_CHOICES, required=False, label="Préférence de lieu"
+        )
+        location = forms.CharField(required=False, label="Zone / lieu")
+        client_address = forms.CharField(required=False, label="Adresse cliente")
+        free_text = forms.CharField(required=False, label="Notes pour la prestataire", widget=forms.Textarea)
+        client_name = forms.CharField(required=False, label="Nom cliente")
+        client_email = forms.EmailField(required=False, label="Email cliente")
+
+        def __init__(self, *args, **kwargs):
+            provider = kwargs.pop("provider")
+            super().__init__(*args, **kwargs)
+            self.fields["service"].queryset = Service.objects.filter(provider=provider).order_by("name")
+
+        def clean_general_adjustments(self):
+            raw_value = (self.cleaned_data.get("general_adjustments") or "").strip()
+            if not raw_value:
+                return []
+            try:
+                parsed = forms.JSONField().clean(raw_value)
+            except forms.ValidationError as exc:
+                raise forms.ValidationError("Format JSON invalide pour les suppléments.") from exc
+            if not isinstance(parsed, list):
+                raise forms.ValidationError("Les suppléments doivent être une liste JSON.")
+            return [str(item).strip() for item in parsed if str(item).strip()]
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<int:provider_id>/generate-lead-prefill-link/",
+                self.admin_site.admin_view(self.generate_lead_prefill_link_view),
+                name="booking_provider_generate_lead_prefill_link",
+            ),
+        ]
+        return custom_urls + urls
+
+    @admin.action(description="Générer un lien lead prérempli (service, créneau, options)")
+    def generate_lead_prefill_links(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(
+                request,
+                "Sélectionne exactement une prestataire pour préremplir un lead.",
+                level=messages.WARNING,
+            )
+            return None
+        provider = queryset.first()
+        target_url = reverse(
+            "admin:booking_provider_generate_lead_prefill_link",
+            args=[provider.id],
+        )
+        return HttpResponseRedirect(target_url)
+
+    def generate_lead_prefill_link_view(self, request, provider_id):
+        provider = Provider.objects.filter(id=provider_id).first()
+        if provider is None:
+            raise Http404("Prestataire introuvable")
+
+        form = self.LeadPrefillForm(request.POST or None, provider=provider)
+        generated_link = ""
+        if request.method == "POST" and form.is_valid():
+            service = form.cleaned_data.get("service")
+            desired_date = form.cleaned_data.get("desired_date")
+            draft = ProviderBookingDraft.objects.create(
+                provider=provider,
+                source=ProviderBookingDraft.SOURCE_ADMIN,
+                created_by=request.user if getattr(request.user, "is_authenticated", False) else None,
+                client_name=form.cleaned_data.get("client_name") or "",
+                client_email=form.cleaned_data.get("client_email") or "",
+                payload={
+                    "service_id": str(service.id) if service else "",
+                    "service_name": service.name if service else "",
+                    "client_name": form.cleaned_data.get("client_name") or "",
+                    "client_email": form.cleaned_data.get("client_email") or "",
+                    "desired_date": desired_date.isoformat() if desired_date else "",
+                    "location_preference": form.cleaned_data.get("location_preference") or "",
+                    "location": form.cleaned_data.get("location") or "",
+                    "client_address": form.cleaned_data.get("client_address") or "",
+                    "hair_length": form.cleaned_data.get("hair_length") or "",
+                    "general_adjustments": form.cleaned_data.get("general_adjustments") or [],
+                    "meche": bool(form.cleaned_data.get("meche")),
+                    "free_text": form.cleaned_data.get("free_text") or "",
+                    "current_hair_picture": "",
+                    "inspiration_pictures": [],
+                },
+            )
+            generated_link = (
+                reverse("interface:provider_detail", args=[provider.id])
+                + f"?recap={draft.token}#booking-wizard"
+            )
+            self.message_user(
+                request,
+                "Lien lead prérempli généré. Tu peux le partager à la cliente.",
+                level=messages.SUCCESS,
+            )
+
+        context = {
+            **self.admin_site.each_context(request),
+            "opts": self.model._meta,
+            "provider": provider,
+            "title": f"Générer un lien lead prérempli · {provider.name}",
+            "form": form,
+            "generated_link": generated_link,
+            "changelist_url": reverse("admin:booking_provider_changelist"),
+        }
+        return TemplateResponse(
+            request,
+            "admin/booking/provider/generate_lead_prefill_link.html",
+            context,
+        )
 
 
 class ProviderPhotoInline(admin.TabularInline):
