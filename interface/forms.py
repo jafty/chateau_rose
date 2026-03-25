@@ -90,7 +90,7 @@ class ServiceRequestForm(forms.ModelForm):
         self.fields["client_phone"].widget.attrs.setdefault("autocomplete", "tel")
         self.fields["details"].widget.attrs.setdefault(
             "placeholder",
-            "Exemple : des knotless braids taille moyenne, longueur milieu du dos, avec un rendu naturel et soigné pour la semaine prochaine.",
+            "Exemple : knotless braids taille moyenne, semaine prochaine, chez moi / chez la coiffeuse, rendu naturel et soigné.",
         )
         self.fields["inspiration_picture"].widget.attrs.setdefault("class", "request-file-input")
 
