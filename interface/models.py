@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -296,11 +297,26 @@ class Interaction(models.Model):
 
 
 class ProviderBookingDraft(models.Model):
+    SOURCE_CLIENT = "client"
+    SOURCE_ADMIN = "admin"
+    SOURCE_CHOICES = (
+        (SOURCE_CLIENT, "Client"),
+        (SOURCE_ADMIN, "Admin"),
+    )
+
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     provider = models.ForeignKey(
         "booking.Provider",
         on_delete=models.CASCADE,
         related_name="booking_drafts",
+    )
+    source = models.CharField(max_length=16, choices=SOURCE_CHOICES, default=SOURCE_CLIENT)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_provider_booking_drafts",
     )
     client_email = models.EmailField(blank=True)
     client_name = models.CharField(max_length=255, blank=True)

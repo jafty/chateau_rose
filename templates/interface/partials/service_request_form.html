@@ -20,7 +20,7 @@
             Vérifie les champs en rouge puis réessaie.
         </div>
     {% endif %}
-    <form method="post" action="{{ form_action|default:'' }}" class="request-single-form provider-form-grid" enctype="multipart/form-data">
+    <form method="post" action="{{ form_action|default:'' }}" class="request-single-form provider-form-grid">
         {% csrf_token %}
         <input type="hidden" name="request_service" value="1" />
 
@@ -45,16 +45,6 @@
             <label for="id_details">Décris-nous ce que tu veux <span class="required-mark">*</span></label>
             {{ request_form.details }}
             {% if request_form.details.errors %}<p class="form-field-error">{{ request_form.details.errors.0 }}</p>{% endif %}
-        </div>
-
-        <div class="form-field full-width">
-            <label for="id_inspiration_picture">Ajoute une photo (facultatif)</label>
-            <div class="file-upload-wrapper">
-                {{ request_form.inspiration_picture }}
-                <span class="file-upload-label">📸 Ajouter une photo de référence</span>
-                <span class="file-upload-info">Optionnel — utile pour accélérer le traitement</span>
-            </div>
-            {% if request_form.inspiration_picture.errors %}<p class="form-field-error">{{ request_form.inspiration_picture.errors.0 }}</p>{% endif %}
         </div>
 
         <div class="wizard-actions full-width">
