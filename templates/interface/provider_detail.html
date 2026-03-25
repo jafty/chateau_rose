@@ -665,7 +665,6 @@
                         <div class="step-indicator active" data-step-indicator="1">1</div>
                         <div class="step-indicator" data-step-indicator="2">2</div>
                         <div class="step-indicator" data-step-indicator="3">3</div>
-                        <div class="step-indicator" data-step-indicator="4">4</div>
                     </div>
                     {% endif %}
 
@@ -691,11 +690,7 @@
                                 <span class="total-amount" id="final-price-display">...</span>
                                 <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher ton estimation.</p>
                                 <p class="meta-line" id="general-adjustments-display" hidden></p>
-                                <div class="deposit-summary">
-                                    <span class="deposit-label">Frais de réservation (déduits)</span>
-                                    <span class="deposit-amount" id="deposit-amount-display">-- €</span>
-                                    <p class="meta-line" id="deposit-details-display">Zéro débit surprise : frais demandés uniquement après validation.</p>
-                                </div>
+                                <p class="meta-line">Le montant à régler maintenant est précisé au récapitulatif.</p>
                                 <span class="sr-only" id="sticky-price-value">-- €</span>
                             </div>
                         </aside>
@@ -890,7 +885,8 @@
             selectServiceFromCard(serviceFromQuery);
         }
 
-        if (Object.keys(recapPrefill).length) {
+        const applyRecapPrefill = () => {
+            if (!Object.keys(recapPrefill).length) return;
             const setValue = (name, value) => {
                 const field = form?.querySelector(`[name="${name}"]`);
                 if (!field || value === undefined || value === null) return;
@@ -905,14 +901,22 @@
                 currentHairPictureInput.value = recapPrefill.current_hair_picture;
             }
             if (serviceSelect && recapPrefill.service_id) {
-                serviceSelect.value = String(recapPrefill.service_id);
-                serviceSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                const recapServiceId = String(recapPrefill.service_id);
+                const hasServiceOption = Array.from(serviceSelect.options).some((opt) => opt.value === recapServiceId);
+                if (hasServiceOption) {
+                    serviceSelect.value = recapServiceId;
+                    serviceSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
             }
             if (hairLengthSelect && recapPrefill.hair_length) {
                 hairLengthSelect.value = recapPrefill.hair_length;
             }
             if (Array.isArray(recapPrefill.general_adjustments) && generalAdjustmentsInput) {
                 generalAdjustmentsInput.value = JSON.stringify(recapPrefill.general_adjustments);
+                recapPrefill.general_adjustments.forEach((adjustmentValue) => {
+                    const checkbox = generalAdjustmentsContainer?.querySelector(`input[type="checkbox"][value="${adjustmentValue}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
             }
             if (mecheCheckbox) {
                 mecheCheckbox.checked = Boolean(recapPrefill.meche);
@@ -929,7 +933,8 @@
             }
             setValue('location', recapPrefill.location || '');
             refreshEstimate();
-        }
+        };
+        applyRecapPrefill();
 
         const syncLocationPreference = () => {
             let selected = document.querySelector('input[name="location_preference"]:checked')?.value;
