@@ -824,6 +824,9 @@
         const depositPaymentHint = document.getElementById('deposit-payment-hint');
 
         const currentHairPictureInput = document.getElementById('current_hair_picture');
+        const existingInspirationPicturesInput = document.getElementById('existing_inspiration_pictures');
+        const currentPictureExistingLabel = document.getElementById('file-label-current-existing');
+        const inspirationExistingLabel = document.getElementById('file-label-inspo-existing');
         const stripePublicKey = form?.dataset?.stripePublicKey;
         const paymentIntentUrl = form?.dataset?.paymentIntentUrl;
         const paymentReturnUrl = form?.dataset?.paymentReturnUrl;
@@ -899,6 +902,17 @@
             setValue('client_address', recapPrefill.client_address || '');
             if (currentHairPictureInput && recapPrefill.current_hair_picture) {
                 currentHairPictureInput.value = recapPrefill.current_hair_picture;
+                if (currentPictureExistingLabel) {
+                    currentPictureExistingLabel.hidden = false;
+                }
+            }
+            if (existingInspirationPicturesInput) {
+                const inspirationPictures = Array.isArray(recapPrefill.inspiration_pictures) ? recapPrefill.inspiration_pictures : [];
+                existingInspirationPicturesInput.value = JSON.stringify(inspirationPictures);
+                if (inspirationExistingLabel && inspirationPictures.length > 0) {
+                    inspirationExistingLabel.hidden = false;
+                    inspirationExistingLabel.textContent = `${inspirationPictures.length} photo(s) déjà enregistrée(s). Ajoute de nouveaux fichiers seulement si tu veux les remplacer.`;
+                }
             }
             if (serviceSelect && recapPrefill.service_id) {
                 const recapServiceId = String(recapPrefill.service_id);

@@ -111,6 +111,7 @@ class ProviderBookingRequestForm(forms.Form):
         required=False,
         widget=MultiFileInput(attrs={"multiple": True}),
     )
+    existing_inspiration_pictures = forms.JSONField(required=False)
     free_text = forms.CharField(label="Infos complémentaires", required=False, widget=forms.Textarea)
     payment_auth_id = forms.CharField(required=False)
 
@@ -193,6 +194,17 @@ class ProviderBookingRequestForm(forms.Form):
             cleaned_data["general_adjustments"] = [str(item).strip() for item in selected_adjustments if str(item).strip()]
         else:
             raise forms.ValidationError("Format de suppléments invalide.")
+
+        existing_inspiration_pictures = cleaned_data.get("existing_inspiration_pictures")
+        if existing_inspiration_pictures in (None, ""):
+            cleaned_data["existing_inspiration_pictures"] = []
+        elif isinstance(existing_inspiration_pictures, list):
+            cleaned_data["existing_inspiration_pictures"] = [
+                str(item).strip() for item in existing_inspiration_pictures if str(item).strip()
+            ]
+        else:
+            raise forms.ValidationError("Format des photos existantes invalide.")
+
         cleaned_data["location"] = location
         cleaned_data["location_preference"] = location_preference
         cleaned_data["client_address"] = client_address

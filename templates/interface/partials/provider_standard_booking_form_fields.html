@@ -66,6 +66,7 @@
                                         <input type="file" name="current_hair_picture_file" id="current_hair_picture_file" accept="image/*" required onchange="updateFileLabel(this)">
                                         <span class="file-upload-label">📸 Ajouter une photo de tes cheveux</span>
                                         <span class="file-upload-info" id="file-label-current">Aucun fichier sélectionné</span>
+                                        <span class="file-upload-info" id="file-label-current-existing" hidden>Photo déjà enregistrée dans ton récapitulatif</span>
                                     </div>
                                 </div>
 
@@ -75,6 +76,7 @@
                                         <input type="file" name="inspiration_pictures" id="inspiration_pictures" accept="image/*" multiple onchange="updateFileLabel(this, 'file-label-inspo')">
                                         <span class="file-upload-label">✨ Ajouter des photos d'inspiration</span>
                                         <span class="file-upload-info" id="file-label-inspo">Aucun fichier sélectionné</span>
+                                        <span class="file-upload-info" id="file-label-inspo-existing" hidden></span>
                                     </div>
                                 </div>
 
@@ -171,5 +173,6 @@
 
                             <input type="hidden" name="provider_id" value="{{ provider.id }}">
                             <input type="hidden" name="current_hair_picture" id="current_hair_picture" value="">
+                            <input type="hidden" name="existing_inspiration_pictures" id="existing_inspiration_pictures" value="[]">
                             <input type="hidden" name="quick_checkout_id" id="quick_checkout_id" value="{{ quick_checkout_id|default:'' }}">
                             
