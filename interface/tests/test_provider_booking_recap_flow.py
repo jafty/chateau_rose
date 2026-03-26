@@ -153,6 +153,13 @@ class ProviderBookingRecapFlowTests(TestCase):
                 "inspiration_pictures": [],
             },
         )
+        self.client.force_login(admin_user)
+
+        prefill_page = self.client.get(
+            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={seeded.token}"
+        )
+        self.assertContains(prefill_page, 'data-can-save-partial-prefill="1"')
+        self.assertContains(prefill_page, "Enregistrer le brouillon prérempli")
 
         prefill_page = self.client.get(
             reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={seeded.token}"
@@ -221,6 +228,11 @@ class ProviderBookingRecapFlowTests(TestCase):
                 "inspiration_pictures": [],
             },
         )
+        anonymous_prefill_page = self.client.get(
+            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={seeded.token}"
+        )
+        self.assertNotContains(anonymous_prefill_page, "Enregistrer le brouillon prérempli")
+        self.client.force_login(admin_user)
 
         response = self.client.post(
             reverse("interface:provider_detail", args=[self.provider.id]),

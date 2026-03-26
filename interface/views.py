@@ -555,6 +555,9 @@ def provider_detail(request, provider_id, quick_checkout=None):
                 recap_prefill = recap_draft.payload or {}
                 recap_message = "Récapitulatif chargé. Tu peux modifier les infos puis finaliser."
                 can_save_partial_prefill = (
+                    bool(getattr(request.user, "is_authenticated", False))
+                    and bool(getattr(request.user, "is_staff", False))
+                    and
                     recap_draft.source == ProviderBookingDraft.SOURCE_ADMIN
                     and recap_draft.completed_at is None
                 )
@@ -581,7 +584,12 @@ def provider_detail(request, provider_id, quick_checkout=None):
                 source=ProviderBookingDraft.SOURCE_ADMIN,
                 completed_at__isnull=True,
             ).first()
-        partial_prefill_mode = bool(existing_admin_draft and post_action == "save_prefill")
+        partial_prefill_mode = bool(
+            existing_admin_draft
+            and post_action == "save_prefill"
+            and bool(getattr(request.user, "is_authenticated", False))
+            and bool(getattr(request.user, "is_staff", False))
+        )
         form = ProviderBookingRequestForm(
             request.POST,
             request.FILES,
