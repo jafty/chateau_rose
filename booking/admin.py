@@ -162,7 +162,11 @@ class ProviderAdmin(ImportExportModelAdmin):
             self.message_user(
                 request,
                 format_html(
-                    "{} · lien lead prérempli : <a href='{}' target='_blank' rel='noopener'>{}</a>",
+                    (
+                        "{} · lien lead prérempli : <a href='{}' target='_blank' rel='noopener'>{}</a>"
+                        " · ouvre ce lien, complète les champs à préremplir, puis clique sur"
+                        " « Voir mon récapitulatif » pour enregistrer le brouillon."
+                    ),
                     provider.name,
                     provider_link,
                     provider_link,

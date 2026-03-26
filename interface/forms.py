@@ -114,10 +114,17 @@ class ProviderBookingRequestForm(forms.Form):
         self.provider = kwargs.pop("provider", None)
         self.require_payment_auth = kwargs.pop("require_payment_auth", True)
         self.require_current_hair_picture = kwargs.pop("require_current_hair_picture", True)
+        self.partial_prefill_mode = kwargs.pop("partial_prefill_mode", False)
         super().__init__(*args, **kwargs)
+        if self.partial_prefill_mode:
+            self.fields["client_name"].required = False
+            self.fields["client_email"].required = False
+            self.fields["desired_date"].required = False
 
     def clean_desired_date(self):
         raw_value = self.cleaned_data.get("desired_date")
+        if self.partial_prefill_mode and not raw_value:
+            return ""
         if not raw_value:
             raise forms.ValidationError("Merci d'utiliser une date au format JJ/MM/AAAA HH:MM.")
 
@@ -137,6 +144,29 @@ class ProviderBookingRequestForm(forms.Form):
         client_address = (cleaned_data.get("client_address") or "").strip()
         location_preference = cleaned_data.get("location_preference")
         location = location_choice
+
+        if self.partial_prefill_mode:
+            cleaned_data["location"] = location
+            cleaned_data["location_preference"] = location_preference
+            cleaned_data["client_address"] = client_address
+            selected_adjustments = cleaned_data.get("general_adjustments")
+            if selected_adjustments in (None, ""):
+                cleaned_data["general_adjustments"] = []
+            elif isinstance(selected_adjustments, list):
+                cleaned_data["general_adjustments"] = [str(item).strip() for item in selected_adjustments if str(item).strip()]
+            else:
+                raise forms.ValidationError("Format de suppléments invalide.")
+
+            existing_inspiration_pictures = cleaned_data.get("existing_inspiration_pictures")
+            if existing_inspiration_pictures in (None, ""):
+                cleaned_data["existing_inspiration_pictures"] = []
+            elif isinstance(existing_inspiration_pictures, list):
+                cleaned_data["existing_inspiration_pictures"] = [
+                    str(item).strip() for item in existing_inspiration_pictures if str(item).strip()
+                ]
+            else:
+                raise forms.ValidationError("Format des photos existantes invalide.")
+            return cleaned_data
 
         if self.provider:
             if self.provider.location_mode == Provider.LOCATION_MODE_SALON_ONLY:

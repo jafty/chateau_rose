@@ -677,6 +677,7 @@
                             data-payment-intent-url="{% url 'interface:provider_payment_intent' %}"
                             data-payment-return-url="{% url 'interface:provider_payment_return' %}"
                             data-stripe-public-key="{{ stripe_public_key }}"
+                            data-can-save-partial-prefill="{% if can_save_partial_prefill %}1{% else %}0{% endif %}"
                         >
                             {% csrf_token %}
 
@@ -796,6 +797,7 @@
         const pricingData = JSON.parse('{{ pricing_data|default:"{}"|escapejs }}');
         const recapPrefill = JSON.parse('{{ recap_prefill|default:"{}"|escapejs }}');
         const form = document.getElementById('provider-request-form');
+        const canSavePartialPrefill = form?.dataset?.canSavePartialPrefill === '1';
         const checkoutOnly = false;
         const fixedPriceCents = Number.parseInt(form?.dataset.fixedPriceCents || '', 10);
         const quickCheckoutId = form?.dataset.quickCheckoutId || '';
@@ -1165,6 +1167,13 @@
             let isValid = true;
 
             inputs.forEach((input) => {
+                if (
+                    canSavePartialPrefill
+                    && currentStep === 2
+                    && ['client_name', 'client_email', 'current_hair_picture_file'].includes(input.id)
+                ) {
+                    return;
+                }
                 if (!input.checkValidity()) {
                     isValid = false;
                     input.reportValidity();

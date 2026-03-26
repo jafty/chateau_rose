@@ -256,6 +256,49 @@ def _update_provider_booking_recap(*, provider: Provider, form: ProviderBookingR
     return draft
 
 
+def _save_partial_provider_booking_recap_prefill(*, provider: Provider, form: ProviderBookingRequestForm, draft: ProviderBookingDraft):
+    payload = dict(draft.payload or {})
+    service = Service.objects.filter(provider=provider, id=form.cleaned_data.get("service_id")).first()
+    if service is None:
+        raise ValidationError("Service non disponible.")
+
+    current_hair_picture_file = form.cleaned_data.get("current_hair_picture_file")
+    if current_hair_picture_file:
+        current_picture = booking_requests.save_current_hair_picture(current_hair_picture_file)
+    else:
+        current_picture = (form.cleaned_data.get("current_hair_picture") or payload.get("current_hair_picture") or "").strip()
+
+    stored_inspiration_pictures = booking_requests.save_inspiration_pictures(form.get_inspiration_files())
+    if not stored_inspiration_pictures:
+        stored_inspiration_pictures = form.cleaned_data.get("existing_inspiration_pictures") or payload.get("inspiration_pictures") or []
+
+    payload.update(
+        {
+            "provider_id": str(provider.id),
+            "service_id": str(form.cleaned_data.get("service_id")),
+            "service_name": service.name,
+            "client_name": (form.cleaned_data.get("client_name") or payload.get("client_name") or "").strip(),
+            "client_email": (form.cleaned_data.get("client_email") or payload.get("client_email") or "").strip(),
+            "desired_date": (form.cleaned_data.get("desired_date") or payload.get("desired_date") or "").strip(),
+            "location_preference": (form.cleaned_data.get("location_preference") or payload.get("location_preference") or "").strip(),
+            "location": (form.cleaned_data.get("location") or payload.get("location") or "").strip(),
+            "client_address": (form.cleaned_data.get("client_address") or payload.get("client_address") or "").strip(),
+            "hair_length": (form.cleaned_data.get("hair_length") or payload.get("hair_length") or "").strip(),
+            "general_adjustments": form.cleaned_data.get("general_adjustments") or [],
+            "meche": bool(form.cleaned_data.get("meche")),
+            "free_text": (form.cleaned_data.get("free_text") or payload.get("free_text") or "").strip(),
+            "current_hair_picture": current_picture,
+            "inspiration_pictures": stored_inspiration_pictures,
+        }
+    )
+
+    draft.client_email = payload.get("client_email", "")
+    draft.client_name = payload.get("client_name", "")
+    draft.payload = payload
+    draft.save(update_fields=["client_email", "client_name", "payload", "updated_at"])
+    return draft
+
+
 def _provider_configuration_blocks_salon_booking(provider: Provider, location_preference: str | None) -> bool:
     requested_preference = (location_preference or "").strip()
     is_salon_request = requested_preference == "salon" or provider.location_mode == Provider.LOCATION_MODE_SALON_ONLY
@@ -490,6 +533,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
     recap_prefill = {}
     recap_token = ""
     recap_message = None
+    can_save_partial_prefill = False
 
     if quick_checkout is not None:
         fixed_price_cents = quick_checkout.reservation_fee_cents
@@ -510,6 +554,13 @@ def provider_detail(request, provider_id, quick_checkout=None):
             if recap_draft:
                 recap_prefill = recap_draft.payload or {}
                 recap_message = "Récapitulatif chargé. Tu peux modifier les infos puis finaliser."
+                can_save_partial_prefill = (
+                    bool(getattr(request.user, "is_authenticated", False))
+                    and bool(getattr(request.user, "is_staff", False))
+                    and
+                    recap_draft.source == ProviderBookingDraft.SOURCE_ADMIN
+                    and recap_draft.completed_at is None
+                )
             else:
                 recap_token = ""
 
@@ -524,29 +575,44 @@ def provider_detail(request, provider_id, quick_checkout=None):
     if request.method == "POST" and request.POST.get("question_form") != "1":
         prefilled_payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
         recap_token_from_post = (request.POST.get("recap_token") or "").strip()
+        post_action = (request.POST.get("action") or "").strip()
+        existing_admin_draft = None
+        if recap_token_from_post:
+            existing_admin_draft = ProviderBookingDraft.objects.filter(
+                token=recap_token_from_post,
+                provider=provider,
+                source=ProviderBookingDraft.SOURCE_ADMIN,
+                completed_at__isnull=True,
+            ).first()
+        partial_prefill_mode = bool(
+            existing_admin_draft
+            and post_action == "save_prefill"
+            and bool(getattr(request.user, "is_authenticated", False))
+            and bool(getattr(request.user, "is_staff", False))
+        )
         form = ProviderBookingRequestForm(
             request.POST,
             request.FILES,
             provider=provider,
             require_payment_auth=False,
-            require_current_hair_picture=True,
+            require_current_hair_picture=not partial_prefill_mode,
+            partial_prefill_mode=partial_prefill_mode,
         )
         if form.is_valid():
             try:
-                existing_admin_draft = None
-                if recap_token_from_post:
-                    existing_admin_draft = ProviderBookingDraft.objects.filter(
-                        token=recap_token_from_post,
-                        provider=provider,
-                        source=ProviderBookingDraft.SOURCE_ADMIN,
-                        completed_at__isnull=True,
-                    ).first()
                 if existing_admin_draft:
-                    recap = _update_provider_booking_recap(
-                        provider=provider,
-                        form=form,
-                        draft=existing_admin_draft,
-                    )
+                    if partial_prefill_mode:
+                        recap = _save_partial_provider_booking_recap_prefill(
+                            provider=provider,
+                            form=form,
+                            draft=existing_admin_draft,
+                        )
+                    else:
+                        recap = _update_provider_booking_recap(
+                            provider=provider,
+                            form=form,
+                            draft=existing_admin_draft,
+                        )
                 else:
                     recap = _create_provider_booking_recap(
                         request=request,
@@ -556,12 +622,17 @@ def provider_detail(request, provider_id, quick_checkout=None):
             except DomainError as exc:
                 error = _friendly_domain_error_message(exc)
             else:
+                if partial_prefill_mode:
+                    return redirect(
+                        f"{reverse('interface:provider_detail', args=[provider.id])}?recap={recap.token}#booking-wizard"
+                    )
                 return redirect("interface:provider_booking_recap", token=str(recap.token))
         else:
             if _provider_configuration_blocks_salon_booking(provider, request.POST.get("location_preference")):
                 _release_payment_auth_safely(prefilled_payment_auth_id)
                 prefilled_payment_auth_id = ""
             error = _first_form_error(form)
+            can_save_partial_prefill = bool(existing_admin_draft)
 
     service_categories = []
     if provider.categorized_services_enabled:
@@ -638,6 +709,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
         "recap_prefill": json.dumps(recap_prefill),
         "recap_token": recap_token,
         "recap_message": recap_message,
+        "can_save_partial_prefill": can_save_partial_prefill,
     }
     if request.headers.get("HX-Request") == "true":
         return render(request, "interface/partials/provider_services_section.html", context)
