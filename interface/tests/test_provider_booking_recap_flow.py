@@ -161,6 +161,12 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertContains(prefill_page, 'data-can-save-partial-prefill="1"')
         self.assertContains(prefill_page, "Enregistrer le brouillon prérempli")
 
+        prefill_page = self.client.get(
+            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={seeded.token}"
+        )
+        self.assertContains(prefill_page, 'data-can-save-partial-prefill="1"')
+        self.assertContains(prefill_page, "Enregistrer le brouillon prérempli")
+
         response = self.client.post(
             reverse("interface:provider_detail", args=[self.provider.id]),
             data={
