@@ -154,6 +154,12 @@ class ProviderBookingRecapFlowTests(TestCase):
             },
         )
 
+        prefill_page = self.client.get(
+            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={seeded.token}"
+        )
+        self.assertContains(prefill_page, 'data-can-save-partial-prefill="1"')
+        self.assertContains(prefill_page, "Enregistrer le brouillon prérempli")
+
         response = self.client.post(
             reverse("interface:provider_detail", args=[self.provider.id]),
             data={
@@ -184,3 +190,64 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertEqual(seeded.client_name, "Nouveau client")
         self.assertEqual(seeded.client_email, "nouveau@example.com")
         self.assertEqual(seeded.payload["free_text"], "Infos admin draft")
+
+    def test_admin_can_save_partial_prefill_without_client_identity_or_pictures(self):
+        admin_user = get_user_model().objects.create_user(
+            username="admin_partial_prefill_user",
+            email="admin-partial@example.com",
+            password="test12345",
+            is_staff=True,
+        )
+        seeded = ProviderBookingDraft.objects.create(
+            provider=self.provider,
+            source=ProviderBookingDraft.SOURCE_ADMIN,
+            created_by=admin_user,
+            client_name="",
+            client_email="",
+            payload={
+                "service_id": str(self.service.id),
+                "service_name": self.service.name,
+                "client_name": "",
+                "client_email": "",
+                "desired_date": "",
+                "location_preference": "",
+                "location": "",
+                "client_address": "",
+                "hair_length": "",
+                "general_adjustments": [],
+                "meche": False,
+                "free_text": "",
+                "current_hair_picture": "",
+                "inspiration_pictures": [],
+            },
+        )
+
+        response = self.client.post(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            data={
+                "service_id": self.service.id,
+                "client_name": "",
+                "client_email": "",
+                "desired_date": "",
+                "location_preference": "",
+                "location": "",
+                "client_address": "",
+                "hair_length": "long",
+                "general_adjustments": "[]",
+                "meche": "",
+                "free_text": "Lead WhatsApp: disponible vendredi",
+                "recap_token": str(seeded.token),
+                "action": "save_prefill",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response["Location"],
+            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={seeded.token}#booking-wizard",
+        )
+        seeded.refresh_from_db()
+        self.assertEqual(seeded.client_name, "")
+        self.assertEqual(seeded.client_email, "")
+        self.assertEqual(seeded.payload["free_text"], "Lead WhatsApp: disponible vendredi")
+        self.assertEqual(seeded.payload["hair_length"], "long")
