@@ -167,6 +167,9 @@
 
                                 <div class="wizard-actions full-width">
                                     <button type="button" class="btn btn-prev btn-secondary">Retour</button>
+                                    {% if can_save_partial_prefill %}
+                                        <button type="submit" class="btn btn-secondary" name="action" value="save_prefill" formnovalidate>Enregistrer le brouillon prérempli</button>
+                                    {% endif %}
                                     <button type="submit" class="btn">Voir mon récapitulatif</button>
                                 </div>
                             </fieldset>
