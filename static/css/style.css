@@ -2280,6 +2280,48 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     color: var(--ink-primary); /* Texte plus foncé pour confirmer */
 }
 
+.availability-choice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.availability-pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ead8e0;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink-secondary);
+    font-weight: 600;
+    padding: 8px 12px;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.availability-pill input[type="checkbox"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+}
+
+.availability-pill:hover {
+    border-color: #f3c1da;
+    background: #fff7fb;
+}
+
+.availability-pill:has(input[type="checkbox"]:checked) {
+    border-color: var(--rose-accent);
+    background: #fff2f6;
+    color: var(--ink-primary);
+    box-shadow: 0 2px 8px rgba(209, 77, 114, 0.12);
+}
+
 .supplements-list {
     display: grid;
     gap: 8px;

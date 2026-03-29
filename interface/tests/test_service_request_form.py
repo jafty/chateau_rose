@@ -12,49 +12,52 @@ class ServiceRequestFormTests(TestCase):
         form = ServiceRequestForm(
             data={
                 "marketing_service": self.service.id,
-                "client_phone": "06 12 34 56 78",
-                "details": "Knotless braids taille S.",
+                "contact": "06 12 34 56 78",
+                "availabilities": ["weekday_morning", "weekend_afternoon"],
             }
         )
 
         self.assertTrue(form.is_valid(), form.errors)
 
-    def test_requires_details_and_phone(self):
+    def test_requires_service_contact_and_availabilities(self):
         form = ServiceRequestForm(
             data={
                 "marketing_service": "",
-                "client_phone": "",
-                "details": "",
+                "contact": "",
+                "availabilities": [],
             }
         )
 
         self.assertFalse(form.is_valid())
         self.assertIn("marketing_service", form.errors)
-        self.assertIn("client_phone", form.errors)
-        self.assertIn("details", form.errors)
+        self.assertIn("contact", form.errors)
+        self.assertIn("availabilities", form.errors)
 
     def test_sanitizes_whatsapp_number(self):
         form = ServiceRequestForm(
             data={
                 "marketing_service": self.service.id,
-                "client_phone": "06 12 34 56 78",
-                "details": "Vanilles à domicile",
+                "contact": "06 12 34 56 78",
+                "availabilities": ["weekday_evening"],
             }
         )
 
         self.assertTrue(form.is_valid(), form.errors)
         instance = form.save()
         self.assertEqual(instance.client_phone, "0612345678")
-        self.assertEqual(instance.availabilities, [])
+        self.assertEqual(instance.client_email, "")
+        self.assertEqual(instance.availabilities, ["weekday_evening"])
 
-    def test_phone_is_required(self):
+    def test_accepts_email_contact(self):
         form = ServiceRequestForm(
             data={
                 "marketing_service": self.service.id,
-                "client_phone": "",
-                "details": "Vanilles à domicile",
+                "contact": "test@example.com",
+                "availabilities": ["weekend_morning"],
             }
         )
 
-        self.assertFalse(form.is_valid())
-        self.assertIn("client_phone", form.errors)
+        self.assertTrue(form.is_valid(), form.errors)
+        instance = form.save()
+        self.assertEqual(instance.client_email, "test@example.com")
+        self.assertEqual(instance.client_phone, "")

@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from django import forms
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.utils import timezone
 
 from booking.models import Provider
@@ -39,8 +41,14 @@ class ServiceRequestForm(forms.ModelForm):
         queryset=MarketingService.objects.all(),
         label="Service",
     )
-    client_phone = forms.CharField(
-        label="Ton numéro (WhatsApp ou téléphone)",
+    contact = forms.CharField(
+        label="Ton contact (WhatsApp ou email)",
+        required=True,
+    )
+    availabilities = forms.MultipleChoiceField(
+        label="Tes disponibilités",
+        choices=ServiceRequest.AVAILABILITY_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
         required=True,
     )
 
@@ -48,41 +56,50 @@ class ServiceRequestForm(forms.ModelForm):
         model = ServiceRequest
         fields = [
             "marketing_service",
-            "client_phone",
-            "details",
+            "availabilities",
         ]
-        widgets = {
-            "details": forms.Textarea(attrs={"rows": 4}),
-        }
-        labels = {
-            "client_phone": "Ton numéro (WhatsApp ou téléphone)",
-            "details": "Décris ta demande",
-        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["details"].required = True
-        self.fields["client_phone"].required = True
-        self.fields["client_phone"].widget.attrs.setdefault("autocomplete", "tel")
-        self.fields["client_phone"].widget.attrs.setdefault("inputmode", "tel")
-        self.fields["details"].widget.attrs.setdefault(
+        self.fields["contact"].required = True
+        self.fields["contact"].widget.attrs.setdefault("autocomplete", "email")
+        self.fields["contact"].widget.attrs.setdefault("inputmode", "email")
+        self.fields["contact"].widget.attrs.setdefault(
             "placeholder",
-            "Exemple : knotless braids, semaine prochaine, chez moi / chez la coiffeuse, cheveux mi-longs.",
+            "Ex : 06 12 34 56 78 ou toi@email.com",
         )
+        self.fields["availabilities"].help_text = "Coche les créneaux qui te vont."
 
-    def clean_client_phone(self):
-        raw_phone = (self.cleaned_data.get("client_phone") or "").strip()
-        if not raw_phone:
-            raise forms.ValidationError("Merci de renseigner ton numéro.")
+    def clean_contact(self):
+        raw_contact = (self.cleaned_data.get("contact") or "").strip()
+        if not raw_contact:
+            raise forms.ValidationError("Renseigne un numéro WhatsApp ou un email.")
 
-        phone = "".join(char for char in raw_phone if char.isdigit() or char == "+")
+        if "@" in raw_contact:
+            try:
+                validate_email(raw_contact)
+            except ValidationError:
+                raise forms.ValidationError("Entre un email valide ou un numéro WhatsApp valide.")
+            return {"kind": "email", "value": raw_contact.lower()}
+
+        phone = "".join(char for char in raw_contact if char.isdigit() or char == "+")
         if len(phone.replace("+", "")) < 8:
-            raise forms.ValidationError("Merci de renseigner un numéro valide ou laisse ce champ vide.")
-        return phone
+            raise forms.ValidationError("Entre un numéro WhatsApp valide ou un email valide.")
+        return {"kind": "phone", "value": phone}
 
-    def clean(self):
-        cleaned_data = super().clean()
-        return cleaned_data
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        contact = self.cleaned_data.get("contact") or {}
+        if contact.get("kind") == "email":
+            instance.client_email = contact.get("value", "")
+            instance.client_phone = ""
+        else:
+            instance.client_phone = contact.get("value", "")
+            instance.client_email = ""
+        instance.details = ""
+        if commit:
+            instance.save()
+        return instance
 
 
 class ProviderBookingRequestForm(forms.Form):

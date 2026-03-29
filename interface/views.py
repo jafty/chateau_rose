@@ -1322,15 +1322,15 @@ def _notify_service_request(record) -> None:
     body_lines = [
         f"Service : {record.marketing_service.name}",
         f"Email : {record.client_email or 'Non communiqué'}",
-        f"Contact WhatsApp : {record.client_phone or 'Non communiqué'}",
+        f"WhatsApp / téléphone : {record.client_phone or 'Non communiqué'}",
         f"Date souhaitée : {desired_date}",
         f"Lieu préféré : {location_preference}",
         f"Zone : {zone_name}",
         f"Disponibilités : {availabilities}",
         f"Photo jointe : {'Oui' if record.inspiration_picture_urls else 'Non'}",
-        "Détails de la demande :",
-        record.details or "Aucun détail supplémentaire.",
     ]
+    if record.details:
+        body_lines.extend(["Détails de la demande :", record.details])
     _create_interaction(
         kind=Interaction.KIND_QUICK_REQUEST,
         source_label="Demande rapide",
