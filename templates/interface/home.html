@@ -457,7 +457,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <section class="city-discovery" aria-label="Pages ville coiffure afro">
     <div class="container city-discovery-inner">
-                <h2 class="section-title">Coiffure afro à Toulouse Métropole</h2>
+        <h2 class="section-title">Coiffure afro à Toulouse Métropole</h2>
+        <div class="toulouse-spotlight">
+            <img
+                class="toulouse-spotlight-image"
+                src="https://images.ladepeche.fr/api/v1/images/view/63b461fb9de9df0e596e20b5/large/image.jpg?v=1"
+                alt="Saint-Cyprien et rue de la République à Toulouse"
+                loading="lazy"
+                decoding="async"
+            >
+            <div class="toulouse-spotlight-copy">
+                <h3>Pas envie de courir en salon ni d'attendre en file&nbsp;?</h3>
+                <p>
+                    Saint-Cyprien et la rue de la République restent des repères pour la coiffure afro à Toulouse.
+                    Mais peu importe que tu habites aux Carmes, à Compans-Caffarelli, à Jolimont ou vers Minimes :
+                    on t'aide à trouver un créneau qui colle à ton rythme, à domicile ou en salon partenaire.
+                </p>
+            </div>
+        </div>
         <div class="city-chip-list">
             {% for city in marketing_city_links %}
                 <a class="city-chip" href="{{ city.url }}">Coiffure afro à {{ city.name }}</a>
