@@ -65,7 +65,12 @@
         line-height: 1.8;
         color: var(--ink-secondary);
     }
-    .provider-header-ctas { margin-top: 1.25rem; }
+    .provider-header-ctas {
+        margin-top: 1.25rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
     .provider-header-ctas .btn,
     .wizard-actions .btn,
     .gallery-more-card {
@@ -509,6 +514,9 @@
                         <path d="m19 12-7 7-7-7"></path>
                     </svg>
                 </a>
+                <a href="#provider-gallery" class="btn secondary">
+                    Voir les réalisations
+                </a>
             </div>
         </div>
         <div class="provider-hero-collage" aria-label="Aperçu des réalisations de {{ provider.name }}">
@@ -701,7 +709,7 @@
 
             </section>
 
-            <section class="content-section">
+            <section class="content-section" id="provider-gallery">
                 <h3 class="section-title provider-section-title">Réalisations</h3>
                 <div class="provider-gallery-card">
                     {% if gallery_photos %}
