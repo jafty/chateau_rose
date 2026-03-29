@@ -44,7 +44,14 @@
 
         <div class="form-field full-width">
             <label>Quand es-tu dispo ? <span class="required-mark">*</span></label>
-            {{ request_form.availabilities }}
+            <div class="availability-choice" role="group" aria-label="Tes disponibilités">
+                {% for checkbox in request_form.availabilities %}
+                    <label class="availability-pill">
+                        {{ checkbox.tag }}
+                        <span>{{ checkbox.choice_label }}</span>
+                    </label>
+                {% endfor %}
+            </div>
             {% if request_form.availabilities.help_text %}<p class="meta-line" style="margin-top:6px;">{{ request_form.availabilities.help_text }}</p>{% endif %}
             {% if request_form.availabilities.errors %}<p class="form-field-error">{{ request_form.availabilities.errors.0 }}</p>{% endif %}
         </div>
