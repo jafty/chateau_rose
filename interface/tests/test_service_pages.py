@@ -115,8 +115,8 @@ class ServicePagesTests(TestCase):
             url,
             {
                 "request_service": "1",
-                "client_phone": "0612345678",
-                "details": "Besoin urgent",
+                "contact": "0612345678",
+                "availabilities": ["weekday_morning", "weekend_afternoon"],
             },
         )
 
@@ -132,7 +132,7 @@ class ServicePagesTests(TestCase):
         self.assertIsNone(request_record.desired_date)
         self.assertEqual(request_record.client_email, "")
         self.assertEqual(request_record.client_phone, "0612345678")
-        self.assertEqual(request_record.availabilities, [])
+        self.assertEqual(request_record.availabilities, ["weekday_morning", "weekend_afternoon"])
 
 
     def test_service_page_creates_quick_request_interaction_and_sets_reply_to(self):
@@ -143,8 +143,8 @@ class ServicePagesTests(TestCase):
                 url,
                 {
                     "request_service": "1",
-                    "client_phone": "0612345678",
-                    "details": "Besoin urgent",
+                    "contact": "0612345678",
+                    "availabilities": ["weekday_evening"],
                 },
             )
 
@@ -167,9 +167,7 @@ class ServicePagesTests(TestCase):
             reverse("interface:home"),
             {
                 "request_service": "1",
-                "client_email": "",
-                "location_preference": ServiceRequest.LOCATION_PREFERENCE_SALON,
-                "details": "",
+                "contact": "",
                 "availabilities": [],
             },
         )
