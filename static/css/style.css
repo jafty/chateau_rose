@@ -390,6 +390,14 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     padding-inline: var(--page-gutter);
 }
 
+.home-hero .hero-title {
+    font-size: clamp(2.1rem, 4vw, 3.3rem);
+}
+
+.home-hero .hero-text {
+    font-size: 1.05rem;
+}
+
 .hero .hero-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
