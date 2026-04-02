@@ -151,7 +151,7 @@ class InteractionAdmin(admin.ModelAdmin):
         "status",
         "source_label",
         "contact_name",
-        "contact_email",
+        "contact",
         "created_at",
         "updated_at",
     )
@@ -167,6 +167,10 @@ class InteractionAdmin(admin.ModelAdmin):
         "notes",
     )
     readonly_fields = ("created_at", "updated_at")
+
+    @admin.display(description="Contact")
+    def contact(self, obj):
+        return obj.contact_phone or obj.contact_email or "-"
 
 @admin.register(ClientReview)
 class ClientReviewAdmin(admin.ModelAdmin):

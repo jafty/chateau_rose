@@ -5,6 +5,7 @@
         <p class="meta-line provider-pricing-note">Sélectionne une coiffure pour estimer ton tarif et vérifier les créneaux disponibles.</p>
     </div>
     {% if provider.categorized_services_enabled and service_categories %}
+    <p class="provider-category-tabs-heading">Filtrer par catégorie</p>
     <div class="provider-category-tabs" role="tablist" aria-label="Catégories de prestations">
         {% for category in service_categories %}
             <a
