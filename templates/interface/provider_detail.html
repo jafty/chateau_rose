@@ -12,6 +12,14 @@
         --provider-surface-padding: clamp(1.5rem, 3vw, 2.25rem);
         --provider-stack-gap: clamp(1rem, 2vw, 1.5rem);
     }
+    .provider-profile,
+    .provider-page-header,
+    .provider-layout,
+    .provider-sidebar,
+    .provider-main,
+    .content-section {
+        min-width: 0;
+    }
     .provider-page-header {
         display: grid;
         grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.95fr);
@@ -231,6 +239,12 @@
         flex: 0 0 auto;
     }
     .provider-note, .provider-card-copy { color: var(--ink-secondary); line-height: 1.7; }
+    .provider-note,
+    .provider-card-copy,
+    .provider-note * {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
     .provider-highlights-card {
         padding: clamp(1.5rem, 3vw, 2.25rem);
         background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(249,246,243,0.96));
@@ -285,6 +299,9 @@
         transition: 0.2s ease;
         cursor: pointer;
         text-decoration: none;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
     .provider-category-tab:hover {
         background: var(--rose-soft);
@@ -443,6 +460,9 @@
             --provider-mobile-surface-inset: clamp(10px, 4vw, 18px);
             --provider-surface-padding: clamp(1rem, 4vw, 1.35rem);
             --provider-stack-gap: 1rem;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: clip;
         }
         .provider-profile.page-shell {
             padding-inline: var(--provider-mobile-surface-inset);
