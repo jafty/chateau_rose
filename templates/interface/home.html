@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="container">
         <h2 class="section-title">Caler ton RDV en 4 étapes</h2>
         <p class="section-subtitle">Tu donnes les infos essentielles, puis on gère la suite pour te proposer un rendez-vous clair et fiable.</p>
-        <div class="step-list" style="margin-top: 50px;">
+        <div class="step-list step-list--spaced">
             <div class="step-item">
                 <strong>Dis-nous ce que tu veux</strong>
                 <p>Contact, prestation souhaitée et disponibilités : tu nous donnes l'essentiel en quelques clics.</p>
@@ -249,8 +249,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <div class="value-prop-grid">
             <div>
-                <h2 class="section-title" style="text-align:left;">Coiffe efficacement tes cheveux afro</h2>
-                <p style="color:var(--ink-secondary); margin-bottom:20px;">Des profils afro vérifiés qui se déplacent, t'accueillent chez eux ou chez elles, avec un brief clair dès le départ.</p>
+                <h2 class="section-title title-left">Coiffe efficacement tes cheveux afro</h2>
+                <p class="muted-copy">Des profils afro vérifiés qui se déplacent, t'accueillent chez eux ou chez elles, avec un brief clair dès le départ.</p>
                 <div class="benefit-list">
                     <div class="benefit-card">
                         <span class="benefit-icon" aria-hidden="true">
@@ -291,8 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             </div>
-            <div style="position:relative;">
-                <div style="border:10px solid white; box-shadow:var(--shadow-hover); transform:rotate(2deg);">
+            <div class="image-frame-tilted-wrap">
+                <div class="image-frame-tilted">
                     <img src="{% static 'demo_pictures/pf_afro_robe_jaune.jpg' %}" alt="Coiffeuse afro à Toulouse" loading="lazy" decoding="async">
                 </div>
             </div>
@@ -414,7 +414,8 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 </section>
 
-<section class="container" style="padding: 80px 20px;" id="catalogue">
+<section class="layout-section section-catalog" id="catalogue">
+    <div class="layout-shell">
     <h2 class="section-title">Des coupes afros pour toutes les envies</h2>
     <div class="all-services-grid polaroid-grid">
         {% for service in services %}
@@ -437,6 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="service-label">{{ service.name }}</span>
             </a>
         {% endfor %}
+    </div>
     </div>
 </section>
 
@@ -465,8 +467,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 <section class="cta-pro" id="pro">
     <div class="container">
-        <h3 style="color:white; font-size: 2rem;">Tu es coiffeuse ou coiffeur afro à Toulouse ?</h3>
-        <p style="margin: 20px 0;">Reçois des demandes claires, sécurise les rendez-vous et garde la main sur tes prix et tes créneaux.</p>
+        <h3 class="cta-pro-title">Tu es coiffeuse ou coiffeur afro à Toulouse ?</h3>
+        <p class="cta-pro-copy">Reçois des demandes claires, sécurise les rendez-vous et garde la main sur tes prix et tes créneaux.</p>
         <a href="{% url 'providers:signup' %}" class="btn secondary">Créer mon espace pro</a>
     </div>
 </section>

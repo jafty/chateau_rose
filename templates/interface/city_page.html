@@ -16,7 +16,7 @@
 </section>
 
 <section class="providers-section city-providers-section" aria-label="Prestataires dans la ville">
-    <div class="container">
+    <div class="layout-shell">
         <div class="homepage-providers-grid">
             {% for provider in providers %}
                 {% include "interface/partials/provider_card.html" with provider=provider %}
@@ -27,7 +27,8 @@
     </div>
 </section>
 
-<section class="container" style="padding: 80px 20px;" id="catalogue-ville">
+<section class="layout-section section-catalog" id="catalogue-ville">
+    <div class="layout-shell">
     <h2 class="section-title">Services disponibles à {{ zone.name }}</h2>
     <div class="all-services-grid polaroid-grid">
         {% for service in services %}
@@ -50,6 +51,7 @@
                 <span class="service-label">{{ service.name }}</span>
             </a>
         {% endfor %}
+    </div>
     </div>
 </section>
 {% endblock %}
