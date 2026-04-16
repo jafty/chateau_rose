@@ -5,14 +5,17 @@
 {% block meta_description %}Trouve une coiffeuse ou un coiffeur afro disponible à domicile à Toulouse. Tresses, locks, soins et plus, avec réservation rapide sur Château Rose.{% endblock %}
 
 {% block content %}
-<section class="container page-hero providers-hero">
-    <div class="paper-card" style="max-width: 900px; margin: 0 auto;">
-        <h1 style="margin: 12px 0 10px;">Coiffure afro à domicile à Toulouse</h1>
+<section class="layout-section layout-section--tight layout-section--flush-top">
+    <div class="layout-shell page-hero providers-hero">
+    <div class="paper-card hero-intro-card">
+        <h1 class="heading-reset">Coiffure afro à domicile à Toulouse</h1>
         <p class="lead">Compare les profils qui se déplacent chez toi, vérifie leurs spécialités et réserve rapidement avec la bonne personne.</p>
+    </div>
     </div>
 </section>
 
-<section class="container providers-section" id="providers" style="padding-top: 60px;">
+<section class="layout-section layout-section--tight providers-section--offset" id="providers">
+    <div class="layout-shell providers-section">
     <div class="providers-grid">
         {% for provider in providers %}
             {% include "interface/partials/provider_card.html" with provider=provider %}
@@ -20,9 +23,11 @@
             <p class="lead">Aucune prestataire ou aucun prestataire à domicile pour le moment.</p>
         {% endfor %}
     </div>
+    </div>
 </section>
 
-<section class="container at-home-seo-content">
+<section class="layout-section layout-section--tight">
+    <div class="layout-shell at-home-seo-content">
     <div class="paper-card">
         <h2>COIFFURE AFRO à domicile toulouse : prendre soin de tes cheveux sans te déplacer</h2>
         <p>Tu veux une solution simple, naturelle et vraiment humaine pour tes cheveux ? Cette page est faite pour toi. Avec Château Rose, tu trouves facilement une coiffeuse ou un coiffeur qui se déplace chez toi, à Toulouse, selon ton style, ton budget et ton emploi du temps.</p>
@@ -31,13 +36,16 @@
         <p>Si tu hésites encore, commence par comparer quelques profils et regarde les spécialités de chacune et chacun. Ensuite, envoie ta demande avec les infos importantes : longueur des cheveux, style souhaité, lieu, créneau idéal. Tu gagneras du temps, et tu auras une réponse plus précise dès le premier échange.</p>
         <p>Notre objectif est clair : rendre la réservation plus fluide, plus rassurante et plus proche de ta réalité. Pour une <strong>COIFFURE AFRO à domicile toulouse</strong> qui te ressemble, tu peux parcourir les prestataires ci-dessus ou déposer directement ta demande pour être orientée vers la bonne personne.</p>
     </div>
+    </div>
 </section>
 
-<section class="container cta-banner providers-footer-gap">
+<section class="layout-section layout-section--tight">
+    <div class="layout-shell cta-banner providers-footer-gap">
     <div>
         <h3>Tu ne trouves pas encore le bon profil ?</h3>
         <p class="lead">Dépose ta demande et on te met en relation avec une prestataire ou un prestataire disponible à domicile.</p>
     </div>
     <a class="btn" href="{% url 'interface:home' %}#service-request">Déposer ma demande</a>
+    </div>
 </section>
 {% endblock %}
