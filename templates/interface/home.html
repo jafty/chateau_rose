@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     {% else %}
                         <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
                     {% endif %}
-                    <span class="service-label">{{ service.name }} <span class="service-arrow">→</span></span>
+                    <span class="service-label">{{ service.name }}</span>
                 </a>
                 {% endfor %}
             </div>

@@ -33,11 +33,30 @@ class MarketingServiceImageInline(admin.TabularInline):
 
 @admin.register(MarketingService)
 class MarketingServiceAdmin(ImportExportModelAdmin):
-    list_display = ("name", "slug")
+    list_display = ("name", "slug", "is_visible_on_homepage", "homepage_order")
+    list_filter = ("is_visible_on_homepage",)
+    list_editable = ("is_visible_on_homepage", "homepage_order")
+    ordering = ("homepage_order", "name")
     search_fields = ("name", "slug")
     prepopulated_fields = {"slug": ("name",)}
     fieldsets = (
-        (None, {"fields": ("name", "slug", "long_title", "short_intro", "intro", "long_description", "highlights", "meta_description")}),
+        (
+            None,
+            {
+                "fields": (
+                    "name",
+                    "slug",
+                    "is_visible_on_homepage",
+                    "homepage_order",
+                    "long_title",
+                    "short_intro",
+                    "intro",
+                    "long_description",
+                    "highlights",
+                    "meta_description",
+                )
+            },
+        ),
         ("Image", {"fields": ("main_image",)}),
     )
     inlines = [MarketingServiceImageInline]

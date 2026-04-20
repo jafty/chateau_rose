@@ -347,6 +347,38 @@ class ServicePagesTests(TestCase):
         self.assertIn('Coiffure afro à Tournefeuille', content)
         self.assertNotIn('SEO local', content)
 
+    def test_home_hides_marketing_services_marked_hidden(self):
+        hidden_service = MarketingService.objects.create(
+            name="Service caché",
+            slug="service-cache",
+            is_visible_on_homepage=False,
+        )
+
+        response = self.client.get(reverse("interface:home"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(self.marketing_service.name, content)
+        self.assertNotIn(hidden_service.name, content)
+
+    def test_home_orders_marketing_services_with_homepage_order(self):
+        slow_service = MarketingService.objects.create(
+            name="Service lent",
+            slug="service-lent",
+            homepage_order=10,
+        )
+        fast_service = MarketingService.objects.create(
+            name="Service rapide",
+            slug="service-rapide",
+            homepage_order=1,
+        )
+
+        response = self.client.get(reverse("interface:home"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertLess(content.index(fast_service.name), content.index(slow_service.name))
+
     def test_footer_does_not_render_marketing_city_links(self):
         response = self.client.get(reverse("interface:provider_list"))
 

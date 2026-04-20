@@ -27,6 +27,8 @@ def _should_compress_image(instance: models.Model, field_name: str) -> bool:
 class MarketingService(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
+    is_visible_on_homepage = models.BooleanField(default=True)
+    homepage_order = models.PositiveIntegerField(default=0)
     intro = models.TextField(blank=True)
     short_intro = models.TextField(blank=True)
     long_description = models.TextField(blank=True)
@@ -45,7 +47,7 @@ class MarketingService(models.Model):
     meta_description = models.TextField(blank=True)
 
     class Meta:
-        ordering = ("name",)
+        ordering = ("homepage_order", "name")
 
     def __str__(self):
         return self.name
