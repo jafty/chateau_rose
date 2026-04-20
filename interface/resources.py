@@ -19,6 +19,8 @@ class MarketingServiceResource(resources.ModelResource):
             "id",
             "name",
             "slug",
+            "is_visible_on_homepage",
+            "homepage_order",
             "intro",
             "short_intro",
             "long_description",

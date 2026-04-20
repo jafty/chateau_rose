@@ -398,7 +398,13 @@ def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
 def home(request):
     providers = Provider.objects.visible_on_website().order_by("homepage_order", "id")
     zones = Zone.objects.all()
-    services = list(MarketingService.objects.all())
+    services = list(
+        MarketingService.objects.filter(is_visible_on_homepage=True).order_by(
+            "homepage_order",
+            "name",
+            "id",
+        )
+    )
     services_by_slug = {service.slug: service for service in services}
     featured_services = []
     for slug in FEATURED_SERVICE_SLUGS:

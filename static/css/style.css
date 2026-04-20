@@ -1255,17 +1255,10 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     font-size: 1.3rem;
     color: var(--ink-primary);
     transition: color 0.3s ease;
-}
-
-.service-arrow {
-    display: inline-block;
-    transition: transform 0.3s ease;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-weight: 400;
-}
-
-.service-polaroid:hover .service-arrow {
-    transform: translateX(4px);
+    text-decoration: underline;
+    text-decoration-color: rgba(226, 92, 147, 0.65);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
 }
 
 .service-polaroid:hover .service-label { color: var(--rose-accent); }
@@ -2762,11 +2755,11 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
         -webkit-overflow-scrolling: touch; scrollbar-width: none;
     }
     .horizontal-scroll-mobile::-webkit-scrollbar { display: none; }
-    .horizontal-scroll-mobile .service-polaroid { flex: 0 0 calc(42vw - 10px) !important; max-width: 220px; scroll-snap-align: center; transform: none !important; padding: 8px 8px 56px !important; }
-    .horizontal-scroll-mobile .service-polaroid img { height: 140px !important; }
+    .horizontal-scroll-mobile .service-polaroid { flex: 0 0 calc(56vw - 10px) !important; max-width: 270px; scroll-snap-align: center; transform: none !important; padding: 8px 8px 44px !important; }
+    .horizontal-scroll-mobile .service-polaroid img { height: 180px !important; }
     .horizontal-scroll-mobile .service-polaroid .service-label {
         bottom: 8px !important;
-        font-size: 0.98rem !important;
+        font-size: 1.22rem !important;
         line-height: 1.15;
         padding-inline: 8px;
         display: -webkit-box;
