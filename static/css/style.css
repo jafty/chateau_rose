@@ -4011,7 +4011,38 @@ footer {
 }
 
 @media (max-width: 640px) {
+    .home-hero .all-services-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .home-hero .service-polaroid {
+        padding: 8px 8px 40px;
+    }
+
+    .home-hero .service-polaroid img {
+        aspect-ratio: 1 / 1;
+        height: auto;
+    }
+
+    .service-header-wrap {
+        max-width: 100%;
+        padding: 28px 12px 24px;
+    }
+
+    .service-header-paper {
+        margin-inline: auto;
+        width: min(100%, 680px);
+    }
+
     .service-hub-layout .providers-grid {
         grid-template-columns: 1fr;
+        justify-items: center;
+        padding-inline: 0;
+    }
+
+    .service-hub-layout .providers-grid .provider-card {
+        width: min(100%, 360px);
+        margin-inline: 0;
     }
 }
