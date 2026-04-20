@@ -834,7 +834,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 .portfolio-strip {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 30px;
     padding: 40px 24px 60px;
     width: min(1200px, 100%);
