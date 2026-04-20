@@ -55,34 +55,39 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         {% endif %}
 
-        <div class="hero-paper-head">
-            <div class="trust-pill"><span class="trust-icon">✓</span> Des expertes passionnées et vérifiées</div>
-            <h1 class="hero-title-centered">Réserve rapidement ta coiffure <span>Afro</span> à Toulouse.</h1>
-            <p class="hero-text-centered">Compare les profils, les prix et les dispos. Prends rendez-vous en quelques clics pour une prestation chez la prestataire ou avec déplacement.</p>
+        <!-- DEBUT DE LA NOUVELLE STRUCTURE COMPACTE -->
+        <div class="hero-compact-header">
+            <div class="trust-pill-micro"><span class="trust-icon">✓</span> Profils vérifiés</div>
+            <h1 class="hero-title-compact">Réserve rapidement ta coiffure <span>Afro</span> à Toulouse.</h1>
+            <p class="hero-text-compact">Compare les expertes de la région, consulte leurs prix et réserve en quelques clics.</p>
+            <p class="hero-question-compact">Que souhaites-tu réaliser ?</p>
         </div>
 
-        <h2 class="hero-grid-title">Quelle coiffure souhaites-tu réaliser ?</h2>
-
-        <div class="all-services-grid">
-            {% for service in services %}
-            <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
-                {% if forloop.counter0|divisibleby:3 %}
-                    <span class="tape top-center" aria-hidden="true"></span>
-                {% elif forloop.counter0|add:'1'|divisibleby:3 %}
-                    <span class="tape top-left" aria-hidden="true"></span>
-                {% else %}
-                    <span class="tape top-left" aria-hidden="true"></span>
-                    <span class="tape top-right" aria-hidden="true"></span>
-                {% endif %}
-                {% if service.resolved_main_image %}
-                    <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
-                {% else %}
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
-                {% endif %}
-                <span class="service-label">{{ service.name }} <span class="service-arrow">→</span></span>
-            </a>
-            {% endfor %}
+        <div class="services-carousel-wrapper">
+            <span class="swipe-hint" aria-hidden="true">← Glisser pour voir plus →</span>
+            
+            <div class="all-services-grid horizontal-scroll-mobile">
+                {% for service in services %}
+                <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
+                    {% if forloop.counter0|divisibleby:3 %}
+                        <span class="tape top-center" aria-hidden="true"></span>
+                    {% elif forloop.counter0|add:'1'|divisibleby:3 %}
+                        <span class="tape top-left" aria-hidden="true"></span>
+                    {% else %}
+                        <span class="tape top-left" aria-hidden="true"></span>
+                        <span class="tape top-right" aria-hidden="true"></span>
+                    {% endif %}
+                    {% if service.resolved_main_image %}
+                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
+                    {% else %}
+                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
+                    {% endif %}
+                    <span class="service-label">{{ service.name }} <span class="service-arrow">→</span></span>
+                </a>
+                {% endfor %}
+            </div>
         </div>
+        <!-- FIN DE LA NOUVELLE STRUCTURE -->
     </div>
 </section>
 
