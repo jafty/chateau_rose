@@ -3824,6 +3824,19 @@ footer {
     padding: 20px 22px;
 }
 
+.breadcrumbs {
+    font-size: 0.85rem;
+    color: var(--ink-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+}
+
+.breadcrumbs a {
+    color: var(--ink-secondary);
+}
+
 .service-main-title {
     font-size: clamp(2.2rem, 4vw, 3.2rem);
 }
@@ -3833,9 +3846,19 @@ footer {
     font-style: italic;
 }
 
+.service-intro {
+    font-size: 1.1rem;
+    color: var(--ink-secondary);
+    margin-top: 12px;
+    line-height: 1.6;
+}
+
 .service-hub-layout {
+    display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 40px;
+    align-items: start;
+    padding-bottom: 80px;
 }
 
 @media (min-width: 960px) {
@@ -3902,6 +3925,25 @@ footer {
 .service-aside-note-list li {
     font-size: 0.85rem;
     color: var(--ink-secondary);
+}
+
+.seo-content {
+    background: #fff;
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-soft);
+    margin-top: 20px;
+    border: 1px solid #eee;
+}
+
+.seo-content h2 {
+    margin-bottom: 16px;
+    font-size: 1.6rem;
+}
+
+.seo-content p {
+    color: var(--ink-secondary);
+    margin-bottom: 16px;
 }
 
 @media (max-width: 640px) {
