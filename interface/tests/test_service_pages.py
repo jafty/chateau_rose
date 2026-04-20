@@ -221,7 +221,7 @@ class ServicePagesTests(TestCase):
         self.assertIn('data-story-media-kind="video"', content)
         self.assertIn('data-story-media-src="https://cdn.example.com/reviews/story.mp4"', content)
 
-    def test_salon_only_badge_is_rendered(self):
+    def test_salon_only_location_text_is_rendered(self):
         self.provider_a.location_mode = Provider.LOCATION_MODE_SALON_ONLY
         self.provider_a.save()
 
@@ -230,8 +230,8 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn("Salon</span>", content)
-        self.assertNotIn("Salon &amp; domicile", content)
+        self.assertIn("Reçoit uniquement", content)
+        self.assertNotIn("Salon</span>", content)
 
     def test_empty_provider_list_is_hidden(self):
         ProviderMarketingService.objects.all().delete()

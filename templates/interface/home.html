@@ -3,156 +3,7 @@
 
 {% block title %}Coiffure afro à Toulouse | Réserve ton RDV | Château Rose{% endblock %}
 
-{% block extra_head %}
-<style>
-    .hero { padding: 40px 0 50px; }
 
-    .hero-paper-head {
-        width: min(860px, 100%);
-        margin: 0 auto 30px;
-        padding: 18px 24px;
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(163, 124, 91, 0.24);
-        border-radius: 14px;
-        box-shadow: var(--shadow-paper);
-        text-align: center;
-        display: grid;
-        justify-items: center;
-        gap: 12px;
-    }
-
-    .trust-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: #fff;
-        border: 1px solid rgba(74, 59, 50, 0.12);
-        padding: 6px 14px;
-        border-radius: 999px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--ink-secondary);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
-
-    .trust-pill .trust-icon {
-        width: 20px;
-        height: 20px;
-        background: #dcfce7;
-        color: #166534;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.75rem;
-    }
-
-    .hero-title-centered { font-size: clamp(2.2rem, 4vw, 3.2rem); line-height: 1.1; }
-    .hero-title-centered span { color: var(--rose-accent); font-style: italic; position: relative; }
-    .hero-title-centered span::after {
-        content: '';
-        position: absolute;
-        bottom: 8px;
-        left: -5px;
-        width: 105%;
-        height: 12px;
-        background: rgba(223, 172, 182, 0.3);
-        z-index: -1;
-        transform: rotate(-1deg);
-    }
-
-    .hero-text-centered { font-size: 1.08rem; color: var(--ink-secondary); font-weight: 500; max-width: 680px; }
-    .hero-grid-title {
-        text-align: center;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        font-size: 1.05rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 24px;
-    }
-
-    .all-services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; }
-    @media (min-width: 900px) {
-        .all-services-grid { grid-template-columns: repeat(4, 1fr); gap: 30px; }
-    }
-
-    .service-polaroid {
-        display: block;
-        background: #fff;
-        padding: 10px 10px 45px;
-        box-shadow: var(--shadow-soft);
-        transition: 0.3s;
-        position: relative;
-        border: 1px solid rgba(0,0,0,0.05);
-        text-align: center;
-        transform: rotate(1deg);
-    }
-    .service-polaroid:nth-child(even) { transform: rotate(-1deg); }
-    .service-polaroid:nth-child(3n) { transform: rotate(2deg); }
-    .service-polaroid:hover { transform: scale(1.04) rotate(0deg); box-shadow: var(--shadow-hover); z-index: 5; }
-    .service-polaroid img { height: 200px; filter: sepia(10%); transition: 0.3s; }
-    .service-polaroid:hover img { filter: sepia(0); }
-
-    .service-label {
-        position: absolute;
-        bottom: 12px;
-        left: 0;
-        width: 100%;
-        font-family: 'Cormorant Garamond', serif;
-        font-weight: 700;
-        font-size: 1.2rem;
-        transition: color 0.3s ease;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 6px;
-    }
-    .service-arrow { display: inline-block; transition: transform 0.3s ease; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 400; }
-    .service-polaroid:hover .service-label { color: var(--rose-accent); }
-    .service-polaroid:hover .service-arrow { transform: translateX(4px); }
-
-    .providers-section { padding: 40px 0 80px; }
-
-    .bold-steps-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px; margin-top: 40px; }
-    .bold-step-item {
-        background: #FFFEFD;
-        padding: 32px 24px;
-        border-radius: var(--radius-md);
-        box-shadow: var(--shadow-paper);
-        text-align: center;
-        border: 1px solid rgba(74, 59, 50, 0.05);
-        transition: 0.3s ease;
-    }
-    .bold-step-item:hover { transform: translateY(-5px); border-color: #f3c1da; box-shadow: var(--shadow-lifted); }
-    .step-number-handwritten {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 24px;
-        background: var(--rose-accent);
-        color: #fff;
-        font-family: 'Permanent Marker', cursive;
-        font-size: 2.2rem;
-        border-radius: 50%;
-        transform: rotate(-6deg);
-        box-shadow: 4px 4px 0 var(--ink-primary);
-    }
-    .bold-step-item h3 { font-size: 1.4rem; margin-bottom: 12px; }
-    .bold-step-item p { color: var(--ink-secondary); font-size: 0.95rem; line-height: 1.5; }
-
-    .value-prop-grid { margin-top: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
-    .title-left { text-align: left; }
-    .muted-copy { color: var(--ink-secondary); margin-bottom: 20px; }
-
-    @media (max-width: 900px) {
-        .value-prop-grid { grid-template-columns: 1fr; }
-    }
-</style>
-{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -209,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <h2 class="hero-grid-title">Quelle coiffure souhaites-tu réaliser ?</h2>
 
-        <div class="all-services-grid polaroid-grid">
+        <div class="all-services-grid">
             {% for service in services %}
             <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
                 {% if forloop.counter0|divisibleby:3 %}
@@ -403,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a class="city-chip" href="{{ city.url }}">Coiffure afro à {{ city.name }}</a>
             {% endfor %}
         </div>
-        <div class="city-chip-list">{% for city in marketing_city_links %}<a class="city-chip" href="{{ city.url }}">Coiffure afro à {{ city.name }}</a>{% endfor %}</div>
     </div>
 </section>
 {% endblock %}
