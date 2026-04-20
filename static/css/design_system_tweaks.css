@@ -7,17 +7,11 @@
 }
 
 .service-header-wrap {
-    max-width: none;
     width: 100%;
 }
 
 .service-header-paper {
     width: 100%;
-    padding: 0;
-    background: none;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
 }
 
 .service-hub-layout .provider-card {

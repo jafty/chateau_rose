@@ -222,16 +222,14 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="container"><h2 class="section-title">Portfolios du moment</h2><p class="section-subtitle">Quelques réalisations récentes de nos talents</p></div>
     <div class="portfolio-strip">
         {% for provider in providers|slice:":6" %}
-            {% with photo=provider.photos.first %}
             <div class="polaroid-mini">
-                {% if photo and photo.resolved_url %}
-                    <img src="{{ photo.resolved_url }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async" draggable="false">
+                {% if provider.resolved_cover_image %}
+                    <img src="{{ provider.resolved_cover_image }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async" draggable="false">
                 {% else %}
                     <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure afro" loading="lazy" decoding="async" draggable="false">
                 {% endif %}
                 <p>{{ provider.name }}</p>
             </div>
-            {% endwith %}
         {% empty %}<p class="lead">Les portfolios arrivent bientôt.</p>{% endfor %}
     </div>
 </section>
