@@ -166,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!track) return;
         const getStep = () => Math.max(track.clientWidth * 0.82, 240);
-
         const refreshRailState = () => {
             const canScroll = track.scrollWidth > track.clientWidth + 8;
             cue?.classList.toggle('is-hidden', !canScroll);
@@ -366,10 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </section>
 
 <section class="portfolio-section">
-    <div class="container">
-        <h2 class="section-title">Portfolios du moment</h2>
-        <p class="section-subtitle">Quelques réalisations récentes de nos talents</p>
-    </div>
+    <div class="container"><h2 class="section-title">Portfolios du moment</h2><p class="section-subtitle">Quelques réalisations récentes de nos talents</p></div>
     <div class="portfolio-strip">
         {% for provider in providers|slice:":6" %}
             {% with photo=provider.photos.first %}
@@ -382,19 +378,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>{{ provider.name }}</p>
             </div>
             {% endwith %}
-        {% empty %}
-            <p class="lead">Les portfolios arrivent bientôt.</p>
-        {% endfor %}
+        {% empty %}<p class="lead">Les portfolios arrivent bientôt.</p>{% endfor %}
     </div>
 </section>
 
-<section class="cta-pro" id="pro">
-    <div class="container">
-        <h3 class="cta-pro-title">Tu es coiffeuse ou coiffeur afro à Toulouse ?</h3>
-        <p class="cta-pro-copy">Reçois des demandes claires, sécurise les rendez-vous et garde la main sur tes prix et tes créneaux.</p>
-        <a href="{% url 'providers:signup' %}" class="btn secondary">Créer mon espace pro</a>
-    </div>
-</section>
+<section class="cta-pro" id="pro"><div class="container"><h3 class="cta-pro-title">Tu es coiffeuse ou coiffeur afro à Toulouse ?</h3><p class="cta-pro-copy">Reçois des demandes claires, sécurise les rendez-vous et garde la main sur tes prix et tes créneaux.</p><a href="{% url 'providers:signup' %}" class="btn secondary">Créer mon espace pro</a></div></section>
 
 <section class="city-discovery" aria-label="Pages ville coiffure afro">
     <div class="container city-discovery-inner">
@@ -415,6 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a class="city-chip" href="{{ city.url }}">Coiffure afro à {{ city.name }}</a>
             {% endfor %}
         </div>
+        <div class="city-chip-list">{% for city in marketing_city_links %}<a class="city-chip" href="{{ city.url }}">Coiffure afro à {{ city.name }}</a>{% endfor %}</div>
     </div>
 </section>
 {% endblock %}

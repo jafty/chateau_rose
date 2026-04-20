@@ -109,6 +109,13 @@
         <h1>{{ long_title|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
     </div>
+    <h1>{{ long_title|default:service.name }} <span style="color:var(--rose-accent); font-style:italic;">{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
+    <p class="lead" style="margin-top:12px; max-width: 840px;">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
+    {% if hero_image %}
+        <div style="margin-top:20px; border:6px solid #fff; box-shadow:var(--shadow-paper); max-width: 720px;">
+            <img src="{{ hero_image }}" alt="{{ service.name }} à {% if zone %}{{ zone.name }}{% else %}Toulouse{% endif %}" width="720" height="460" loading="eager" fetchpriority="high" decoding="async">
+        </div>
+    {% endif %}
 </section>
 
 <section class="container service-hub-layout">
