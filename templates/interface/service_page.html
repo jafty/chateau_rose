@@ -5,6 +5,7 @@
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/design_system_tweaks.css' %}">
 <script type="application/ld+json">{{ service_schema_json|safe }}</script>
 {% endblock %}
 
@@ -53,25 +54,10 @@
                             <span class="tag">{{ provider_service.name }}</span>
                         {% endfor %}
                     </div>
-                    <div class="card-actions"><span class="link">Voir les tarifs</span></div>
+                    <div class="card-actions"><span class="link service-card-link">Voir les tarifs</span></div>
                 </div>
             </a>
             {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if gallery_images or hero_image %}
-        <div>
-            <h3 style="font-size: 1.6rem; margin-bottom: 8px;">Inspirations {{ service.name }}</h3>
-            <p style="color: var(--ink-secondary); font-size: 0.95rem;">Quelques réalisations récentes de nos prestataires toulousaines.</p>
-            <div class="gallery-scroll">
-                {% if hero_image %}
-                <div class="gallery-item"><img src="{{ hero_image }}" alt="{{ service.name }} à {% if zone %}{{ zone.name }}{% else %}Toulouse{% endif %}" loading="lazy" decoding="async"></div>
-                {% endif %}
-                {% for image in gallery_images %}
-                <div class="gallery-item"><img src="{{ image.url }}" alt="Inspiration {{ service.name }}" loading="lazy" decoding="async"></div>
-                {% endfor %}
-            </div>
         </div>
         {% endif %}
 
@@ -90,18 +76,18 @@
             <h4>Affiner par zone</h4>
             {% with featured_zones=zones|slice:":5" remainder_zones=zones|slice:"5:" %}
             <div class="nav-list">
-                <a href="{% url 'interface:service_page' service.slug %}" class="nav-link {% if not zone %}active{% endif %}">📍 Tout Toulouse <span>→</span></a>
+                <a href="{% url 'interface:service_page' service.slug %}" class="nav-link {% if not zone %}active{% endif %}">📍 Tout Toulouse <span>&rarr;</span></a>
                 {% for zone_option in featured_zones %}
-                    <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}" class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">{{ zone_option.name }} <span>→</span></a>
+                    <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}" class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">{{ zone_option.name }} <span>&rarr;</span></a>
                 {% endfor %}
             </div>
             {% if remainder_zones %}
                 <div class="nav-list zone-list-full" data-zone-accordion-content hidden>
                     {% for zone_option in remainder_zones %}
-                        <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}" class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">{{ zone_option.name }} <span>→</span></a>
+                        <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}" class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">{{ zone_option.name }} <span>&rarr;</span></a>
                     {% endfor %}
                 </div>
-                <button class="zone-toggle" type="button" data-zone-accordion-trigger aria-expanded="false"><span data-zone-toggle-label>Voir plus de villes</span> <span data-zone-toggle-icon>↓</span></button>
+                <button class="zone-toggle" type="button" data-zone-accordion-trigger aria-expanded="false"><span data-zone-toggle-label>Voir plus de villes</span> <span data-zone-toggle-icon>&darr;</span></button>
             {% endif %}
             {% endwith %}
         </div>
@@ -117,7 +103,7 @@
             </ul>
         </div>
 
-        <div class="service-aside-note">
+        <div class="paper-card service-aside-note">
             <h4 class="service-aside-note-title">Bon à savoir</h4>
             <div class="service-aside-note-copy">{{ city_intro|sanitize_marketing_html }}</div>
             {% if highlights %}
@@ -145,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         content.classList.toggle('is-open', isOpen);
         toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         if (label) label.textContent = isOpen ? 'Voir moins de villes' : 'Voir plus de villes';
-        if (icon) icon.textContent = isOpen ? '↑' : '↓';
+        if (icon) icon.textContent = isOpen ? '\u2191' : '\u2193';
     };
 
     setState(false);
