@@ -1,0 +1,67 @@
+.portfolio-strip {
+    padding: 18px 24px 60px;
+}
+
+.zone-list-full[hidden] {
+    display: none !important;
+}
+
+.service-header-wrap {
+    max-width: none;
+    width: 100%;
+}
+
+.service-header-paper {
+    width: 100%;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.service-hub-layout .provider-card {
+    width: 100%;
+}
+
+.service-hub-layout .provider-name {
+    font-size: 1.4rem;
+    line-height: 1.2;
+    margin-bottom: 0;
+}
+
+.service-hub-layout .tags {
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.service-hub-layout .card-actions {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px dashed #eee;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.service-hub-layout .card-actions .link,
+.service-hub-layout .card-actions .service-card-link {
+    color: var(--rose-accent);
+    border-bottom: none;
+}
+
+.service-aside-note {
+    padding: 1.5rem;
+}
+
+.service-aside-note-copy > * + * {
+    margin-top: 0.75rem;
+}
+
+.service-aside-note-list {
+    margin-top: 14px;
+}
+
+.service-aside-note-list li {
+    line-height: 1.55;
+}
