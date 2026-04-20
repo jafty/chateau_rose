@@ -65,9 +65,9 @@
                 <a href="{% url 'interface:provider_list' %}">Prestataires</a>
                 <a href="{% url 'interface:home' %}#catalogue">Services</a>
                 <a href="{% url 'providers:signup' %}">Devenir partenaire</a>
-                <a href="{% url 'interface:home' %}#service-request" class="pro-link pro-link-mobile">Ton RDV en 10 secondes</a>
+                <a href="{% url 'interface:home' %}#catalogue" class="pro-link pro-link-mobile">Prendre RDV</a>
             </nav>
-            <a href="{% url 'interface:home' %}#service-request" class="pro-link pro-link-desktop">Ton RDV en 10 secondes</a>
+            <a href="{% url 'interface:home' %}#catalogue" class="pro-link pro-link-desktop">Prendre RDV</a>
         </div>
     </header>
 
@@ -96,7 +96,7 @@
                     <li><a href="{% url 'interface:provider_list' %}">Prestataires</a></li>
                     <li><a href="{% url 'interface:at_home_provider_list' %}">Coiffure afro à domicile</a></li>
                     <li><a href="{% url 'interface:home' %}#catalogue">Services</a></li>
-                    <li><a href="{% url 'interface:home' %}#service-request">Réserver rapidement</a></li>
+                    <li><a href="{% url 'interface:home' %}#catalogue">Trouver un service</a></li>
                 </ul>
             </div>
             <div class="footer-section">
@@ -114,7 +114,7 @@
                 <ul class="footer-links">
                     <li><a href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:login' %}{% endif %}">Espace prestataires</a></li>
                     <li><a href="{% url 'providers:signup' %}">Devenir partenaire</a></li>
-                    <li><a href="{% url 'interface:home' %}#service-request">Recevoir des demandes</a></li>
+                    <li><a href="{% url 'interface:home' %}#catalogue">Voir le catalogue</a></li>
                 </ul>
             </div>
             <div class="footer-section">

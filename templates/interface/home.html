@@ -3,171 +3,184 @@
 
 {% block title %}Coiffure afro à Toulouse | Réserve ton RDV | Château Rose{% endblock %}
 
+{% block extra_head %}
+<style>
+    .hero { padding: 40px 0 50px; }
+
+    .hero-paper-head {
+        width: min(860px, 100%);
+        margin: 0 auto 30px;
+        padding: 18px 24px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(163, 124, 91, 0.24);
+        border-radius: 14px;
+        box-shadow: var(--shadow-paper);
+        text-align: center;
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+    }
+
+    .trust-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #fff;
+        border: 1px solid rgba(74, 59, 50, 0.12);
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--ink-secondary);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .trust-pill .trust-icon {
+        width: 20px;
+        height: 20px;
+        background: #dcfce7;
+        color: #166534;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+
+    .hero-title-centered { font-size: clamp(2.2rem, 4vw, 3.2rem); line-height: 1.1; }
+    .hero-title-centered span { color: var(--rose-accent); font-style: italic; position: relative; }
+    .hero-title-centered span::after {
+        content: '';
+        position: absolute;
+        bottom: 8px;
+        left: -5px;
+        width: 105%;
+        height: 12px;
+        background: rgba(223, 172, 182, 0.3);
+        z-index: -1;
+        transform: rotate(-1deg);
+    }
+
+    .hero-text-centered { font-size: 1.08rem; color: var(--ink-secondary); font-weight: 500; max-width: 680px; }
+    .hero-grid-title {
+        text-align: center;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 24px;
+    }
+
+    .all-services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; }
+    @media (min-width: 900px) {
+        .all-services-grid { grid-template-columns: repeat(4, 1fr); gap: 30px; }
+    }
+
+    .service-polaroid {
+        display: block;
+        background: #fff;
+        padding: 10px 10px 45px;
+        box-shadow: var(--shadow-soft);
+        transition: 0.3s;
+        position: relative;
+        border: 1px solid rgba(0,0,0,0.05);
+        text-align: center;
+        transform: rotate(1deg);
+    }
+    .service-polaroid:nth-child(even) { transform: rotate(-1deg); }
+    .service-polaroid:nth-child(3n) { transform: rotate(2deg); }
+    .service-polaroid:hover { transform: scale(1.04) rotate(0deg); box-shadow: var(--shadow-hover); z-index: 5; }
+    .service-polaroid img { height: 200px; filter: sepia(10%); transition: 0.3s; }
+    .service-polaroid:hover img { filter: sepia(0); }
+
+    .service-label {
+        position: absolute;
+        bottom: 12px;
+        left: 0;
+        width: 100%;
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 700;
+        font-size: 1.2rem;
+        transition: color 0.3s ease;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+    }
+    .service-arrow { display: inline-block; transition: transform 0.3s ease; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 400; }
+    .service-polaroid:hover .service-label { color: var(--rose-accent); }
+    .service-polaroid:hover .service-arrow { transform: translateX(4px); }
+
+    .providers-section { padding: 40px 0 80px; }
+
+    .bold-steps-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px; margin-top: 40px; }
+    .bold-step-item {
+        background: #FFFEFD;
+        padding: 32px 24px;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-paper);
+        text-align: center;
+        border: 1px solid rgba(74, 59, 50, 0.05);
+        transition: 0.3s ease;
+    }
+    .bold-step-item:hover { transform: translateY(-5px); border-color: #f3c1da; box-shadow: var(--shadow-lifted); }
+    .step-number-handwritten {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 24px;
+        background: var(--rose-accent);
+        color: #fff;
+        font-family: 'Permanent Marker', cursive;
+        font-size: 2.2rem;
+        border-radius: 50%;
+        transform: rotate(-6deg);
+        box-shadow: 4px 4px 0 var(--ink-primary);
+    }
+    .bold-step-item h3 { font-size: 1.4rem; margin-bottom: 12px; }
+    .bold-step-item p { color: var(--ink-secondary); font-size: 0.95rem; line-height: 1.5; }
+
+    .value-prop-grid { margin-top: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+    .title-left { text-align: left; }
+    .muted-copy { color: var(--ink-secondary); margin-bottom: 20px; }
+
+    @media (max-width: 900px) {
+        .value-prop-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const storyCards = document.querySelectorAll('[data-story-card]');
-    const storyZoomModal = document.querySelector('[data-story-zoom-modal]');
-    const storyZoomFigure = storyZoomModal?.querySelector('[data-story-zoom-figure]');
-    const storyZoomMediaSlot = storyZoomModal?.querySelector('[data-story-zoom-media-slot]');
-    const storyZoomRating = storyZoomModal?.querySelector('[data-story-zoom-rating]');
-    const storyZoomClientName = storyZoomModal?.querySelector('[data-story-zoom-client-name]');
-    const storyZoomReviewText = storyZoomModal?.querySelector('[data-story-zoom-review-text]');
-    const modalCloseButtons = storyZoomModal?.querySelectorAll('[data-story-zoom-close]') || [];
-
-    const buildStoryZoomMedia = (card) => {
-        if (!storyZoomMediaSlot) {
-            return;
-        }
-
-        const mediaSrc = card.dataset.storyMediaSrc;
-        const mediaKind = card.dataset.storyMediaKind === 'video' ? 'video' : 'image';
-        const mediaAlt = card.dataset.storyImageAlt || 'Photo du résultat client ou cliente';
-
-        if (!mediaSrc) {
-            return;
-        }
-
-        storyZoomMediaSlot.innerHTML = '';
-
-        if (mediaKind === 'video') {
-            const video = document.createElement('video');
-            video.src = mediaSrc;
-            video.controls = true;
-            video.autoplay = true;
-            video.setAttribute('playsinline', '');
-            video.setAttribute('preload', 'metadata');
-            video.setAttribute('aria-label', mediaAlt);
-            storyZoomMediaSlot.appendChild(video);
-            return;
-        }
-
-        const image = document.createElement('img');
-        image.src = mediaSrc;
-        image.alt = mediaAlt;
-        image.loading = 'lazy';
-        image.decoding = 'async';
-        storyZoomMediaSlot.appendChild(image);
-    };
-
-    const closeStoryZoom = () => {
-        if (!storyZoomModal) {
-            return;
-        }
-        storyZoomMediaSlot?.querySelectorAll('video').forEach((video) => {
-            video.pause();
-            video.removeAttribute('src');
-            video.load();
-        });
-        if (storyZoomMediaSlot) {
-            storyZoomMediaSlot.innerHTML = '';
-        }
-        if (storyZoomRating) {
-            storyZoomRating.textContent = '';
-        }
-        if (storyZoomClientName) {
-            storyZoomClientName.textContent = '';
-        }
-        if (storyZoomReviewText) {
-            storyZoomReviewText.textContent = '';
-        }
-        storyZoomModal.classList.remove('is-open');
-        storyZoomModal.setAttribute('aria-hidden', 'true');
-    };
-
-    const openStoryZoom = (card) => {
-        if (!storyZoomModal || !storyZoomFigure) {
-            return;
-        }
-
-        if (!card.dataset.storyMediaSrc) {
-            return;
-        }
-
-        buildStoryZoomMedia(card);
-        if (storyZoomRating) {
-            const rating = Number.parseInt(card.dataset.storyRating || '0', 10);
-            const boundedRating = Number.isNaN(rating) ? 0 : Math.max(0, Math.min(5, rating));
-            storyZoomRating.textContent = `${'★'.repeat(boundedRating)}${'☆'.repeat(5 - boundedRating)}`;
-        }
-        if (storyZoomClientName) {
-            storyZoomClientName.textContent = card.dataset.storyClientName || '';
-        }
-        if (storyZoomReviewText) {
-            storyZoomReviewText.textContent = card.dataset.storyReviewText || '';
-        }
-        storyZoomModal.classList.add('is-open');
-        storyZoomModal.setAttribute('aria-hidden', 'false');
-    };
-
-    storyCards.forEach((card) => {
-        card.addEventListener('focusin', () => card.classList.add('is-hovered'));
-        card.addEventListener('focusout', () => card.classList.remove('is-hovered'));
-        card.addEventListener('click', () => openStoryZoom(card));
-        card.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                openStoryZoom(card);
-            }
-        });
-    });
-
-    modalCloseButtons.forEach((button) => {
-        button.addEventListener('click', closeStoryZoom);
-    });
-
-    storyZoomModal?.addEventListener('click', (event) => {
-        if (event.target === storyZoomModal) {
-            closeStoryZoom();
-        }
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && storyZoomModal?.classList.contains('is-open')) {
-            closeStoryZoom();
-        }
-    });
-
     const rails = document.querySelectorAll('[data-scroll-rail]');
-
     rails.forEach((rail) => {
         const track = rail.querySelector('[data-scroll-track]');
         const cue = rail.querySelector('[data-scroll-cue]');
         const prevButton = rail.querySelector('[data-scroll-prev]');
         const nextButton = rail.querySelector('[data-scroll-next]');
 
-        if (!track) {
-            return;
-        }
-
+        if (!track) return;
         const getStep = () => Math.max(track.clientWidth * 0.82, 240);
 
         const refreshRailState = () => {
             const canScroll = track.scrollWidth > track.clientWidth + 8;
             cue?.classList.toggle('is-hidden', !canScroll);
-
-            if (!prevButton || !nextButton) {
-                return;
-            }
-
+            if (!prevButton || !nextButton) return;
             prevButton.hidden = !canScroll;
             nextButton.hidden = !canScroll;
-
             const atStart = track.scrollLeft <= 8;
             const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 8;
-
             prevButton.disabled = atStart;
             nextButton.disabled = atEnd;
         };
 
-        prevButton?.addEventListener('click', () => {
-            track.scrollBy({ left: -getStep(), behavior: 'smooth' });
-        });
-
-        nextButton?.addEventListener('click', () => {
-            track.scrollBy({ left: getStep(), behavior: 'smooth' });
-        });
-
+        prevButton?.addEventListener('click', () => track.scrollBy({ left: -getStep(), behavior: 'smooth' }));
+        nextButton?.addEventListener('click', () => track.scrollBy({ left: getStep(), behavior: 'smooth' }));
         track.addEventListener('scroll', refreshRailState, { passive: true });
         window.addEventListener('resize', refreshRailState);
         refreshRailState();
@@ -177,125 +190,108 @@ document.addEventListener('DOMContentLoaded', () => {
 {% endblock %}
 
 {% block content %}
-<section class="hero home-hero">
-    <div class="container hero-grid">
-        <div class="hero-content hero-card">
-            <h1 class="hero-title">On gère ta coiffure <span>Afro</span>, n'importe où à Toulouse</h1>
-            <p class="hero-text">Dis-nous ce que tu veux et quand tu es dispo. On te cale un rendez-vous avec une coiffeuse afro indépendante, directement chez elle ou à ton domicile.</p>
-            <div class="hero-actions">
-                <a href="#service-request" class="btn">Prends RDV en 10 secondes</a>
-                <a href="#providers" class="btn secondary">Découvre les tarifs</a>
+<section class="hero home-hero" id="catalogue">
+    <div class="container">
+        {% if request_form.errors %}
+            <div class="alert" role="alert" style="margin-bottom:16px;">
+                <strong>On n'a pas pu envoyer ta demande.</strong><br>
+                Vérifie les champs en rouge puis réessaie.
+                {% for field in request_form %}
+                    {% for error in field.errors %}<div>{{ error }}</div>{% endfor %}
+                {% endfor %}
             </div>
-            <a href="#happy-clients" class="trust-indicator" aria-label="Voir les avis clients et résultats">
-                <span class="trust-icon" aria-hidden="true">✓</span>
-                <span class="trust-copy">
-                    <strong>Prestataires talentueux et vérifiés</strong>
-                    <span>Résultats visibles en stories clientes</span>
-                </span>
-            </a>
+        {% endif %}
+
+        <div class="hero-paper-head">
+            <div class="trust-pill"><span class="trust-icon">✓</span> Des expertes passionnées et vérifiées</div>
+            <h1 class="hero-title-centered">Réserve rapidement ta coiffure <span>Afro</span> à Toulouse.</h1>
+            <p class="hero-text-centered">Compare les profils, les prix et les dispos. Prends rendez-vous en quelques clics pour une prestation chez la prestataire ou avec déplacement.</p>
         </div>
 
-        <div class="hub-grid polaroid-grid">
-            {% for service in featured_services %}
-                <a class="service-polaroid hero-polaroid" href="{% url 'interface:service_page' service.slug %}">
-                    {% if forloop.counter0|divisibleby:3 %}
-                        <span class="tape top-center" aria-hidden="true"></span>
-                    {% elif forloop.counter0|add:'1'|divisibleby:3 %}
-                        <span class="tape top-left" aria-hidden="true"></span>
-                    {% else %}
-                        <span class="tape top-left" aria-hidden="true"></span>
-                        <span class="tape top-right" aria-hidden="true"></span>
-                    {% endif %}
-                    {% if service.resolved_main_image %}
-                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }}" width="320" height="320" loading="lazy" decoding="async">
-                    {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }}" width="320" height="320" loading="lazy" decoding="async">
-                    {% endif %}
-                    <span class="service-label">{{ service.name }}</span>
-                </a>
-            {% empty %}
-                <div class="service-polaroid hero-polaroid" aria-hidden="true">
+        <h2 class="hero-grid-title">Quelle coiffure souhaites-tu réaliser ?</h2>
+
+        <div class="all-services-grid polaroid-grid">
+            {% for service in services %}
+            <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
+                {% if forloop.counter0|divisibleby:3 %}
+                    <span class="tape top-center" aria-hidden="true"></span>
+                {% elif forloop.counter0|add:'1'|divisibleby:3 %}
                     <span class="tape top-left" aria-hidden="true"></span>
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure afro" width="320" height="320" loading="lazy" decoding="async">
-                    <span class="service-label">Coiffures d'exception</span>
-                </div>
+                {% else %}
+                    <span class="tape top-left" aria-hidden="true"></span>
+                    <span class="tape top-right" aria-hidden="true"></span>
+                {% endif %}
+                {% if service.resolved_main_image %}
+                    <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
+                {% else %}
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
+                {% endif %}
+                <span class="service-label">{{ service.name }} <span class="service-arrow">→</span></span>
+            </a>
             {% endfor %}
         </div>
     </div>
 </section>
 
+<section class="providers-section" id="providers">
+    <div class="container">
+        <div class="section-paper-head">
+            <h2 class="section-title">Nos as de la coiffure afro à Toulouse</h2>
+            <p class="section-subtitle">Chaque profil affiche ses tarifs, ses disponibilités et son portfolio complet.</p>
+        </div>
+        <div class="homepage-providers-grid" aria-label="Top 3 des prestataires">
+            {% for provider in providers|slice:":3" %}
+                {% include "interface/partials/provider_card.html" with provider=provider %}
+            {% empty %}
+                <p class="lead">Les prestataires seront publiés très bientôt.</p>
+            {% endfor %}
+        </div>
+        {% if providers|length > 3 %}
+        <div class="homepage-providers-cta">
+            <a href="{% url 'interface:provider_list' %}" class="btn">Voir tous les profils &amp; tarifs</a>
+            <a href="{% url 'interface:at_home_provider_list' %}" class="btn secondary">Voir les profils avec déplacement</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
 <section class="steps-section" id="about">
     <div class="container">
-        <h2 class="section-title">Caler ton RDV en 4 étapes</h2>
-        <p class="section-subtitle">Tu donnes les infos essentielles, puis on gère la suite pour te proposer un rendez-vous clair et fiable.</p>
-        <div class="step-list step-list--spaced">
-            <div class="step-item">
-                <strong>Dis-nous ce que tu veux</strong>
-                <p>Contact, prestation souhaitée et disponibilités : tu nous donnes l'essentiel en quelques clics.</p>
-            </div>
-            <div class="step-item">
-                <strong>On te confirme le bon créneau</strong>
-                <p>On vérifie avec notre équipe et on te propose un rendez-vous qui colle à ta demande.</p>
-            </div>
-            <div class="step-item">
-                <strong>Tu sécurises ton RDV</strong>
-                <p>Tu valides les dernières infos demandées pour bloquer ton créneau en toute tranquillité.</p>
-            </div>
-            <div class="step-item">
-                <strong>Tu repars coiffé·e</strong>
-                <p>Le jour J, la prestation est réalisée comme prévu et tu repars avec la coiffure que tu voulais.</p>
-            </div>
+        <h2 class="section-title">Prendre RDV n'a jamais été aussi simple</h2>
+
+        <div class="bold-steps-list">
+            <article class="bold-step-item"><div class="step-number-handwritten">1</div><h3>Choisis ta coiffure</h3><p>Tresses, locks, soins... Clique sur la prestation de ton choix en haut de page.</p></article>
+            <article class="bold-step-item"><div class="step-number-handwritten">2</div><h3>Trouve ta pépite</h3><p>Parcours les profils et les portfolios de nos coiffeuses toulousaines.</p></article>
+            <article class="bold-step-item"><div class="step-number-handwritten">3</div><h3>Bloque le créneau</h3><p>Sélectionne tes dates et sécurise facilement ton rendez-vous en ligne.</p></article>
+            <article class="bold-step-item"><div class="step-number-handwritten">4</div><h3>Kiffe le résultat</h3><p>Le jour J, fais-toi chouchouter chez la prestataire ou directement chez toi.</p></article>
         </div>
 
         <div class="value-prop-grid">
             <div>
-                <h2 class="section-title title-left">Coiffe efficacement tes cheveux afro</h2>
-                <p class="muted-copy">Des profils afro vérifiés qui se déplacent, t'accueillent chez eux ou chez elles, avec un brief clair dès le départ.</p>
+                <h2 class="section-title title-left">Trouve la bonne coiffeuse, sans prise de tête</h2>
+                <p class="muted-copy">Compare les profils vérifiés de la région, réserve en ligne et profite de ta coiffure en toute sérénité.</p>
                 <div class="benefit-list">
                     <div class="benefit-card">
                         <span class="benefit-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                                <path d="M9.5 4A7.5 7.5 0 0 0 2 11.5v1A7.5 7.5 0 0 0 9.5 20h6A6.5 6.5 0 0 0 22 13.5 6.5 6.5 0 0 0 15.5 7H15A7.46 7.46 0 0 0 9.5 4Z"></path>
-                                <path d="M9 10h1.5v3H13"></path>
-                            </svg>
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M9.5 4A7.5 7.5 0 0 0 2 11.5v1A7.5 7.5 0 0 0 9.5 20h6A6.5 6.5 0 0 0 22 13.5 6.5 6.5 0 0 0 15.5 7H15A7.46 7.46 0 0 0 9.5 4Z"></path><path d="M9 10h1.5v3H13"></path></svg>
                         </span>
-                        <div>
-                            <strong>Zéro charge mentale</strong>
-                            <span>Tu ne cherches plus, tu ne compares plus. C'est nous qui trouvons la bonne personne pour toi, au bon moment.</span>
-                        </div>
+                        <div><strong>Choix &amp; Transparence</strong><span>Consulte les prix à l'avance, découvre les portfolios et trouve la coiffeuse qui correspond à ton budget.</span></div>
                     </div>
                     <div class="benefit-card">
                         <span class="benefit-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                                <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7A2.5 2.5 0 0 1 17.5 16H12l-3.5 3V16h-2A2.5 2.5 0 0 1 4 13.5Z"></path>
-                                <path d="M8 9h8M8 12h5"></path>
-                            </svg>
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7A2.5 2.5 0 0 1 17.5 16H12l-3.5 3V16h-2A2.5 2.5 0 0 1 4 13.5Z"></path><path d="M8 9h8M8 12h5"></path></svg>
                         </span>
-                        <div>
-                            <strong>Un vrai suivi humain</strong>
-                            <span>Un vrai échange par SMS avec notre équipe pour cadrer ta demande et s'assurer que la prestation correspondra exactement à tes attentes.</span>
-                        </div>
+                        <div><strong>Gain de temps</strong><span>Réserve directement le créneau qui t'arrange, chez la prestataire ou avec déplacement.</span></div>
                     </div>
                     <div class="benefit-card">
                         <span class="benefit-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                                <path d="M7 10V8a5 5 0 1 1 10 0v2"></path>
-                                <rect x="5" y="10" width="14" height="10" rx="2"></rect>
-                                <path d="M12 14v2"></path>
-                            </svg>
+                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M7 10V8a5 5 0 1 1 10 0v2"></path><rect x="5" y="10" width="14" height="10" rx="2"></rect><path d="M12 14v2"></path></svg>
                         </span>
-                        <div>
-                            <strong>100% Sécurisé & vérifié</strong>
-                            <span>Des coiffeuses indépendantes testées, approuvées, et des frais de réservation encadrés pour éviter les faux plans.</span>
-                        </div>
+                        <div><strong>100% Sécurisé &amp; vérifié</strong><span>Des profils testés et approuvés. Ton paiement est sécurisé jusqu'à la réalisation de la prestation.</span></div>
                     </div>
                 </div>
             </div>
-            <div class="image-frame-tilted-wrap">
-                <div class="image-frame-tilted">
-                    <img src="{% static 'demo_pictures/pf_afro_robe_jaune.jpg' %}" alt="Coiffeuse afro à Toulouse" loading="lazy" decoding="async">
-                </div>
-            </div>
+            <div class="image-frame-tilted-wrap"><div class="image-frame-tilted"><img src="{% static 'demo_pictures/pf_afro_robe_jaune.jpg' %}" alt="Coiffeuse afro à Toulouse" loading="lazy" decoding="async"></div></div>
         </div>
     </div>
 </section>
@@ -305,21 +301,29 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="container">
         <div class="story-header">
             <div class="section-paper-head">
-                <h2 class="story-title">Les clients et clientes partagent leurs résultats en story</h2>
+                <h2 class="story-title">Les clients et clientes partagent leurs résultats</h2>
                 <p class="section-subtitle">Survole (ou touche sur mobile) une story pour lire l'avis associé.</p>
             </div>
         </div>
         <div class="scroll-rail" data-scroll-rail>
             <div class="scroll-rail-topbar">
-                <p class="providers-scroll-hint" data-scroll-cue>↔︎ Fais glisser pour parcourir les stories</p>
+                <p class="providers-scroll-hint" data-scroll-cue>↔︎ Fais glisser pour parcourir</p>
                 <div class="scroll-rail-actions">
                     <button type="button" class="scroll-rail-btn" data-scroll-prev aria-label="Stories précédentes">←</button>
                     <button type="button" class="scroll-rail-btn" data-scroll-next aria-label="Stories suivantes">→</button>
                 </div>
             </div>
             <div class="story-scroll" data-scroll-track>
-            {% for review in homepage_reviews %}
-                <article class="story-card" data-story-card tabindex="0" role="button" aria-label="Zoomer la photo de {{ review.client_name }}" data-story-client-name="{{ review.client_name }}" data-story-image-alt="Story de {{ review.client_name }}" data-story-rating="{{ review.rating }}" data-story-review-text="{{ review.review_text }}"
+                {% for review in homepage_reviews %}
+                <article
+                    class="story-card"
+                    data-story-card
+                    tabindex="0"
+                    role="button"
+                    data-story-client-name="{{ review.client_name }}"
+                    data-story-image-alt="Story de {{ review.client_name }}"
+                    data-story-rating="{{ review.rating }}"
+                    data-story-review-text="{{ review.review_text }}"
                     {% if review.resolved_photo %}
                         data-story-media-src="{{ review.resolved_photo }}"
                         data-story-media-kind="{% if review.is_video %}video{% else %}image{% endif %}"
@@ -330,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 >
                     {% if review.resolved_photo %}
                         {% if review.is_video %}
-                            <video src="{{ review.resolved_photo }}" muted playsinline preload="metadata" aria-label="Story vidéo de {{ review.client_name }}"></video>
+                            <video src="{{ review.resolved_photo }}" muted playsinline preload="metadata"></video>
                             <span class="story-media-badge" aria-hidden="true">▶</span>
                         {% else %}
                             <img src="{{ review.resolved_photo }}" alt="Story de {{ review.client_name }}" loading="lazy" decoding="async">
@@ -340,105 +344,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     {% endif %}
                     <div class="story-review-popover">
                         <div class="hero-review-stars" aria-hidden="true">
-                            {% for _ in "12345"|make_list %}
-                                {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
-                            {% endfor %}
+                            {% for _ in "12345"|make_list %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}
                         </div>
                         <p>“{{ review.review_text }}”</p>
                         <strong>{{ review.client_name }}</strong>
                     </div>
                 </article>
-            {% endfor %}
+                {% endfor %}
             </div>
-        </div>
-    </div>
-</section>
-
-<div class="story-zoom-modal" data-story-zoom-modal aria-hidden="true" role="dialog" aria-label="Zoom de la photo client ou cliente">
-    <button type="button" class="story-zoom-close" data-story-zoom-close aria-label="Fermer le zoom">×</button>
-    <figure class="story-zoom-figure" data-story-zoom-figure>
-        <div class="story-zoom-media" data-story-zoom-media-slot></div>
-        <figcaption class="story-zoom-caption">
-            <div class="hero-review-stars" data-story-zoom-rating aria-hidden="true"></div>
-            <strong data-story-zoom-client-name></strong>
-            <p data-story-zoom-review-text></p>
-        </figcaption>
-    </figure>
-</div>
-
-<section class="reassurance-strip" aria-label="Éléments de réassurance">
-    <div class="container reassurance-grid">
-        <div class="reassurance-item">
-            <span class="reassurance-icon" aria-hidden="true">✓</span>
-            <span>Profils vérifiés manuellement</span>
-        </div>
-        <div class="reassurance-item">
-            <span class="reassurance-icon" aria-hidden="true">🔒</span>
-            <span>Frais de réservation sécurisés</span>
-        </div>
-        <div class="reassurance-item">
-            <span class="reassurance-icon" aria-hidden="true">💬</span>
-            <span>Échange direct avec l'équipe Château Rose</span>
         </div>
     </div>
 </section>
 {% endif %}
 
-<section class="form-section" id="service-request">
-    <div class="container">
-        <div class="paper-form">
-            {% include "interface/partials/service_request_form.html" with title="Prends 10 secondes pour demander RDV" lead="Choisis ce que tu veux, on revient rapidement vers toi pour régler les détails (généralement moins d'1h)" %}
-        </div>
-    </div>
-</section>
-
-<section class="providers-section" id="providers">
-    <div class="container">
-        <div class="section-paper-head">
-            <h2 class="section-title">Nos as de la coiffure afro à Toulouse</h2>
-            <p class="section-subtitle">Estime le prix en choisissant d'abord une prestataire : chaque profil affiche ses tarifs par prestation.</p>
-        </div>
-        <div class="homepage-providers-grid" aria-label="Top 3 des prestataires">
-            {% for provider in providers|slice:":3" %}
-                {% include "interface/partials/provider_card.html" with provider=provider %}
-            {% empty %}
-                <p class="lead">Les prestataires seront publiés très bientôt.</p>
-            {% endfor %}
-        </div>
-        {% if providers|length > 3 %}
-            <div class="homepage-providers-cta">
-                <a href="{% url 'interface:provider_list' %}" class="btn">Voir les profils & tarifs</a>
-                <a href="{% url 'interface:at_home_provider_list' %}" class="btn secondary">Voir les profils à domicile</a>
-            </div>
-        {% endif %}
-    </div>
-</section>
-
-<section class="layout-section section-catalog" id="catalogue">
-    <div class="layout-shell">
-    <h2 class="section-title">Des coupes afros pour toutes les envies</h2>
-    <div class="all-services-grid polaroid-grid">
-        {% for service in services %}
-            <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
-                {% if forloop.counter <= 8 %}
-                    {% if forloop.counter0|divisibleby:3 %}
-                        <span class="tape top-center" aria-hidden="true"></span>
-                    {% elif forloop.counter0|add:'1'|divisibleby:3 %}
-                        <span class="tape top-left" aria-hidden="true"></span>
-                    {% else %}
-                        <span class="tape top-left" aria-hidden="true"></span>
-                        <span class="tape top-right" aria-hidden="true"></span>
-                    {% endif %}
-                {% endif %}
-                {% if service.resolved_main_image %}
-                    <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" width="320" height="320" loading="lazy" decoding="async">
-                {% else %}
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" width="320" height="320" loading="lazy" decoding="async">
-                {% endif %}
-                <span class="service-label">{{ service.name }}</span>
-            </a>
-        {% endfor %}
-    </div>
+<section class="reassurance-strip" aria-label="Éléments de réassurance">
+    <div class="container reassurance-grid">
+        <div class="reassurance-item"><span class="reassurance-icon" aria-hidden="true">✓</span><span>Profils vérifiés manuellement</span></div>
+        <div class="reassurance-item"><span class="reassurance-icon" aria-hidden="true">🔒</span><span>Frais de réservation sécurisés</span></div>
+        <div class="reassurance-item"><span class="reassurance-icon" aria-hidden="true">💬</span><span>Échange direct avec l'équipe Château Rose</span></div>
     </div>
 </section>
 
@@ -450,14 +373,14 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="portfolio-strip">
         {% for provider in providers|slice:":6" %}
             {% with photo=provider.photos.first %}
-                <div class="polaroid-mini">
-                    {% if photo and photo.resolved_url %}
-                        <img src="{{ photo.resolved_url }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async" draggable="false">
-                    {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure afro" loading="lazy" decoding="async" draggable="false">
-                    {% endif %}
-                    <p>{{ provider.name }}</p>
-                </div>
+            <div class="polaroid-mini">
+                {% if photo and photo.resolved_url %}
+                    <img src="{{ photo.resolved_url }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async" draggable="false">
+                {% else %}
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure afro" loading="lazy" decoding="async" draggable="false">
+                {% endif %}
+                <p>{{ provider.name }}</p>
+            </div>
             {% endwith %}
         {% empty %}
             <p class="lead">Les portfolios arrivent bientôt.</p>
@@ -477,20 +400,13 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="container city-discovery-inner">
         <h2 class="section-title">Coiffure afro à Toulouse Métropole</h2>
         <div class="toulouse-spotlight">
-            <img
-                class="toulouse-spotlight-image"
-                src="https://images.ladepeche.fr/api/v1/images/view/63b461fb9de9df0e596e20b5/large/image.jpg?v=1"
-                alt="Saint-Cyprien et rue de la République à Toulouse"
-                loading="lazy"
-                decoding="async"
-            >
+            <img class="toulouse-spotlight-image" src="https://images.ladepeche.fr/api/v1/images/view/63b461fb9de9df0e596e20b5/large/image.jpg?v=1" alt="Saint-Cyprien et rue de la République à Toulouse" loading="lazy" decoding="async">
             <div class="toulouse-spotlight-copy">
-                <h3>Flemme de courir d'une adresse à l'autre ou de faire la queue en salon ?&nbsp;?</h3>
+                <h3>Flemme de courir d'une adresse à l'autre ou de faire la queue en salon ?</h3>
                 <p>
                     De Saint-Cyprien à Compans en passant par les Arènes : les bons salons de coiffure afro c'est pas ce qui manque à Toulouse.<br/>
                     Mais tu n'as peut-être pas envie de traverser la ville ni d'attendre des heures dans une salle bondée. <br/>
-                    Ça tombe très bien, parce que Château Rose c'est majoritairement une équipe de coiffeuses et coiffeurs indépendantes et indépendants, avec un vrai savoir-faire, qui te reçoivent ou se déplacent chez toi.<br/>
-                    Grâce à ça, tu vas pouvoir t'occuper de tes cheveux sans chambouler ton emploi du temps, tout en permettant à des passionnés du cheveu afro de vivre de leur métier en toute liberté.
+                    Ça tombe très bien, parce que Château Rose c'est majoritairement une équipe de coiffeuses indépendantes qui te reçoivent ou se déplacent chez toi.
                 </p>
             </div>
         </div>
@@ -501,5 +417,4 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
     </div>
 </section>
-
 {% endblock %}
