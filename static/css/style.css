@@ -3792,3 +3792,120 @@ footer {
 .paper-card {
     border-radius: 12px;
 }
+
+/* --- HOME & SERVICE REBUILD ALIGNMENT --- */
+.home-hero .all-services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 24px;
+}
+
+@media (min-width: 900px) {
+    .home-hero .all-services-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 30px;
+    }
+}
+
+.home-hero .service-polaroid img {
+    height: 200px;
+}
+
+.service-header-wrap {
+    padding: 40px 0 30px;
+    max-width: 800px;
+}
+
+.service-header-paper {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(163, 124, 91, 0.24);
+    border-radius: 14px;
+    box-shadow: var(--shadow-paper);
+    padding: 20px 22px;
+}
+
+.service-main-title {
+    font-size: clamp(2.2rem, 4vw, 3.2rem);
+}
+
+.service-main-title span {
+    color: var(--rose-accent);
+    font-style: italic;
+}
+
+.service-hub-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+}
+
+@media (min-width: 960px) {
+    .service-hub-layout {
+        grid-template-columns: minmax(0, 1fr) 320px;
+    }
+}
+
+.service-hub-layout .providers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+.service-hub-layout .provider-header {
+    height: 260px;
+}
+
+.service-hub-layout .provider-body {
+    padding: 18px;
+    gap: 8px;
+}
+
+.service-hub-layout .provider-loc {
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.service-hub-layout .tag {
+    background: #fafafa;
+}
+
+.service-hub-layout .service-sidebar {
+    gap: 24px;
+}
+
+@media (min-width: 960px) {
+    .service-hub-layout .service-sidebar {
+        position: sticky;
+        top: 100px;
+    }
+}
+
+.service-aside-note {
+    padding: 0 10px;
+}
+
+.service-aside-note-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+.service-aside-note-copy {
+    font-size: 0.9rem;
+    color: var(--ink-secondary);
+    line-height: 1.6;
+}
+
+.service-aside-note-list {
+    margin-top: 10px;
+}
+
+.service-aside-note-list li {
+    font-size: 0.85rem;
+    color: var(--ink-secondary);
+}
+
+@media (max-width: 640px) {
+    .service-hub-layout .providers-grid {
+        grid-template-columns: 1fr;
+    }
+}

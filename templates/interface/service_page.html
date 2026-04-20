@@ -5,117 +5,16 @@
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block extra_head %}
-<style>
-    .service-header-wrap { padding: 40px 0 30px; }
-    .service-header-paper {
-        max-width: 800px;
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(163, 124, 91, 0.24);
-        border-radius: 14px;
-        box-shadow: var(--shadow-paper);
-        padding: 20px 22px;
-    }
-
-    .breadcrumbs {
-        font-size: 0.85rem;
-        color: var(--ink-secondary);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 16px;
-    }
-    .breadcrumbs a { color: var(--ink-secondary); }
-
-    .service-header-paper h1 { font-size: clamp(2.2rem, 4vw, 3.2rem); }
-    .service-header-paper h1 span { color: var(--rose-accent); font-style: italic; }
-
-    .service-intro {
-        font-size: 1.1rem;
-        color: var(--ink-secondary);
-        margin-top: 12px;
-        line-height: 1.6;
-    }
-
-    .service-hub-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 40px;
-        align-items: start;
-        padding-bottom: 80px;
-    }
-    @media (min-width: 960px) {
-        .service-hub-layout { grid-template-columns: minmax(0, 1fr) 320px; }
-    }
-
-    .providers-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        gap: 24px;
-        margin-bottom: 40px;
-    }
-
-    .provider-card { background: var(--bg-paper); border: 1px solid #eee; box-shadow: var(--shadow-paper); border-radius: var(--radius-sm); overflow: hidden; display: flex; flex-direction: column; transition: 0.3s ease; }
-    .provider-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-soft); border-color: #f3c1da; }
-    .provider-header { height: 260px; position: relative; }
-    .provider-avatar-badge { position: absolute; bottom: 12px; right: 12px; width: 66px; height: 66px; border-radius: 50%; border: 3px solid #fff; box-shadow: var(--shadow-paper); overflow: hidden; background: #fff; }
-    .provider-body { padding: 18px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-    .provider-name { font-size: 1.4rem; margin-bottom: 0; line-height: 1.2; }
-    .provider-loc { color: var(--ink-secondary); font-size: 0.95rem; font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 600; margin-bottom: 10px; }
-    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-    .tag { border: 1px solid #EEE; padding: 4px 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--ink-secondary); border-radius: 4px; background: #fafafa; }
-    .tag.tag-primary { background: #fff2f6; color: #be185d; border-color: #fce7f3; }
-    .card-actions { margin-top: auto; border-top: 1px dashed #eee; padding-top: 16px; display: flex; justify-content: flex-end; align-items: center; }
-    .card-actions .link { font-size: 0.85rem; font-weight: 700; color: var(--rose-accent); text-transform: uppercase; }
-
-    .service-sidebar { display: flex; flex-direction: column; gap: 24px; }
-    @media (min-width: 960px) { .service-sidebar { position: sticky; top: 100px; } }
-
-    .paper-card { background: var(--bg-paper); padding: 1.5rem; box-shadow: var(--shadow-paper); border-radius: var(--radius-md); border: 1px solid rgba(0,0,0,0.04); }
-    .paper-card h4 { margin-bottom: 16px; font-size: 1.2rem; }
-
-    .nav-list { display: flex; flex-direction: column; gap: 4px; }
-    .nav-link { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed rgba(0,0,0,0.05); font-size: 0.95rem; color: var(--ink-secondary); }
-    .nav-link:hover { color: var(--rose-accent); padding-left: 4px; border-bottom-color: var(--rose-accent); }
-    .nav-link.active { color: var(--rose-accent); font-weight: 700; border-bottom-style: solid; }
-
-    .zone-list-full { display: none; }
-    .zone-list-full.is-open { display: flex; }
-    .zone-toggle { font-size: 0.85rem; color: var(--rose-accent); background: none; border: none; padding: 10px 0 0; cursor: pointer; font-weight: 600; }
-
-    .highlight-list { display: grid; gap: 12px; color: var(--ink-secondary); font-size: 0.95rem; list-style: none; }
-    .highlight-list.pink-checks li { position: relative; padding-left: 26px; }
-    .highlight-list.pink-checks li::before { content: "✔"; color: #e91e63; position: absolute; left: 0; top: 0; font-weight: 800; }
-
-    .seo-content { background: #fff; padding: 2rem; border-radius: var(--radius-md); box-shadow: var(--shadow-soft); margin-top: 20px; border: 1px solid #eee; }
-    .seo-content h2 { margin-bottom: 16px; font-size: 1.6rem; }
-    .seo-content p { color: var(--ink-secondary); margin-bottom: 16px; }
-
-    .gallery-scroll { display: flex; gap: 16px; overflow-x: auto; padding: 10px 0 20px; scrollbar-width: thin; scrollbar-color: var(--rose-accent) transparent; margin-top: 20px; }
-    .gallery-item { flex: 0 0 220px; height: 220px; border: 4px solid #fff; box-shadow: var(--shadow-paper); transform: rotate(1deg); transition: 0.3s; }
-    .gallery-item:nth-child(even) { transform: rotate(-2deg); }
-    .gallery-item:hover { transform: scale(1.05) rotate(0deg); z-index: 2; }
-
-    @media (max-width: 640px) {
-        .providers-grid { grid-template-columns: 1fr; }
-    }
-</style>
 <script type="application/ld+json">{{ service_schema_json|safe }}</script>
 {% endblock %}
 
 {% block content %}
-<section class="container service-header-wrap">
+<section class="container service-header service-header-wrap">
     <div class="service-header-paper">
         <div class="breadcrumbs"><a href="{% url 'interface:home' %}">Accueil</a> &nbsp;/&nbsp; <a href="{% url 'interface:home' %}#catalogue">Services</a> &nbsp;/&nbsp; {{ service.name }}</div>
-        <h1>{{ long_title|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
+        <h1 class="service-main-title">{{ long_title|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
     </div>
-    <h1>{{ long_title|default:service.name }} <span style="color:var(--rose-accent); font-style:italic;">{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
-    <p class="lead" style="margin-top:12px; max-width: 840px;">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
-    {% if hero_image %}
-        <div style="margin-top:20px; border:6px solid #fff; box-shadow:var(--shadow-paper); max-width: 720px;">
-            <img src="{{ hero_image }}" alt="{{ service.name }} à {% if zone %}{{ zone.name }}{% else %}Toulouse{% endif %}" width="720" height="460" loading="eager" fetchpriority="high" decoding="async">
-        </div>
-    {% endif %}
 </section>
 
 <section class="container service-hub-layout">
@@ -140,16 +39,16 @@
                 </div>
                 <div class="provider-body">
                     <h3 class="provider-name">{{ provider.name }}</h3>
-                    <p class="provider-loc">{{ provider.location_mode_label }}</p>
-                    <div class="tags">
+                    <p class="provider-loc">
                         {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
-                            <span class="tag tag-primary">Salon</span>
-                            <span class="tag">Reçoit uniquement</span>
+                            Reçoit uniquement
                         {% elif provider.location_mode == provider.LOCATION_MODE_CLIENT_HOME_ONLY %}
-                            <span class="tag">Se déplace uniquement</span>
+                            Se déplace uniquement
                         {% else %}
-                            <span class="tag">Reçoit ou se déplace</span>
+                            Reçoit ou se déplace
                         {% endif %}
+                    </p>
+                    <div class="tags">
                         {% for provider_service in provider.services.all|slice:":2" %}
                             <span class="tag">{{ provider_service.name }}</span>
                         {% endfor %}
@@ -218,12 +117,12 @@
             </ul>
         </div>
 
-        <div style="padding: 0 10px;">
-            <h4 style="font-family: 'Cormorant Garamond'; font-style: italic; font-size: 1.3rem; margin-bottom: 10px;">Bon à savoir</h4>
-            <div style="font-size: 0.9rem; color: var(--ink-secondary); line-height: 1.6;">{{ city_intro|sanitize_marketing_html }}</div>
+        <div class="service-aside-note">
+            <h4 class="service-aside-note-title">Bon à savoir</h4>
+            <div class="service-aside-note-copy">{{ city_intro|sanitize_marketing_html }}</div>
             {% if highlights %}
-                <ul class="highlight-list" style="margin-top: 10px;">
-                    {% for h in highlights %}<li style="font-size: 0.85rem; color: var(--ink-secondary);">• {{ h|sanitize_marketing_html }}</li>{% endfor %}
+                <ul class="highlight-list service-aside-note-list">
+                    {% for h in highlights %}<li>• {{ h|sanitize_marketing_html }}</li>{% endfor %}
                 </ul>
             {% endif %}
         </div>
