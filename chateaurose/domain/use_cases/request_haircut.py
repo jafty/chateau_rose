@@ -3,7 +3,10 @@ from datetime import timedelta
 
 from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import ValidationError
-from chateaurose.domain.services.pricing import estimate_service_price_cents
+from chateaurose.domain.services.pricing import (
+    compute_checkout_amounts_cents,
+    estimate_service_price_cents,
+)
 
 SUBMITTED = "SUBMITTED"
 SALON_LOCATION_LABEL = "Salon"
@@ -36,6 +39,8 @@ def execute(
     skip_coverage_validation: bool = False,
     inspiration_pictures: list,
     free_text: str,
+    service_fee_coupon_code: str | None = None,
+    waive_service_fee: bool = False,
     payment_auth_id: str | None = None,
     provider_booking_url_base: str | None = None,
     provider_salon_zone: str | None = None,
@@ -101,10 +106,23 @@ def execute(
         location_preference=normalized_location_preference,
     )
     deposit_percentage = service.get("deposit_percentage")
-    if deposit_percentage is not None:
-        deposit_cents = round(estimated_price * deposit_percentage / 100)
-    else:
+    if deposit_percentage is None:
         deposit_cents = service.get("deposit_cents")
+        if deposit_cents is None:
+            raise ValidationError("Missing required field: deposit configuration")
+        checkout_amounts = {
+            "total_cents": estimated_price,
+            "reservation_fee_cents": deposit_cents,
+            "remaining_cents": max(estimated_price - deposit_cents, 0),
+        }
+    else:
+        checkout_amounts = compute_checkout_amounts_cents(
+            subtotal_cents=estimated_price,
+            deposit_percentage=deposit_percentage,
+            service_fee_percentage=service.get("service_fee_percentage", 0),
+            waive_service_fee=bool(service.get("waive_service_fee")) or waive_service_fee,
+        )
+        deposit_cents = checkout_amounts["reservation_fee_cents"]
     if deposit_cents is None:
         raise ValidationError("Missing required field: deposit configuration")
 
@@ -131,7 +149,7 @@ def execute(
         current_hair_picture=current_hair_picture,
         inspiration_pictures=inspiration_pictures,
         free_text=free_text,
-        estimated_price_cents=estimated_price,
+        estimated_price_cents=checkout_amounts["total_cents"],
         payment_auth_id=payment_auth_id,
         status=SUBMITTED,
         created_at=created_at,
@@ -158,7 +176,7 @@ def execute(
         "Paiement :",
         f"- Empreinte bancaire validée : {_format_euros(deposit_cents)} (pas encore débités)",
         f"- Débit des frais de réservation uniquement après confirmation : {_format_euros(deposit_cents)}",
-        f"- Reste à régler chez la prestataire : {_format_euros(max(estimated_price - deposit_cents, 0))}",
+        f"- Reste à régler chez la prestataire : {_format_euros(checkout_amounts['remaining_cents'])}",
     ]
     if free_text:
         provider_message_lines.append(f"Message : {free_text}")
@@ -186,7 +204,7 @@ def execute(
         "Paiement :",
         f"- Empreinte bancaire déjà validée : {_format_euros(deposit_cents)} (pas encore débités)",
         f"- Montant qui sera débité à la confirmation : {_format_euros(deposit_cents)}",
-        f"- Reste à régler chez la prestataire : {_format_euros(max(estimated_price - deposit_cents, 0))}",
+        f"- Reste à régler chez la prestataire : {_format_euros(checkout_amounts['remaining_cents'])}",
     ]
     if free_text:
         client_message_lines.append(f"- Ton message : {free_text}")

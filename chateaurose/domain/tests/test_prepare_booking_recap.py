@@ -19,6 +19,7 @@ def test_prepare_booking_recap_normalizes_payload():
         general_adjustments=[" extra", " ", "wash"],
         meche=True,
         free_text="  Merci  ",
+        service_fee_coupon_code=" vipzero ",
         current_hair_picture="bookings/current/photo.jpg",
         inspiration_pictures=[" book1.jpg ", ""],
     )
@@ -28,6 +29,7 @@ def test_prepare_booking_recap_normalizes_payload():
     assert recap["client_name"] == "Sarah"
     assert recap["client_address"] == "10 rue du test"
     assert recap["general_adjustments"] == ["extra", "wash"]
+    assert recap["service_fee_coupon_code"] == "VIPZERO"
     assert recap["inspiration_pictures"] == ["book1.jpg"]
     assert recap["meche"] is True
 
@@ -48,6 +50,7 @@ def test_prepare_booking_recap_requires_address_for_domicile():
             general_adjustments=[],
             meche=False,
             free_text="",
+            service_fee_coupon_code="",
             current_hair_picture="bookings/current/photo.jpg",
             inspiration_pictures=[],
         )
@@ -71,6 +74,7 @@ def test_prepare_booking_recap_rejects_invalid_location_preference():
             general_adjustments=[],
             meche=False,
             free_text="",
+            service_fee_coupon_code="",
             current_hair_picture="bookings/current/photo.jpg",
             inspiration_pictures=[],
         )

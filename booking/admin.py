@@ -21,6 +21,7 @@ from .models import (
     ProviderMarketingService,
     ProviderBlockedSlot,
     ProviderPhoto,
+    ProviderServiceFeeCoupon,
     ProviderZone,
     Service,
     ServiceCategory,
@@ -54,6 +55,7 @@ class ProviderAdminForm(forms.ModelForm):
             "contact_email",
             "deposit_cents",
             "deposit_percentage",
+            "service_fee_percentage",
             "salon_zone",
             "salon_address",
             "profile_image",
@@ -115,6 +117,7 @@ class ProviderAdmin(ImportExportModelAdmin):
         "contact_email",
         "deposit_cents",
         "deposit_percentage",
+        "service_fee_percentage",
         "salon_zone",
         "provides_meche",
         "location_mode",
@@ -187,6 +190,13 @@ class ProviderPhotoInline(admin.TabularInline):
 
 
 ProviderAdmin.inlines.append(ProviderPhotoInline)
+
+
+@admin.register(ProviderServiceFeeCoupon)
+class ProviderServiceFeeCouponAdmin(admin.ModelAdmin):
+    list_display = ("provider", "code", "is_active", "created_at")
+    list_filter = ("provider", "is_active")
+    search_fields = ("code", "provider__name")
 
 
 @admin.register(ProviderPhoto)

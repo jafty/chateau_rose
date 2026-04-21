@@ -125,6 +125,7 @@ class ProviderBookingRequestForm(forms.Form):
     )
     existing_inspiration_pictures = forms.JSONField(required=False)
     free_text = forms.CharField(label="Infos complémentaires", required=False, widget=forms.Textarea)
+    service_fee_coupon_code = forms.CharField(label="Code partenaire", required=False)
     payment_auth_id = forms.CharField(required=False)
 
     def __init__(self, *args, **kwargs):

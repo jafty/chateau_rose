@@ -74,6 +74,10 @@ class Provider(models.Model):
         default=30,
         help_text="Pourcentage de l'estimation utilisé pour calculer l'acompte.",
     )
+    service_fee_percentage = models.PositiveSmallIntegerField(
+        default=15,
+        help_text="Pourcentage de frais de service ajouté au prix des prestations.",
+    )
     pending_reminder_sent_at = models.DateTimeField(null=True, blank=True)
     salon_zone = models.CharField(
         max_length=255,
@@ -490,3 +494,24 @@ class Booking(models.Model):
             if url:
                 resolved.append(url)
         return resolved
+
+
+class ProviderServiceFeeCoupon(models.Model):
+    provider = models.ForeignKey(
+        Provider,
+        on_delete=models.CASCADE,
+        related_name="service_fee_coupons",
+    )
+    code = models.CharField(max_length=64)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("provider", "code")
+
+    def save(self, *args, **kwargs):
+        self.code = (self.code or "").strip().upper()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.provider.name} · {self.code}"

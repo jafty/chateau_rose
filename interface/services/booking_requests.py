@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from PIL import Image, ImageOps
+from chateaurose.domain.services.pricing import compute_checkout_amounts_cents
 
 
 def format_price(cents: int) -> str:
@@ -19,14 +20,21 @@ def build_pricing_data(services):
     pricing_data = {}
     starting_prices = []
     for service in services:
-        service.price_display = format_price(service.base_price_cents)
+        service_fee_percentage = service.provider.service_fee_percentage or 15
         adjustments = service.hair_length_adjustments or {"standard": 0}
         general_adjustments = service.general_adjustments or {"standard": 0}
         min_adj = min(adjustments.values()) if adjustments else 0
         general_adj_total = 0
-        starting_price = service.base_price_cents + min_adj + general_adj_total
+        starting_subtotal = service.base_price_cents + min_adj + general_adj_total
+        starting_price = compute_checkout_amounts_cents(
+            subtotal_cents=starting_subtotal,
+            deposit_percentage=service.provider.deposit_percentage or 30,
+            service_fee_percentage=service_fee_percentage,
+        )["total_cents"]
+        service.price_display = format_price(starting_price)
         starting_prices.append(starting_price)
         pricing_data[str(service.id)] = {
+            "name": service.name,
             "base": service.base_price_cents,
             "lengths": adjustments,
             "general_adjustments": general_adjustments,
@@ -34,6 +42,7 @@ def build_pricing_data(services):
             "at_home_bonus": service.at_home_bonus_cents,
             "starting_from": starting_price,
             "deposit_percentage": service.provider.deposit_percentage,
+            "service_fee_percentage": service_fee_percentage,
         }
     return pricing_data, starting_prices
 

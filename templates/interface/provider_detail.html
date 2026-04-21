@@ -952,6 +952,7 @@
             setValue('client_email', recapPrefill.client_email || '');
             setValue('desired_date', (recapPrefill.desired_date || '').slice(0, 16));
             setValue('free_text', recapPrefill.free_text || '');
+            setValue('service_fee_coupon_code', recapPrefill.service_fee_coupon_code || '');
             setValue('client_address', recapPrefill.client_address || '');
             if (currentHairPictureInput && recapPrefill.current_hair_picture) {
                 currentHairPictureInput.value = recapPrefill.current_hair_picture;
@@ -1133,6 +1134,7 @@
                     locationPreferenceInput?.value ||
                     'salon',
                 desired_date: form?.querySelector('input[name="desired_date"]')?.value || null,
+                service_fee_coupon_code: form?.querySelector('input[name="service_fee_coupon_code"]')?.value || '',
                 quick_checkout_id: quickCheckoutId || undefined,
             };
         };
@@ -1463,7 +1465,10 @@
             const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : computedTotalCents;
             const totalStr = formatPrice(totalCents);
             const depositPercentage = pricing.deposit_percentage ?? 0;
-            const depositCents = Math.round(totalCents * depositPercentage / 100);
+            const serviceFeePercentage = pricing.service_fee_percentage ?? 15;
+            const serviceFeeCents = Math.round(totalCents * serviceFeePercentage / 100);
+            const totalWithFeesCents = totalCents + serviceFeeCents;
+            const depositCents = Math.round(totalCents * depositPercentage / 100) + serviceFeeCents;
             const depositStr = formatPrice(depositCents);
             const selectedOption = serviceSelect?.selectedOptions?.[0];
             const serviceName =
@@ -1471,8 +1476,8 @@
                 (selectedOption ? selectedOption.textContent.split(' - ')[0].trim() : null) ||
                 'Service';
 
-            stickyPriceValue.textContent = totalStr;
-            finalPriceDisplay.textContent = totalStr;
+            stickyPriceValue.textContent = formatPrice(totalWithFeesCents);
+            finalPriceDisplay.textContent = formatPrice(totalWithFeesCents);
             const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
             const mecheText = mecheCheckbox
                 ? mecheCheckbox.checked
@@ -1480,7 +1485,7 @@
                     : 'mèches non fournies'
                 : 'mèches non fournies';
             const locationText = atHomeAdj > 0 ? `à domicile (+${formatPrice(atHomeAdj)})` : "chez la prestataire";
-            const remainingStr = formatPrice(Math.max(totalCents - depositCents, 0));
+            const remainingStr = formatPrice(Math.max(totalWithFeesCents - depositCents, 0));
             if (Number.isFinite(fixedPriceCents)) {
                 finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). À payer après acompte : ${remainingStr}.`;
             } else {
@@ -1500,11 +1505,11 @@
                 depositInlineDisplay.textContent = depositStr;
             }
             if (depositPaymentHint) {
-                depositPaymentHint.textContent = `Frais de réservation estimés : ${depositStr} (empreinte bancaire).`; 
+                depositPaymentHint.textContent = `Frais de réservation estimés : ${depositStr} (acompte + frais de service).`; 
             }
             if (depositDetailsDisplay) {
                 depositDetailsDisplay.textContent =
-                    `Frais de réservation estimés (${depositPercentage} %), prélevés seulement après confirmation. Déduits du total.`;
+                    `Frais de réservation estimés (${depositPercentage} % d'acompte + ${serviceFeePercentage} % de frais de service), prélevés seulement après confirmation.`;
             }
         };
 

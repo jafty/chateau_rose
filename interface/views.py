@@ -19,10 +19,10 @@ from django.utils.text import slugify
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 
-from booking.models import Booking, Provider, Service, ServiceCategory, Zone
+from booking.models import Booking, Provider, ProviderServiceFeeCoupon, Service, ServiceCategory, Zone
 from chateaurose.domain.exceptions import DomainError, ValidationError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
-from chateaurose.domain.services.pricing import estimate_service_price_cents
+from chateaurose.domain.services.pricing import compute_checkout_amounts_cents, estimate_service_price_cents
 from chateaurose.domain.use_cases import expire_booking as expire_booking_uc
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
 from chateaurose.domain.use_cases import prepare_booking_recap, request_haircut, update_proposal
@@ -60,6 +60,17 @@ provider_directory = DjangoProviderDirectory()
 
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
 SUPPORT_EMAIL = (getattr(settings, "OPERATIONS_EMAIL", "") or "japhet.situmonana@gmail.com").strip()
+
+
+def _provider_coupon_is_valid(provider: Provider, code: str | None) -> bool:
+    normalized_code = (code or "").strip().upper()
+    if not normalized_code:
+        return False
+    return ProviderServiceFeeCoupon.objects.filter(
+        provider=provider,
+        is_active=True,
+        code=normalized_code,
+    ).exists()
 
 
 def _create_interaction(
@@ -214,6 +225,7 @@ def _build_provider_booking_recap_payload(*, provider: Provider, form: ProviderB
         general_adjustments=form.cleaned_data.get("general_adjustments", []),
         meche=form.cleaned_data.get("meche", False),
         free_text=form.cleaned_data.get("free_text", ""),
+        service_fee_coupon_code=form.cleaned_data.get("service_fee_coupon_code", ""),
         current_hair_picture=current_picture,
         inspiration_pictures=stored_inspiration_pictures,
     )
@@ -287,6 +299,11 @@ def _save_partial_provider_booking_recap_prefill(*, provider: Provider, form: Pr
             "general_adjustments": form.cleaned_data.get("general_adjustments") or [],
             "meche": bool(form.cleaned_data.get("meche")),
             "free_text": (form.cleaned_data.get("free_text") or payload.get("free_text") or "").strip(),
+            "service_fee_coupon_code": (
+                form.cleaned_data.get("service_fee_coupon_code")
+                or payload.get("service_fee_coupon_code")
+                or ""
+            ).strip().upper(),
             "current_hair_picture": current_picture,
             "inspiration_pictures": stored_inspiration_pictures,
         }
@@ -840,8 +857,14 @@ def provider_booking_recap(request, token):
     except ValidationError as exc:
         raise Http404(str(exc))
 
-    deposit_percentage = provider.deposit_percentage or 30
-    deposit_cents = round(total_cents * deposit_percentage / 100)
+    coupon_code = (payload.get("service_fee_coupon_code") or "").strip().upper()
+    service_fee_waived = _provider_coupon_is_valid(provider, coupon_code)
+    checkout_amounts = compute_checkout_amounts_cents(
+        subtotal_cents=total_cents,
+        deposit_percentage=provider.deposit_percentage or 30,
+        service_fee_percentage=provider.service_fee_percentage or 15,
+        waive_service_fee=service_fee_waived,
+    )
     desired_date_display = payload.get("desired_date") or "Non renseignée"
     try:
         desired_date_display = timezone.localtime(datetime.fromisoformat(str(payload.get("desired_date")))).strftime("%d/%m/%Y à %H:%M")
@@ -885,6 +908,8 @@ def provider_booking_recap(request, token):
                     current_hair_picture=payload.get("current_hair_picture") or "",
                     inspiration_pictures=payload.get("inspiration_pictures") or [],
                     free_text=payload.get("free_text") or "",
+                    service_fee_coupon_code=coupon_code,
+                    waive_service_fee=service_fee_waived,
                     payment_auth_id=payment_auth_id or None,
                     provider_booking_url_base=provider_booking_url_base,
                     provider_salon_zone=provider.salon_zone,
@@ -929,9 +954,14 @@ def provider_booking_recap(request, token):
             "payload": payload,
             "is_completed": bool(draft.completed_at),
             "edit_url": f"{reverse('interface:provider_detail', args=[provider.id])}?recap={draft.token}",
-            "total_price": booking_requests.format_price(total_cents),
-            "deposit_price": booking_requests.format_price(deposit_cents),
-            "remaining_price": booking_requests.format_price(max(total_cents - deposit_cents, 0)),
+            "total_price": booking_requests.format_price(checkout_amounts["total_cents"]),
+            "subtotal_price": booking_requests.format_price(checkout_amounts["subtotal_cents"]),
+            "service_fee_price": booking_requests.format_price(checkout_amounts["service_fee_cents"]),
+            "deposit_price": booking_requests.format_price(checkout_amounts["reservation_fee_cents"]),
+            "remaining_price": booking_requests.format_price(checkout_amounts["remaining_cents"]),
+            "service_fee_coupon_code": coupon_code,
+            "service_fee_waived": service_fee_waived,
+            "reservation_label_details": "inclut l'acompte prestataire et les frais de service Château Rose",
             "desired_date_display": desired_date_display,
             "stripe_public_key": stripe_public_key,
             "require_payment_auth": require_payment_auth,
@@ -1009,6 +1039,7 @@ def provider_payment_intent(request):
     meche = payload.get("meche")
     location_preference = payload.get("location_preference")
     desired_date = payload.get("desired_date")
+    service_fee_coupon_code = (payload.get("service_fee_coupon_code") or "").strip().upper()
     quick_checkout_id = payload.get("quick_checkout_id")
     validate_only = bool(payload.get("validate_only"))
 
@@ -1045,6 +1076,11 @@ def provider_payment_intent(request):
         except KeyError:
             return JsonResponse({"error": "Service non disponible."}, status=400)
 
+        provider_for_coupon = Provider.objects.filter(id=provider_id).first()
+        service_fee_waived = bool(
+            provider_for_coupon and _provider_coupon_is_valid(provider_for_coupon, service_fee_coupon_code)
+        )
+
         try:
             estimated_price_cents, _, _ = estimate_service_price_cents(
                 service=service,
@@ -1063,7 +1099,12 @@ def provider_payment_intent(request):
 
         deposit_percentage = service.get("deposit_percentage")
         if deposit_percentage is not None:
-            amount_cents = round(estimated_price_cents * deposit_percentage / 100)
+            amount_cents = compute_checkout_amounts_cents(
+                subtotal_cents=estimated_price_cents,
+                deposit_percentage=deposit_percentage,
+                service_fee_percentage=service.get("service_fee_percentage", 15),
+                waive_service_fee=service_fee_waived,
+            )["reservation_fee_cents"]
         else:
             amount_cents = service.get("deposit_cents")
         if amount_cents is None:

@@ -57,3 +57,25 @@ def estimate_service_price_cents(
 
     estimated_price = base_price + length_adj + general_adj_value + meche_bonus + domicile_bonus
     return estimated_price, normalized_hair_length, normalized_general_adjustments
+
+
+def compute_checkout_amounts_cents(
+    *,
+    subtotal_cents: int,
+    deposit_percentage: int,
+    service_fee_percentage: int,
+    waive_service_fee: bool = False,
+) -> dict:
+    deposit_cents = round(subtotal_cents * deposit_percentage / 100)
+    service_fee_cents = 0 if waive_service_fee else round(subtotal_cents * service_fee_percentage / 100)
+    total_cents = subtotal_cents + service_fee_cents
+    reservation_fee_cents = deposit_cents + service_fee_cents
+    remaining_cents = max(total_cents - reservation_fee_cents, 0)
+    return {
+        "subtotal_cents": subtotal_cents,
+        "deposit_cents": deposit_cents,
+        "service_fee_cents": service_fee_cents,
+        "total_cents": total_cents,
+        "reservation_fee_cents": reservation_fee_cents,
+        "remaining_cents": remaining_cents,
+    }
