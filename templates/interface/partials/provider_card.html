@@ -17,7 +17,15 @@
     </div>
     <div class="provider-body">
         <h3 class="provider-name">{{ provider.name }}</h3>
-        <p class="provider-loc">Toulouse &amp; métropole</p>
+        <p class="provider-loc">
+            {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
+                Reçoit
+            {% elif provider.location_mode == provider.LOCATION_MODE_CLIENT_HOME_ONLY %}
+                Se déplace
+            {% else %}
+                Reçoit &amp; se déplace
+            {% endif %}
+        </p>
         <div class="tags">
             {% for service in provider.services.all|slice:":3" %}
                 <span class="tag">{{ service.name }}</span>
