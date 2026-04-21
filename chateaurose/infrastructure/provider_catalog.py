@@ -36,6 +36,7 @@ class DjangoProviderCatalog:
             "at_home_bonus_cents": service.at_home_bonus_cents,
             "deposit_cents": service.provider.deposit_cents,
             "deposit_percentage": service.provider.deposit_percentage,
+            "service_fee_percentage": service.provider.service_fee_percentage,
         }
 
     def provider_covers_zone(self, provider_id: str, zone_name: str) -> bool:

@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from booking.models import Booking, Provider, ProviderZone, Service, Zone
+from booking.models import Booking, Provider, ProviderServiceFeeCoupon, ProviderZone, Service, Zone
 from interface.models import ProviderBookingDraft
 
 
@@ -122,6 +122,39 @@ class ProviderBookingRecapFlowTests(TestCase):
             response.url,
             reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={draft.token}#booking-wizard",
         )
+
+    def test_recap_includes_service_fee_in_totals_without_coupon(self):
+        self.client.post(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            data={
+                **self._base_payload(),
+                "current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair"),
+            },
+        )
+        draft = ProviderBookingDraft.objects.get(provider=self.provider)
+
+        recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
+        self.assertContains(recap_page, "143.75 €")
+        self.assertContains(recap_page, "18.75 €")
+        self.assertContains(recap_page, "56.25 €")
+
+    def test_recap_waives_service_fee_with_valid_coupon(self):
+        ProviderServiceFeeCoupon.objects.create(provider=self.provider, code="vipzero")
+        payload = self._base_payload()
+        payload["service_fee_coupon_code"] = "vipzero"
+        self.client.post(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            data={
+                **payload,
+                "current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair"),
+            },
+        )
+        draft = ProviderBookingDraft.objects.get(provider=self.provider)
+
+        recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
+        self.assertContains(recap_page, "125 €")
+        self.assertContains(recap_page, "0 €")
+        self.assertContains(recap_page, "37.50 €")
 
     def test_admin_seeded_draft_is_updated_in_place_when_client_completes_prefilled_form(self):
         admin_user = get_user_model().objects.create_user(

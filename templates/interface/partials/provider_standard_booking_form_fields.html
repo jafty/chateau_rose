@@ -85,6 +85,12 @@
                                     <textarea name="free_text" id="free_text" placeholder="Ex. : cuir chevelu sensible, préférence pour un créneau le matin, style recherché..."></textarea>
                                 </div>
 
+                                <div class="form-field full-width">
+                                    <label for="service_fee_coupon_code">Code partenaire (optionnel)</label>
+                                    <input type="text" name="service_fee_coupon_code" id="service_fee_coupon_code" placeholder="Ex : VIPSANSFRAIS">
+                                    <p class="meta-line">Si {{ provider.name }} t'a donné un code, les frais de service Château Rose peuvent être offerts.</p>
+                                </div>
+
                                 <div class="form-field">
                                     <label>Ton prénom / nom <span class="required-mark">*</span></label>
                                     <input type="text" name="client_name" id="client_name" required autocomplete="name">

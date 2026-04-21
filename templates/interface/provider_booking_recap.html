@@ -32,13 +32,16 @@
                 <div class="summary-row"><strong>Nom</strong><span>{{ payload.client_name|default:"Non renseigné" }}</span></div>
                 <div class="summary-row"><strong>Email</strong><span>{{ payload.client_email|default:"Non renseigné" }}</span></div>
                 <div class="summary-row"><strong>Précisions</strong><span>{{ payload.free_text|default:"Aucune précision" }}</span></div>
+                {% if service_fee_coupon_code %}
+                    <div class="summary-row"><strong>Code partenaire</strong><span>{{ service_fee_coupon_code }}</span></div>
+                {% endif %}
             </div>
 
             <div class="secure-badge" style="margin: 12px 0 18px;">
                 <span style="font-size: 1.5rem;">🔒</span>
                 <div>
                     <strong class="secure-badge-title">Aucun montant n'est débité maintenant.</strong><br>
-                    Une empreinte bancaire est posée pour <strong>{{ deposit_price }}</strong>. Les frais de réservation ne sont prélevés que si <strong>{{ provider.name }}</strong> confirme le rendez-vous.
+                    Une empreinte bancaire est posée pour <strong>{{ deposit_price }}</strong>. Les frais de réservation (incluant acompte prestataire + frais de service Château Rose) ne sont prélevés que si <strong>{{ provider.name }}</strong> confirme le rendez-vous.
                 </div>
             </div>
             <div class="pricing-grid">
@@ -46,6 +49,15 @@
                     <p class="meta-line">Empreinte bancaire pour demander le créneau</p>
                     <p class="pricing-amount">{{ deposit_price }}</p>
                     <p class="meta-line">Pas de débit immédiat. Débit uniquement après confirmation de la prestataire.</p>
+                </article>
+                <article class="pricing-card">
+                    <p class="meta-line">Prix prestation (hors frais de service)</p>
+                    <p class="pricing-amount">{{ subtotal_price }}</p>
+                </article>
+                <article class="pricing-card">
+                    <p class="meta-line">Frais de service Château Rose</p>
+                    <p class="pricing-amount">{{ service_fee_price }}</p>
+                    <p class="meta-line">{% if service_fee_waived %}Offerts avec le code partenaire appliqué.{% else %}Inclus dans les frais de réservation.{% endif %}</p>
                 </article>
                 <article class="pricing-card">
                     <p class="meta-line">Estimation totale</p>
@@ -168,6 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         location_preference: '{{ payload.location_preference|default:"salon"|escapejs }}',
         meche: {{ payload.meche|yesno:"true,false" }},
         general_adjustments: {{ payload.general_adjustments|default:"[]"|safe }},
+        service_fee_coupon_code: '{{ payload.service_fee_coupon_code|default:""|escapejs }}',
     };
 
     const response = await fetch('{{ payment_intent_url }}', {

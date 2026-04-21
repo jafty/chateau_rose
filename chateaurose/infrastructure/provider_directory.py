@@ -15,4 +15,5 @@ class DjangoProviderDirectory:
             "salon_zone": provider.salon_zone or "",
             "salon_address": provider.salon_address or "",
             "deposit_percentage": provider.deposit_percentage,
+            "service_fee_percentage": provider.service_fee_percentage,
         }

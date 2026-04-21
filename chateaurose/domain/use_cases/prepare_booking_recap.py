@@ -16,6 +16,7 @@ def execute(
     general_adjustments: list[str] | None,
     meche: bool,
     free_text: str,
+    service_fee_coupon_code: str | None,
     current_hair_picture: str,
     inspiration_pictures: list[str] | None,
 ) -> dict:
@@ -58,6 +59,7 @@ def execute(
         "general_adjustments": normalized_adjustments,
         "meche": bool(meche),
         "free_text": (free_text or "").strip(),
+        "service_fee_coupon_code": (service_fee_coupon_code or "").strip().upper(),
         "current_hair_picture": current_hair_picture.strip(),
         "inspiration_pictures": normalized_inspiration,
     }
