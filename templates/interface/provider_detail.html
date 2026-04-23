@@ -1276,7 +1276,19 @@
             return (euros + (centsRemainder > 0 ? 1 : 0)) * 100;
         };
 
-        const formatMarketingPrice = (cents) => formatPrice(ceilPriceForDisplay(cents));
+        const adjustmentWithFeesCents = (adjustmentCents, serviceFeePercentage) => {
+            if (!Number.isFinite(adjustmentCents) || adjustmentCents === 0) return 0;
+            const feeCents = Math.round(adjustmentCents * (serviceFeePercentage || 0) / 100);
+            return adjustmentCents + feeCents;
+        };
+
+        const formatAdjustmentWithFees = (adjustmentCents, serviceFeePercentage) => {
+            const totalAdjustmentCents = adjustmentWithFeesCents(adjustmentCents, serviceFeePercentage);
+            if (totalAdjustmentCents > 0) {
+                return formatPrice(ceilPriceForDisplay(totalAdjustmentCents));
+            }
+            return formatPrice(totalAdjustmentCents);
+        };
 
         const toggleHairLengthField = (isVisible) => {
             if (hairLengthField) {
@@ -1296,6 +1308,7 @@
             if (!serviceId || !pricingData[serviceId]) return;
 
             const lengths = pricingData[serviceId].lengths || {};
+            const serviceFeePercentage = pricingData[serviceId].service_fee_percentage ?? 15;
             const lengthKeys = Object.keys(lengths);
 
             if (lengthKeys.length <= 1) {
@@ -1304,7 +1317,7 @@
                 const opt = document.createElement('option');
                 opt.value = defaultKey;
                 const displayDelta =
-                    delta === 0 ? '' : delta > 0 ? ` (+${formatPrice(delta)})` : ` (${formatPrice(delta)})`;
+                    delta === 0 ? '' : delta > 0 ? ` (+${formatAdjustmentWithFees(delta, serviceFeePercentage)})` : ` (${formatAdjustmentWithFees(delta, serviceFeePercentage)})`;
                 opt.textContent = `${defaultKey}${displayDelta}`;
                 hairLengthSelect.appendChild(opt);
                 hairLengthSelect.value = defaultKey;
@@ -1324,7 +1337,7 @@
                         opt.value = lengthKey;
                         const delta = lengths[lengthKey];
                         const displayDelta =
-                            delta === 0 ? '' : delta > 0 ? ` (+${formatPrice(delta)})` : ` (${formatPrice(delta)})`;
+                            delta === 0 ? '' : delta > 0 ? ` (+${formatAdjustmentWithFees(delta, serviceFeePercentage)})` : ` (${formatAdjustmentWithFees(delta, serviceFeePercentage)})`;
                         opt.textContent = `${lengthKey}${displayDelta}`;
                         hairLengthSelect.appendChild(opt);
                     });
@@ -1366,6 +1379,7 @@
             }
 
             const adjustments = pricingData[serviceId].general_adjustments || {};
+            const serviceFeePercentage = pricingData[serviceId].service_fee_percentage ?? 15;
             const keys = Object.keys(adjustments).filter((key) => key.toLowerCase() !== 'standard');
 
             if (!keys.length) {
@@ -1387,7 +1401,12 @@
                 const label = document.createElement('label');
                 label.htmlFor = optionId;
                 const delta = adjustments[adjustmentKey];
-                const displayDelta = delta === 0 ? '' : delta > 0 ? ` (+${formatPrice(delta)})` : ` (${formatPrice(delta)})`;
+                const displayDelta =
+                    delta === 0
+                        ? ''
+                        : delta > 0
+                            ? ` (+${formatAdjustmentWithFees(delta, serviceFeePercentage)})`
+                            : ` (${formatAdjustmentWithFees(delta, serviceFeePercentage)})`;
                 label.textContent = `${adjustmentKey}${displayDelta}`;
 
                 const wrapper = document.createElement('div');
@@ -1421,10 +1440,11 @@
             return Math.min(...values);
         };
 
-        const formatAdjustment = (label, value) => {
+        const formatAdjustment = (label, value, serviceFeePercentage) => {
             if (!label || value === undefined || value === null) return '';
             const sign = value > 0 ? '+' : '';
-            return `${label} (${sign}${formatPrice(value)})`;
+            const formattedValue = formatAdjustmentWithFees(Math.abs(value), serviceFeePercentage);
+            return `${label} (${sign}${formattedValue})`;
         };
 
         const refreshEstimate = () => {
@@ -1492,7 +1512,9 @@
                     ? '+ mèches fournies'
                     : 'mèches non fournies'
                 : 'mèches non fournies';
-            const locationText = atHomeAdj > 0 ? `à domicile (+${formatPrice(atHomeAdj)})` : "chez la prestataire";
+            const locationText = atHomeAdj > 0
+                ? `à domicile (+${formatAdjustmentWithFees(atHomeAdj, serviceFeePercentage)})`
+                : "chez la prestataire";
             const remainingStr = formatPrice(Math.max(totalWithFeesCents - depositCents, 0));
             const serviceFeeStr = formatPrice(serviceFeeCents);
             if (Number.isFinite(fixedPriceCents)) {
@@ -1502,7 +1524,7 @@
             } 
             if (generalAdjustmentsDisplay) {
                 const adjustmentsText = selectedAdjustments.length
-                    ? `Suppléments : ${selectedAdjustments.map((item) => formatAdjustment(item, adjustments[item] || 0)).filter(Boolean).join(' · ')}`
+                    ? `Suppléments : ${selectedAdjustments.map((item) => formatAdjustment(item, adjustments[item] || 0, serviceFeePercentage)).filter(Boolean).join(' · ')}`
                     : '';
                 generalAdjustmentsDisplay.textContent = adjustmentsText;
                 generalAdjustmentsDisplay.hidden = !adjustmentsText;
