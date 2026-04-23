@@ -6,7 +6,10 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from PIL import Image, ImageOps
-from chateaurose.domain.services.pricing import compute_checkout_amounts_cents
+from chateaurose.domain.services.pricing import (
+    ceil_price_for_display_cents,
+    compute_checkout_amounts_cents,
+)
 
 
 def format_price(cents: int) -> str:
@@ -14,6 +17,11 @@ def format_price(cents: int) -> str:
     if cents % 100 == 0:
         return f"{euros:.0f} €"
     return f"{euros:.2f} €"
+
+
+def format_marketing_price(cents: int) -> str:
+    rounded_cents = ceil_price_for_display_cents(cents)
+    return format_price(rounded_cents)
 
 
 def build_pricing_data(services):
@@ -31,7 +39,7 @@ def build_pricing_data(services):
             deposit_percentage=service.provider.deposit_percentage or 30,
             service_fee_percentage=service_fee_percentage,
         )["total_cents"]
-        service.price_display = format_price(starting_price)
+        service.price_display = format_marketing_price(starting_price)
         starting_prices.append(starting_price)
         pricing_data[str(service.id)] = {
             "name": service.name,
