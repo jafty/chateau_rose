@@ -2,6 +2,7 @@ import pytest
 
 from chateaurose.domain.exceptions import ValidationError
 from chateaurose.domain.services.pricing import (
+    ceil_price_for_display_cents,
     compute_checkout_amounts_cents,
     estimate_service_price_cents,
 )
@@ -110,3 +111,14 @@ def test_compute_checkout_amounts_can_waive_service_fee():
     assert amounts["total_cents"] == 10000
     assert amounts["reservation_fee_cents"] == 3000
     assert amounts["remaining_cents"] == 7000
+
+
+def test_ceil_price_for_display_cents_rounds_up_to_next_full_euro():
+    assert ceil_price_for_display_cents(11000) == 11000
+    assert ceil_price_for_display_cents(11001) == 11100
+    assert ceil_price_for_display_cents(11099) == 11100
+
+
+def test_ceil_price_for_display_cents_handles_non_positive_values():
+    assert ceil_price_for_display_cents(0) == 0
+    assert ceil_price_for_display_cents(-50) == 0
