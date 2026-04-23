@@ -79,3 +79,10 @@ def compute_checkout_amounts_cents(
         "reservation_fee_cents": reservation_fee_cents,
         "remaining_cents": remaining_cents,
     }
+
+
+def ceil_price_for_display_cents(amount_cents: int) -> int:
+    if amount_cents <= 0:
+        return 0
+    euros, cents = divmod(amount_cents, 100)
+    return (euros + (1 if cents else 0)) * 100

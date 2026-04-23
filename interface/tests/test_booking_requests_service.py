@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 
-from interface.services.booking_requests import resolve_stored_media_url
+from interface.services.booking_requests import format_marketing_price, resolve_stored_media_url
 
 
 class ResolveStoredMediaUrlTests(TestCase):
@@ -34,3 +34,9 @@ class ResolveStoredMediaUrlTests(TestCase):
     def test_resolve_root_relative_kept(self):
         root_relative = "/media/bookings/inspiration/img.jpg"
         self.assertEqual(resolve_stored_media_url(root_relative), root_relative)
+
+
+class FormatMarketingPriceTests(TestCase):
+    def test_format_marketing_price_rounds_up_to_next_euro(self):
+        self.assertEqual(format_marketing_price(11000), "110 €")
+        self.assertEqual(format_marketing_price(11001), "111 €")
