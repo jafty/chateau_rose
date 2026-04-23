@@ -1268,6 +1268,29 @@
             const euros = cents / 100;
             return euros % 1 === 0 ? `${euros.toFixed(0)} €` : `${euros.toFixed(2)} €`;
         };
+        // Backward-compatible alias kept to avoid runtime errors in stale inline handlers/cached snippets.
+        const formatMarketingPrice = formatPrice;
+
+        const ceilPriceForDisplay = (cents) => {
+            if (!Number.isFinite(cents) || cents <= 0) return 0;
+            const euros = Math.floor(cents / 100);
+            const centsRemainder = cents % 100;
+            return (euros + (centsRemainder > 0 ? 1 : 0)) * 100;
+        };
+
+        const adjustmentWithFeesCents = (adjustmentCents, serviceFeePercentage) => {
+            if (!Number.isFinite(adjustmentCents) || adjustmentCents === 0) return 0;
+            const feeCents = Math.round(adjustmentCents * (serviceFeePercentage || 0) / 100);
+            return adjustmentCents + feeCents;
+        };
+
+        const formatAdjustmentWithFees = (adjustmentCents, serviceFeePercentage) => {
+            const totalAdjustmentCents = adjustmentWithFeesCents(adjustmentCents, serviceFeePercentage);
+            if (totalAdjustmentCents > 0) {
+                return formatPrice(ceilPriceForDisplay(totalAdjustmentCents));
+            }
+            return formatPrice(totalAdjustmentCents);
+        };
 
         const ceilPriceForDisplay = (cents) => {
             if (!Number.isFinite(cents) || cents <= 0) return 0;
