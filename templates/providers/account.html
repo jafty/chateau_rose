@@ -19,7 +19,7 @@
 </section>
 
 <section class="container provider-account-page">
-    <nav class="paper-card form-card provider-account-card" style="position:sticky; top:16px; z-index:5;">
+    <nav class="paper-card form-card provider-account-card">
         <h3 class="section-title provider-section-title">Navigation rapide</h3>
         <div class="btn-group" style="display:flex;flex-wrap:wrap;gap:8px;">
             <a class="btn secondary" href="#account-info">Infos</a>
@@ -117,6 +117,7 @@
     <div class="paper-card form-card provider-account-card" id="account-services">
         <h3 class="section-title provider-section-title">Services et suppléments</h3>
         <p class="meta-line">Clique sur une carte pour éditer le service affiché sur ta page publique.</p>
+        <div class="provider-account-services-grid">
         {% for service, form in service_forms %}
             <article class="provider-service-card service-edit-card">
                 <span class="tape" aria-hidden="true"></span>
@@ -187,6 +188,7 @@
                 </form>
             </article>
         {% endfor %}
+        </div>
     </div>
 
     <div class="paper-card form-card provider-account-card" id="account-add-service">
@@ -251,7 +253,7 @@ document.querySelectorAll('.js-service-edit-toggle').forEach((button) => {
         if (!form) return;
         const willShow = form.hasAttribute('hidden');
         form.toggleAttribute('hidden');
-        button.textContent = willShow ? 'Masquer l’édition' : 'Modifier cette prestation';
+        button.textContent = willShow ? "Masquer l’édition" : 'Modifier cette prestation';
     });
 });
 </script>
