@@ -1529,6 +1529,7 @@
             const serviceFeePercentage = pricing.service_fee_percentage ?? 15;
             const serviceFeeCents = Math.round(totalCents * serviceFeePercentage / 100);
             const totalWithFeesCents = totalCents + serviceFeeCents;
+            const displayTotalWithFeesCents = ceilPriceForDisplay(totalWithFeesCents);
             const depositCents = Math.round(totalCents * depositPercentage / 100) + serviceFeeCents;
             const depositStr = formatMarketingPrice(depositCents);
             const selectedOption = serviceSelect?.selectedOptions?.[0];
@@ -1537,8 +1538,8 @@
                 (selectedOption ? selectedOption.textContent.split(' - ')[0].trim() : null) ||
                 'Service';
 
-            stickyPriceValue.textContent = formatMarketingPrice(totalWithFeesCents);
-            finalPriceDisplay.textContent = formatMarketingPrice(totalWithFeesCents);
+            stickyPriceValue.textContent = formatMarketingPrice(displayTotalWithFeesCents);
+            finalPriceDisplay.textContent = formatMarketingPrice(displayTotalWithFeesCents);
             const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
             const mecheText = mecheCheckbox
                 ? mecheCheckbox.checked
@@ -1548,7 +1549,7 @@
             const locationText = atHomeAdj > 0
                 ? `à domicile (+${formatAdjustmentWithFees(atHomeAdj, serviceFeePercentage)})`
                 : "chez la prestataire";
-            const remainingStr = formatPrice(Math.max(totalWithFeesCents - depositCents, 0));
+            const remainingStr = formatPrice(Math.max(displayTotalWithFeesCents - depositCents, 0));
             const serviceFeeStr = formatPrice(serviceFeeCents);
             if (Number.isFinite(fixedPriceCents)) {
                 finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). Frais de service inclus : ${serviceFeeStr}. À payer après acompte : ${remainingStr}.`;
