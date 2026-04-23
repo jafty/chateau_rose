@@ -123,6 +123,7 @@ class ProviderInfoForm(forms.ModelForm):
 
 
 class ProviderServiceForm(forms.ModelForm):
+    name = forms.CharField(label="Nom de la prestation", max_length=255, required=False)
     base_price_euros = forms.CharField(label="Prix (hors frais de service)")
     meche_bonus_euros = forms.CharField(label="Supplément mèches", required=False)
     at_home_bonus_euros = forms.CharField(label="Supplément domicile", required=False)
@@ -130,6 +131,7 @@ class ProviderServiceForm(forms.ModelForm):
     class Meta:
         model = Service
         fields = (
+            "name",
             "image",
             "image_url",
             "base_price_euros",
@@ -162,9 +164,18 @@ class ProviderServiceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
+            self.initial["name"] = self.instance.name
             self.initial["base_price_euros"] = self.cents_to_euros(self.instance.base_price_cents)
             self.initial["meche_bonus_euros"] = self.cents_to_euros(self.instance.meche_bonus_cents)
             self.initial["at_home_bonus_euros"] = self.cents_to_euros(self.instance.at_home_bonus_cents)
+
+    def clean_name(self):
+        name = (self.cleaned_data.get("name") or "").strip()
+        if name:
+            return name
+        if self.instance and self.instance.pk:
+            return self.instance.name
+        raise forms.ValidationError("Le nom de la prestation est requis.")
 
     def clean_base_price_euros(self):
         return self._euros_to_cents(self.cleaned_data.get("base_price_euros"), allow_blank=False)
@@ -213,6 +224,24 @@ class ProviderBlockedSlotForm(forms.ModelForm):
 
 
 class ProviderPhotoForm(forms.ModelForm):
+    media_kind = forms.ChoiceField(
+        choices=ProviderPhoto.MEDIA_KIND_CHOICES,
+        initial=ProviderPhoto.MEDIA_IMAGE,
+        label="Type de média",
+    )
+
     class Meta:
         model = ProviderPhoto
-        fields = ("image", "image_url", "caption", "order")
+        fields = ("media_kind", "image", "image_url", "video", "video_url", "caption", "order")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        media_kind = cleaned_data.get("media_kind")
+        has_image = bool(cleaned_data.get("image") or (cleaned_data.get("image_url") or "").strip())
+        has_video = bool(cleaned_data.get("video") or (cleaned_data.get("video_url") or "").strip())
+
+        if media_kind == ProviderPhoto.MEDIA_IMAGE and not has_image:
+            raise forms.ValidationError("Ajoute une image ou un lien d'image.")
+        if media_kind == ProviderPhoto.MEDIA_VIDEO and not has_video:
+            raise forms.ValidationError("Ajoute une vidéo ou un lien vidéo.")
+        return cleaned_data

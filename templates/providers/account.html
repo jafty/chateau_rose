@@ -19,7 +19,18 @@
 </section>
 
 <section class="container provider-account-page">
-    <div class="paper-card form-card provider-account-card">
+    <nav class="paper-card form-card provider-account-card" style="position:sticky; top:16px; z-index:5;">
+        <h3 class="section-title provider-section-title">Navigation rapide</h3>
+        <div class="btn-group" style="display:flex;flex-wrap:wrap;gap:8px;">
+            <a class="btn secondary" href="#account-info">Infos</a>
+            <a class="btn secondary" href="#account-media">Médias</a>
+            <a class="btn secondary" href="#account-slots">Indisponibilités</a>
+            <a class="btn secondary" href="#account-services">Services</a>
+            <a class="btn secondary" href="#account-add-service">Ajouter un service</a>
+        </div>
+    </nav>
+
+    <div class="paper-card form-card provider-account-card" id="account-info">
         <h3 class="section-title provider-section-title">Textes d'informations</h3>
         <form method="post" class="stack-form-grid">
             {% csrf_token %}
@@ -36,23 +47,33 @@
         </form>
     </div>
 
-    <div class="paper-card form-card provider-account-card">
-        <h3 class="section-title provider-section-title">Photos de prestations</h3>
+    <div class="paper-card form-card provider-account-card" id="account-media">
+        <h3 class="section-title provider-section-title">Médias de prestations (photos & vidéos)</h3>
         <form method="post" enctype="multipart/form-data" class="stack-form-grid">
             {% csrf_token %}
             <input type="hidden" name="action" value="add_photo">
+            <label>Type {{ photo_form.media_kind }}</label>
             <label>Ajouter une image {{ photo_form.image }}</label>
             <label>…ou lien d'image {{ photo_form.image_url }}</label>
+            <label>Ajouter une vidéo {{ photo_form.video }}</label>
+            <label>…ou lien vidéo {{ photo_form.video_url }}</label>
             <label>Légende {{ photo_form.caption }}</label>
             <label>Ordre {{ photo_form.order }}</label>
-            <button class="btn" type="submit">Ajouter la photo</button>
+            <button class="btn" type="submit">Ajouter le média</button>
         </form>
         {% if photos %}
             <div class="provider-photo-grid" style="margin-top:16px;">
                 {% for photo in photos %}
                     <article class="provider-photo-card">
-                        {% if photo.resolved_url %}<img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}">{% endif %}
+                        {% if photo.resolved_url %}
+                            {% if photo.is_video %}
+                                <video src="{{ photo.resolved_url }}" controls preload="metadata" aria-label="{{ photo.caption|default:provider.name }}"></video>
+                            {% else %}
+                                <img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}">
+                            {% endif %}
+                        {% endif %}
                         <p class="meta-line">{{ photo.caption|default:"Sans légende" }}</p>
+                        <p class="meta-line">Type : {% if photo.is_video %}Vidéo{% else %}Image{% endif %}</p>
                         <form method="post">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="delete_photo">
@@ -65,7 +86,7 @@
         {% endif %}
     </div>
 
-    <div class="paper-card form-card provider-account-card">
+    <div class="paper-card form-card provider-account-card" id="account-slots">
         <h3 class="section-title provider-section-title">Créneaux ponctuellement indisponibles</h3>
         <form method="post" class="stack-form-grid provider-inline-grid">
             {% csrf_token %}
@@ -93,68 +114,118 @@
         {% endif %}
     </div>
 
-    <div class="paper-card form-card provider-account-card">
+    <div class="paper-card form-card provider-account-card" id="account-services">
         <h3 class="section-title provider-section-title">Services et suppléments</h3>
-        <p class="meta-line">Mets à jour facilement chaque prestation : tarif de base, photo, suppléments selon la longueur de cheveux et options complémentaires. Pas besoin de format technique.</p>
+        <p class="meta-line">Clique sur une carte pour éditer le service affiché sur ta page publique.</p>
         {% for service, form in service_forms %}
-            <form method="post" enctype="multipart/form-data" class="service-edit-card">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="save_service">
-                <input type="hidden" name="service_id" value="{{ service.id }}">
-                <h4 class="service-edit-title">{{ service.name }}</h4>
-                <div class="provider-inline-grid">
-                    <label>Prix hors frais (€) {{ form.base_price_euros }}</label>
-                    <label>Supplément mèches (€) {{ form.meche_bonus_euros }}</label>
-                    <label>Supplément domicile (€) {{ form.at_home_bonus_euros }}</label>
-                    <label>
-                        Photo de la prestation {{ form.image }}
-                        {% if service.resolved_image %}
-                            <span class="meta-line">Image actuelle :</span>
-                            <img class="service-current-image-preview" src="{{ service.resolved_image }}" alt="Image actuelle pour {{ service.name }}">
-                        {% endif %}
-                    </label>
-                    <label style="grid-column:1 / -1;">Lien de la photo (optionnel) {{ form.image_url }}</label>
+            <article class="provider-service-card service-edit-card">
+                <span class="tape" aria-hidden="true"></span>
+                <div class="provider-service-card__media">
+                    <img src="{{ service.resolved_image }}" alt="{{ service.name }} — aperçu prestataire" loading="lazy" decoding="async">
+                </div>
+                <div class="provider-service-card__content">
+                    <div class="provider-service-card__top">
+                        <h4>{{ service.name }}</h4>
+                        <span class="service-price">Dès <span class="price-value">{{ form.base_price_euros.value|default:"0,00" }} €</span></span>
+                    </div>
+                    <button type="button" class="btn btn-accent provider-service-card__button js-service-edit-toggle">Modifier cette prestation</button>
                 </div>
 
-                <div class="adjustments-grid">
-                    <div>
-                        <h5>Suppléments longueur</h5>
-                        <p class="meta-line">Exemple : +10€ pour cheveux longs.</p>
-                        <div class="adjustment-list">
-                            {% for label, cents in service.hair_length_adjustments.items %}
-                                <div class="adjustment-row">
-                                    <input name="hair_label[]" value="{{ label }}" placeholder="Ex: Long">
-                                    <input name="hair_price[]" value="{{ cents|cents_to_euros_input }}" placeholder="€" inputmode="decimal">
-                                </div>
-                            {% endfor %}
-                            <div class="adjustment-row">
-                                <input name="hair_label[]" placeholder="Nouvelle longueur">
-                                <input name="hair_price[]" placeholder="€" inputmode="decimal">
-                            </div>
-                        </div>
-                        <button type="button" class="btn secondary adjustment-add-btn" data-target="hair">+ Ajouter une longueur</button>
+                <form method="post" enctype="multipart/form-data" class="stack-form-grid" hidden>
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save_service">
+                    <input type="hidden" name="service_id" value="{{ service.id }}">
+                    <label>Nom du service {{ form.name }}</label>
+                    <div class="provider-inline-grid">
+                        <label>Prix hors frais (€) {{ form.base_price_euros }}</label>
+                        <label>Supplément mèches (€) {{ form.meche_bonus_euros }}</label>
+                        <label>Supplément domicile (€) {{ form.at_home_bonus_euros }}</label>
+                        <label>
+                            Photo de la prestation {{ form.image }}
+                            {% if service.resolved_image %}
+                                <span class="meta-line">Image actuelle :</span>
+                                <img class="service-current-image-preview" src="{{ service.resolved_image }}" alt="Image actuelle pour {{ service.name }}">
+                            {% endif %}
+                        </label>
+                        <label style="grid-column:1 / -1;">Lien de la photo (optionnel) {{ form.image_url }}</label>
                     </div>
-                    <div>
-                        <h5>Ajustements généraux</h5>
-                        <p class="meta-line">Exemple : +5€ pour motifs ou finition spéciale.</p>
-                        <div class="adjustment-list">
-                            {% for label, cents in service.general_adjustments.items %}
+                    <div class="adjustments-grid">
+                        <div>
+                            <h5>Suppléments longueur</h5>
+                            <div class="adjustment-list">
+                                {% for label, cents in service.hair_length_adjustments.items %}
+                                    <div class="adjustment-row">
+                                        <input name="hair_label[]" value="{{ label }}" placeholder="Ex: Long">
+                                        <input name="hair_price[]" value="{{ cents|cents_to_euros_input }}" placeholder="€" inputmode="decimal">
+                                    </div>
+                                {% endfor %}
                                 <div class="adjustment-row">
-                                    <input name="general_label[]" value="{{ label }}" placeholder="Ex: Motif">
-                                    <input name="general_price[]" value="{{ cents|cents_to_euros_input }}" placeholder="€" inputmode="decimal">
+                                    <input name="hair_label[]" placeholder="Nouvelle longueur">
+                                    <input name="hair_price[]" placeholder="€" inputmode="decimal">
                                 </div>
-                            {% endfor %}
-                            <div class="adjustment-row">
-                                <input name="general_label[]" placeholder="Nouvel ajustement">
-                                <input name="general_price[]" placeholder="€" inputmode="decimal">
                             </div>
+                            <button type="button" class="btn secondary adjustment-add-btn" data-target="hair">+ Ajouter une longueur</button>
                         </div>
-                        <button type="button" class="btn secondary adjustment-add-btn" data-target="general">+ Ajouter un ajustement</button>
+                        <div>
+                            <h5>Ajustements généraux</h5>
+                            <div class="adjustment-list">
+                                {% for label, cents in service.general_adjustments.items %}
+                                    <div class="adjustment-row">
+                                        <input name="general_label[]" value="{{ label }}" placeholder="Ex: Motif">
+                                        <input name="general_price[]" value="{{ cents|cents_to_euros_input }}" placeholder="€" inputmode="decimal">
+                                    </div>
+                                {% endfor %}
+                                <div class="adjustment-row">
+                                    <input name="general_label[]" placeholder="Nouvel ajustement">
+                                    <input name="general_price[]" placeholder="€" inputmode="decimal">
+                                </div>
+                            </div>
+                            <button type="button" class="btn secondary adjustment-add-btn" data-target="general">+ Ajouter un ajustement</button>
+                        </div>
                     </div>
-                </div>
-                <button class="btn" type="submit">Enregistrer {{ service.name }}</button>
-            </form>
+                    <button class="btn" type="submit">Enregistrer {{ service.name }}</button>
+                </form>
+            </article>
         {% endfor %}
+    </div>
+
+    <div class="paper-card form-card provider-account-card" id="account-add-service">
+        <h3 class="section-title provider-section-title">Ajouter un nouveau service</h3>
+        <form method="post" enctype="multipart/form-data" class="stack-form-grid">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_service">
+            <label>Nom du service {{ new_service_form.name }}</label>
+            <div class="provider-inline-grid">
+                <label>Prix hors frais (€) {{ new_service_form.base_price_euros }}</label>
+                <label>Supplément mèches (€) {{ new_service_form.meche_bonus_euros }}</label>
+                <label>Supplément domicile (€) {{ new_service_form.at_home_bonus_euros }}</label>
+                <label>Photo du service {{ new_service_form.image }}</label>
+                <label style="grid-column:1 / -1;">Lien de la photo (optionnel) {{ new_service_form.image_url }}</label>
+            </div>
+            <div class="adjustments-grid">
+                <div>
+                    <h5>Suppléments longueur</h5>
+                    <div class="adjustment-list">
+                        <div class="adjustment-row">
+                            <input name="new_hair_label[]" placeholder="Nouvelle longueur">
+                            <input name="new_hair_price[]" placeholder="€" inputmode="decimal">
+                        </div>
+                    </div>
+                    <button type="button" class="btn secondary adjustment-add-btn" data-target="new_hair">+ Ajouter une longueur</button>
+                </div>
+                <div>
+                    <h5>Ajustements généraux</h5>
+                    <div class="adjustment-list">
+                        <div class="adjustment-row">
+                            <input name="new_general_label[]" placeholder="Nouvel ajustement">
+                            <input name="new_general_price[]" placeholder="€" inputmode="decimal">
+                        </div>
+                    </div>
+                    <button type="button" class="btn secondary adjustment-add-btn" data-target="new_general">+ Ajouter un ajustement</button>
+                </div>
+            </div>
+            <button class="btn" type="submit">Créer le service</button>
+        </form>
     </div>
 </section>
 <script>
@@ -170,6 +241,17 @@ document.querySelectorAll('.adjustment-add-btn').forEach((button) => {
             <input name="${type}_price[]" placeholder="€" inputmode="decimal">
         `;
         list.appendChild(row);
+    });
+});
+
+document.querySelectorAll('.js-service-edit-toggle').forEach((button) => {
+    button.addEventListener('click', () => {
+        const card = button.closest('.service-edit-card');
+        const form = card ? card.querySelector('form') : null;
+        if (!form) return;
+        const willShow = form.hasAttribute('hidden');
+        form.toggleAttribute('hidden');
+        button.textContent = willShow ? 'Masquer l’édition' : 'Modifier cette prestation';
     });
 });
 </script>
