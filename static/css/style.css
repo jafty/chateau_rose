@@ -2676,6 +2676,18 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .adjustments-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .adjustment-list { display: grid; gap: 8px; }
 .adjustment-row { display: grid; grid-template-columns: 1fr 130px; gap: 8px; }
+.provider-inline-grid > label,
+.adjustments-grid > div,
+.adjustment-row > input { min-width: 0; }
+.service-current-image-preview {
+    margin-top: 8px;
+    width: 100%;
+    max-width: 220px;
+    max-height: 160px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
 .provider-account-page { padding-bottom: 60px; }
 .provider-account-card { max-width: 960px; margin: 0 auto 20px; }
 .provider-account-card:last-child { margin-bottom: 0; }
@@ -2702,6 +2714,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     .bookings-mobile-cards { display: block; }
     .provider-inline-grid,
     .adjustments-grid { grid-template-columns: 1fr; }
+    .adjustment-row { grid-template-columns: minmax(0, 1fr); }
     .account-page-hero { padding-top: 48px; }
 
     .provider-profile,

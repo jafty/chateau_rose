@@ -55,6 +55,7 @@ def build_storage_settings(env: Mapping[str, str], base_dir: Path) -> StorageSet
             "AWS_STORAGE_BUCKET_NAME": bucket,
             "AWS_S3_OBJECT_PARAMETERS": {"CacheControl": cache_control},
             "AWS_QUERYSTRING_AUTH": querystring_auth_value,
+            "AWS_S3_FILE_OVERWRITE": False,
         }
         if region:
             extra_settings["AWS_S3_REGION_NAME"] = region
@@ -76,7 +77,10 @@ def build_storage_settings(env: Mapping[str, str], base_dir: Path) -> StorageSet
         if not bucket:
             raise ValueError("GS_BUCKET_NAME is required when FILE_STORAGE_BACKEND=gcs")
         media_url = env.get("GS_MEDIA_URL") or f"https://storage.googleapis.com/{bucket}/"
-        extra_settings = {"GS_BUCKET_NAME": bucket}
+        extra_settings = {
+            "GS_BUCKET_NAME": bucket,
+            "GS_FILE_OVERWRITE": False,
+        }
         credentials_file = env.get("GOOGLE_APPLICATION_CREDENTIALS")
         if credentials_file:
             extra_settings["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_file

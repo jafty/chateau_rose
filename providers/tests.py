@@ -320,7 +320,6 @@ class ProviderAccountTests(TestCase):
             {
                 "action": "save_service",
                 "service_id": self.service.id,
-                "name": self.service.name,
                 "base_price_euros": "79,50",
                 "meche_bonus_euros": "5",
                 "at_home_bonus_euros": "12,5",
@@ -339,6 +338,15 @@ class ProviderAccountTests(TestCase):
         self.assertEqual(self.service.at_home_bonus_cents, 1250)
         self.assertEqual(self.service.hair_length_adjustments, {"long": 1000, "extra long": 2050})
         self.assertEqual(self.service.general_adjustments, {"motif": 300, "perles": 850})
+
+    def test_provider_account_page_displays_current_service_image_preview(self):
+        self.service.image_url = "https://cdn.example.com/services/nattes.jpg"
+        self.service.save(update_fields=["image_url"])
+
+        response = self.client.get(reverse("providers:account"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.service.image_url)
 
     def test_provider_can_add_punctual_blocked_slot_with_default_message(self):
         response = self.client.post(

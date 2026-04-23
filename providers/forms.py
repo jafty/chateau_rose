@@ -130,7 +130,6 @@ class ProviderServiceForm(forms.ModelForm):
     class Meta:
         model = Service
         fields = (
-            "name",
             "image",
             "image_url",
             "base_price_euros",
