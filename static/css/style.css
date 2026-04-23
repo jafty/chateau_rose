@@ -2676,12 +2676,33 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .adjustments-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .adjustment-list { display: grid; gap: 8px; }
 .adjustment-row { display: grid; grid-template-columns: 1fr 130px; gap: 8px; }
+.provider-account-page { padding-bottom: 60px; }
+.provider-account-card { max-width: 960px; margin: 0 auto 20px; }
+.provider-account-card:last-child { margin-bottom: 0; }
+.provider-account-card input,
+.provider-account-card textarea,
+.provider-account-card select {
+    border-radius: 10px;
+    border: 1px solid #d5dae1;
+    padding: 11px 12px;
+    background: #fff;
+}
+.provider-account-card input:focus,
+.provider-account-card textarea:focus,
+.provider-account-card select:focus {
+    outline: none;
+    border-color: #c84b82;
+    box-shadow: 0 0 0 3px rgba(200, 75, 130, 0.15);
+}
+.service-edit-title { margin: 0 0 10px; font-size: 1.1rem; }
+.adjustment-add-btn { margin-top: 8px; }
 
 @media (max-width: 640px) {
     .bookings-desktop-table { display: none; }
     .bookings-mobile-cards { display: block; }
     .provider-inline-grid,
     .adjustments-grid { grid-template-columns: 1fr; }
+    .account-page-hero { padding-top: 48px; }
 
     .provider-profile,
     .providers-section,

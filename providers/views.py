@@ -272,6 +272,11 @@ def _adjustments_from_post(request, prefix: str) -> dict:
     adjustments = {}
     for raw_label, raw_price in zip(labels, prices):
         label = (raw_label or "").strip()
+        price = (raw_price or "").strip()
+        if not label and not price:
+            continue
+        if not label and price:
+            raise DomainError("Ajoute un intitulé pour le supplément saisi.")
         if not label:
             continue
         try:
@@ -314,7 +319,8 @@ def account(request):
                     service.save()
                     message = f"Service « {service.name} » mis à jour."
                 else:
-                    error = "Merci de corriger les champs du service."
+                    first_error = next(iter(service_form.errors.values()))[0] if service_form.errors else "Merci de corriger les champs du service."
+                    error = f"Service « {service.name} » : {first_error}"
             elif action == "add_blocked_slot":
                 blocked_slot_form = ProviderBlockedSlotForm(request.POST)
                 if blocked_slot_form.is_valid():
