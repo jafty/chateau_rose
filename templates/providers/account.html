@@ -106,7 +106,13 @@
                     <label>Prix hors frais (€) {{ form.base_price_euros }}</label>
                     <label>Supplément mèches (€) {{ form.meche_bonus_euros }}</label>
                     <label>Supplément domicile (€) {{ form.at_home_bonus_euros }}</label>
-                    <label>Photo de la prestation {{ form.image }}</label>
+                    <label>
+                        Photo de la prestation {{ form.image }}
+                        {% if service.resolved_image %}
+                            <span class="meta-line">Image actuelle :</span>
+                            <img class="service-current-image-preview" src="{{ service.resolved_image }}" alt="Image actuelle pour {{ service.name }}">
+                        {% endif %}
+                    </label>
                     <label style="grid-column:1 / -1;">Lien de la photo (optionnel) {{ form.image_url }}</label>
                 </div>
 
