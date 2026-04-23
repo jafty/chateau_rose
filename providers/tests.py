@@ -5,7 +5,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from booking.models import Booking, Provider, Service
+from booking.models import Booking, Provider, ProviderBlockedSlot, Service
 
 
 class _PaymentGatewayStub:
@@ -285,6 +285,85 @@ class ProviderSignupTests(TestCase):
         self.assertEqual(provider.contact_email, "new@pro.fr")
         self.assertEqual(provider.location_mode, Provider.LOCATION_MODE_HYBRID)
         self.assertTrue(response.wsgi_request.user.is_authenticated)
+
+
+@override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
+class ProviderAccountTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="provider-account",
+            password="safepass123",
+        )
+        self.provider = Provider.objects.create(
+            name="Compte Pro",
+            user=self.user,
+        )
+        self.service = Service.objects.create(
+            provider=self.provider,
+            name="Nattes",
+            slug="nattes",
+            base_price_cents=5500,
+            hair_length_adjustments={"long": 1000},
+            general_adjustments={"motif": 500},
+        )
+        self.client = Client()
+        self.client.login(username="provider-account", password="safepass123")
+
+    def test_provider_can_update_service_prices_and_adjustments_in_euros(self):
+        response = self.client.post(
+            reverse("providers:account"),
+            {
+                "action": "save_service",
+                "service_id": self.service.id,
+                "base_price_euros": "79,50",
+                "meche_bonus_euros": "5",
+                "at_home_bonus_euros": "12,5",
+                "hair_label[]": ["long", "extra long"],
+                "hair_price[]": ["10", "20,5"],
+                "general_label[]": ["motif", "perles"],
+                "general_price[]": ["3", "8,5"],
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.service.refresh_from_db()
+        self.assertEqual(self.service.base_price_cents, 7950)
+        self.assertEqual(self.service.meche_bonus_cents, 500)
+        self.assertEqual(self.service.at_home_bonus_cents, 1250)
+        self.assertEqual(self.service.hair_length_adjustments, {"long": 1000, "extra long": 2050})
+        self.assertEqual(self.service.general_adjustments, {"motif": 300, "perles": 850})
+
+    def test_provider_account_page_displays_current_service_image_preview(self):
+        self.service.image_url = "https://cdn.example.com/services/nattes.jpg"
+        self.service.save(update_fields=["image_url"])
+
+        response = self.client.get(reverse("providers:account"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.service.image_url)
+
+    def test_provider_can_add_punctual_blocked_slot_with_default_message(self):
+        response = self.client.post(
+            reverse("providers:account"),
+            {
+                "action": "add_blocked_slot",
+                "starts_at": "2026-06-10T10:00",
+                "ends_at": "2026-06-10T12:00",
+                "reason": "",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        slot = ProviderBlockedSlot.objects.get(provider=self.provider)
+        self.assertFalse(slot.is_recurring)
+        self.assertEqual(slot.reason, "Ce créneau n'est plus disponible")
 
 
 @override_settings(

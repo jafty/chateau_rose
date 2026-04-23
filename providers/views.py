@@ -2,6 +2,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 import logging
 
+from django import forms
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
@@ -11,7 +12,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.urls import reverse_lazy
 
-from booking.models import Booking, Provider
+from booking.models import Booking, Provider, ProviderPhoto, Service
 from chateaurose.domain.exceptions import DomainError
 from chateaurose.domain.use_cases import (
     expire_booking as expire_booking_uc,
@@ -22,7 +23,14 @@ from chateaurose.infrastructure.booking_repository import DjangoBookingRepositor
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
-from providers.forms import ProviderPartnershipRequestForm, ProviderPasswordResetForm
+from providers.forms import (
+    ProviderBlockedSlotForm,
+    ProviderInfoForm,
+    ProviderPartnershipRequestForm,
+    ProviderPasswordResetForm,
+    ProviderPhotoForm,
+    ProviderServiceForm,
+)
 
 repo = DjangoBookingRepository()
 notifier = EmailNotifier()
@@ -255,4 +263,134 @@ def signup(request):
         request,
         "providers/signup.html",
         {"form": form, "request_sent": request_sent},
+    )
+
+
+def _adjustments_from_post(request, prefix: str) -> dict:
+    labels = request.POST.getlist(f"{prefix}_label[]")
+    prices = request.POST.getlist(f"{prefix}_price[]")
+    adjustments = {}
+    for raw_label, raw_price in zip(labels, prices):
+        label = (raw_label or "").strip()
+        price = (raw_price or "").strip()
+        if not label and not price:
+            continue
+        if not label and price:
+            raise DomainError("Ajoute un intitulé pour le supplément saisi.")
+        if not label:
+            continue
+        try:
+            cents = ProviderServiceForm._euros_to_cents(raw_price)
+        except forms.ValidationError as exc:
+            raise DomainError(exc.messages[0])
+        adjustments[label] = cents
+    return adjustments
+
+
+@login_required(login_url="providers:login")
+def account(request):
+    provider = Provider.objects.filter(user=request.user).first()
+    if provider is None:
+        return HttpResponseForbidden("Accès réservé aux prestataires enregistrés.")
+
+    info_form = ProviderInfoForm(instance=provider)
+    blocked_slot_form = ProviderBlockedSlotForm()
+    photo_form = ProviderPhotoForm()
+    new_service_form = ProviderServiceForm()
+    message = None
+    error = None
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        try:
+            if action == "save_info":
+                info_form = ProviderInfoForm(request.POST, instance=provider)
+                if info_form.is_valid():
+                    info_form.save()
+                    message = "Informations mises à jour."
+                else:
+                    error = "Merci de corriger les champs informations."
+            elif action == "save_service":
+                service = get_object_or_404(Service, id=request.POST.get("service_id"), provider=provider)
+                service_form = ProviderServiceForm(request.POST, request.FILES, instance=service)
+                if service_form.is_valid():
+                    service = service_form.save(commit=False)
+                    service.hair_length_adjustments = _adjustments_from_post(request, "hair")
+                    service.general_adjustments = _adjustments_from_post(request, "general")
+                    service.save()
+                    message = f"Service « {service.name} » mis à jour."
+                else:
+                    first_error = next(iter(service_form.errors.values()))[0] if service_form.errors else "Merci de corriger les champs du service."
+                    error = f"Service « {service.name} » : {first_error}"
+            elif action == "add_service":
+                new_service_form = ProviderServiceForm(request.POST, request.FILES)
+                if new_service_form.is_valid():
+                    service = new_service_form.save(commit=False)
+                    service.provider = provider
+                    service.hair_length_adjustments = _adjustments_from_post(request, "new_hair")
+                    service.general_adjustments = _adjustments_from_post(request, "new_general")
+                    service.save()
+                    new_service_form = ProviderServiceForm()
+                    message = f"Service « {service.name} » ajouté."
+                else:
+                    error = "Merci de corriger les champs du nouveau service."
+            elif action == "add_blocked_slot":
+                blocked_slot_form = ProviderBlockedSlotForm(request.POST)
+                if blocked_slot_form.is_valid():
+                    slot = blocked_slot_form.save(commit=False)
+                    slot.provider = provider
+                    slot.save()
+                    blocked_slot_form = ProviderBlockedSlotForm()
+                    message = "Créneau ponctuel indisponible ajouté."
+                else:
+                    error = "Merci de corriger les dates du créneau indisponible."
+            elif action == "delete_blocked_slot":
+                slot = get_object_or_404(provider.blocked_slots.filter(is_recurring=False), id=request.POST.get("slot_id"))
+                slot.delete()
+                message = "Créneau ponctuel supprimé."
+            elif action == "add_photo":
+                photo_form = ProviderPhotoForm(request.POST, request.FILES)
+                if photo_form.is_valid():
+                    photo = photo_form.save(commit=False)
+                    photo.provider = provider
+                    photo.save()
+                    photo_form = ProviderPhotoForm()
+                    message = "Média ajouté."
+                else:
+                    error = "Merci de corriger le média à ajouter."
+            elif action == "delete_photo":
+                photo = get_object_or_404(provider.photos, id=request.POST.get("photo_id"))
+                photo.delete()
+                message = "Média supprimé."
+        except (DomainError, InvalidOperation) as exc:
+            error = str(exc)
+
+    services = provider.services.order_by("name")
+    service_forms = []
+    invalid_service_id = request.POST.get("service_id") if request.method == "POST" else None
+    for service in services:
+        if request.method == "POST" and request.POST.get("action") == "save_service" and str(service.id) == str(invalid_service_id):
+            form = ProviderServiceForm(request.POST, request.FILES, instance=service)
+        else:
+            form = ProviderServiceForm(instance=service)
+        service_forms.append((service, form))
+
+    blocked_slots = provider.blocked_slots.filter(is_recurring=False, is_active=True).order_by("starts_at")
+    photos = provider.photos.order_by("order", "id")
+
+    return render(
+        request,
+        "providers/account.html",
+        {
+            "provider": provider,
+            "message": message,
+            "error": error,
+            "info_form": info_form,
+            "service_forms": service_forms,
+            "blocked_slot_form": blocked_slot_form,
+            "blocked_slots": blocked_slots,
+            "photo_form": photo_form,
+            "photos": photos,
+            "new_service_form": new_service_form,
+        },
     )
