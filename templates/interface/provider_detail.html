@@ -1463,7 +1463,6 @@
             const atHomeAdj = selectedLocationPreference === "domicile" ? pricing.at_home_bonus || 0 : 0;
             const computedTotalCents = base + lengthAdj + generalAdj + mecheAdj + atHomeAdj;
             const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : computedTotalCents;
-            const totalStr = formatPrice(totalCents);
             const depositPercentage = pricing.deposit_percentage ?? 0;
             const serviceFeePercentage = pricing.service_fee_percentage ?? 15;
             const serviceFeeCents = Math.round(totalCents * serviceFeePercentage / 100);
@@ -1486,10 +1485,11 @@
                 : 'mèches non fournies';
             const locationText = atHomeAdj > 0 ? `à domicile (+${formatPrice(atHomeAdj)})` : "chez la prestataire";
             const remainingStr = formatPrice(Math.max(totalWithFeesCents - depositCents, 0));
+            const serviceFeeStr = formatPrice(serviceFeeCents);
             if (Number.isFinite(fixedPriceCents)) {
-                finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). À payer après acompte : ${remainingStr}.`;
+                finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). Frais de service inclus : ${serviceFeeStr}. À payer après acompte : ${remainingStr}.`;
             } else {
-                finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). À payer après acompte : ${remainingStr}.`;
+                finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). Frais de service inclus : ${serviceFeeStr}. À payer après acompte : ${remainingStr}.`;
             } 
             if (generalAdjustmentsDisplay) {
                 const adjustmentsText = selectedAdjustments.length
