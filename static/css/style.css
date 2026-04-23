@@ -2667,6 +2667,13 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .stack-form-grid input[type="datetime-local"],
 .stack-form-grid input[type="url"],
 .stack-form-grid input[type="file"] { width: 100%; }
+.stack-form-grid label,
+.stack-form-grid form { min-width: 0; }
+.stack-form-grid input[type="file"] {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .provider-inline-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .provider-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
 .provider-photo-card img { width: 100%; height: 150px; object-fit: cover; border-radius: 10px; }
@@ -2682,6 +2689,9 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .provider-account-services-grid .service-edit-card {
     margin-top: 0;
     align-content: start;
+}
+.provider-account-services-grid .service-edit-card.is-editing {
+    grid-column: 1 / -1;
 }
 .provider-account-services-grid .provider-service-card__media {
     aspect-ratio: 1 / 1;
