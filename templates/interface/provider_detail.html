@@ -203,6 +203,7 @@
         padding: 0.55rem 0.55rem 1.2rem;
     }
     .provider-avatar-polaroid img { aspect-ratio: 1 / 1; }
+    .provider-avatar-mobile { display: none; }
     .provider-tag-cloud {
         position: static;
         display: flex;
@@ -486,6 +487,16 @@
             max-width: none;
             margin-inline: 0;
         }
+        .provider-page-header {
+            display: flex;
+            flex-direction: column;
+        }
+        .provider-hero-card { order: 1; }
+        .provider-avatar-mobile {
+            display: block;
+            order: 2;
+        }
+        .provider-hero-collage { order: 3; }
         .provider-main {
             gap: 1.25rem;
         }
@@ -514,6 +525,9 @@
         .provider-avatar-polaroid {
             width: 100%;
             max-width: none;
+        }
+        .provider-sidebar > .provider-avatar-polaroid {
+            display: none;
         }
         .provider-service-card__content {
             padding-inline: 0.3rem;
@@ -546,6 +560,23 @@
                 <a href="#provider-gallery" class="btn secondary">
                     Voir les réalisations
                 </a>
+            </div>
+        </div>
+        <div class="provider-avatar-mobile">
+            <div class="provider-avatar-polaroid">
+                <span class="tape" aria-hidden="true"></span>
+                {% if provider.resolved_profile_image %}
+                    <img src="{{ provider.resolved_profile_image }}" alt="Photo de {{ provider.name }}" loading="lazy" decoding="async">
+                {% else %}
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portrait prestataire coiffure afro" loading="lazy" decoding="async">
+                {% endif %}
+                <div class="provider-tag-cloud">
+                    {% for service in provider.marketing_services.all|slice:":3" %}
+                        <span class="tag">{{ service.name }}</span>
+                    {% empty %}
+                        <span class="tag">Coiffure afro</span>
+                    {% endfor %}
+                </div>
             </div>
         </div>
         <div class="provider-hero-collage" aria-label="Aperçu des réalisations de {{ provider.name }}">
@@ -1270,27 +1301,6 @@
         };
         // Backward-compatible alias kept to avoid runtime errors in stale inline handlers/cached snippets.
         const formatMarketingPrice = formatPrice;
-
-        const ceilPriceForDisplay = (cents) => {
-            if (!Number.isFinite(cents) || cents <= 0) return 0;
-            const euros = Math.floor(cents / 100);
-            const centsRemainder = cents % 100;
-            return (euros + (centsRemainder > 0 ? 1 : 0)) * 100;
-        };
-
-        const adjustmentWithFeesCents = (adjustmentCents, serviceFeePercentage) => {
-            if (!Number.isFinite(adjustmentCents) || adjustmentCents === 0) return 0;
-            const feeCents = Math.round(adjustmentCents * (serviceFeePercentage || 0) / 100);
-            return adjustmentCents + feeCents;
-        };
-
-        const formatAdjustmentWithFees = (adjustmentCents, serviceFeePercentage) => {
-            const totalAdjustmentCents = adjustmentWithFeesCents(adjustmentCents, serviceFeePercentage);
-            if (totalAdjustmentCents > 0) {
-                return formatPrice(ceilPriceForDisplay(totalAdjustmentCents));
-            }
-            return formatPrice(totalAdjustmentCents);
-        };
 
         const ceilPriceForDisplay = (cents) => {
             if (!Number.isFinite(cents) || cents <= 0) return 0;
