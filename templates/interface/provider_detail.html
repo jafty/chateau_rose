@@ -1493,11 +1493,12 @@
                     : 'mèches non fournies'
                 : 'mèches non fournies';
             const locationText = atHomeAdj > 0 ? `à domicile (+${formatPrice(atHomeAdj)})` : "chez la prestataire";
-            const remainingStr = formatMarketingPrice(Math.max(totalWithFeesCents - depositCents, 0));
+            const remainingStr = formatPrice(Math.max(totalWithFeesCents - depositCents, 0));
+            const serviceFeeStr = formatPrice(serviceFeeCents);
             if (Number.isFinite(fixedPriceCents)) {
-                finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). À payer après acompte : ${remainingStr}.`;
+                finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). Frais de service inclus : ${serviceFeeStr}. À payer après acompte : ${remainingStr}.`;
             } else {
-                finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). À payer après acompte : ${remainingStr}.`;
+                finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). Frais de service inclus : ${serviceFeeStr}. À payer après acompte : ${remainingStr}.`;
             } 
             if (generalAdjustmentsDisplay) {
                 const adjustmentsText = selectedAdjustments.length
