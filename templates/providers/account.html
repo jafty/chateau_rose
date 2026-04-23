@@ -253,6 +253,7 @@ document.querySelectorAll('.js-service-edit-toggle').forEach((button) => {
         if (!form) return;
         const willShow = form.hasAttribute('hidden');
         form.toggleAttribute('hidden');
+        card.classList.toggle('is-editing', willShow);
         button.textContent = willShow ? "Masquer l’édition" : 'Modifier cette prestation';
     });
 });
