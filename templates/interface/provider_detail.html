@@ -1269,6 +1269,15 @@
             return euros % 1 === 0 ? `${euros.toFixed(0)} €` : `${euros.toFixed(2)} €`;
         };
 
+        const ceilPriceForDisplay = (cents) => {
+            if (!Number.isFinite(cents) || cents <= 0) return 0;
+            const euros = Math.floor(cents / 100);
+            const centsRemainder = cents % 100;
+            return (euros + (centsRemainder > 0 ? 1 : 0)) * 100;
+        };
+
+        const formatMarketingPrice = (cents) => formatPrice(ceilPriceForDisplay(cents));
+
         const toggleHairLengthField = (isVisible) => {
             if (hairLengthField) {
                 hairLengthField.hidden = !isVisible;
@@ -1468,15 +1477,15 @@
             const serviceFeeCents = Math.round(totalCents * serviceFeePercentage / 100);
             const totalWithFeesCents = totalCents + serviceFeeCents;
             const depositCents = Math.round(totalCents * depositPercentage / 100) + serviceFeeCents;
-            const depositStr = formatPrice(depositCents);
+            const depositStr = formatMarketingPrice(depositCents);
             const selectedOption = serviceSelect?.selectedOptions?.[0];
             const serviceName =
                 pricing.name ||
                 (selectedOption ? selectedOption.textContent.split(' - ')[0].trim() : null) ||
                 'Service';
 
-            stickyPriceValue.textContent = formatPrice(totalWithFeesCents);
-            finalPriceDisplay.textContent = formatPrice(totalWithFeesCents);
+            stickyPriceValue.textContent = formatMarketingPrice(totalWithFeesCents);
+            finalPriceDisplay.textContent = formatMarketingPrice(totalWithFeesCents);
             const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
             const mecheText = mecheCheckbox
                 ? mecheCheckbox.checked
@@ -1509,7 +1518,7 @@
             }
             if (depositDetailsDisplay) {
                 depositDetailsDisplay.textContent =
-                    `Frais de réservation estimés (${depositPercentage} % d'acompte + ${serviceFeePercentage} % de frais de service), prélevés seulement après confirmation.`;
+                    `Frais de réservation estimés (${depositPercentage} % d'acompte + ${serviceFeePercentage} % de frais de service), arrondis à l'euro supérieur pour l'affichage, prélevés seulement après confirmation.`;
             }
         };
 
