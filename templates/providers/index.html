@@ -16,6 +16,9 @@
         </p>
         <p class="meta-line">{% if admin_mode %}Tu peux ouvrir chaque demande, proposer un créneau, confirmer ou refuser au nom du prestataire concerné.{% else %}Partage ce lien d'accès uniquement si tu veux inviter quelqu'un à se connecter en ton nom : <code>{{ request.build_absolute_uri }}</code>{% endif %}</p>
         <div class="btn-group" style="margin-top:10px;">
+            {% if not admin_mode %}
+                <a class="btn" href="{% url 'providers:account' %}">Gérer mon compte</a>
+            {% endif %}
             <form method="post" action="{% url 'providers:logout' %}">
                 {% csrf_token %}
                 <button class="btn secondary" type="submit">Se déconnecter</button>
@@ -28,7 +31,7 @@
     <div class="paper-card" style="max-width:760px; margin: 0 auto;">
         <h3 class="section-title provider-section-title">Dernières demandes reçues</h3>
         {% if bookings %}
-            <div class="table-wrapper">
+            <div class="table-wrapper bookings-desktop-table">
                 <table class="dashboard-table">
                     <thead>
                         <tr>
@@ -55,6 +58,19 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+            <div class="bookings-mobile-cards">
+                {% for booking in bookings %}
+                    <article class="booking-card-mobile">
+                        <p><strong>Demande :</strong> <a href="{% url 'providers:booking_detail' booking.booking_id %}">{{ booking.booking_id }}</a></p>
+                        <p><strong>Client :</strong> {{ booking.client_name }}</p>
+                        {% if admin_mode %}<p><strong>Prestataire :</strong> {{ booking.provider.name }}</p>{% endif %}
+                        <p><strong>Service :</strong> {{ booking.service.name }}</p>
+                        <p><strong>Date souhaitée :</strong> {{ booking.desired_date }}</p>
+                        <p><strong>Lieu :</strong> {{ booking.location }}</p>
+                        <p><strong>Statut :</strong> <span class="status-pill">{{ booking.status }}</span></p>
+                    </article>
+                {% endfor %}
             </div>
         {% else %}
             <p class="meta-line">Aucune demande pour le moment.</p>

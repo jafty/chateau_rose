@@ -22,6 +22,18 @@ def cents_to_euros(cents_value):
 
 
 @register.filter
+def cents_to_euros_input(cents_value):
+    if cents_value in (None, ""):
+        return ""
+    try:
+        cents = Decimal(cents_value)
+    except InvalidOperation:
+        return ""
+    euros = (cents / Decimal(100)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return f"{euros:.2f}".replace(".", ",")
+
+
+@register.filter
 def format_french_datetime(value):
     if not value:
         return ""

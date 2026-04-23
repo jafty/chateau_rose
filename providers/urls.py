@@ -7,6 +7,7 @@ app_name = "providers"
 
 urlpatterns = [
     path("", views.index, name="providers_index"),
+    path("compte/", views.account, name="account"),
     path("inscription/", views.signup, name="signup"),
     path("demandes/<str:booking_id>/", views.booking_detail, name="booking_detail"),
     path(

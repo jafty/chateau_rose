@@ -2653,12 +2653,36 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
 .dashboard-table th, .dashboard-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #E5E7EB; }
 .dashboard-table th { color: var(--ink-secondary); font-size: 0.9rem; }
+.bookings-mobile-cards { display: none; }
+.booking-card-mobile { border: 1px solid #E5E7EB; border-radius: 12px; padding: 12px; margin-top: 10px; background: #fff; }
+.booking-card-mobile p { margin: 0 0 6px; }
 .status-pill { display: inline-block; padding: 6px 10px; background: #FEF2F2; color: #991B1B; border-radius: 999px; font-weight: 700; font-size: 0.85rem; }
 .login-form { display: grid; gap: 12px; margin-top: 14px; max-width: 420px; }
 .login-form label { font-weight: 700; }
 .login-form input { width: 100%; padding: 12px; border: 1px solid #E5E7EB; background: #fff; border-radius: 0; font-size: 0.95rem; }
+.stack-form-grid { display: grid; gap: 12px; }
+.stack-form-grid textarea,
+.stack-form-grid input[type="text"],
+.stack-form-grid input[type="number"],
+.stack-form-grid input[type="datetime-local"],
+.stack-form-grid input[type="url"],
+.stack-form-grid input[type="file"] { width: 100%; }
+.provider-inline-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.provider-photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.provider-photo-card img { width: 100%; height: 150px; object-fit: cover; border-radius: 10px; }
+.compact-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.compact-list li { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; display: grid; gap: 6px; }
+.service-edit-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; display: grid; gap: 12px; margin-top: 14px; }
+.adjustments-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.adjustment-list { display: grid; gap: 8px; }
+.adjustment-row { display: grid; grid-template-columns: 1fr 130px; gap: 8px; }
 
 @media (max-width: 640px) {
+    .bookings-desktop-table { display: none; }
+    .bookings-mobile-cards { display: block; }
+    .provider-inline-grid,
+    .adjustments-grid { grid-template-columns: 1fr; }
+
     .provider-profile,
     .providers-section,
     .provider-hero,
