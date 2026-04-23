@@ -2673,6 +2673,30 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .compact-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .compact-list li { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; display: grid; gap: 6px; }
 .service-edit-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; display: grid; gap: 12px; margin-top: 14px; }
+.provider-account-services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 14px;
+}
+.provider-account-services-grid .service-edit-card {
+    margin-top: 0;
+    align-content: start;
+}
+.provider-account-services-grid .provider-service-card__media {
+    aspect-ratio: 1 / 1;
+    background: #f4efea;
+    overflow: hidden;
+    border-radius: 10px;
+}
+.provider-account-services-grid .provider-service-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.service-edit-card form[hidden] {
+    display: none !important;
+}
 .adjustments-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .adjustment-list { display: grid; gap: 8px; }
 .adjustment-row { display: grid; grid-template-columns: 1fr 130px; gap: 8px; }
@@ -2713,7 +2737,8 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     .bookings-desktop-table { display: none; }
     .bookings-mobile-cards { display: block; }
     .provider-inline-grid,
-    .adjustments-grid { grid-template-columns: 1fr; }
+    .adjustments-grid,
+    .provider-account-services-grid { grid-template-columns: 1fr; }
     .adjustment-row { grid-template-columns: minmax(0, 1fr); }
     .account-page-hero { padding-top: 48px; }
 
