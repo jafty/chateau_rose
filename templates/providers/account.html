@@ -4,7 +4,7 @@
 {% block title %}Mon compte prestataire{% endblock %}
 
 {% block content %}
-<section class="container page-hero">
+<section class="container page-hero account-page-hero">
     <div class="paper-card" style="max-width:960px; margin: 0 auto;">
         <span class="pill">Mon compte</span>
         <h1 style="margin: 12px 0 10px;">Gérer mes prestations et disponibilités</h1>
@@ -18,8 +18,8 @@
     </div>
 </section>
 
-<section class="container" style="padding-bottom: 60px;">
-    <div class="paper-card" style="max-width:960px; margin: 0 auto 20px;">
+<section class="container provider-account-page">
+    <div class="paper-card form-card provider-account-card">
         <h3 class="section-title provider-section-title">Textes d'informations</h3>
         <form method="post" class="stack-form-grid">
             {% csrf_token %}
@@ -36,13 +36,13 @@
         </form>
     </div>
 
-    <div class="paper-card" style="max-width:960px; margin: 0 auto 20px;">
+    <div class="paper-card form-card provider-account-card">
         <h3 class="section-title provider-section-title">Photos de prestations</h3>
         <form method="post" enctype="multipart/form-data" class="stack-form-grid">
             {% csrf_token %}
             <input type="hidden" name="action" value="add_photo">
             <label>Ajouter une image {{ photo_form.image }}</label>
-            <label>…ou URL image {{ photo_form.image_url }}</label>
+            <label>…ou lien d'image {{ photo_form.image_url }}</label>
             <label>Légende {{ photo_form.caption }}</label>
             <label>Ordre {{ photo_form.order }}</label>
             <button class="btn" type="submit">Ajouter la photo</button>
@@ -65,7 +65,7 @@
         {% endif %}
     </div>
 
-    <div class="paper-card" style="max-width:960px; margin: 0 auto 20px;">
+    <div class="paper-card form-card provider-account-card">
         <h3 class="section-title provider-section-title">Créneaux ponctuellement indisponibles</h3>
         <form method="post" class="stack-form-grid provider-inline-grid">
             {% csrf_token %}
@@ -93,26 +93,27 @@
         {% endif %}
     </div>
 
-    <div class="paper-card" style="max-width:960px; margin: 0 auto;">
+    <div class="paper-card form-card provider-account-card">
         <h3 class="section-title provider-section-title">Services et suppléments</h3>
-        <p class="meta-line">Tu peux modifier le prix hors frais, l'image, les suppléments de longueurs et les ajustements généraux sans JSON.</p>
+        <p class="meta-line">Mets à jour facilement chaque prestation : tarif de base, photo, suppléments selon la longueur de cheveux et options complémentaires. Pas besoin de format technique.</p>
         {% for service, form in service_forms %}
             <form method="post" enctype="multipart/form-data" class="service-edit-card">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="save_service">
                 <input type="hidden" name="service_id" value="{{ service.id }}">
-                <h4 style="margin:0 0 10px;">{{ service.name }}</h4>
+                <h4 class="service-edit-title">{{ service.name }}</h4>
                 <div class="provider-inline-grid">
                     <label>Prix hors frais (€) {{ form.base_price_euros }}</label>
                     <label>Supplément mèches (€) {{ form.meche_bonus_euros }}</label>
                     <label>Supplément domicile (€) {{ form.at_home_bonus_euros }}</label>
-                    <label>Image upload {{ form.image }}</label>
-                    <label style="grid-column:1 / -1;">Image URL {{ form.image_url }}</label>
+                    <label>Photo de la prestation {{ form.image }}</label>
+                    <label style="grid-column:1 / -1;">Lien de la photo (optionnel) {{ form.image_url }}</label>
                 </div>
 
                 <div class="adjustments-grid">
                     <div>
                         <h5>Suppléments longueur</h5>
+                        <p class="meta-line">Exemple : +10€ pour cheveux longs.</p>
                         <div class="adjustment-list">
                             {% for label, cents in service.hair_length_adjustments.items %}
                                 <div class="adjustment-row">
@@ -120,16 +121,16 @@
                                     <input name="hair_price[]" value="{{ cents|cents_to_euros_input }}" placeholder="€" inputmode="decimal">
                                 </div>
                             {% endfor %}
-                            {% for i in "1234" %}
-                                <div class="adjustment-row">
-                                    <input name="hair_label[]" placeholder="Nouvelle longueur">
-                                    <input name="hair_price[]" placeholder="€" inputmode="decimal">
-                                </div>
-                            {% endfor %}
+                            <div class="adjustment-row">
+                                <input name="hair_label[]" placeholder="Nouvelle longueur">
+                                <input name="hair_price[]" placeholder="€" inputmode="decimal">
+                            </div>
                         </div>
+                        <button type="button" class="btn secondary adjustment-add-btn" data-target="hair">+ Ajouter une longueur</button>
                     </div>
                     <div>
                         <h5>Ajustements généraux</h5>
+                        <p class="meta-line">Exemple : +5€ pour motifs ou finition spéciale.</p>
                         <div class="adjustment-list">
                             {% for label, cents in service.general_adjustments.items %}
                                 <div class="adjustment-row">
@@ -137,13 +138,12 @@
                                     <input name="general_price[]" value="{{ cents|cents_to_euros_input }}" placeholder="€" inputmode="decimal">
                                 </div>
                             {% endfor %}
-                            {% for i in "1234" %}
-                                <div class="adjustment-row">
-                                    <input name="general_label[]" placeholder="Nouvel ajustement">
-                                    <input name="general_price[]" placeholder="€" inputmode="decimal">
-                                </div>
-                            {% endfor %}
+                            <div class="adjustment-row">
+                                <input name="general_label[]" placeholder="Nouvel ajustement">
+                                <input name="general_price[]" placeholder="€" inputmode="decimal">
+                            </div>
                         </div>
+                        <button type="button" class="btn secondary adjustment-add-btn" data-target="general">+ Ajouter un ajustement</button>
                     </div>
                 </div>
                 <button class="btn" type="submit">Enregistrer {{ service.name }}</button>
@@ -151,4 +151,20 @@
         {% endfor %}
     </div>
 </section>
+<script>
+document.querySelectorAll('.adjustment-add-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+        const type = button.dataset.target;
+        const list = button.parentElement.querySelector('.adjustment-list');
+        if (!list) return;
+        const row = document.createElement('div');
+        row.className = 'adjustment-row';
+        row.innerHTML = `
+            <input name="${type}_label[]" placeholder="${type === 'hair' ? 'Nouvelle longueur' : 'Nouvel ajustement'}">
+            <input name="${type}_price[]" placeholder="€" inputmode="decimal">
+        `;
+        list.appendChild(row);
+    });
+});
+</script>
 {% endblock %}
