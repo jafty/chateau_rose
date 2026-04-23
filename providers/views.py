@@ -296,6 +296,7 @@ def account(request):
     info_form = ProviderInfoForm(instance=provider)
     blocked_slot_form = ProviderBlockedSlotForm()
     photo_form = ProviderPhotoForm()
+    new_service_form = ProviderServiceForm()
     message = None
     error = None
 
@@ -321,6 +322,18 @@ def account(request):
                 else:
                     first_error = next(iter(service_form.errors.values()))[0] if service_form.errors else "Merci de corriger les champs du service."
                     error = f"Service « {service.name} » : {first_error}"
+            elif action == "add_service":
+                new_service_form = ProviderServiceForm(request.POST, request.FILES)
+                if new_service_form.is_valid():
+                    service = new_service_form.save(commit=False)
+                    service.provider = provider
+                    service.hair_length_adjustments = _adjustments_from_post(request, "new_hair")
+                    service.general_adjustments = _adjustments_from_post(request, "new_general")
+                    service.save()
+                    new_service_form = ProviderServiceForm()
+                    message = f"Service « {service.name} » ajouté."
+                else:
+                    error = "Merci de corriger les champs du nouveau service."
             elif action == "add_blocked_slot":
                 blocked_slot_form = ProviderBlockedSlotForm(request.POST)
                 if blocked_slot_form.is_valid():
@@ -340,16 +353,15 @@ def account(request):
                 if photo_form.is_valid():
                     photo = photo_form.save(commit=False)
                     photo.provider = provider
-                    photo.media_kind = ProviderPhoto.MEDIA_IMAGE
                     photo.save()
                     photo_form = ProviderPhotoForm()
-                    message = "Photo ajoutée."
+                    message = "Média ajouté."
                 else:
-                    error = "Merci de corriger la photo à ajouter."
+                    error = "Merci de corriger le média à ajouter."
             elif action == "delete_photo":
-                photo = get_object_or_404(provider.photos.filter(media_kind=ProviderPhoto.MEDIA_IMAGE), id=request.POST.get("photo_id"))
+                photo = get_object_or_404(provider.photos, id=request.POST.get("photo_id"))
                 photo.delete()
-                message = "Photo supprimée."
+                message = "Média supprimé."
         except (DomainError, InvalidOperation) as exc:
             error = str(exc)
 
@@ -364,7 +376,7 @@ def account(request):
         service_forms.append((service, form))
 
     blocked_slots = provider.blocked_slots.filter(is_recurring=False, is_active=True).order_by("starts_at")
-    photos = provider.photos.filter(media_kind=ProviderPhoto.MEDIA_IMAGE).order_by("order", "id")
+    photos = provider.photos.order_by("order", "id")
 
     return render(
         request,
@@ -379,5 +391,6 @@ def account(request):
             "blocked_slots": blocked_slots,
             "photo_form": photo_form,
             "photos": photos,
+            "new_service_form": new_service_form,
         },
     )
