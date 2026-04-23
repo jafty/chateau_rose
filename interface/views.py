@@ -719,7 +719,9 @@ def provider_detail(request, provider_id, quick_checkout=None):
         "question_form": question_form,
         "pricing_data": json.dumps(pricing_data),
         "default_starting_price": (
-            booking_requests.format_price(min(starting_prices)) if starting_prices else None
+            booking_requests.format_marketing_price(min(starting_prices))
+            if starting_prices
+            else None
         ),
         "salon_location_label": salon_location_label,
         "stripe_public_key": stripe_public_key,
