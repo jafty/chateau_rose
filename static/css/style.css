@@ -4223,3 +4223,321 @@ footer {
         margin-inline: 0;
     }
 }
+
+/* Booking recap page (scoped to this page only) */
+.booking-recap-page {
+    padding: clamp(40px, 6vw, 80px) 0;
+}
+
+.booking-recap-page .recap-layout {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: clamp(24px, 4vw, 40px);
+    align-items: start;
+}
+
+.booking-recap-page .recap-header {
+    margin-bottom: 32px;
+}
+
+.booking-recap-page .recap-header h1 {
+    font-size: clamp(2.2rem, 4vw, 3rem);
+    line-height: 1.1;
+    margin-bottom: 12px;
+}
+
+.booking-recap-page .recap-header p {
+    font-size: 1.1rem;
+    color: var(--ink-secondary);
+    font-weight: 500;
+    max-width: 780px;
+}
+
+.booking-recap-page .booking-recap-alert {
+    margin-bottom: 18px;
+}
+
+.booking-recap-page .recap-card,
+.booking-recap-page .receipt-card {
+    background: var(--bg-paper);
+    border-radius: 16px;
+    padding: clamp(20px, 4vw, 32px);
+    box-shadow: var(--shadow-paper);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.booking-recap-page .recap-card {
+    margin-bottom: 24px;
+}
+
+.booking-recap-page .recap-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    color: var(--ink-primary);
+    border-bottom: 1px dashed rgba(74, 59, 50, 0.15);
+    padding-bottom: 16px;
+}
+
+.booking-recap-page .recap-card-title--compact {
+    font-size: 1.15rem;
+    margin-bottom: 16px;
+}
+
+.booking-recap-page .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+}
+
+.booking-recap-page .timeline::before {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 10px;
+    bottom: 20px;
+    width: 2px;
+    background: rgba(223, 172, 182, 0.3);
+    z-index: 0;
+}
+
+.booking-recap-page .timeline-step {
+    display: flex;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.booking-recap-page .timeline-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--rose-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(223, 172, 182, 0.2);
+    color: var(--rose-accent);
+}
+
+.booking-recap-page .timeline-icon.active {
+    background: var(--rose-accent);
+    color: #fff;
+}
+
+.booking-recap-page .timeline-content h3 {
+    font-size: 1rem;
+    margin: 0 0 4px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    color: var(--ink-primary);
+}
+
+.booking-recap-page .timeline-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--ink-secondary);
+    line-height: 1.4;
+}
+
+.booking-recap-page .summary-list {
+    display: grid;
+    gap: 16px;
+}
+
+.booking-recap-page .summary-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.booking-recap-page .summary-item-icon {
+    color: var(--ink-secondary);
+    opacity: 0.7;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.booking-recap-page .summary-item-content strong {
+    display: block;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ink-secondary);
+    margin-bottom: 2px;
+}
+
+.booking-recap-page .summary-item-content span {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink-primary);
+}
+
+.booking-recap-page .summary-item-content .detail,
+.booking-recap-page .recap-free-text {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--ink-secondary);
+    margin-top: 2px;
+    line-height: 1.45;
+}
+
+.booking-recap-page .recap-actions {
+    margin-top: 24px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.booking-recap-page .recap-edit-btn {
+    width: auto;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+}
+
+.booking-recap-page .payment-sidebar {
+    position: sticky;
+    top: 100px;
+    display: grid;
+    gap: 24px;
+}
+
+.booking-recap-page .receipt-card {
+    background: #faf9f7;
+    border: 1px solid rgba(74, 59, 50, 0.1);
+}
+
+.booking-recap-page .receipt-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 10px;
+    font-size: 0.95rem;
+    color: var(--ink-secondary);
+}
+
+.booking-recap-page .receipt-line strong,
+.booking-recap-page .receipt-line--strong {
+    font-weight: 600;
+    color: var(--ink-primary);
+}
+
+.booking-recap-page .receipt-help {
+    margin: 2px 0 8px;
+    color: var(--ink-secondary);
+    font-size: 0.85rem;
+}
+
+.booking-recap-page .receipt-divider {
+    height: 1px;
+    border-bottom: 1px dashed rgba(74, 59, 50, 0.2);
+    margin: 16px 0;
+}
+
+.booking-recap-page .receipt-divider--spaced {
+    margin-top: 24px;
+}
+
+.booking-recap-page .price-highlight {
+    background: #fff;
+    border: 2px solid var(--rose-accent);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 20px 0;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(223, 172, 182, 0.15);
+}
+
+.booking-recap-page .price-highlight span {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--rose-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.booking-recap-page .price-highlight .amount {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--ink-primary);
+    line-height: 1;
+}
+
+.booking-recap-page .price-highlight p {
+    margin: 8px 0 0;
+    font-size: 0.85rem;
+    color: var(--ink-secondary);
+    line-height: 1.3;
+}
+
+.booking-recap-page .stripe-label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    color: var(--ink-primary);
+}
+
+.booking-recap-page .stripe-zone {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.booking-recap-page #payment-error {
+    margin-top: 12px;
+}
+
+.booking-recap-page .recap-submit-btn {
+    margin-top: 16px;
+    padding: 16px;
+    font-size: 1.05rem;
+}
+
+.booking-recap-page .trust-badges {
+    display: grid;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.booking-recap-page .trust-badge {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: var(--ink-secondary);
+    line-height: 1.4;
+}
+
+.booking-recap-page .trust-badge svg {
+    color: #155b32;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+}
+
+.booking-recap-page .recap-link-note {
+    padding: 0 8px;
+}
+
+@media (max-width: 900px) {
+    .booking-recap-page .recap-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-recap-page .payment-sidebar {
+        position: static;
+    }
+}

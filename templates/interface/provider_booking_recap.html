@@ -3,156 +3,223 @@
 {% block title %}Ton récapitulatif | Château Rose{% endblock %}
 
 {% block content %}
-<section class="thank-you-section">
-    <div class="container thank-you-shell">
-        <div class="paper-card thank-you-card" style="max-width: 760px; text-align: left;">
-            <h1 style="margin-bottom: 10px;">Vérifie ton récapitulatif</h1>
-            <p style="margin-bottom: 20px;">Tu fais ici une demande de rendez-vous avec empreinte bancaire, pas un paiement immédiat.</p>
+<section class="booking-recap-page">
+    <div class="container">
+        <div class="recap-header">
+            <h1>Dernière étape{% if payload.client_name %}, {{ payload.client_name }}{% endif %} !</h1>
+            <p>
+                Vérifie les informations de ton rendez-vous et sécurise ta demande.
+                <strong>Tu ne seras pas débité(e) aujourd'hui.</strong>
+            </p>
+        </div>
 
-            <div class="meta-line" style="margin-bottom: 14px;">
-                Prestataire : <strong>{{ provider.name }}</strong>
-            </div>
+        {% if error %}
+            <div class="alert error booking-recap-alert">{{ error }}</div>
+        {% endif %}
 
-            <div style="display:grid; gap: 12px; margin-bottom: 20px;">
-                <div class="summary-row"><strong>Prestation</strong><span>{{ payload.service_name|default:"Non renseignée" }}</span></div>
-                <div class="summary-row"><strong>Date souhaitée</strong><span>{{ desired_date_display }}</span></div>
-                <div class="summary-row">
-                    <strong>Lieu</strong>
-                    <span>
-                        {% if payload.location_preference == "salon" %}
-                            Chez la prestataire
-                        {% else %}
-                            À domicile
-                        {% endif %}
-                    </span>
-                </div>
-                {% if payload.location_preference != "salon" %}
-                    <div class="summary-row"><strong>Adresse</strong><span>{{ payload.client_address|default:"Non renseignée" }}</span></div>
-                {% endif %}
-                <div class="summary-row"><strong>Nom</strong><span>{{ payload.client_name|default:"Non renseigné" }}</span></div>
-                <div class="summary-row"><strong>Email</strong><span>{{ payload.client_email|default:"Non renseigné" }}</span></div>
-                <div class="summary-row"><strong>Précisions</strong><span>{{ payload.free_text|default:"Aucune précision" }}</span></div>
-                {% if service_fee_coupon_code %}
-                    <div class="summary-row"><strong>Code partenaire</strong><span>{{ service_fee_coupon_code }}</span></div>
-                {% endif %}
-            </div>
+        {% if is_completed %}
+            <div class="alert success booking-recap-alert">Cette demande a déjà été envoyée ✅</div>
+        {% endif %}
 
-            <div class="secure-badge" style="margin: 12px 0 18px;">
-                <span style="font-size: 1.5rem;">🔒</span>
-                <div>
-                    <strong class="secure-badge-title">Aucun montant n'est débité maintenant.</strong><br>
-                    Une empreinte bancaire est posée pour <strong>{{ deposit_price }}</strong>. Les frais de réservation (incluant acompte prestataire + frais de service Château Rose) ne sont prélevés que si <strong>{{ provider.name }}</strong> confirme le rendez-vous.
-                </div>
-            </div>
-            <div class="pricing-grid">
-                <article class="pricing-card pricing-card--primary">
-                    <p class="meta-line">Empreinte bancaire pour demander le créneau</p>
-                    <p class="pricing-amount">{{ deposit_price }}</p>
-                    <p class="meta-line">Pas de débit immédiat. Débit uniquement après confirmation de la prestataire.</p>
-                </article>
-                <article class="pricing-card">
-                    <p class="meta-line">Prix prestation (hors frais de service)</p>
-                    <p class="pricing-amount">{{ subtotal_price }}</p>
-                </article>
-                <article class="pricing-card">
-                    <p class="meta-line">Frais de service Château Rose</p>
-                    <p class="pricing-amount">{{ service_fee_price }}</p>
-                    <p class="meta-line">{% if service_fee_waived %}Offerts avec le code partenaire appliqué.{% else %}Inclus dans les frais de réservation.{% endif %}</p>
-                </article>
-                <article class="pricing-card">
-                    <p class="meta-line">Estimation totale</p>
-                    <p class="pricing-amount">{{ total_price }}</p>
-                    <p class="meta-line">Montant indicatif selon les options choisies.</p>
-                </article>
-                <article class="pricing-card">
-                    <p class="meta-line">À régler le jour J</p>
-                    <p class="pricing-amount">{{ remaining_price }}</p>
-                    <p class="meta-line">Paiement direct à {{ provider.name }} après déduction.</p>
-                </article>
-            </div>
-
-            {% if error %}<div class="alert error" style="margin-bottom:16px;">{{ error }}</div>{% endif %}
-
-            {% if is_completed %}
-                <div class="alert success" style="margin-bottom: 16px;">Cette demande a déjà été envoyée ✅</div>
-            {% endif %}
-
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <form method="post" action="" style="display:inline;">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="edit">
-                    <button type="submit" class="btn secondary">Modifier ma demande</button>
-                </form>
-            </div>
-
-            {% if not is_completed %}
-            <form method="post" id="recap-confirm-form" style="margin-top:16px;">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="confirm">
-                <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
-                {% if stripe_public_key %}
-                    <div class="form-field full-width" style="margin-bottom:14px;">
-                        <label>Saisis ta carte pour sécuriser ton créneau</label>
-                        <p class="meta-line" id="payment-hint" style="margin-top:6px;">Aucun débit avant confirmation finale par la prestataire.</p>
-                        <div id="payment-element" class="payment-element" style="min-height: 200px;"></div>
-                        <div class="alert error" id="payment-error" hidden style="margin-top: 10px;"></div>
+        <div class="recap-layout">
+            <div class="recap-details">
+                <article class="recap-card">
+                    <h2 class="recap-card-title">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 8v4l3 3"></path></svg>
+                        Comment ça se passe ?
+                    </h2>
+                    <div class="timeline">
+                        <div class="timeline-step">
+                            <div class="timeline-icon active" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                            </div>
+                            <div class="timeline-content">
+                                <h3>1. Empreinte bancaire (Maintenant)</h3>
+                                <p>Tu renseignes ta carte pour prouver ton sérieux. <strong>Aucun montant n'est prélevé.</strong></p>
+                            </div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="timeline-icon" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            </div>
+                            <div class="timeline-content">
+                                <h3>2. Validation par {{ provider.name }}</h3>
+                                <p>La prestataire a 48h pour accepter. Si elle accepte, l'empreinte est transformée en règlement. Si elle refuse, l'empreinte disparaît.</p>
+                            </div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="timeline-icon" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            </div>
+                            <div class="timeline-content">
+                                <h3>3. Le jour de la coiffure</h3>
+                                <p>Tu règles le reste directement auprès de {{ provider.name }} selon les conditions indiquées.</p>
+                            </div>
+                        </div>
                     </div>
-                {% endif %}
-                <button type="submit" class="btn">Sécuriser ce créneau</button>
-            </form>
-            {% endif %}
+                </article>
 
-            <p class="meta-line" style="margin-top: 16px;">Tu as aussi reçu ce lien par email, tu peux y revenir quand tu veux.</p>
+                <article class="recap-card">
+                    <h2 class="recap-card-title">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
+                        Ta demande de rendez-vous
+                    </h2>
+                    <div class="summary-list">
+                        <div class="summary-item">
+                            <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            <div class="summary-item-content">
+                                <strong>Prestataire</strong>
+                                <span>{{ provider.name }}</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4l3 3"></path></svg>
+                            <div class="summary-item-content">
+                                <strong>Prestation</strong>
+                                <span>{{ payload.service_name|default:"Non renseignée" }}</span>
+                                {% if payload.general_adjustments %}
+                                    <span class="detail">Ajustements : {{ payload.general_adjustments|join:", " }}</span>
+                                {% endif %}
+                                {% if payload.hair_length %}
+                                    <span class="detail">Longueur de cheveux : {{ payload.hair_length }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            <div class="summary-item-content">
+                                <strong>Date souhaitée</strong>
+                                <span>{{ desired_date_display }}</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                            <div class="summary-item-content">
+                                <strong>Lieu</strong>
+                                <span>
+                                    {% if payload.location_preference == "salon" %}
+                                        Chez la prestataire
+                                    {% else %}
+                                        À domicile
+                                    {% endif %}
+                                </span>
+                                {% if payload.location_preference != "salon" %}
+                                    <span class="detail">{{ payload.client_address|default:"Adresse non renseignée" }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16v16H4z"></path><path d="M8 9h8"></path><path d="M8 13h8"></path></svg>
+                            <div class="summary-item-content">
+                                <strong>Coordonnées</strong>
+                                <span>{{ payload.client_name|default:"Non renseigné" }}</span>
+                                <span class="detail">{{ payload.client_email|default:"Email non renseigné" }}</span>
+                            </div>
+                        </div>
+                        {% if payload.free_text %}
+                            <div class="summary-item">
+                                <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                <div class="summary-item-content">
+                                    <strong>Précisions</strong>
+                                    <span class="detail recap-free-text">{{ payload.free_text }}</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if service_fee_coupon_code %}
+                            <div class="summary-item">
+                                <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41 11 3.83a2 2 0 0 0-1.41-.58H4a2 2 0 0 0-2 2v5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l5.6-5.6a2 2 0 0 0 0-2.83Z"></path><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"></circle></svg>
+                                <div class="summary-item-content">
+                                    <strong>Code partenaire</strong>
+                                    <span>{{ service_fee_coupon_code }}</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="recap-actions">
+                        <form method="post" action="">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="edit">
+                            <button type="submit" class="btn secondary recap-edit-btn">Modifier ma demande</button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+
+            <aside class="payment-sidebar">
+                <article class="receipt-card">
+                    <h2 class="recap-card-title recap-card-title--compact">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Détail du règlement
+                    </h2>
+
+                    <div class="receipt-line">
+                        <span>Prestation</span>
+                        <span>{{ subtotal_price }}</span>
+                    </div>
+                    <div class="receipt-line">
+                        <span>Frais de service Château Rose</span>
+                        <span>{{ service_fee_price }}</span>
+                    </div>
+                    {% if service_fee_waived %}
+                        <p class="receipt-help">Frais de service offerts grâce au code partenaire.</p>
+                    {% endif %}
+
+                    <div class="receipt-divider"></div>
+
+                    <div class="receipt-line">
+                        <strong>Estimation totale du RDV</strong>
+                        <strong>{{ total_price }}</strong>
+                    </div>
+
+                    <div class="price-highlight">
+                        <span>Empreinte sécurisée requise</span>
+                        <div class="amount">{{ deposit_price }}</div>
+                        <p>Débit uniquement si le RDV est validé par {{ provider.name }}.</p>
+                    </div>
+
+                    <div class="receipt-line receipt-line--strong">
+                        <span>Reste à payer sur place</span>
+                        <span>{{ remaining_price }}</span>
+                    </div>
+
+                    <div class="receipt-divider receipt-divider--spaced"></div>
+
+                    {% if not is_completed %}
+                        <form method="post" id="recap-confirm-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="confirm">
+                            <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
+                            {% if stripe_public_key %}
+                                <label class="stripe-label">Saisis ta carte pour l'empreinte</label>
+                                <div class="stripe-zone">
+                                    <p class="meta-line" id="payment-hint">Aucun débit avant confirmation finale par la prestataire.</p>
+                                    <div id="payment-element" class="payment-element payment-element--tall"></div>
+                                    <div class="alert error" id="payment-error" hidden></div>
+                                </div>
+                            {% endif %}
+
+                            <button type="submit" class="btn recap-submit-btn">Sécuriser ma demande</button>
+                        </form>
+                    {% endif %}
+
+                    <div class="trust-badges">
+                        <div class="trust-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            <span>Paiement crypté et 100% sécurisé via Stripe.</span>
+                        </div>
+                        <div class="trust-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-10.05l5.67-5.67"></path></svg>
+                            <span>Annulation sans frais possible selon les conditions de la prestataire.</span>
+                        </div>
+                    </div>
+                </article>
+
+                <p class="meta-line recap-link-note">Tu as aussi reçu ce lien par email, tu peux y revenir quand tu veux.</p>
+            </aside>
         </div>
     </div>
 </section>
-<style>
-    .summary-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        background: rgba(163, 124, 91, 0.07);
-    }
-    .summary-row span {
-        text-align: right;
-    }
-    .pricing-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 12px;
-        margin: 14px 0 18px;
-    }
-    .pricing-card {
-        border: 1px solid rgba(163, 124, 91, 0.24);
-        border-radius: 12px;
-        padding: 12px;
-        background: #fff;
-    }
-    .pricing-card--primary {
-        border-color: rgba(31, 133, 73, 0.45);
-        background: rgba(31, 133, 73, 0.09);
-    }
-    .pricing-amount {
-        margin: 4px 0;
-        font-size: 1.15rem;
-        font-weight: 600;
-    }
-    .pricing-card--primary .pricing-amount {
-        font-size: 1.45rem;
-        font-weight: 700;
-    }
-    .pricing-card:not(.pricing-card--primary) .meta-line {
-        font-size: 0.9rem;
-        color: var(--ink-secondary);
-    }
-    .secure-badge-title {
-        font-size: 1.05rem;
-        font-weight: 800;
-        color: #155b32;
-    }
-</style>
 {% if stripe_public_key and not is_completed %}
 <script src="https://js.stripe.com/v3"></script>
 <script>
