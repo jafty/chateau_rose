@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load marketing_extras static %}
 
-{% block title %}{{ long_title|default:page_service_name|default:service.name }}{% if zone %} à {{ zone.name }}{% elif not is_sub_service_page %} à Toulouse{% endif %} | Château Rose{% endblock %}
+{% block title %}{{ long_title|default:page_service_name|default:service.name }}{% if zone %} à {{ zone.name }}{% else %} à Toulouse{% endif %} | Château Rose{% endblock %}
 {% block meta_description %}{{ meta_description }}{% endblock %}
 
 {% block extra_head %}
@@ -13,7 +13,7 @@
 <section class="container service-header service-header-wrap">
     <div class="service-header-paper">
         <div class="breadcrumbs"><a href="{% url 'interface:home' %}">Accueil</a> &nbsp;/&nbsp; <a href="{% url 'interface:home' %}#catalogue">Services</a> &nbsp;/&nbsp; {{ page_service_name|default:service.name }}</div>
-        <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% elif not is_sub_service_page %}à Toulouse{% endif %}</span></h1>
+        <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
         <a class="btn secondary" href="tel:{{ support_phone_tel }}" style="display:inline-flex;align-items:center;gap:0.45rem;margin-top:0.8rem;">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.8 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.3a2 2 0 0 1 2.1-.5c.8.4 1.7.7 2.6.8A2 2 0 0 1 22 16.9Z"></path></svg>
