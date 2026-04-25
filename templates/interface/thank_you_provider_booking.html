@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load marketing_extras %}
 
 {% block content %}
 <section class="thank-you-section">
@@ -11,6 +12,12 @@
                 <p>Ta demande a bien été transmise au profil partenaire.</p>
             {% endif %}
             <p>Tu recevras une confirmation dès que la prestataire valide le créneau.</p>
+            {% if provider_additional_info %}
+                <div class="paper-card" style="margin-top: 16px; text-align: left;">
+                    <h3 style="margin-bottom: 8px;">Bon à savoir avant le RDV</h3>
+                    <p style="margin: 0;">{{ provider_additional_info|sanitize_marketing_html }}</p>
+                </div>
+            {% endif %}
             <p><a class="btn" href="{% url 'interface:home' %}">Retour à l'accueil</a></p>
         </div>
     </div>

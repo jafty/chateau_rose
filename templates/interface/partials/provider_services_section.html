@@ -42,7 +42,7 @@
                                     <h4>{{ service.name }}</h4>
                                     <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
                                 </div>
-                                <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Voir le tarif estimé</button>
+                                <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Estimer et réserver</button>
                             </div>
                         </article>
                     {% endfor %}
@@ -63,7 +63,7 @@
                             <h4>{{ service.name }}</h4>
                             <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
                         </div>
-                    <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Voir le tarif estimé</button>
+                    <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Estimer et réserver</button>
                 </div>
             </article>
         {% empty %}

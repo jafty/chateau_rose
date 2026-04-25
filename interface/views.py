@@ -19,7 +19,15 @@ from django.utils.text import slugify
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 
-from booking.models import Booking, Provider, ProviderServiceFeeCoupon, Service, ServiceCategory, Zone
+from booking.models import (
+    Booking,
+    Provider,
+    ProviderBeforeAppointmentItem,
+    ProviderServiceFeeCoupon,
+    Service,
+    ServiceCategory,
+    Zone,
+)
 from chateaurose.domain.exceptions import DomainError, ValidationError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
 from chateaurose.domain.services.pricing import compute_checkout_amounts_cents, estimate_service_price_cents
@@ -39,6 +47,7 @@ from interface.marketing_cities import CITY_PAGE_COPY, MARKETING_CITY_ENTRIES
 from interface.models import (
     ClientReview,
     MarketingService,
+    MarketingSubService,
     MarketingServiceZone,
     MarketingZone,
     ProviderBookingDraft,
@@ -60,6 +69,8 @@ provider_directory = DjangoProviderDirectory()
 
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
 SUPPORT_EMAIL = (getattr(settings, "OPERATIONS_EMAIL", "") or "japhet.situmonana@gmail.com").strip()
+SUPPORT_PHONE_DISPLAY = "+33 6 49 49 14 49"
+SUPPORT_PHONE_TEL = "+33649491449"
 
 
 def _provider_coupon_is_valid(provider: Provider, code: str | None) -> bool:
@@ -696,6 +707,9 @@ def provider_detail(request, provider_id, quick_checkout=None):
         ]
 
     provider_photos = list(provider.photos.all())
+    before_appointment_items = list(
+        ProviderBeforeAppointmentItem.objects.filter(provider=provider)
+    )
     hero_photos = [
         photo
         for photo in provider_photos
@@ -712,6 +726,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
         "zones": zones,
         "hero_photos": hero_photos,
         "gallery_photos": gallery_photos,
+        "before_appointment_items": before_appointment_items,
         "message": message,
         "question_message": question_message,
         "error": error,
@@ -735,6 +750,8 @@ def provider_detail(request, provider_id, quick_checkout=None):
         "recap_token": recap_token,
         "recap_message": recap_message,
         "can_save_partial_prefill": can_save_partial_prefill,
+        "support_phone_display": SUPPORT_PHONE_DISPLAY,
+        "support_phone_tel": SUPPORT_PHONE_TEL,
     }
     if request.headers.get("HX-Request") == "true":
         return render(request, "interface/partials/provider_services_section.html", context)
@@ -803,7 +820,9 @@ def quick_checkout_page(request, checkout_id):
                     },
                 )
                 thank_you_url = reverse("interface:thank_you_provider_booking")
-                return redirect(f"{thank_you_url}?provider={provider.name}")
+                return redirect(
+                    f"{thank_you_url}?provider={provider.name}&provider_id={provider.id}"
+                )
             except DomainError as exc:
                 _release_payment_auth_safely(payment_auth_id)
                 error = _friendly_domain_error_message(exc)
@@ -882,7 +901,9 @@ def provider_booking_recap(request, token):
             return redirect(f"{reverse('interface:provider_detail', args=[provider.id])}?recap={draft.token}#booking-wizard")
         if draft.completed_at:
             thank_you_url = reverse("interface:thank_you_provider_booking")
-            return redirect(f"{thank_you_url}?provider={provider.name}")
+            return redirect(
+                f"{thank_you_url}?provider={provider.name}&provider_id={provider.id}"
+            )
 
         payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
         if require_payment_auth and not payment_auth_id:
@@ -945,7 +966,9 @@ def provider_booking_recap(request, token):
                 _mark_recap_completed_if_needed(str(draft.token))
                 request.session["provider_request_message"] = f"Demande envoyée. ID: {booking.id}"
                 thank_you_url = reverse("interface:thank_you_provider_booking")
-                return redirect(f"{thank_you_url}?provider={provider.name}")
+                return redirect(
+                    f"{thank_you_url}?provider={provider.name}&provider_id={provider.id}"
+                )
 
     return render(
         request,
@@ -1550,6 +1573,10 @@ def service_page(request, service_slug: str):
     providers = list(
         Provider.objects.visible_on_website().filter(marketing_services__slug=service_slug).distinct()
     )
+    sub_services = list(
+        MarketingSubService.objects.filter(service=service_meta, is_visible=True)
+        .prefetch_related("providers")
+    )
     service_request_redirect = _build_service_request_redirect(request)
     if service_request_redirect:
         return service_request_redirect
@@ -1594,6 +1621,11 @@ def service_page(request, service_slug: str):
             "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
             "request_form": request_form,
             "request_success": request_success,
+            "sub_services": sub_services,
+            "is_sub_service_page": False,
+            "page_service_name": service_meta.name,
+            "support_phone_display": SUPPORT_PHONE_DISPLAY,
+            "support_phone_tel": SUPPORT_PHONE_TEL,
         },
     )
 
@@ -1619,6 +1651,16 @@ def service_city_page(request, service_slug: str, city_slug: str):
             marketing_services__slug=service_slug,
             zones__slug=zone.slug,
         ).distinct()
+    )
+    sub_services = list(
+        MarketingSubService.objects.filter(
+            service=service_meta,
+            is_visible=True,
+            providers__zones__slug=zone.slug,
+            providers__is_visible_on_website=True,
+        )
+        .distinct()
+        .prefetch_related("providers")
     )
     service_request_redirect = _build_service_request_redirect(request)
     if service_request_redirect:
@@ -1658,6 +1700,11 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
             "request_form": request_form,
             "request_success": request_success,
+            "sub_services": sub_services,
+            "is_sub_service_page": False,
+            "page_service_name": service_meta.name,
+            "support_phone_display": SUPPORT_PHONE_DISPLAY,
+            "support_phone_tel": SUPPORT_PHONE_TEL,
         },
     )
 
@@ -1683,6 +1730,16 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             marketing_services__slug=service_slug,
             zones__slug=zone.slug,
         ).distinct()
+    )
+    sub_services = list(
+        MarketingSubService.objects.filter(
+            service=service_meta,
+            is_visible=True,
+            providers__zones__slug=zone.slug,
+            providers__is_visible_on_website=True,
+        )
+        .distinct()
+        .prefetch_related("providers")
     )
     service_request_redirect = _build_service_request_redirect(request)
     if service_request_redirect:
@@ -1722,6 +1779,72 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
             "request_form": request_form,
             "request_success": request_success,
+            "sub_services": sub_services,
+            "is_sub_service_page": False,
+            "page_service_name": service_meta.name,
+            "support_phone_display": SUPPORT_PHONE_DISPLAY,
+            "support_phone_tel": SUPPORT_PHONE_TEL,
+        },
+    )
+
+
+def sub_service_page(request, service_slug: str, sub_service_slug: str):
+    service_meta = _get_service_or_404(service_slug)
+    sub_service = get_object_or_404(
+        MarketingSubService,
+        service=service_meta,
+        slug=sub_service_slug,
+        is_visible=True,
+    )
+    providers = list(
+        Provider.objects.visible_on_website()
+        .filter(marketing_sub_services=sub_service)
+        .distinct()
+    )
+
+    service_request_redirect = _build_service_request_redirect(request)
+    if service_request_redirect:
+        return service_request_redirect
+
+    request_form, request_success = _build_service_request_form(
+        request, service_meta, zone=None
+    )
+    if request_form == "redirect":
+        return redirect("interface:thank_you_quick_request")
+    if request_form is None:
+        return redirect(f"{request.path}?anchor=service-request")
+
+    service_content = _to_service_content(service_meta)
+    marketing_content = build_marketing_content(service=service_content)
+    service_schema = _build_service_schema(request, sub_service.name, None)
+    return render(
+        request,
+        "interface/service_page.html",
+        {
+            "service": service_meta,
+            "sub_service": sub_service,
+            "zone": None,
+            "providers": providers,
+            "zones": [],
+            "intro": sub_service.intro or marketing_content.intro,
+            "short_intro": sub_service.short_intro or marketing_content.short_intro,
+            "long_description": marketing_content.long_description,
+            "long_title": sub_service.name,
+            "city_intro": marketing_content.location_intro,
+            "highlights": marketing_content.highlights,
+            "hero_image": sub_service.resolved_image or marketing_content.hero_image,
+            "gallery_images": marketing_content.gallery,
+            "meta_description": marketing_content.meta_description,
+            "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
+            "request_form": request_form,
+            "request_success": request_success,
+            "sub_services": list(
+                MarketingSubService.objects.filter(service=service_meta, is_visible=True)
+            ),
+            "is_sub_service_page": True,
+            "page_service_name": sub_service.name,
+            "support_phone_display": SUPPORT_PHONE_DISPLAY,
+            "support_phone_tel": SUPPORT_PHONE_TEL,
         },
     )
 
@@ -1737,10 +1860,18 @@ def thank_you_quick_request(request):
 
 def thank_you_provider_booking(request):
     provider_name = request.GET.get("provider", "").strip()
+    provider_id = (request.GET.get("provider_id") or "").strip()
+    provider_additional_info = ""
+    if provider_id.isdigit():
+        provider = Provider.objects.filter(id=int(provider_id)).only("additional_info").first()
+        provider_additional_info = (getattr(provider, "additional_info", "") or "").strip()
     return render(
         request,
         "interface/thank_you_provider_booking.html",
-        {"provider_name": provider_name},
+        {
+            "provider_name": provider_name,
+            "provider_additional_info": provider_additional_info,
+        },
     )
 
 

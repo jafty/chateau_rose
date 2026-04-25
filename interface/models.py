@@ -66,6 +66,58 @@ class MarketingService(models.Model):
         return super().save(*args, **kwargs)
 
 
+class MarketingSubService(models.Model):
+    service = models.ForeignKey(
+        MarketingService,
+        on_delete=models.CASCADE,
+        related_name="sub_services",
+    )
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255)
+    intro = models.TextField(blank=True)
+    short_intro = models.TextField(blank=True)
+    image = models.ImageField(upload_to="marketing/sub_services/main/", blank=True, null=True)
+    image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text=(
+            "Upload an image or provide an absolute URL, /root-relative path, "
+            "or relative static asset path."
+        ),
+    )
+    providers = models.ManyToManyField(
+        "booking.Provider",
+        related_name="marketing_sub_services",
+        blank=True,
+    )
+    is_visible = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ("order", "name")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("service", "slug"),
+                name="unique_marketing_sub_service_slug_per_service",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.service.name} · {self.name}"
+
+    @property
+    def resolved_image(self):
+        if self.image:
+            return self.image.url
+        return self.image_url or self.service.resolved_main_image
+
+    def save(self, *args, **kwargs):
+        if _should_compress_image(self, "image"):
+            compress_image_field(self.image, max_px=1200, quality=80)
+        return super().save(*args, **kwargs)
+
+
 class MarketingZone(models.Model):
     zone = models.OneToOneField(
         "booking.Zone",
