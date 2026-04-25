@@ -544,11 +544,18 @@
     <div class="provider-page-header">
         <div class="provider-hero-card provider-surface-stack provider-hero-content">
             <div class="provider-hero-badges">
-                <span class="pill"><span class="verified-pill-icon" aria-hidden="true">✓</span> Prestataire vérifié</span>
-                <span class="pill">{{ provider.location_mode_label }}</span>
+                <span class="pill"><span class="verified-pill-icon" aria-hidden="true">✓</span> Prestataire vérifiée</span>
+                <span class="pill">
+                    {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
+                        Reçoit uniquement
+                    {% elif provider.location_mode == provider.LOCATION_MODE_CLIENT_HOME_ONLY %}
+                        Se déplace uniquement
+                    {% else %}
+                        Reçoit ou se déplace
+                    {% endif %}
+                </span>
             </div>
             <h1 class="provider-page-title">{{ provider.display_h1 }}</h1>
-            <p class="lead">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p>
             <div class="provider-header-ctas">
                 <a href="#services-list" class="btn">
                     Voir les tarifs et réserver
@@ -557,8 +564,11 @@
                         <path d="m19 12-7 7-7-7"></path>
                     </svg>
                 </a>
-                <a href="#provider-gallery" class="btn secondary">
-                    Voir les réalisations
+                <a href="tel:{{ support_phone_tel }}" class="btn secondary">
+                    <svg class="provider-cta-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.8 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.3a2 2 0 0 1 2.1-.5c.8.4 1.7.7 2.6.8A2 2 0 0 1 22 16.9Z"></path>
+                    </svg>
+                    Un doute ? Appelez-nous
                 </a>
             </div>
         </div>
@@ -691,26 +701,17 @@
                             <path d="M12 10v6"></path>
                             <path d="M12 7h.01"></path>
                         </svg>
-                        Bon à savoir
+                        Avant le RDV
                     </h3>
-                    <div class="provider-highlights-grid">
-                        <div class="provider-highlights-column">
-                            <h4>Avant le rendez-vous</h4>
-                            <div class="provider-note">
-                                {{ provider.additional_info|default:"Ajoute ici les informations utiles à lire avant réservation : mèches à prévoir, moyens de paiement, détails pratiques ou précisions importantes."|sanitize_marketing_html }}
-                            </div>
-                        </div>
-                        <div class="provider-highlights-column">
-                            <h4>Réservation</h4>
-                            <div class="provider-note">
-                                <ul>
-                                    <li>Choisis une prestation pour obtenir une estimation immédiate.</li>
-                                    <li>Ajoute une photo de tes cheveux pour aider la prestataire à confirmer.</li>
-                                    <li>Le récapitulatif affiche clairement les frais de réservation déduits du total à régler chez la prestataire.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+                    <ul class="highlight-list pink-checks">
+                        {% for item in before_appointment_items %}
+                            <li>{{ item.label }}</li>
+                        {% empty %}
+                            <li>Mèches non fournies</li>
+                            <li>Retards facturés</li>
+                            <li>Merci de venir avec les cheveux propres et démêlés</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </section>
 
@@ -726,7 +727,7 @@
             {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
 
                 <div class="provider-form-card inline-form-card" id="booking-wizard">
-                    <h3 class="wizard-heading">Voir le tarif estimé</h3>
+                    <h3 class="wizard-heading">Estimer et réserver</h3>
 
                     {% if not is_quick_checkout %}
                     <div class="step-progress">
@@ -762,6 +763,16 @@
                                 <p class="meta-line">Le montant à régler maintenant est précisé au récapitulatif.</p>
                                 <span class="sr-only" id="sticky-price-value">-- €</span>
                             </div>
+                            <div class="sticky-price-bar">
+                                <span class="total-label">Besoin d'être rassurée ?</span>
+                                <p class="meta-line">Notre équipe te répond et t'accompagne avant la réservation.</p>
+                                <a href="tel:{{ support_phone_tel }}" class="btn btn-accent" style="margin-top:0.65rem;display:inline-flex;align-items:center;gap:0.5rem;">
+                                    <svg class="provider-cta-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.8 2.6a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.5-1.3a2 2 0 0 1 2.1-.5c.8.4 1.7.7 2.6.8A2 2 0 0 1 22 16.9Z"></path>
+                                    </svg>
+                                    Appeler le {{ support_phone_display }}
+                                </a>
+                            </div>
                         </aside>
                         {% endif %}
                     </div>
@@ -770,7 +781,7 @@
             </section>
 
             <section class="content-section" id="provider-gallery">
-                <h3 class="section-title provider-section-title">Réalisations</h3>
+                <h3 class="section-title provider-section-title">Clientes satisfaites</h3>
                 <div class="provider-gallery-card">
                     {% if gallery_photos %}
                         <div class="photo-grid provider-gallery-grid" data-gallery-grid>
@@ -833,6 +844,13 @@
                         </div>
                         <div class="gallery-modal__thumbs" data-gallery-thumbs></div>
                     </div>
+                </div>
+            </section>
+
+            <section class="content-section">
+                <div class="provider-sidebar-card provider-surface-stack">
+                    <h3 class="provider-card-title">À propos de {{ provider.name }}</h3>
+                    <p class="provider-note">{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p>
                 </div>
             </section>
 

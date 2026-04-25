@@ -198,7 +198,8 @@ class QuickCheckoutViewTests(TestCase):
         booking = Booking.objects.get()
         self.assertRedirects(
             response,
-            reverse("interface:thank_you_provider_booking") + f"?provider={self.provider.name}",
+            reverse("interface:thank_you_provider_booking")
+            + f"?provider={self.provider.name}&provider_id={self.provider.id}",
             fetch_redirect_response=False,
         )
         self.assertEqual(booking.status, "SUBMITTED")

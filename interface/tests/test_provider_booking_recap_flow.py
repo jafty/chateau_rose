@@ -20,6 +20,7 @@ class ProviderBookingRecapFlowTests(TestCase):
             name="Diva",
             salon_zone="Toulouse Centre",
             salon_address="12 rue des Fleurs, Toulouse",
+            additional_info="Prévoir 10 minutes d'avance.",
         )
         self.zone = Zone.objects.create(name="Toulouse", slug="toulouse")
         ProviderZone.objects.create(provider=self.provider, zone=self.zone)
@@ -101,6 +102,17 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertEqual(Booking.objects.count(), 1)
         draft.refresh_from_db()
         self.assertIsNotNone(draft.completed_at)
+        self.assertIn(f"provider_id={self.provider.id}", submission["Location"])
+
+    def test_thank_you_page_displays_provider_additional_info(self):
+        response = self.client.get(
+            reverse("interface:thank_you_provider_booking")
+            + f"?provider={self.provider.name}&provider_id={self.provider.id}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Bon à savoir avant le RDV")
+        self.assertContains(response, "Prévoir 10 minutes d'avance.")
 
     def test_recap_edit_redirects_to_booking_section(self):
         self.client.post(

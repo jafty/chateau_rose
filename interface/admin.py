@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.html import format_html, format_html_join
 
 from import_export.admin import ImportExportModelAdmin
@@ -14,6 +15,7 @@ from interface.resources import (
 from interface.models import (
     ClientReview,
     MarketingService,
+    MarketingSubService,
     MarketingServiceImage,
     MarketingServiceZone,
     MarketingZone,
@@ -61,6 +63,33 @@ class MarketingServiceAdmin(ImportExportModelAdmin):
     )
     inlines = [MarketingServiceImageInline]
     resource_class = MarketingServiceResource
+
+
+@admin.register(MarketingSubService)
+class MarketingSubServiceAdmin(admin.ModelAdmin):
+    class Form(forms.ModelForm):
+        providers = forms.ModelMultipleChoiceField(
+            queryset=None,
+            required=False,
+            widget=FilteredSelectMultiple("prestataires", is_stacked=False),
+        )
+
+        class Meta:
+            model = MarketingSubService
+            fields = "__all__"
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            from booking.models import Provider
+
+            self.fields["providers"].queryset = Provider.objects.order_by("name")
+
+    form = Form
+    list_display = ("name", "service", "is_visible", "order")
+    list_filter = ("service", "is_visible")
+    search_fields = ("name", "slug", "service__name")
+    prepopulated_fields = {"slug": ("name",)}
+    autocomplete_fields = ("service",)
 
 
 @admin.register(MarketingZone)

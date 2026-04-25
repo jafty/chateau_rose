@@ -251,6 +251,22 @@ class ServiceCategory(models.Model):
         return f"{self.name} ({self.provider})"
 
 
+class ProviderBeforeAppointmentItem(models.Model):
+    provider = models.ForeignKey(
+        Provider,
+        on_delete=models.CASCADE,
+        related_name="before_appointment_items",
+    )
+    label = models.CharField(max_length=255)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ("order", "id")
+
+    def __str__(self):
+        return f"{self.provider.name} · {self.label}"
+
+
 class ProviderPhoto(models.Model):
     MEDIA_IMAGE = "image"
     MEDIA_VIDEO = "video"

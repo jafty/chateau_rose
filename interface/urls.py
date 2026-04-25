@@ -51,6 +51,11 @@ urlpatterns = [
     path("bookings/<str:booking_id>/confirmation/", views.client_confirmation, name="client_confirmation"),
     path("bookings/<str:booking_id>/proposition/", views.client_proposal, name="client_proposal"),
     path("services/<slug:service_slug>/", views.service_page, name="service_page"),
+    path(
+        "services/<slug:service_slug>/sous-services/<slug:sub_service_slug>/",
+        views.sub_service_page,
+        name="sub_service_page",
+    ),
     path("services/<slug:service_slug>/<slug:city_slug>/", views.service_city_page, name="service_city_page"),
     path(
         "services/<slug:service_slug>/<slug:city_slug>/<slug:district_slug>/",

@@ -8,7 +8,15 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from booking.models import Booking, Provider, ProviderPhoto, ProviderZone, Service, Zone
+from booking.models import (
+    Booking,
+    Provider,
+    ProviderBeforeAppointmentItem,
+    ProviderPhoto,
+    ProviderZone,
+    Service,
+    Zone,
+)
 from interface.models import ProviderBookingDraft
 
 
@@ -257,3 +265,20 @@ class ProviderRequestUploadTests(TestCase):
         self.assertIn("look-0.jpg", hero_section)
         self.assertIn("look-3.jpg", hero_section)
         self.assertNotIn("look-4.jpg", hero_section)
+
+    def test_provider_detail_renders_before_appointment_checklist_and_call_cta(self):
+        ProviderBeforeAppointmentItem.objects.create(
+            provider=self.provider,
+            label="Mèches non fournies",
+            order=1,
+        )
+
+        response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Avant le RDV")
+        self.assertContains(response, "Mèches non fournies")
+        self.assertContains(response, "Un doute ? Appelez-nous")
+        self.assertContains(response, "Clientes satisfaites")
+        self.assertContains(response, "À propos de Divine")
+        self.assertContains(response, "Estimer et réserver")

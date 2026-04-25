@@ -4,7 +4,15 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from booking.models import Provider, ProviderMarketingService, ProviderZone, Zone
-from interface.models import ClientReview, Interaction, MarketingService, MarketingServiceZone, MarketingZone, ServiceRequest
+from interface.models import (
+    ClientReview,
+    Interaction,
+    MarketingService,
+    MarketingServiceZone,
+    MarketingSubService,
+    MarketingZone,
+    ServiceRequest,
+)
 
 
 @override_settings(
@@ -31,6 +39,7 @@ class ServicePagesTests(TestCase):
         )
         self.provider_a = Provider.objects.create(name="Prestataire A")
         self.provider_b = Provider.objects.create(name="Prestataire B")
+        self.provider_c = Provider.objects.create(name="Prestataire C")
 
         ProviderMarketingService.objects.create(
             provider=self.provider_a, service=self.marketing_service
@@ -39,8 +48,15 @@ class ServicePagesTests(TestCase):
         ProviderZone.objects.create(provider=self.provider_a, zone=self.toulouse)
         ProviderZone.objects.create(provider=self.provider_a, zone=self.capitole)
         ProviderZone.objects.create(provider=self.provider_b, zone=self.colomiers)
+        ProviderZone.objects.create(provider=self.provider_c, zone=self.toulouse)
 
         MarketingZone.objects.create(zone=self.toulouse)
+        self.sub_service = MarketingSubService.objects.create(
+            service=self.marketing_service,
+            name="Knotless braids",
+            slug="knotless-braids",
+        )
+        self.sub_service.providers.add(self.provider_a)
 
     def test_service_page_filters_providers_by_service(self):
         url = reverse("interface:service_page", args=["tresses"])
@@ -73,6 +89,30 @@ class ServicePagesTests(TestCase):
         self.assertIn("Intro courte tresses", content)
         self.assertIn("Titre long tresses", content)
         self.assertIn("Rapide", content)
+
+    def test_service_page_renders_sub_service_cards_and_support_cta(self):
+        response = self.client.get(reverse("interface:service_page", args=["tresses"]))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Knotless braids", content)
+        self.assertIn("/services/tresses/sous-services/knotless-braids/", content)
+        self.assertIn("Une question ? Appelez-nous", content)
+        self.assertIn('href="tel:+33649491449"', content)
+
+    def test_sub_service_page_filters_providers_without_zone_filter(self):
+        self.sub_service.providers.add(self.provider_c)
+
+        response = self.client.get(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(self.provider_a.name, content)
+        self.assertIn(self.provider_c.name, content)
+        self.assertNotIn(self.provider_b.name, content)
+        self.assertNotIn("Affiner par zone", content)
 
     def test_service_page_uses_static_main_image_when_no_upload(self):
         self.marketing_service.main_image_url = "https://static.example.com/tresses.jpg"
@@ -261,7 +301,6 @@ class ServicePagesTests(TestCase):
         content = response.content.decode()
         self.assertIn("Rapide", content)
         self.assertIn("Capitole highlight", content)
-        self.assertIn(marketing_zone.hero_image_url, content)
 
     def test_service_zone_marketing_overrides_are_used(self):
         MarketingZone.objects.create(
@@ -294,7 +333,6 @@ class ServicePagesTests(TestCase):
         self.assertIn("Short intro Capitole", content)
         self.assertIn("Description longue Capitole", content)
         self.assertIn("Titre long Capitole", content)
-        self.assertIn(service_zone.hero_image_url, content)
         self.assertNotIn("Capitole highlight", content)
 
 

@@ -18,6 +18,7 @@ from booking.resources import (
 from .models import (
     Booking,
     Provider,
+    ProviderBeforeAppointmentItem,
     ProviderMarketingService,
     ProviderBlockedSlot,
     ProviderPhoto,
@@ -190,6 +191,16 @@ class ProviderPhotoInline(admin.TabularInline):
 
 
 ProviderAdmin.inlines.append(ProviderPhotoInline)
+
+
+class ProviderBeforeAppointmentItemInline(admin.TabularInline):
+    model = ProviderBeforeAppointmentItem
+    extra = 1
+    fields = ("label", "order")
+    ordering = ("order", "id")
+
+
+ProviderAdmin.inlines.append(ProviderBeforeAppointmentItemInline)
 
 
 @admin.register(ProviderServiceFeeCoupon)
