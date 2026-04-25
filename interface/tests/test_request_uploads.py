@@ -278,7 +278,7 @@ class ProviderRequestUploadTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Avant le RDV")
         self.assertContains(response, "Mèches non fournies")
-        self.assertContains(response, "Un doute ? appelle-nous")
+        self.assertContains(response, "Un doute ? Appelle-nous")
         self.assertContains(response, "Clientes satisfaites")
         self.assertContains(response, "À propos de Divine")
         self.assertContains(response, "Estimer et réserver")

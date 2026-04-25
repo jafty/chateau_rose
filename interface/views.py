@@ -1568,6 +1568,13 @@ def _build_service_schema(request, service_name: str, zone_name: str | None):
     }
 
 
+AT_HOME_MARKETING_COPY = (
+    "Réserve facilement une prestation à domicile avec une prestataire ou un prestataire "
+    "qui se déplace. Même fonctionnement pour tous les services : tu compares les profils, "
+    "tu vérifies les tarifs, puis tu réserves selon tes disponibilités."
+)
+
+
 def service_page(request, service_slug: str):
     service_meta = _get_service_or_404(service_slug)
     providers = list(
@@ -1623,7 +1630,11 @@ def service_page(request, service_slug: str):
             "request_success": request_success,
             "sub_services": sub_services,
             "is_sub_service_page": False,
+            "is_at_home_page": False,
             "page_service_name": service_meta.name,
+            "seo_section_heading": f"{service_meta.name} : ce qu'il faut savoir",
+            "seo_intro": intro,
+            "seo_long_description": long_description,
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
         },
@@ -1702,7 +1713,11 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "request_success": request_success,
             "sub_services": sub_services,
             "is_sub_service_page": False,
+            "is_at_home_page": False,
             "page_service_name": service_meta.name,
+            "seo_section_heading": f"{service_meta.name} : ce qu'il faut savoir",
+            "seo_intro": intro,
+            "seo_long_description": long_description,
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
         },
@@ -1781,7 +1796,11 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             "request_success": request_success,
             "sub_services": sub_services,
             "is_sub_service_page": False,
+            "is_at_home_page": False,
             "page_service_name": service_meta.name,
+            "seo_section_heading": f"{service_meta.name} : ce qu'il faut savoir",
+            "seo_intro": intro,
+            "seo_long_description": long_description,
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
         },
@@ -1842,7 +1861,120 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
                 MarketingSubService.objects.filter(service=service_meta, is_visible=True)
             ),
             "is_sub_service_page": True,
+            "is_at_home_page": False,
             "page_service_name": sub_service.name,
+            "seo_section_heading": f"{sub_service.name} : l'essentiel",
+            "seo_intro": sub_service.short_intro or sub_service.intro or marketing_content.short_intro,
+            "seo_long_description": "",
+            "support_phone_display": SUPPORT_PHONE_DISPLAY,
+            "support_phone_tel": SUPPORT_PHONE_TEL,
+        },
+    )
+
+
+def service_at_home_page(request, service_slug: str):
+    service_meta = _get_service_or_404(service_slug)
+    providers = list(
+        Provider.objects.visible_on_website()
+        .filter(marketing_services__slug=service_slug)
+        .filter(
+            location_mode__in=[
+                Provider.LOCATION_MODE_CLIENT_HOME_ONLY,
+                Provider.LOCATION_MODE_HYBRID,
+            ]
+        )
+        .distinct()
+    )
+
+    service_content = _to_service_content(service_meta)
+    marketing_content = build_marketing_content(service=service_content)
+    page_service_name = f"{service_meta.name} à domicile"
+    service_schema = _build_service_schema(request, page_service_name, None)
+    return render(
+        request,
+        "interface/service_page.html",
+        {
+            "service": service_meta,
+            "zone": None,
+            "providers": providers,
+            "zones": [],
+            "intro": AT_HOME_MARKETING_COPY,
+            "short_intro": AT_HOME_MARKETING_COPY,
+            "long_description": "",
+            "long_title": page_service_name,
+            "city_intro": marketing_content.location_intro,
+            "highlights": marketing_content.highlights,
+            "hero_image": marketing_content.hero_image,
+            "gallery_images": marketing_content.gallery,
+            "meta_description": f"Trouve facilement {service_meta.name.lower()} à domicile à Toulouse.",
+            "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
+            "request_form": None,
+            "request_success": False,
+            "sub_services": [],
+            "is_sub_service_page": False,
+            "is_at_home_page": True,
+            "page_service_name": page_service_name,
+            "seo_section_heading": f"{page_service_name} : comment ça marche",
+            "seo_intro": AT_HOME_MARKETING_COPY,
+            "seo_long_description": "",
+            "support_phone_display": SUPPORT_PHONE_DISPLAY,
+            "support_phone_tel": SUPPORT_PHONE_TEL,
+        },
+    )
+
+
+def sub_service_at_home_page(request, service_slug: str, sub_service_slug: str):
+    service_meta = _get_service_or_404(service_slug)
+    sub_service = get_object_or_404(
+        MarketingSubService,
+        service=service_meta,
+        slug=sub_service_slug,
+        is_visible=True,
+    )
+    providers = list(
+        Provider.objects.visible_on_website()
+        .filter(marketing_sub_services=sub_service)
+        .filter(
+            location_mode__in=[
+                Provider.LOCATION_MODE_CLIENT_HOME_ONLY,
+                Provider.LOCATION_MODE_HYBRID,
+            ]
+        )
+        .distinct()
+    )
+
+    service_content = _to_service_content(service_meta)
+    marketing_content = build_marketing_content(service=service_content)
+    page_service_name = f"{sub_service.name} à domicile"
+    service_schema = _build_service_schema(request, page_service_name, None)
+    return render(
+        request,
+        "interface/service_page.html",
+        {
+            "service": service_meta,
+            "sub_service": sub_service,
+            "zone": None,
+            "providers": providers,
+            "zones": [],
+            "intro": AT_HOME_MARKETING_COPY,
+            "short_intro": AT_HOME_MARKETING_COPY,
+            "long_description": "",
+            "long_title": page_service_name,
+            "city_intro": marketing_content.location_intro,
+            "highlights": marketing_content.highlights,
+            "hero_image": sub_service.resolved_image or marketing_content.hero_image,
+            "gallery_images": marketing_content.gallery,
+            "meta_description": f"Trouve facilement {sub_service.name.lower()} à domicile à Toulouse.",
+            "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
+            "request_form": None,
+            "request_success": False,
+            "sub_services": [],
+            "is_sub_service_page": True,
+            "is_at_home_page": True,
+            "page_service_name": page_service_name,
+            "seo_section_heading": f"{page_service_name} : comment ça marche",
+            "seo_intro": AT_HOME_MARKETING_COPY,
+            "seo_long_description": "",
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
         },
