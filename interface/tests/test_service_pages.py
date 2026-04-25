@@ -97,7 +97,7 @@ class ServicePagesTests(TestCase):
         content = response.content.decode()
         self.assertIn("Knotless braids", content)
         self.assertIn("/services/tresses/sous-services/knotless-braids/", content)
-        self.assertIn("Une question ? Appelez-nous", content)
+        self.assertIn("Une question ? appelle-nous", content)
         self.assertIn('href="tel:+33649491449"', content)
 
     def test_sub_service_page_filters_providers_without_zone_filter(self):
