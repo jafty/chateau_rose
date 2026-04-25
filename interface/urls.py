@@ -52,9 +52,19 @@ urlpatterns = [
     path("bookings/<str:booking_id>/proposition/", views.client_proposal, name="client_proposal"),
     path("services/<slug:service_slug>/", views.service_page, name="service_page"),
     path(
+        "services/<slug:service_slug>/a-domicile/",
+        views.service_at_home_page,
+        name="service_at_home_page",
+    ),
+    path(
         "services/<slug:service_slug>/sous-services/<slug:sub_service_slug>/",
         views.sub_service_page,
         name="sub_service_page",
+    ),
+    path(
+        "services/<slug:service_slug>/sous-services/<slug:sub_service_slug>/a-domicile/",
+        views.sub_service_at_home_page,
+        name="sub_service_at_home_page",
     ),
     path("services/<slug:service_slug>/<slug:city_slug>/", views.service_city_page, name="service_city_page"),
     path(

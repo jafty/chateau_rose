@@ -97,7 +97,7 @@ class ServicePagesTests(TestCase):
         content = response.content.decode()
         self.assertIn("Knotless braids", content)
         self.assertIn("/services/tresses/sous-services/knotless-braids/", content)
-        self.assertIn("Une question ? appelle-nous", content)
+        self.assertIn("Une question ? Appelle-nous", content)
         self.assertIn('href="tel:+33649491449"', content)
 
     def test_sub_service_page_filters_providers_without_zone_filter(self):
@@ -113,6 +113,45 @@ class ServicePagesTests(TestCase):
         self.assertIn(self.provider_c.name, content)
         self.assertNotIn(self.provider_b.name, content)
         self.assertNotIn("Affiner par zone", content)
+        self.assertIn("Knotless braids : l&#x27;essentiel", content)
+        self.assertNotIn("Description longue tresses", content)
+
+    def test_service_at_home_page_filters_only_mobile_providers(self):
+        self.provider_a.location_mode = Provider.LOCATION_MODE_HYBRID
+        self.provider_a.save()
+        self.provider_b.location_mode = Provider.LOCATION_MODE_SALON_ONLY
+        self.provider_b.save()
+        self.provider_c.location_mode = Provider.LOCATION_MODE_CLIENT_HOME_ONLY
+        self.provider_c.save()
+        ProviderMarketingService.objects.create(
+            provider=self.provider_c, service=self.marketing_service
+        )
+
+        response = self.client.get(reverse("interface:service_at_home_page", args=["tresses"]))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(self.provider_a.name, content)
+        self.assertIn(self.provider_c.name, content)
+        self.assertNotIn(self.provider_b.name, content)
+        self.assertIn("Tresses / Braids à domicile", content)
+
+    def test_sub_service_at_home_page_filters_only_mobile_providers(self):
+        self.provider_a.location_mode = Provider.LOCATION_MODE_SALON_ONLY
+        self.provider_a.save()
+        self.provider_c.location_mode = Provider.LOCATION_MODE_CLIENT_HOME_ONLY
+        self.provider_c.save()
+        self.sub_service.providers.add(self.provider_c)
+
+        response = self.client.get(
+            reverse("interface:sub_service_at_home_page", args=["tresses", "knotless-braids"])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(self.provider_c.name, content)
+        self.assertNotIn(self.provider_a.name, content)
+        self.assertIn("Knotless braids à domicile", content)
 
     def test_service_page_uses_static_main_image_when_no_upload(self):
         self.marketing_service.main_image_url = "https://static.example.com/tresses.jpg"
