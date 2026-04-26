@@ -1864,7 +1864,7 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
             "is_at_home_page": False,
             "page_service_name": sub_service.name,
             "seo_section_heading": f"{sub_service.name} : l'essentiel",
-            "seo_intro": sub_service.short_intro or sub_service.intro or marketing_content.short_intro,
+            "seo_intro": sub_service.intro or marketing_content.intro,
             "seo_long_description": "",
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
