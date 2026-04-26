@@ -3809,6 +3809,10 @@ footer {
 .sticky-price-bar.hidden {
     display: none;
 }
+.sticky-price-bar--support {
+    position: static;
+    top: auto;
+}
 
 .total-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-secondary); }
 .total-amount { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 700; font-style: italic; color: var(--rose-accent); }
