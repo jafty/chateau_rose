@@ -170,7 +170,7 @@ class Provider(models.Model):
 
     def save(self, *args, **kwargs):
         if _should_compress_image(self, "profile_image"):
-            compress_image_field(self.profile_image, max_px=720, quality=80)
+            compress_image_field(self.profile_image, max_px=320, quality=76)
         return super().save(*args, **kwargs)
 
 

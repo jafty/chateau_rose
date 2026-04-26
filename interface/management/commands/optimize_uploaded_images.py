@@ -28,7 +28,7 @@ TARGETS = (
     CompressionTarget(MarketingServiceImage, "image", 800),
     CompressionTarget(MarketingZone, "hero_image", 1200),
     CompressionTarget(MarketingServiceZone, "hero_image", 1200),
-    CompressionTarget(Provider, "profile_image", 720),
+    CompressionTarget(Provider, "profile_image", 320, quality=76),
     CompressionTarget(Service, "image", 720),
     CompressionTarget(ProviderPhoto, "image", 720),
 )

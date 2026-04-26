@@ -189,7 +189,7 @@ class ProviderAdmin(ImportExportModelAdmin):
         for provider in queryset:
             if not provider.profile_image:
                 continue
-            compress_image_field(provider.profile_image, max_px=720, quality=80)
+            compress_image_field(provider.profile_image, max_px=320, quality=76)
             provider.save(update_fields=["profile_image"])
             processed += 1
         self.message_user(
