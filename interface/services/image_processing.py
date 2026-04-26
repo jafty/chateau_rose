@@ -22,5 +22,6 @@ def compress_image_field(image_field, *, max_px: int, quality: int = 80) -> None
         image_field.seek(0)
         return
 
-    base_name, _ = os.path.splitext(image_field.name)
-    image_field.save(f"{base_name}.webp", ContentFile(buffer.getvalue()), save=False)
+    original_filename = os.path.basename(image_field.name or "image")
+    stem, _ = os.path.splitext(original_filename)
+    image_field.save(f"{stem}.webp", ContentFile(buffer.getvalue()), save=False)
