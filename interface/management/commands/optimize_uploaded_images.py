@@ -23,8 +23,8 @@ class CompressionTarget:
 
 
 TARGETS = (
-    CompressionTarget(MarketingService, "main_image", 900),
-    CompressionTarget(MarketingSubService, "image", 900),
+    CompressionTarget(MarketingService, "main_image", 760, quality=78),
+    CompressionTarget(MarketingSubService, "image", 760, quality=78),
     CompressionTarget(MarketingServiceImage, "image", 800),
     CompressionTarget(MarketingZone, "hero_image", 1200),
     CompressionTarget(MarketingServiceZone, "hero_image", 1200),

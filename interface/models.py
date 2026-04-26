@@ -62,7 +62,7 @@ class MarketingService(models.Model):
 
     def save(self, *args, **kwargs):
         if _should_compress_image(self, "main_image"):
-            compress_image_field(self.main_image, max_px=900, quality=80)
+            compress_image_field(self.main_image, max_px=760, quality=78)
         return super().save(*args, **kwargs)
 
 
@@ -114,7 +114,7 @@ class MarketingSubService(models.Model):
 
     def save(self, *args, **kwargs):
         if _should_compress_image(self, "image"):
-            compress_image_field(self.image, max_px=900, quality=80)
+            compress_image_field(self.image, max_px=760, quality=78)
         return super().save(*args, **kwargs)
 
 

@@ -72,7 +72,7 @@ class MarketingServiceAdmin(ImportExportModelAdmin):
         for service in queryset:
             if not service.main_image:
                 continue
-            compress_image_field(service.main_image, max_px=900, quality=80)
+            compress_image_field(service.main_image, max_px=760, quality=78)
             service.save(update_fields=["main_image"])
             processed += 1
         self.message_user(
@@ -115,7 +115,7 @@ class MarketingSubServiceAdmin(admin.ModelAdmin):
         for subservice in queryset:
             if not subservice.image:
                 continue
-            compress_image_field(subservice.image, max_px=900, quality=80)
+            compress_image_field(subservice.image, max_px=760, quality=78)
             subservice.save(update_fields=["image"])
             processed += 1
         self.message_user(
