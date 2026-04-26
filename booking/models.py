@@ -170,7 +170,7 @@ class Provider(models.Model):
 
     def save(self, *args, **kwargs):
         if _should_compress_image(self, "profile_image"):
-            compress_image_field(self.profile_image, max_px=1200, quality=80)
+            compress_image_field(self.profile_image, max_px=320, quality=76)
         return super().save(*args, **kwargs)
 
 
@@ -230,7 +230,7 @@ class Service(models.Model):
 
     def save(self, *args, **kwargs):
         if _should_compress_image(self, "image"):
-            compress_image_field(self.image, max_px=900, quality=80)
+            compress_image_field(self.image, max_px=720, quality=80)
         return super().save(*args, **kwargs)
 
 
@@ -327,7 +327,7 @@ class ProviderPhoto(models.Model):
 
     def save(self, *args, **kwargs):
         if _should_compress_image(self, "image"):
-            compress_image_field(self.image, max_px=900, quality=80)
+            compress_image_field(self.image, max_px=720, quality=80)
         return super().save(*args, **kwargs)
 
 
