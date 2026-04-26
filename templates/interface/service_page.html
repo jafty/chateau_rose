@@ -24,9 +24,10 @@
 
 <section class="container service-hub-layout">
     <div class="main-content">
-        {% if sub_services %}
+        {% if sub_services and not is_sub_service_page %}
         <div class="services-carousel-wrapper" style="margin-bottom:1.25rem;">
-            <div class="all-services-grid horizontal-scroll-mobile">
+            <h2 class="service-subservices-heading">Affiner ta recherche par type de prestation</h2>
+            <div class="all-services-grid horizontal-scroll-mobile service-subservices-grid">
                 {% for sub_service_item in sub_services %}
                     <a href="{% url 'interface:sub_service_page' service.slug sub_service_item.slug %}" class="service-polaroid">
                         <span class="tape top-center" aria-hidden="true"></span>
