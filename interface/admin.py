@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.html import format_html, format_html_join
 
@@ -25,6 +25,7 @@ from interface.models import (
     QuickCheckoutPage,
 )
 from interface.services.booking_requests import resolve_stored_media_url
+from interface.services.image_processing import compress_image_field
 
 
 class MarketingServiceImageInline(admin.TabularInline):
@@ -63,6 +64,22 @@ class MarketingServiceAdmin(ImportExportModelAdmin):
     )
     inlines = [MarketingServiceImageInline]
     resource_class = MarketingServiceResource
+    actions = ("recompress_main_images",)
+
+    @admin.action(description="Optimiser les images principales sélectionnées")
+    def recompress_main_images(self, request, queryset):
+        processed = 0
+        for service in queryset:
+            if not service.main_image:
+                continue
+            compress_image_field(service.main_image, max_px=760, quality=78)
+            service.save(update_fields=["main_image"])
+            processed += 1
+        self.message_user(
+            request,
+            f"{processed} image(s) principale(s) optimisée(s).",
+            level=messages.SUCCESS if processed else messages.WARNING,
+        )
 
 
 @admin.register(MarketingSubService)
@@ -90,6 +107,22 @@ class MarketingSubServiceAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug", "service__name")
     prepopulated_fields = {"slug": ("name",)}
     autocomplete_fields = ("service",)
+    actions = ("recompress_subservice_images",)
+
+    @admin.action(description="Optimiser les images sous-service sélectionnées")
+    def recompress_subservice_images(self, request, queryset):
+        processed = 0
+        for subservice in queryset:
+            if not subservice.image:
+                continue
+            compress_image_field(subservice.image, max_px=760, quality=78)
+            subservice.save(update_fields=["image"])
+            processed += 1
+        self.message_user(
+            request,
+            f"{processed} image(s) sous-service optimisée(s).",
+            level=messages.SUCCESS if processed else messages.WARNING,
+        )
 
 
 @admin.register(MarketingZone)
@@ -102,6 +135,22 @@ class MarketingZoneAdmin(ImportExportModelAdmin):
         ("Image", {"fields": ("hero_image",)}),
     )
     resource_class = MarketingZoneResource
+    actions = ("recompress_zone_images",)
+
+    @admin.action(description="Optimiser les images de zone sélectionnées")
+    def recompress_zone_images(self, request, queryset):
+        processed = 0
+        for zone in queryset:
+            if not zone.hero_image:
+                continue
+            compress_image_field(zone.hero_image, max_px=1200, quality=80)
+            zone.save(update_fields=["hero_image"])
+            processed += 1
+        self.message_user(
+            request,
+            f"{processed} image(s) de zone optimisée(s).",
+            level=messages.SUCCESS if processed else messages.WARNING,
+        )
 
 
 @admin.register(MarketingServiceZone)
@@ -128,6 +177,22 @@ class MarketingServiceZoneAdmin(ImportExportModelAdmin):
         ("Image", {"fields": ("hero_image",)}),
     )
     resource_class = MarketingServiceZoneResource
+    actions = ("recompress_service_zone_images",)
+
+    @admin.action(description="Optimiser les images service+zone sélectionnées")
+    def recompress_service_zone_images(self, request, queryset):
+        processed = 0
+        for service_zone in queryset:
+            if not service_zone.hero_image:
+                continue
+            compress_image_field(service_zone.hero_image, max_px=1200, quality=80)
+            service_zone.save(update_fields=["hero_image"])
+            processed += 1
+        self.message_user(
+            request,
+            f"{processed} image(s) service+zone optimisée(s).",
+            level=messages.SUCCESS if processed else messages.WARNING,
+        )
 
 
 @admin.register(ServiceRequest)
@@ -234,6 +299,22 @@ class MarketingServiceImageAdmin(ImportExportModelAdmin):
     list_filter = ("service",)
     search_fields = ("caption",)
     resource_class = MarketingServiceImageResource
+    actions = ("recompress_gallery_images",)
+
+    @admin.action(description="Optimiser les images galerie marketing sélectionnées")
+    def recompress_gallery_images(self, request, queryset):
+        processed = 0
+        for image in queryset:
+            if not image.image:
+                continue
+            compress_image_field(image.image, max_px=800, quality=80)
+            image.save(update_fields=["image"])
+            processed += 1
+        self.message_user(
+            request,
+            f"{processed} image(s) galerie optimisée(s).",
+            level=messages.SUCCESS if processed else messages.WARNING,
+        )
 
 
 @admin.register(ProviderBookingDraft)
