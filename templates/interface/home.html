@@ -5,6 +5,12 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/design_system_tweaks.css' %}">
+<link rel="preconnect" href="https://chateau-rose-bucket.s3.amazonaws.com" crossorigin>
+{% with lcp_service=services|first %}
+    {% if lcp_service and lcp_service.resolved_main_image %}
+<link rel="preload" as="image" href="{{ lcp_service.resolved_main_image }}" fetchpriority="high">
+    {% endif %}
+{% endwith %}
 {% endblock %}
 
 
@@ -78,9 +84,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="tape top-right" aria-hidden="true"></span>
                     {% endif %}
                     {% if service.resolved_main_image %}
-                        <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
+                        {% if forloop.first %}
+                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" width="320" height="320" fetchpriority="high" decoding="async">
+                        {% else %}
+                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" width="320" height="320" loading="lazy" decoding="async">
+                        {% endif %}
                     {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" loading="lazy" decoding="async">
+                        {% if forloop.first %}
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" width="320" height="320" fetchpriority="high" decoding="async">
+                        {% else %}
+                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" width="320" height="320" loading="lazy" decoding="async">
+                        {% endif %}
                     {% endif %}
                     <span class="service-label">{{ service.name }}</span>
                 </a>

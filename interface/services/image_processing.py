@@ -13,21 +13,14 @@ def compress_image_field(image_field, *, max_px: int, quality: int = 80) -> None
         image_field.seek(0)
         with Image.open(image_field) as image:
             image = ImageOps.exif_transpose(image)
-            if image.mode in ("RGBA", "LA") or (
-                image.mode == "P" and "transparency" in image.info
-            ):
-                image = image.convert("RGBA")
-                background = Image.new("RGB", image.size, (255, 255, 255))
-                background.paste(image, mask=image.split()[-1])
-                image = background
-            else:
-                image = image.convert("RGB")
+            if image.mode not in ("RGB", "RGBA"):
+                image = image.convert("RGBA" if "transparency" in image.info else "RGB")
             image.thumbnail((max_px, max_px), Image.LANCZOS)
             buffer = BytesIO()
-            image.save(buffer, format="JPEG", quality=quality, optimize=True)
+            image.save(buffer, format="WEBP", quality=quality, method=6, optimize=True)
     except Exception:
         image_field.seek(0)
         return
 
     base_name, _ = os.path.splitext(image_field.name)
-    image_field.save(f"{base_name}.jpg", ContentFile(buffer.getvalue()), save=False)
+    image_field.save(f"{base_name}.webp", ContentFile(buffer.getvalue()), save=False)

@@ -30,6 +30,7 @@ from .models import (
 )
 from interface.models import MarketingService, ProviderBookingDraft
 from interface.services.booking_requests import resolve_stored_media_url
+from interface.services.image_processing import compress_image_field
 
 
 class ProviderAdminForm(forms.ModelForm):
@@ -130,7 +131,7 @@ class ProviderAdmin(ImportExportModelAdmin):
     list_filter = ("location_mode", "is_visible_on_website")
     inlines = []
     resource_class = ProviderResource
-    actions = ("generate_lead_prefill_links",)
+    actions = ("generate_lead_prefill_links", "recompress_profile_images")
 
     @admin.action(description="Générer un lien de brouillon prérempli (lead)")
     def generate_lead_prefill_links(self, request, queryset):
@@ -182,6 +183,21 @@ class ProviderAdmin(ImportExportModelAdmin):
         if generated_count == 0:
             self.message_user(request, "Aucun prestataire sélectionné.", level=messages.WARNING)
 
+    @admin.action(description="Optimiser les photos de profil sélectionnées")
+    def recompress_profile_images(self, request, queryset):
+        processed = 0
+        for provider in queryset:
+            if not provider.profile_image:
+                continue
+            compress_image_field(provider.profile_image, max_px=720, quality=80)
+            provider.save(update_fields=["profile_image"])
+            processed += 1
+        self.message_user(
+            request,
+            f"{processed} photo(s) de profil optimisée(s).",
+            level=messages.SUCCESS if processed else messages.WARNING,
+        )
+
 
 class ProviderPhotoInline(admin.TabularInline):
     model = ProviderPhoto
@@ -216,6 +232,22 @@ class ProviderPhotoAdmin(ImportExportModelAdmin):
     list_filter = ("provider",)
     search_fields = ("caption",)
     resource_class = ProviderPhotoResource
+    actions = ("recompress_gallery_images",)
+
+    @admin.action(description="Optimiser les photos galerie sélectionnées")
+    def recompress_gallery_images(self, request, queryset):
+        processed = 0
+        for photo in queryset:
+            if not photo.image:
+                continue
+            compress_image_field(photo.image, max_px=720, quality=80)
+            photo.save(update_fields=["image"])
+            processed += 1
+        self.message_user(
+            request,
+            f"{processed} image(s) galerie optimisée(s).",
+            level=messages.SUCCESS if processed else messages.WARNING,
+        )
 
 
 class ServiceAdminForm(forms.ModelForm):
@@ -286,6 +318,7 @@ class ServiceAdmin(ImportExportModelAdmin):
     search_fields = ("name", "slug")
     resource_class = ServiceResource
     form = ServiceAdminForm
+    actions = ("recompress_service_images",)
 
     @admin.display(description="Image")
     def image_preview(self, obj):
@@ -296,6 +329,21 @@ class ServiceAdmin(ImportExportModelAdmin):
             '<img src="{}" alt="{}" style="max-width:64px;max-height:64px;border-radius:8px;border:1px solid #ddd;" />',
             image_url,
             obj.name,
+        )
+
+    @admin.action(description="Optimiser les images service sélectionnées")
+    def recompress_service_images(self, request, queryset):
+        processed = 0
+        for service in queryset:
+            if not service.image:
+                continue
+            compress_image_field(service.image, max_px=720, quality=80)
+            service.save(update_fields=["image"])
+            processed += 1
+        self.message_user(
+            request,
+            f"{processed} image(s) service optimisée(s).",
+            level=messages.SUCCESS if processed else messages.WARNING,
         )
 
 
