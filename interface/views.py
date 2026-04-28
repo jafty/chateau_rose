@@ -30,7 +30,11 @@ from booking.models import (
 )
 from chateaurose.domain.exceptions import DomainError, ValidationError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
-from chateaurose.domain.services.pricing import compute_checkout_amounts_cents, estimate_service_price_cents
+from chateaurose.domain.services.pricing import (
+    compute_checkout_amounts_cents,
+    compute_checkout_amounts_from_total_cents,
+    estimate_service_price_cents,
+)
 from chateaurose.domain.use_cases import expire_booking as expire_booking_uc
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
 from chateaurose.domain.use_cases import prepare_booking_recap, request_haircut, update_proposal
@@ -1007,12 +1011,16 @@ def _payment_summary(booking, *, total_cents: int | None = None) -> dict:
     if effective_total_cents is None:
         effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
     deposit_percentage = booking.provider.deposit_percentage or 30
-    reservation_fee_cents = round(effective_total_cents * deposit_percentage / 100)
-    remaining_cents = max(effective_total_cents - reservation_fee_cents, 0)
+    service_fee_percentage = booking.provider.service_fee_percentage or 0
+    checkout_amounts = compute_checkout_amounts_from_total_cents(
+        total_cents=effective_total_cents,
+        deposit_percentage=deposit_percentage,
+        service_fee_percentage=service_fee_percentage,
+    )
     return {
         "total": _format_euros_from_cents(effective_total_cents),
-        "reservation_fee": _format_euros_from_cents(reservation_fee_cents),
-        "remaining": _format_euros_from_cents(remaining_cents),
+        "reservation_fee": _format_euros_from_cents(checkout_amounts["reservation_fee_cents"]),
+        "remaining": _format_euros_from_cents(checkout_amounts["remaining_cents"]),
     }
 
 

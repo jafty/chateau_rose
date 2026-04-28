@@ -81,6 +81,34 @@ def compute_checkout_amounts_cents(
     }
 
 
+def compute_checkout_amounts_from_total_cents(
+    *,
+    total_cents: int,
+    deposit_percentage: int,
+    service_fee_percentage: int,
+) -> dict:
+    if service_fee_percentage <= 0:
+        return compute_checkout_amounts_cents(
+            subtotal_cents=total_cents,
+            deposit_percentage=deposit_percentage,
+            service_fee_percentage=service_fee_percentage,
+        )
+
+    estimated_subtotal = round(total_cents * 100 / (100 + service_fee_percentage))
+    subtotal_cents = estimated_subtotal
+    for candidate in range(max(0, estimated_subtotal - 5), estimated_subtotal + 6):
+        candidate_service_fee_cents = round(candidate * service_fee_percentage / 100)
+        if candidate + candidate_service_fee_cents == total_cents:
+            subtotal_cents = candidate
+            break
+
+    return compute_checkout_amounts_cents(
+        subtotal_cents=subtotal_cents,
+        deposit_percentage=deposit_percentage,
+        service_fee_percentage=service_fee_percentage,
+    )
+
+
 def ceil_price_for_display_cents(amount_cents: int) -> int:
     if amount_cents <= 0:
         return 0

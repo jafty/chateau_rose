@@ -20,6 +20,7 @@ from chateaurose.domain.use_cases import (
     update_proposal,
 )
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
+from chateaurose.domain.services.pricing import compute_checkout_amounts_from_total_cents
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
@@ -59,12 +60,16 @@ def _format_price_from_cents(amount_cents: int) -> str:
 def _payment_summary(booking) -> dict:
     effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
     deposit_percentage = booking.provider.deposit_percentage or 30
-    reservation_fee_cents = int((Decimal(effective_total_cents) * Decimal(deposit_percentage) / Decimal("100")).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
-    remaining_cents = max(effective_total_cents - reservation_fee_cents, 0)
+    service_fee_percentage = booking.provider.service_fee_percentage or 0
+    checkout_amounts = compute_checkout_amounts_from_total_cents(
+        total_cents=effective_total_cents,
+        deposit_percentage=deposit_percentage,
+        service_fee_percentage=service_fee_percentage,
+    )
     return {
         "total": _format_price_from_cents(effective_total_cents),
-        "reservation_fee": _format_price_from_cents(reservation_fee_cents),
-        "remaining": _format_price_from_cents(remaining_cents),
+        "reservation_fee": _format_price_from_cents(checkout_amounts["reservation_fee_cents"]),
+        "remaining": _format_price_from_cents(checkout_amounts["remaining_cents"]),
     }
 
 
