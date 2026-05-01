@@ -1017,10 +1017,16 @@ def _payment_summary(booking, *, total_cents: int | None = None) -> dict:
         deposit_percentage=deposit_percentage,
         service_fee_percentage=service_fee_percentage,
     )
+    reservation_fee_cents = checkout_amounts["reservation_fee_cents"]
+    remaining_cents = checkout_amounts["remaining_cents"]
     return {
         "total": _format_euros_from_cents(effective_total_cents),
-        "reservation_fee": _format_euros_from_cents(checkout_amounts["reservation_fee_cents"]),
-        "remaining": _format_euros_from_cents(checkout_amounts["remaining_cents"]),
+        "reservation_fee": _format_euros_from_cents(reservation_fee_cents),
+        "deposit": _format_euros_from_cents(checkout_amounts["deposit_cents"]),
+        "service_fee": _format_euros_from_cents(checkout_amounts["service_fee_cents"]),
+        "remaining": _format_euros_from_cents(remaining_cents),
+        "reservation_fee_rounded": _format_euros_from_cents(ceil_price_for_display_cents(reservation_fee_cents)),
+        "remaining_rounded": _format_euros_from_cents(floor_price_for_display_cents(remaining_cents)),
     }
 
 

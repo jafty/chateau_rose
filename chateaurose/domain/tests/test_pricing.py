@@ -4,6 +4,7 @@ from chateaurose.domain.exceptions import ValidationError
 from chateaurose.domain.services.pricing import (
     ceil_price_for_display_cents,
     compute_checkout_amounts_cents,
+    floor_price_for_display_cents,
     estimate_service_price_cents,
 )
 
@@ -122,3 +123,13 @@ def test_ceil_price_for_display_cents_rounds_up_to_next_full_euro():
 def test_ceil_price_for_display_cents_handles_non_positive_values():
     assert ceil_price_for_display_cents(0) == 0
     assert ceil_price_for_display_cents(-50) == 0
+
+
+def test_floor_price_for_display_cents_rounds_down_to_full_euro():
+    assert floor_price_for_display_cents(11099) == 11000
+    assert floor_price_for_display_cents(11000) == 11000
+
+
+def test_floor_price_for_display_cents_handles_non_positive_values():
+    assert floor_price_for_display_cents(0) == 0
+    assert floor_price_for_display_cents(-50) == 0
