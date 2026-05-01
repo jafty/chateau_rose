@@ -34,19 +34,9 @@
 
     <div class="paper-card" style="margin-top: 24px;">
         <h2 class="section-title">Paiement</h2>
-        {% if booking.status == "CONFIRMED" %}
-            <p class="meta-line" style="margin: 0;"><strong>Frais de réservation débités :</strong> {{ payment_summary.reservation_fee }}</p>
-            <p class="meta-line" style="margin: 6px 0 0;">- Acompte prestataire : {{ payment_summary.deposit }} · - Frais Château Rose : {{ payment_summary.service_fee }}</p>
-            <p class="meta-line" style="margin: 6px 0 0;"><strong>Reste à régler chez la prestataire :</strong> {{ payment_summary.remaining }}</p>
-            <p class="meta-line" style="margin: 6px 0 0;"><strong>Montant conseillé à régler le jour J (arrondi) :</strong> {{ payment_summary.remaining_rounded }}</p>
-        {% else %}
-            <p class="meta-line" style="margin: 0;"><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }} (pas encore débités)</p>
-            <p class="meta-line" style="margin: 6px 0 0;">- Acompte prestataire : {{ payment_summary.deposit }} · - Frais Château Rose : {{ payment_summary.service_fee }}</p>
-            <p class="meta-line" style="margin: 6px 0 0;"><strong>Montant débité à la confirmation :</strong> {{ payment_summary.reservation_fee }}</p>
-            <p class="meta-line" style="margin: 6px 0 0;"><strong>Montant affiché arrondi (acompte) :</strong> {{ payment_summary.reservation_fee_rounded }}</p>
-            <p class="meta-line" style="margin: 6px 0 0;"><strong>Reste à régler après confirmation :</strong> {{ payment_summary.remaining }}</p>
-            <p class="meta-line" style="margin: 6px 0 0;"><strong>Montant conseillé à régler le jour J (arrondi) :</strong> {{ payment_summary.remaining_rounded }}</p>
-        {% endif %}
+        <p class="meta-line" style="margin: 0;"><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
+        <p class="meta-line" style="margin: 6px 0 0;"><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }}<br>Frais Château Rose : {{ payment_summary.service_fee }}<br>Acompte prestataire : {{ payment_summary.deposit }}</p>
+        <p class="meta-line" style="margin: 6px 0 0;"><strong>Montant à régler le jour J :</strong> {{ payment_summary.remaining }}</p>
     </div>
 
     <div class="paper-card" style="margin-top: 24px;">
