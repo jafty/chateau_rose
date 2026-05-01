@@ -20,7 +20,11 @@ from chateaurose.domain.use_cases import (
     update_proposal,
 )
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
-from chateaurose.domain.services.pricing import compute_checkout_amounts_from_total_cents
+from chateaurose.domain.services.pricing import (
+    ceil_price_for_display_cents,
+    compute_checkout_amounts_from_total_cents,
+    floor_price_for_display_cents,
+)
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
@@ -59,17 +63,32 @@ def _format_price_from_cents(amount_cents: int) -> str:
 
 def _payment_summary(booking) -> dict:
     effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
-    deposit_percentage = booking.provider.deposit_percentage or 30
-    service_fee_percentage = booking.provider.service_fee_percentage or 0
+    deposit_percentage = booking.provider.deposit_percentage if booking.provider.deposit_percentage is not None else 30
+    service_fee_percentage = booking.provider.service_fee_percentage if booking.provider.service_fee_percentage is not None else 0
     checkout_amounts = compute_checkout_amounts_from_total_cents(
         total_cents=effective_total_cents,
         deposit_percentage=deposit_percentage,
         service_fee_percentage=service_fee_percentage,
     )
+    computed_reservation_fee_cents = checkout_amounts["reservation_fee_cents"]
+    reservation_fee_cents = (
+        booking.locked_reservation_fee_cents
+        if booking.locked_reservation_fee_cents is not None
+        else computed_reservation_fee_cents
+    )
+    service_fee_cents = checkout_amounts["service_fee_cents"]
+    deposit_cents = max(reservation_fee_cents - service_fee_cents, 0)
+    displayed_deposit_cents = ceil_price_for_display_cents(deposit_cents)
+    displayed_reservation_fee_cents = service_fee_cents + displayed_deposit_cents
+    displayed_remaining_cents = floor_price_for_display_cents(
+        max(effective_total_cents - displayed_reservation_fee_cents, 0)
+    )
     return {
         "total": _format_price_from_cents(effective_total_cents),
-        "reservation_fee": _format_price_from_cents(checkout_amounts["reservation_fee_cents"]),
-        "remaining": _format_price_from_cents(checkout_amounts["remaining_cents"]),
+        "reservation_fee": _format_price_from_cents(displayed_reservation_fee_cents),
+        "service_fee": _format_price_from_cents(service_fee_cents),
+        "deposit": _format_price_from_cents(displayed_deposit_cents),
+        "remaining": _format_price_from_cents(displayed_remaining_cents),
     }
 
 
