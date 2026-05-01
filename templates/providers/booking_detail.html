@@ -96,11 +96,16 @@
                     <p><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
                     {% if booking.status == "CONFIRMED" %}
                         <p><strong>Frais de réservation débités :</strong> {{ payment_summary.reservation_fee }}</p>
+                        <p>- Acompte prestataire : {{ payment_summary.deposit }} · - Frais Château Rose : {{ payment_summary.service_fee }}</p>
                         <p><strong>Reste à régler chez la prestataire :</strong> {{ payment_summary.remaining }}</p>
+                        <p><strong>Montant conseillé à régler le jour J (arrondi) :</strong> {{ payment_summary.remaining_rounded }}</p>
                     {% else %}
                         <p><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }} (pas encore débités)</p>
+                        <p>- Acompte prestataire : {{ payment_summary.deposit }} · - Frais Château Rose : {{ payment_summary.service_fee }}</p>
                         <p><strong>Montant débité à la confirmation :</strong> {{ payment_summary.reservation_fee }}</p>
+                        <p><strong>Montant affiché arrondi (acompte) :</strong> {{ payment_summary.reservation_fee_rounded }}</p>
                         <p><strong>Reste à régler après confirmation :</strong> {{ payment_summary.remaining }}</p>
+                        <p><strong>Montant conseillé à régler le jour J (arrondi) :</strong> {{ payment_summary.remaining_rounded }}</p>
                     {% endif %}
                 </div>
 

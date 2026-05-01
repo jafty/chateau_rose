@@ -31,9 +31,11 @@ from booking.models import (
 from chateaurose.domain.exceptions import DomainError, ValidationError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
 from chateaurose.domain.services.pricing import (
+    ceil_price_for_display_cents,
     compute_checkout_amounts_cents,
     compute_checkout_amounts_from_total_cents,
     estimate_service_price_cents,
+    floor_price_for_display_cents,
 )
 from chateaurose.domain.use_cases import expire_booking as expire_booking_uc
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
@@ -1017,16 +1019,25 @@ def _payment_summary(booking, *, total_cents: int | None = None) -> dict:
         deposit_percentage=deposit_percentage,
         service_fee_percentage=service_fee_percentage,
     )
-    reservation_fee_cents = checkout_amounts["reservation_fee_cents"]
+    computed_reservation_fee_cents = checkout_amounts["reservation_fee_cents"]
+    reservation_fee_cents = (
+        booking.locked_reservation_fee_cents
+        if booking.locked_reservation_fee_cents is not None
+        else computed_reservation_fee_cents
+    )
+    service_fee_cents = checkout_amounts["service_fee_cents"]
+    deposit_cents = max(reservation_fee_cents - service_fee_cents, 0)
     remaining_cents = checkout_amounts["remaining_cents"]
+    remaining_with_locked_reservation_cents = max(effective_total_cents - reservation_fee_cents, 0)
     return {
         "total": _format_euros_from_cents(effective_total_cents),
         "reservation_fee": _format_euros_from_cents(reservation_fee_cents),
-        "deposit": _format_euros_from_cents(checkout_amounts["deposit_cents"]),
-        "service_fee": _format_euros_from_cents(checkout_amounts["service_fee_cents"]),
-        "remaining": _format_euros_from_cents(remaining_cents),
+        "deposit": _format_euros_from_cents(deposit_cents),
+        "service_fee": _format_euros_from_cents(service_fee_cents),
+        "remaining": _format_euros_from_cents(remaining_with_locked_reservation_cents),
         "reservation_fee_rounded": _format_euros_from_cents(ceil_price_for_display_cents(reservation_fee_cents)),
-        "remaining_rounded": _format_euros_from_cents(floor_price_for_display_cents(remaining_cents)),
+        "remaining_rounded": _format_euros_from_cents(floor_price_for_display_cents(remaining_with_locked_reservation_cents)),
+        "remaining_computed": _format_euros_from_cents(remaining_cents),
     }
 
 
