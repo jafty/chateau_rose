@@ -183,4 +183,40 @@ class BookingActionTests(TestCase):
         response = self.client.get(reverse("interface:client_confirmation", args=[booking.booking_id]))
 
         self.assertContains(response, "Empreinte bancaire validée")
-        self.assertContains(response, "20.25 €")
+        self.assertContains(response, "20.75 €")
+        self.assertContains(response, "Acompte prestataire : 14 €")
+        self.assertContains(response, "Montant à régler le jour J :")
+
+    def test_client_confirmation_applies_ceil_deposit_and_floor_remaining(self):
+        booking = Booking.objects.create(
+            booking_id="BK-ROUNDING-1",
+            provider=self.provider,
+            service=self.service,
+            client_name="Nina",
+            client_email="nina@example.com",
+            location="Paris",
+            location_preference="salon",
+            client_address="",
+            desired_date=(timezone.now() + timedelta(days=2)).isoformat(),
+            hair_length="long",
+            general_adjustments=[],
+            meche=False,
+            current_hair_picture="current.jpg",
+            inspiration_pictures=[],
+            free_text="",
+            estimated_price_cents=8625,
+            payment_auth_id="pi_auth_rounding",
+            status="SUBMITTED",
+            created_at=timezone.now(),
+        )
+
+        response = self.client.get(reverse("interface:client_confirmation", args=[booking.booking_id]))
+
+        self.assertContains(response, "Total estimé :")
+        self.assertContains(response, "86.25 €")
+        self.assertContains(response, "Empreinte bancaire validée")
+        self.assertContains(response, "34.25 €")
+        self.assertContains(response, "Frais Château Rose : 11.25 €")
+        self.assertContains(response, "Acompte prestataire : 23 €")
+        self.assertContains(response, "Montant à régler le jour J")
+        self.assertContains(response, "52 €")

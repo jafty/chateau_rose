@@ -1027,17 +1027,16 @@ def _payment_summary(booking, *, total_cents: int | None = None) -> dict:
     )
     service_fee_cents = checkout_amounts["service_fee_cents"]
     deposit_cents = max(reservation_fee_cents - service_fee_cents, 0)
-    remaining_cents = checkout_amounts["remaining_cents"]
-    remaining_with_locked_reservation_cents = max(effective_total_cents - reservation_fee_cents, 0)
+    displayed_deposit_cents = ceil_price_for_display_cents(deposit_cents)
+    displayed_reservation_fee_cents = service_fee_cents + displayed_deposit_cents
+    remaining_with_locked_reservation_cents = max(effective_total_cents - displayed_reservation_fee_cents, 0)
+    displayed_remaining_cents = floor_price_for_display_cents(remaining_with_locked_reservation_cents)
     return {
         "total": _format_euros_from_cents(effective_total_cents),
-        "reservation_fee": _format_euros_from_cents(reservation_fee_cents),
-        "deposit": _format_euros_from_cents(deposit_cents),
+        "reservation_fee": _format_euros_from_cents(displayed_reservation_fee_cents),
+        "deposit": _format_euros_from_cents(displayed_deposit_cents),
         "service_fee": _format_euros_from_cents(service_fee_cents),
-        "remaining": _format_euros_from_cents(remaining_with_locked_reservation_cents),
-        "reservation_fee_rounded": _format_euros_from_cents(ceil_price_for_display_cents(reservation_fee_cents)),
-        "remaining_rounded": _format_euros_from_cents(floor_price_for_display_cents(remaining_with_locked_reservation_cents)),
-        "remaining_computed": _format_euros_from_cents(remaining_cents),
+        "remaining": _format_euros_from_cents(displayed_remaining_cents),
     }
 
 
