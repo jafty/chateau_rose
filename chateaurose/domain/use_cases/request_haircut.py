@@ -175,7 +175,8 @@ def execute(
         "",
         "Paiement :",
         f"- Empreinte bancaire validée : {_format_euros(deposit_cents)} (pas encore débités)",
-        f"- Débit des frais de réservation uniquement après confirmation : {_format_euros(deposit_cents)}",
+        f"  dont acompte prestataire : {_format_euros(checkout_amounts['deposit_cents'])}",
+        f"  dont frais Château Rose : {_format_euros(checkout_amounts['service_fee_cents'])}",
         f"- Reste à régler chez la prestataire : {_format_euros(checkout_amounts['remaining_cents'])}",
     ]
     if free_text:
@@ -203,7 +204,8 @@ def execute(
         "",
         "Paiement :",
         f"- Empreinte bancaire déjà validée : {_format_euros(deposit_cents)} (pas encore débités)",
-        f"- Montant qui sera débité à la confirmation : {_format_euros(deposit_cents)}",
+        f"  dont acompte prestataire : {_format_euros(checkout_amounts['deposit_cents'])}",
+        f"  dont frais Château Rose : {_format_euros(checkout_amounts['service_fee_cents'])}",
         f"- Reste à régler chez la prestataire : {_format_euros(checkout_amounts['remaining_cents'])}",
     ]
     if free_text:

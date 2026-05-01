@@ -802,6 +802,8 @@ def quick_checkout_page(request, checkout_id):
             client_address_value = ""
         if require_payment_auth and not payment_auth_id:
             error = "Merci d'ajouter une empreinte bancaire pour sécuriser la demande."
+        elif require_payment_auth and not _payment_auth_is_confirmed(payment_auth_id):
+            error = "L'empreinte bancaire n'est pas confirmée. Merci de réessayer le paiement."
         elif is_domicile and not client_address_value:
             error = "Merci d'indiquer ton adresse complète pour le rendez-vous à domicile."
         else:
@@ -914,6 +916,8 @@ def provider_booking_recap(request, token):
         payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
         if require_payment_auth and not payment_auth_id:
             error = "Ajoute ton empreinte bancaire pour sécuriser le créneau."
+        elif require_payment_auth and not _payment_auth_is_confirmed(payment_auth_id):
+            error = "L'empreinte bancaire n'est pas confirmée. Merci de réessayer le paiement."
         else:
             booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
             provider_booking_url_base = request.build_absolute_uri(
@@ -1008,12 +1012,26 @@ def _format_euros_from_cents(amount_cents: int) -> str:
     return booking_requests.format_price(amount_cents)
 
 
+def _payment_auth_is_confirmed(payment_auth_id: str) -> bool:
+    if not payment_auth_id or payment_auth_id.startswith("free_"):
+        return True
+    if not settings.STRIPE_SECRET_KEY:
+        return False
+    try:
+        intent = payment_gateway.retrieve_payment_intent(payment_auth_id)
+    except Exception:
+        return False
+    return (intent.get("status") or "") in {"requires_capture", "succeeded", "processing"}
+
+
 def _payment_summary(booking, *, total_cents: int | None = None) -> dict:
     effective_total_cents = total_cents
     if effective_total_cents is None:
         effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
     deposit_percentage = booking.provider.deposit_percentage or 30
-    service_fee_percentage = booking.provider.service_fee_percentage or 0
+    service_fee_percentage = booking.provider.service_fee_percentage
+    if service_fee_percentage is None:
+        service_fee_percentage = Provider._meta.get_field("service_fee_percentage").default
     checkout_amounts = compute_checkout_amounts_from_total_cents(
         total_cents=effective_total_cents,
         deposit_percentage=deposit_percentage,
