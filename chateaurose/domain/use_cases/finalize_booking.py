@@ -2,7 +2,11 @@ from datetime import datetime, timedelta
 
 from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import InvalidState
-from chateaurose.domain.services.pricing import compute_checkout_amounts_from_total_cents
+from chateaurose.domain.services.pricing import (
+    ceil_price_for_display_cents,
+    compute_checkout_amounts_from_total_cents,
+    floor_price_for_display_cents,
+)
 from chateaurose.domain.use_cases.expire_booking import EXPIRATION_DELAY
 
 CONFIRMED = "CONFIRMED"
@@ -28,19 +32,30 @@ def _payment_lines(
         deposit_percentage=deposit_percentage,
         service_fee_percentage=service_fee_percentage,
     )
+    deposit_cents = checkout_amounts["deposit_cents"]
+    service_fee_cents = checkout_amounts["service_fee_cents"]
     reservation_fee_cents = checkout_amounts["reservation_fee_cents"]
     remaining_cents = checkout_amounts["remaining_cents"]
+    reservation_fee_rounded_cents = ceil_price_for_display_cents(reservation_fee_cents)
+    remaining_rounded_cents = floor_price_for_display_cents(remaining_cents)
     if captured:
         return [
             "Paiement :",
             f"- Frais de réservation débités : {_format_euros(reservation_fee_cents)}",
+            f"  dont acompte prestataire : {_format_euros(deposit_cents)}",
+            f"  dont frais Château Rose : {_format_euros(service_fee_cents)}",
             f"- Reste à régler chez la prestataire : {_format_euros(remaining_cents)}",
+            f"  (arrondi à payer le jour J : {_format_euros(remaining_rounded_cents)})",
         ]
     return [
         "Paiement :",
         f"- Empreinte bancaire déjà validée : {_format_euros(reservation_fee_cents)} (pas encore débités)",
+        f"  dont acompte prestataire : {_format_euros(deposit_cents)}",
+        f"  dont frais Château Rose : {_format_euros(service_fee_cents)}",
         f"- Montant qui sera débité à la confirmation : {_format_euros(reservation_fee_cents)}",
+        f"  (arrondi affiché : {_format_euros(reservation_fee_rounded_cents)})",
         f"- Reste à régler chez la prestataire après confirmation : {_format_euros(remaining_cents)}",
+        f"  (arrondi à payer le jour J : {_format_euros(remaining_rounded_cents)})",
     ]
 
 

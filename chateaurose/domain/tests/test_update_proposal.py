@@ -75,8 +75,11 @@ def test_provider_proposes_update_moves_to_pending_client_validation_and_notifie
                     "",
                     "Paiement :",
                     "- Empreinte bancaire déjà validée : 27,00 € (pas encore débités)",
+                    "  dont acompte prestataire : 27,00 €",
+                    "  dont frais Château Rose : 0,00 €",
                     "- Montant débité si tu acceptes : 27,00 €",
                     "- Reste à régler chez la prestataire : 63,00 €",
+                    "  (arrondi à payer le jour J : 63,00 €)",
                     "",
                     "Tu peux accepter ou refuser la proposition depuis ton espace de suivi :",
                     "https://example.com/booking/booking_1/",
@@ -437,3 +440,54 @@ def test_update_proposal_includes_optional_free_text_message_in_email():
 
     assert "Message de la prestataire / du prestataire :" in notifier.messages[0]["body"]
     assert "Je peux aussi avancer de 30 minutes si besoin." in notifier.messages[0]["body"]
+
+
+def test_update_proposal_payment_lines_include_service_fee_in_captured_amount():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+    provider_directory = InMemoryProviderDirectory(
+        {
+            "provider_1": {
+                "name": "Amandine",
+                "email": "amandine@example.com",
+                "phone": "+33601020304",
+                "deposit_percentage": 30,
+                "service_fee_percentage": 15,
+            }
+        }
+    )
+
+    booking = BookingRequest(
+        id="booking_fee_1",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Saint-Cyprien",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        payment_auth_id="auth_fee_1",
+        status="SUBMITTED",
+        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+    )
+    repo.add(booking)
+
+    update_proposal.execute(
+        booking_id="booking_fee_1",
+        provider_id="provider_1",
+        new_price_cents=9000,
+        new_date="2026-01-11T18:00:00Z",
+        booking_repository=repo,
+        notifier=notifier,
+        provider_directory=provider_directory,
+        client_control_url="https://example.com/booking/booking_fee_1/",
+    )
+
+    body = notifier.messages[0]["body"]
+    assert "- Empreinte bancaire déjà validée : 40,50 € (pas encore débités)" in body
+    assert "- Montant débité si tu acceptes : 40,50 €" in body
+    assert "- Reste à régler chez la prestataire : 63,00 €" in body

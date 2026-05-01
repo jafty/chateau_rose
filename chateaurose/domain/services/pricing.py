@@ -114,3 +114,10 @@ def ceil_price_for_display_cents(amount_cents: int) -> int:
         return 0
     euros, cents = divmod(amount_cents, 100)
     return (euros + (1 if cents else 0)) * 100
+
+
+def floor_price_for_display_cents(amount_cents: int) -> int:
+    if amount_cents <= 0:
+        return 0
+    euros, _ = divmod(amount_cents, 100)
+    return euros * 100
