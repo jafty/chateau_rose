@@ -475,6 +475,11 @@ class Booking(models.Model):
     payment_auth_id = models.CharField(max_length=64)
     status = models.CharField(max_length=64, choices=STATUS_CHOICES)
     proposed_price_cents = models.IntegerField(null=True, blank=True)
+    locked_reservation_fee_cents = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Montant total effectivement payé/autorisé en acompte (modifiable pour préserver l'historique).",
+    )
     proposed_date = models.CharField(max_length=128, null=True, blank=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField(null=True, blank=True)

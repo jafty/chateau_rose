@@ -443,6 +443,7 @@ class BookingAdmin(admin.ModelAdmin):
         "proposed_price_cents",
         "proposed_date",
         "payment_auth_id",
+        "locked_reservation_fee_cents",
         "current_hair_picture",
         "current_hair_picture_preview",
         "inspiration_pictures",

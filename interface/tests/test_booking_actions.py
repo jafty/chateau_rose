@@ -155,3 +155,32 @@ class BookingActionTests(TestCase):
         self.assertEqual(booking.status, "CANCELLED")
         self.assertEqual(payment_stub.released, ["pi_auth_admin_expired"])
         self.assertEqual(len(notifier_stub.messages), 2)
+
+    def test_client_confirmation_uses_locked_reservation_fee_when_present(self):
+        booking = Booking.objects.create(
+            booking_id="BK-LOCKED-FEE-1",
+            provider=self.provider,
+            service=self.service,
+            client_name="Léa",
+            client_email="lea@example.com",
+            location="Paris",
+            location_preference="salon",
+            client_address="",
+            desired_date=(timezone.now() + timedelta(days=2)).isoformat(),
+            hair_length="long",
+            general_adjustments=[],
+            meche=False,
+            current_hair_picture="current.jpg",
+            inspiration_pictures=[],
+            free_text="",
+            estimated_price_cents=5175,
+            payment_auth_id="pi_auth_locked",
+            status="SUBMITTED",
+            locked_reservation_fee_cents=2025,
+            created_at=timezone.now(),
+        )
+
+        response = self.client.get(reverse("interface:client_confirmation", args=[booking.booking_id]))
+
+        self.assertContains(response, "Empreinte bancaire validée")
+        self.assertContains(response, "20.25 €")
