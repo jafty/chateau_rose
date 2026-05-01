@@ -197,8 +197,10 @@ class ProviderDashboardTests(TestCase):
         response = self.client.get(detail_url)
 
         self.assertContains(response, "Empreinte bancaire validée")
-        self.assertContains(response, "6,50 €")
-        self.assertContains(response, "58,50 €")
+        self.assertContains(response, "14,48 €")
+        self.assertContains(response, "Frais Château Rose : 8,48 €")
+        self.assertContains(response, "Acompte prestataire : 6,00 €")
+        self.assertContains(response, "50,00 €")
 
     def test_booking_detail_shows_photos_and_prices_in_euros(self):
         booking = self._create_booking()
