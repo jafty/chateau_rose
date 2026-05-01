@@ -148,7 +148,9 @@ class ProviderBookingRecapFlowTests(TestCase):
         recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
         self.assertContains(recap_page, "143.75 €")
         self.assertContains(recap_page, "18.75 €")
-        self.assertContains(recap_page, "56.25 €")
+        self.assertContains(recap_page, "56.75 €")
+        self.assertContains(recap_page, "Dont acompte prestataire : 38 €")
+        self.assertContains(recap_page, "87 €")
 
     def test_recap_waives_service_fee_with_valid_coupon(self):
         ProviderServiceFeeCoupon.objects.create(provider=self.provider, code="vipzero")
@@ -166,7 +168,9 @@ class ProviderBookingRecapFlowTests(TestCase):
         recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
         self.assertContains(recap_page, "125 €")
         self.assertContains(recap_page, "0 €")
-        self.assertContains(recap_page, "37.50 €")
+        self.assertContains(recap_page, "38 €")
+        self.assertContains(recap_page, "Dont acompte prestataire : 38 €")
+        self.assertContains(recap_page, "87 €")
 
     def test_admin_seeded_draft_is_updated_in_place_when_client_completes_prefilled_form(self):
         admin_user = get_user_model().objects.create_user(

@@ -890,8 +890,8 @@ def provider_booking_recap(request, token):
     service_fee_waived = _provider_coupon_is_valid(provider, coupon_code)
     checkout_amounts = compute_checkout_amounts_cents(
         subtotal_cents=total_cents,
-        deposit_percentage=provider.deposit_percentage or 30,
-        service_fee_percentage=provider.service_fee_percentage or 15,
+        deposit_percentage=provider.deposit_percentage if provider.deposit_percentage is not None else 30,
+        service_fee_percentage=provider.service_fee_percentage if provider.service_fee_percentage is not None else 15,
         waive_service_fee=service_fee_waived,
     )
     desired_date_display = payload.get("desired_date") or "Non renseignée"
@@ -980,6 +980,12 @@ def provider_booking_recap(request, token):
                     f"{thank_you_url}?provider={provider.name}&provider_id={provider.id}"
                 )
 
+    displayed_deposit_cents = ceil_price_for_display_cents(checkout_amounts["deposit_cents"])
+    displayed_reservation_fee_cents = checkout_amounts["service_fee_cents"] + displayed_deposit_cents
+    displayed_remaining_cents = floor_price_for_display_cents(
+        checkout_amounts["total_cents"] - displayed_reservation_fee_cents
+    )
+
     return render(
         request,
         "interface/provider_booking_recap.html",
@@ -992,8 +998,9 @@ def provider_booking_recap(request, token):
             "total_price": booking_requests.format_price(checkout_amounts["total_cents"]),
             "subtotal_price": booking_requests.format_price(checkout_amounts["subtotal_cents"]),
             "service_fee_price": booking_requests.format_price(checkout_amounts["service_fee_cents"]),
-            "deposit_price": booking_requests.format_price(checkout_amounts["reservation_fee_cents"]),
-            "remaining_price": booking_requests.format_price(checkout_amounts["remaining_cents"]),
+            "acompte_price": booking_requests.format_price(displayed_deposit_cents),
+            "deposit_price": booking_requests.format_price(displayed_reservation_fee_cents),
+            "remaining_price": booking_requests.format_price(displayed_remaining_cents),
             "service_fee_coupon_code": coupon_code,
             "service_fee_waived": service_fee_waived,
             "reservation_label_details": "inclut l'acompte prestataire et les frais de service Château Rose",
