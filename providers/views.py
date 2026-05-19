@@ -92,6 +92,18 @@ def _payment_summary(booking) -> dict:
     }
 
 
+def _locked_reservation_fee_cents(booking) -> int:
+    effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
+    deposit_percentage = booking.provider.deposit_percentage if booking.provider.deposit_percentage is not None else 30
+    service_fee_percentage = booking.provider.service_fee_percentage if booking.provider.service_fee_percentage is not None else 0
+    checkout_amounts = compute_checkout_amounts_from_total_cents(
+        total_cents=effective_total_cents,
+        deposit_percentage=deposit_percentage,
+        service_fee_percentage=service_fee_percentage,
+    )
+    return booking.locked_reservation_fee_cents if booking.locked_reservation_fee_cents is not None else checkout_amounts["reservation_fee_cents"]
+
+
 class ProviderPasswordResetView(auth_views.PasswordResetView):
     success_url = reverse_lazy("providers:password_reset_done")
     form_class = ProviderPasswordResetForm
@@ -197,8 +209,14 @@ def booking_detail(request, booking_id):
         action = request.POST.get("action")
         try:
             if action == "propose":
-                price_cents = _parse_price_to_cents(
+                remaining_price_cents = _parse_price_to_cents(
                     request.POST.get("proposed_price_euros")
+                )
+                reservation_fee_cents = _locked_reservation_fee_cents(booking)
+                price_cents = (
+                    reservation_fee_cents + remaining_price_cents
+                    if remaining_price_cents is not None
+                    else None
                 )
                 raw_date = request.POST.get("proposed_date", "")
                 proposed_date = raw_date.strip() or None
@@ -249,6 +267,7 @@ def booking_detail(request, booking_id):
             "message": message,
             "error": error,
             "payment_summary": _payment_summary(booking),
+            "reserved_amount": _format_price_from_cents(_locked_reservation_fee_cents(booking)),
             "admin_mode": admin_mode,
         },
     )

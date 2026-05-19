@@ -145,7 +145,7 @@
                 <div class="booking-action-card">
                     <h3>Réponse à la demande</h3>
                     <p class="booking-action-lead">
-                        Confirme le créneau et le tarif, ou propose un ajustement au client.
+                        Confirme le créneau, ou propose un ajustement sur le reste à payer.
                     </p>
 
                     <div class="booking-decision-flow">
@@ -165,7 +165,7 @@
                             data-target="booking-negotiation-panel"
                             aria-expanded="false"
                         >
-                            Faire une contre-proposition (Prix/Date)
+                            Faire une contre-proposition (Reste/Date)
                         </button>
 
                         <div class="booking-negotiation-panel" id="booking-negotiation-panel">
@@ -173,9 +173,9 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="propose" />
                                 <div class="form-field">
-                                    <label for="price">Nouveau tarif (€)</label>
+                                    <label for="price">Nouveau reste à payer (€)</label>
                                     <input id="price" type="number" name="proposed_price_euros" min="0" step="0.01" inputmode="decimal" />
-                                    <small class="field-hint">Laisse vide si tu ne modifies pas le tarif.</small>
+                                    <small class="field-hint">Acompte déjà réservé : {{ reserved_amount }}. Laisse vide si tu ne modifies pas le reste à payer.</small>
                                 </div>
                                 <div class="form-field">
                                     <label for="proposed_date">Nouvelle date</label>
@@ -265,7 +265,7 @@
             toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
             toggleBtn.textContent = expanded
                 ? 'Masquer la contre-proposition'
-                : 'Faire une contre-proposition (Prix/Date)';
+                : 'Faire une contre-proposition (Reste/Date)';
         });
     }
 </script>

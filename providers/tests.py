@@ -127,7 +127,7 @@ class ProviderDashboardTests(TestCase):
             detail_url,
             {
                 "action": "propose",
-                "proposed_price_euros": "72,00",
+                "proposed_price_euros": "50,00",
                 "proposed_date": "2026-02-01T10:00",
             },
             follow=True,
@@ -136,7 +136,7 @@ class ProviderDashboardTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(booking.status, "PENDING_CLIENT_VALIDATION")
-        self.assertEqual(booking.proposed_price_cents, 7200)
+        self.assertEqual(booking.proposed_price_cents, 7544)
         self.assertEqual(booking.proposed_date, "2026-02-01T10:00")
 
     def test_provider_can_propose_only_price(self):
@@ -147,7 +147,7 @@ class ProviderDashboardTests(TestCase):
             detail_url,
             {
                 "action": "propose",
-                "proposed_price_euros": "80",
+                "proposed_price_euros": "58",
                 "proposed_date": "",
             },
             follow=True,
@@ -156,7 +156,7 @@ class ProviderDashboardTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(booking.status, "PENDING_CLIENT_VALIDATION")
-        self.assertEqual(booking.proposed_price_cents, 8000)
+        self.assertEqual(booking.proposed_price_cents, 8344)
         self.assertIsNone(booking.proposed_date)
 
     def test_booking_detail_displays_optional_counter_proposal_message_field(self):
