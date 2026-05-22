@@ -104,6 +104,23 @@ def _locked_reservation_fee_cents(booking) -> int:
     return booking.locked_reservation_fee_cents if booking.locked_reservation_fee_cents is not None else checkout_amounts["reservation_fee_cents"]
 
 
+def _locked_provider_deposit_cents(booking) -> int:
+    effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
+    deposit_percentage = booking.provider.deposit_percentage if booking.provider.deposit_percentage is not None else 30
+    service_fee_percentage = booking.provider.service_fee_percentage if booking.provider.service_fee_percentage is not None else 0
+    checkout_amounts = compute_checkout_amounts_from_total_cents(
+        total_cents=effective_total_cents,
+        deposit_percentage=deposit_percentage,
+        service_fee_percentage=service_fee_percentage,
+    )
+    reservation_fee_cents = (
+        booking.locked_reservation_fee_cents
+        if booking.locked_reservation_fee_cents is not None
+        else checkout_amounts["reservation_fee_cents"]
+    )
+    return max(reservation_fee_cents - checkout_amounts["service_fee_cents"], 0)
+
+
 class ProviderPasswordResetView(auth_views.PasswordResetView):
     success_url = reverse_lazy("providers:password_reset_done")
     form_class = ProviderPasswordResetForm
@@ -268,6 +285,7 @@ def booking_detail(request, booking_id):
             "error": error,
             "payment_summary": _payment_summary(booking),
             "reserved_amount": _format_price_from_cents(_locked_reservation_fee_cents(booking)),
+            "reserved_provider_deposit_amount": _format_price_from_cents(_locked_provider_deposit_cents(booking)),
             "admin_mode": admin_mode,
         },
     )

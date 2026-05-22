@@ -167,6 +167,8 @@ class ProviderDashboardTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "name=\"counter_proposal_message\"")
+        self.assertContains(response, "Empreinte déjà réservée")
+        self.assertContains(response, "dont acompte prestataire")
 
     def test_provider_can_propose_only_date(self):
         booking = self._create_booking()
