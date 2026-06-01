@@ -28,9 +28,14 @@ from .models import (
     ServiceCategory,
     Zone,
 )
-from interface.models import MarketingService, ProviderBookingDraft
+from interface.models import MarketingService, MarketingSubService, ProviderBookingDraft
 from interface.services.booking_requests import resolve_stored_media_url
 from interface.services.image_processing import compress_image_field
+
+
+class MarketingSubServiceMultipleChoiceField(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        return f"{obj.service.name} · {obj.name}"
 
 
 class ProviderAdminForm(forms.ModelForm):
@@ -43,6 +48,15 @@ class ProviderAdminForm(forms.ModelForm):
         queryset=MarketingService.objects.all(),
         required=False,
         widget=FilteredSelectMultiple("services", is_stacked=False),
+    )
+    marketing_sub_services = MarketingSubServiceMultipleChoiceField(
+        queryset=MarketingSubService.objects.select_related("service").all(),
+        required=False,
+        widget=FilteredSelectMultiple("sous-services", is_stacked=False),
+        help_text=(
+            "Sélectionne ici les sous-services associés à cette prestataire. "
+            "Le service marketing parent est automatiquement associé si nécessaire."
+        ),
     )
 
     class Meta:
@@ -69,6 +83,7 @@ class ProviderAdminForm(forms.ModelForm):
             "user",
             "zones",
             "marketing_services",
+            "marketing_sub_services",
         )
 
     def __init__(self, *args, **kwargs):
@@ -76,6 +91,9 @@ class ProviderAdminForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             self.fields["zones"].initial = self.instance.zones.all()
             self.fields["marketing_services"].initial = self.instance.marketing_services.all()
+            self.fields["marketing_sub_services"].initial = (
+                self.instance.marketing_sub_services.select_related("service").all()
+            )
 
     def save(self, commit=True):
         provider = super().save(commit=commit)
@@ -84,6 +102,7 @@ class ProviderAdminForm(forms.ModelForm):
 
         selected_zones = self.cleaned_data.get("zones")
         selected_services = self.cleaned_data.get("marketing_services")
+        selected_sub_services = self.cleaned_data.get("marketing_sub_services")
 
         if selected_zones is not None:
             ProviderZone.objects.filter(provider=provider).exclude(zone__in=selected_zones).delete()
@@ -95,6 +114,12 @@ class ProviderAdminForm(forms.ModelForm):
                 service__in=selected_services
             ).delete()
             for service in selected_services:
+                ProviderMarketingService.objects.get_or_create(provider=provider, service=service)
+
+        if selected_sub_services is not None:
+            provider.marketing_sub_services.set(selected_sub_services)
+            parent_services = {sub_service.service for sub_service in selected_sub_services}
+            for service in parent_services:
                 ProviderMarketingService.objects.get_or_create(provider=provider, service=service)
 
         if provider.categorized_services_enabled:
