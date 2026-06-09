@@ -15,6 +15,9 @@ class _PaymentGatewayStub:
     def release_auth(self, auth_id: str):
         self.released.append(auth_id)
 
+    def capture_auth(self, auth_id: str):
+        return None
+
 
 class _NotifierStub:
     def __init__(self):
@@ -118,6 +121,31 @@ class ProviderDashboardTests(TestCase):
         self.assertEqual(payment_stub.released, ["auth_1"])
         self.assertEqual(len(notifier_stub.messages), 2)
 
+
+    def test_provider_reject_transfers_booking_to_alternative_search(self):
+        from providers import views
+
+        payment_stub = _PaymentGatewayStub()
+        notifier_stub = _NotifierStub()
+
+        original_gateway = views.payment_gateway
+        original_notifier = views.notifier
+        views.payment_gateway = payment_stub
+        views.notifier = notifier_stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+        self.addCleanup(setattr, views, "notifier", original_notifier)
+
+        booking = self._create_booking(status="SUBMITTED")
+        detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
+
+        response = self.client.post(detail_url, {"action": "reject"}, follow=True)
+
+        booking.refresh_from_db()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(booking.status, "AWAITING_ALTERNATIVE_PROVIDER")
+        self.assertIsNotNone(booking.alternative_requested_at)
+        self.assertEqual(payment_stub.released, [])
+        self.assertEqual(notifier_stub.messages[-1]["subject"], f"Alternative à trouver · {booking.booking_id}")
 
     def test_provider_can_propose_update_from_detail(self):
         booking = self._create_booking()

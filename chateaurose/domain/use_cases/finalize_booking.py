@@ -12,6 +12,7 @@ from chateaurose.domain.use_cases.expire_booking import EXPIRATION_DELAY
 CONFIRMED = "CONFIRMED"
 CANCELLED = "CANCELLED"
 PENDING_CLIENT_VALIDATION = "PENDING_CLIENT_VALIDATION"
+AWAITING_ALTERNATIVE_PROVIDER = "AWAITING_ALTERNATIVE_PROVIDER"
 SUBMITTED = "SUBMITTED"
 
 
@@ -238,22 +239,22 @@ def execute(
                     reply_to=booking.client_contact["email"],
                 )
         elif decision == "reject" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION):
-            booking.status = CANCELLED
-            payment_gateway.release_auth(booking.payment_auth_id)
+            booking.status = AWAITING_ALTERNATIVE_PROVIDER
+            booking.alternative_requested_at = effective_now
             notifier.notify(
                 booking.provider_id,
-                "Demande annulée",
+                "Demande transférée à Château Rose",
                 "\n".join(
                     [
                         f"Bonjour {provider_name},",
                         "",
-                        "Tu as bien annulé la demande.",
+                        "Merci pour ta réponse. La demande n'est pas annulée côté client : Château Rose prend le relais pour chercher une autre coiffeuse compatible.",
                         "Récapitulatif :",
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                        "Aucun montant n'est débité tant qu'un nouveau rendez-vous n'est pas confirmé.",
                         "",
                         "À bientôt,",
                         "L'équipe Château Rose",
@@ -262,25 +263,47 @@ def execute(
             )
             notifier.notify(
                 booking.client_contact["email"],
-                "Demande annulée",
+                "Château Rose cherche une autre coiffeuse",
                 "\n".join(
                     [
                         f"Bonjour {booking.client_contact['name']},",
                         "",
-                        "La demande a été refusée par la prestataire.",
+                        "La coiffeuse choisie ne peut finalement pas assurer ce rendez-vous.",
+                        "Ta demande reste ouverte : Château Rose prend le relais pour chercher une autre coiffeuse compatible avec ta prestation, ton lieu et tes disponibilités.",
+                        "",
                         "Récapitulatif :",
-                        f"- Date : {effective_date}",
+                        f"- Date souhaitée : {effective_date}",
                         f"- Lieu : {location_label}",
-                        f"- Tarif : {formatted_price}",
+                        f"- Tarif estimé : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                        "Paiement : ton empreinte bancaire reste en attente et aucun montant n'est débité avant confirmation d'un nouveau rendez-vous.",
+                        "Si aucune solution adaptée n'est trouvée rapidement, l'empreinte sera libérée.",
                         "",
-                        "Si tu veux, tu peux déposer une nouvelle demande.",
-                        "À bientôt,",
+                        "À très vite,",
                         "L'équipe Château Rose",
                     ]
                 ),
             )
+            if operations_email:
+                notifier.notify(
+                    operations_email,
+                    f"Alternative à trouver · {booking.id}",
+                    "\n".join(
+                        [
+                            "Une prestataire a refusé une demande. La demande reste ouverte et nécessite une alternative.",
+                            f"- ID demande : {booking.id}",
+                            f"- Prestataire initiale : {provider_name}",
+                            f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
+                            f"- Date souhaitée : {effective_date}",
+                            f"- Lieu : {location_label}",
+                            f"- Tarif estimé : {formatted_price}",
+                            f"- Empreinte bancaire : {booking.payment_auth_id}",
+                            "",
+                            "Action requise : contacter une autre coiffeuse compatible, puis proposer une solution à la cliente ou annuler la demande si aucune alternative n'est possible.",
+                        ]
+                    ),
+                    reply_to=booking.client_contact["email"],
+                )
         else:
             raise InvalidState("Invalid state for provider decision")
 
@@ -436,10 +459,27 @@ def execute(
                     ]
                 ),
             )
+            if operations_email:
+                notifier.notify(
+                    operations_email,
+                    f"Demande annulée par la cliente · {booking.id}",
+                    "\n".join(
+                        [
+                            "Une cliente a refusé une proposition. La demande est annulée et l'empreinte bancaire a été libérée.",
+                            f"- ID demande : {booking.id}",
+                            f"- Prestataire : {provider_name}",
+                            f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
+                            f"- Date : {effective_date}",
+                            f"- Lieu : {location_label}",
+                            f"- Tarif : {formatted_price}",
+                        ]
+                    ),
+                    reply_to=booking.client_contact["email"],
+                )
         else:
             raise InvalidState("Invalid state for client decision")
     elif actor == "admin":
-        if decision == "cancel" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION):
+        if decision == "cancel" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER):
             booking.status = CANCELLED
             payment_gateway.release_auth(booking.payment_auth_id)
             notifier.notify(
@@ -483,6 +523,23 @@ def execute(
                     ]
                 ),
             )
+            if operations_email:
+                notifier.notify(
+                    operations_email,
+                    f"Demande annulée par Château Rose · {booking.id}",
+                    "\n".join(
+                        [
+                            "Une demande a été annulée par l'équipe Château Rose et l'empreinte bancaire a été libérée.",
+                            f"- ID demande : {booking.id}",
+                            f"- Prestataire : {provider_name}",
+                            f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
+                            f"- Date : {effective_date}",
+                            f"- Lieu : {location_label}",
+                            f"- Tarif : {formatted_price}",
+                        ]
+                    ),
+                    reply_to=booking.client_contact["email"],
+                )
         else:
             raise InvalidState("Invalid state for admin decision")
     else:

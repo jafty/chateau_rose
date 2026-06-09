@@ -53,6 +53,7 @@ def _expire_visible_open_bookings(*, bookings, now):
             booking_repository=repo,
             payment_gateway=payment_gateway,
             notifier=notifier,
+            operations_email=SUPPORT_EMAIL,
         )
 
 
@@ -160,12 +161,12 @@ def index(request):
 
     if admin_mode:
         open_bookings = Booking.objects.filter(
-            status__in=(expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION)
+            status__in=(expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION, expire_booking_uc.AWAITING_ALTERNATIVE_PROVIDER)
         )
     else:
         open_bookings = Booking.objects.filter(
             provider=provider,
-            status__in=(expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION),
+            status__in=(expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION, expire_booking_uc.AWAITING_ALTERNATIVE_PROVIDER),
         )
 
     _expire_visible_open_bookings(bookings=open_bookings.iterator(), now=timezone.now())
@@ -209,13 +210,14 @@ def booking_detail(request, booking_id):
 
     acting_provider = booking.provider if admin_mode else provider
 
-    if booking.status in (expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION):
+    if booking.status in (expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION, expire_booking_uc.AWAITING_ALTERNATIVE_PROVIDER):
         expire_booking_uc.execute(
             booking_id=booking.booking_id,
             now=timezone.now(),
             booking_repository=repo,
             payment_gateway=payment_gateway,
             notifier=notifier,
+            operations_email=SUPPORT_EMAIL,
         )
         booking.refresh_from_db()
 

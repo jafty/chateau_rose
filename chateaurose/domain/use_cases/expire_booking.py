@@ -1,10 +1,9 @@
 from datetime import timedelta
 
 from chateaurose.domain.entities.booking import BookingRequest
-from chateaurose.domain.exceptions import InvalidState
-
 SUBMITTED = "SUBMITTED"
 PENDING_CLIENT_VALIDATION = "PENDING_CLIENT_VALIDATION"
+AWAITING_ALTERNATIVE_PROVIDER = "AWAITING_ALTERNATIVE_PROVIDER"
 CANCELLED = "CANCELLED"
 EXPIRATION_DELAY = timedelta(hours=72)
 
@@ -16,13 +15,16 @@ def execute(
     booking_repository,
     payment_gateway,
     notifier,
+    operations_email: str | None = None,
 ) -> BookingRequest:
     booking = booking_repository.get(booking_id)
 
     if booking.status in (CANCELLED,):
         return booking
 
-    if booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION) and now - booking.created_at >= EXPIRATION_DELAY:
+    reference_time = (booking.alternative_requested_at or booking.updated_at or booking.created_at) if booking.status == AWAITING_ALTERNATIVE_PROVIDER else booking.created_at
+    if booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER) and now - reference_time >= EXPIRATION_DELAY:
+        expired_while_finding_alternative = booking.status == AWAITING_ALTERNATIVE_PROVIDER
         booking.status = CANCELLED
         booking.updated_at = now
         payment_gateway.release_auth(booking.payment_auth_id)
@@ -37,7 +39,7 @@ def execute(
                 [
                     "Bonjour,",
                     "",
-                    "La demande a expiré faute de confirmation.",
+                    "La recherche d'alternative a expiré." if expired_while_finding_alternative else "La demande a expiré faute de confirmation.",
                     "Récapitulatif :",
                     f"- Date : {effective_date}",
                     f"- Lieu : {booking.location}",
@@ -55,17 +57,34 @@ def execute(
                 [
                     f"Bonjour {booking.client_contact['name']},",
                     "",
-                    "La demande a expiré faute de confirmation.",
+                    "Nous n'avons pas trouvé d'alternative compatible dans le délai prévu." if expired_while_finding_alternative else "La demande a expiré faute de confirmation.",
                     "Récapitulatif :",
                     f"- Date : {effective_date}",
                     f"- Lieu : {booking.location}",
                     f"- Tarif : {formatted_price}",
                     "",
-                    "Si tu veux, tu peux déposer une nouvelle demande.",
+                    "Ton empreinte bancaire a été libérée. Si tu veux, tu peux déposer une nouvelle demande." if expired_while_finding_alternative else "Si tu veux, tu peux déposer une nouvelle demande.",
                     "À bientôt,",
                     "L'équipe Château Rose",
                 ]
             ),
         )
+        if operations_email:
+            notifier.notify(
+                operations_email,
+                f"Demande expirée · {booking.id}",
+                "\n".join(
+                    [
+                        "Une demande a expiré et l'empreinte bancaire a été libérée.",
+                        f"- ID demande : {booking.id}",
+                        f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
+                        f"- Date : {effective_date}",
+                        f"- Lieu : {booking.location}",
+                        f"- Tarif : {formatted_price}",
+                        f"- Statut précédent : {'alternative en recherche' if expired_while_finding_alternative else 'en attente'}",
+                    ]
+                ),
+                reply_to=booking.client_contact["email"],
+            )
         booking_repository.update(booking)
     return booking
