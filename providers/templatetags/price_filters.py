@@ -77,6 +77,7 @@ def booking_status_label(status):
     labels = {
         "SUBMITTED": "Soumise",
         "PENDING_CLIENT_VALIDATION": "En attente client",
+        "AWAITING_ALTERNATIVE_PROVIDER": "Alternative en recherche",
         "CONFIRMED": "Confirmée",
         "CANCELLED": "Annulée",
     }

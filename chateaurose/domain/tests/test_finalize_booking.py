@@ -146,11 +146,12 @@ def test_provider_confirms_original_captures_and_notifies():
     ]
 
 
-def test_provider_rejects_releases_and_notifies():
+def test_provider_rejects_submitted_booking_moves_to_alternative_search_and_notifies_operations():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
     provider_directory = _provider_directory()
+    now = datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc)
 
     booking = BookingRequest(
         id="booking_2",
@@ -177,72 +178,73 @@ def test_provider_rejects_releases_and_notifies():
         booking_id="booking_2",
         actor="provider",
         decision="reject",
-        now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc),
+        now=now,
+        booking_repository=repo,
+        payment_gateway=payments,
+        provider_directory=provider_directory,
+        notifier=notifier,
+        operations_email="ops@example.com",
+    )
+
+    assert updated.status == finalize_booking.AWAITING_ALTERNATIVE_PROVIDER
+    assert updated.alternative_requested_at == now
+    assert payments.release_calls == []
+    assert payments.capture_calls == []
+    assert [(message["recipient"], message["subject"]) for message in notifier.messages] == [
+        ("provider_1", "Demande transférée à Château Rose"),
+        ("sarah@example.com", "Château Rose cherche une autre coiffeuse"),
+        ("ops@example.com", "Alternative à trouver · booking_2"),
+    ]
+    assert "Ta demande reste ouverte" in notifier.messages[1]["body"]
+    assert "Action requise" in notifier.messages[2]["body"]
+    assert notifier.messages[2]["reply_to"] == "sarah@example.com"
+
+
+def test_provider_rejects_pending_client_validation_booking_moves_to_alternative_search():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+    payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
+    now = datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc)
+
+    booking = BookingRequest(
+        id="booking_reject_pending",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Saint-Cyprien",
+        location_preference="domicile",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        client_address="5 place du Capitole, 31000 Toulouse",
+        payment_auth_id="auth_pending",
+        status="PENDING_CLIENT_VALIDATION",
+        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+        proposed_date="2026-01-11T17:00:00Z",
+        proposed_price_cents=9000,
+    )
+    repo.add(booking)
+
+    updated = finalize_booking.execute(
+        booking_id="booking_reject_pending",
+        actor="provider",
+        decision="reject",
+        now=now,
         booking_repository=repo,
         payment_gateway=payments,
         provider_directory=provider_directory,
         notifier=notifier,
     )
 
-    assert updated.status == finalize_booking.CANCELLED
-    assert payments.release_calls == [{"auth_id": "auth_2"}]
-    assert notifier.messages[-2:] == [
-        {
-            "recipient": "provider_1",
-            "subject": "Demande annulée",
-            "body": "\n".join(
-                [
-                    "Bonjour Amandine,",
-                    "",
-                    "Tu as bien annulé la demande.",
-                    "Récapitulatif :",
-                    "- Date : 2026-01-10T17:00:00Z",
-                    "- Lieu : Saint-Cyprien",
-                    "- Tarif : 85,00 €",
-                    "",
-                    "Paiement :",
-                    "- Empreinte bancaire déjà validée : 25,50 € (pas encore débités)",
-                    "  dont acompte prestataire : 25,50 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Montant qui sera débité à la confirmation : 25,50 €",
-                    "  (arrondi affiché : 26,00 €)",
-                    "- Reste à régler chez la prestataire après confirmation : 59,50 €",
-                    "  (arrondi à payer le jour J : 59,00 €)",
-                    "",
-                    "À bientôt,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        },
-        {
-            "recipient": "sarah@example.com",
-            "subject": "Demande annulée",
-            "body": "\n".join(
-                [
-                    "Bonjour Sarah,",
-                    "",
-                    "La demande a été refusée par la prestataire.",
-                    "Récapitulatif :",
-                    "- Date : 2026-01-10T17:00:00Z",
-                    "- Lieu : Saint-Cyprien",
-                    "- Tarif : 85,00 €",
-                    "",
-                    "Paiement :",
-                    "- Empreinte bancaire déjà validée : 25,50 € (pas encore débités)",
-                    "  dont acompte prestataire : 25,50 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Montant qui sera débité à la confirmation : 25,50 €",
-                    "  (arrondi affiché : 26,00 €)",
-                    "- Reste à régler chez la prestataire après confirmation : 59,50 €",
-                    "  (arrondi à payer le jour J : 59,00 €)",
-                    "",
-                    "Si tu veux, tu peux déposer une nouvelle demande.",
-                    "À bientôt,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        },
-    ]
+    assert updated.status == finalize_booking.AWAITING_ALTERNATIVE_PROVIDER
+    assert updated.alternative_requested_at == now
+    assert payments.release_calls == []
+    assert notifier.messages[1]["subject"] == "Château Rose cherche une autre coiffeuse"
 
 
 def test_client_accepts_proposal_captures_and_confirms():
@@ -772,3 +774,98 @@ def test_confirm_schedules_client_reminder_immediately_if_within_24h():
             ),
         }
     ]
+
+
+def test_admin_can_cancel_awaiting_alternative_booking_and_notify_operations():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+    payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
+
+    created_at = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    booking = BookingRequest(
+        id="booking_admin_alt_cancel",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Saint-Cyprien",
+        location_preference="domicile",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        client_address="5 place du Capitole, 31000 Toulouse",
+        payment_auth_id="auth_admin_alt_cancel",
+        status=finalize_booking.AWAITING_ALTERNATIVE_PROVIDER,
+        created_at=created_at,
+        alternative_requested_at=created_at + timedelta(hours=1),
+    )
+    repo.add(booking)
+
+    updated = finalize_booking.execute(
+        booking_id="booking_admin_alt_cancel",
+        actor="admin",
+        decision="cancel",
+        now=created_at + timedelta(hours=2),
+        booking_repository=repo,
+        payment_gateway=payments,
+        provider_directory=provider_directory,
+        notifier=notifier,
+        operations_email="ops@example.com",
+    )
+
+    assert updated.status == finalize_booking.CANCELLED
+    assert payments.release_calls == [{"auth_id": "auth_admin_alt_cancel"}]
+    assert notifier.messages[-1]["recipient"] == "ops@example.com"
+    assert notifier.messages[-1]["subject"] == "Demande annulée par Château Rose · booking_admin_alt_cancel"
+
+
+def test_client_refusal_notifies_operations_when_email_is_configured():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+    payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
+
+    created_at = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    booking = BookingRequest(
+        id="booking_client_refusal_ops",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Saint-Cyprien",
+        location_preference="domicile",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        client_address="5 place du Capitole, 31000 Toulouse",
+        payment_auth_id="auth_client_refusal_ops",
+        status="PENDING_CLIENT_VALIDATION",
+        created_at=created_at,
+        proposed_date="2026-01-11T17:00:00Z",
+        proposed_price_cents=9000,
+    )
+    repo.add(booking)
+
+    updated = finalize_booking.execute(
+        booking_id="booking_client_refusal_ops",
+        actor="client",
+        decision="refuse",
+        now=created_at + timedelta(hours=2),
+        booking_repository=repo,
+        payment_gateway=payments,
+        provider_directory=provider_directory,
+        notifier=notifier,
+        operations_email="ops@example.com",
+    )
+
+    assert updated.status == finalize_booking.CANCELLED
+    assert payments.release_calls == [{"auth_id": "auth_client_refusal_ops"}]
+    assert notifier.messages[-1]["recipient"] == "ops@example.com"
+    assert notifier.messages[-1]["subject"] == "Demande annulée par la cliente · booking_client_refusal_ops"

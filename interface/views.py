@@ -1318,6 +1318,7 @@ def provider_action(request, booking_id):
             booking_repository=repo,
             payment_gateway=payment_gateway,
             notifier=notifier,
+            operations_email=SUPPORT_EMAIL,
         )
     return redirect("interface:home")
 
@@ -1349,6 +1350,7 @@ def client_action(request, booking_id):
             booking_repository=repo,
             payment_gateway=payment_gateway,
             notifier=notifier,
+            operations_email=SUPPORT_EMAIL,
         )
         expired = True
 
@@ -1371,6 +1373,7 @@ def client_confirmation(request, booking_id):
     )
     is_confirmed = booking.status == finalize_booking_uc.CONFIRMED
     is_cancelled = booking.status == finalize_booking_uc.CANCELLED
+    is_awaiting_alternative = booking.status == finalize_booking_uc.AWAITING_ALTERNATIVE_PROVIDER
     show_expired_notice = request.GET.get("status") == "expired"
     is_salon = booking.location_preference == "salon"
     client_moves = is_salon
@@ -1383,6 +1386,7 @@ def client_confirmation(request, booking_id):
             "effective_price": effective_price,
             "is_confirmed": is_confirmed,
             "is_cancelled": is_cancelled,
+            "is_awaiting_alternative": is_awaiting_alternative,
             "show_expired_notice": show_expired_notice,
             "client_moves": client_moves,
             "provider_email": booking.provider.contact_email or "Non communiqué",
@@ -2076,6 +2080,7 @@ def cancel_booking_admin(request, booking_id):
             payment_gateway=payment_gateway,
             provider_directory=provider_directory,
             notifier=notifier,
+            operations_email=SUPPORT_EMAIL,
         )
     except finalize_booking_uc.InvalidState:
         return HttpResponseBadRequest("Impossible d'annuler cette demande.")

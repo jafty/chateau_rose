@@ -13,6 +13,8 @@
             <p class="lead">Merci {{ booking.client_name }}, ton rendez-vous est confirmé.</p>
         {% elif is_cancelled %}
             <p class="lead">La demande est annulée.</p>
+        {% elif is_awaiting_alternative %}
+            <p class="lead">Château Rose cherche une autre coiffeuse compatible. Ton empreinte bancaire n'est pas débitée avant confirmation.</p>
         {% else %}
             <p class="lead">Ta demande est en cours.</p>
         {% endif %}

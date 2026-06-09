@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -17,7 +18,7 @@ class Command(BaseCommand):
 
         booking_ids = list(
             Booking.objects.filter(
-                status__in=(expire_booking.SUBMITTED, expire_booking.PENDING_CLIENT_VALIDATION),
+                status__in=(expire_booking.SUBMITTED, expire_booking.PENDING_CLIENT_VALIDATION, expire_booking.AWAITING_ALTERNATIVE_PROVIDER),
                 created_at__lte=threshold,
             )
             .order_by("created_at")
@@ -40,6 +41,7 @@ class Command(BaseCommand):
                 booking_repository=repository,
                 payment_gateway=payment_gateway,
                 notifier=notifier,
+                operations_email=(getattr(settings, "OPERATIONS_EMAIL", "") or "").strip() or None,
             )
             if result.status == expire_booking.CANCELLED:
                 expired_count += 1

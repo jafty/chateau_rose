@@ -218,6 +218,16 @@
                         La personne cliente doit valider ta proposition avant confirmation.
                     </p>
                 </div>
+            {% elif booking.status == "AWAITING_ALTERNATIVE_PROVIDER" %}
+                <div class="booking-action-card booking-status-info">
+                    <h3>Alternative en recherche</h3>
+                    <p class="booking-action-lead">
+                        La demande reste ouverte côté client. Château Rose prend le relais pour trouver une autre coiffeuse compatible avant de confirmer ou d'annuler.
+                    </p>
+                    {% if admin_mode %}
+                        <p class="meta-line">Action requise : contacter une autre prestataire, puis envoyer une proposition à la cliente ou annuler si aucune solution n'est possible.</p>
+                    {% endif %}
+                </div>
             {% elif booking.status == "CONFIRMED" %}
                 <div class="booking-action-card booking-status-info">
                     <h3>Rendez-vous confirmé</h3>

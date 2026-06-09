@@ -19,6 +19,7 @@ class BookingRequest:
     payment_auth_id: str
     status: str
     created_at: datetime
+    alternative_requested_at: datetime | None = None
     general_adjustments: list[str] | None = None
     proposed_price_cents: int | None = None
     proposed_date: str | None = None

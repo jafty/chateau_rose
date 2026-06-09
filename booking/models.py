@@ -452,6 +452,7 @@ class Booking(models.Model):
     STATUS_CHOICES = [
         ("SUBMITTED", "SUBMITTED"),
         ("PENDING_CLIENT_VALIDATION", "PENDING_CLIENT_VALIDATION"),
+        ("AWAITING_ALTERNATIVE_PROVIDER", "AWAITING_ALTERNATIVE_PROVIDER"),
         ("CONFIRMED", "CONFIRMED"),
         ("CANCELLED", "CANCELLED"),
     ]
@@ -474,6 +475,7 @@ class Booking(models.Model):
     estimated_price_cents = models.IntegerField()
     payment_auth_id = models.CharField(max_length=64)
     status = models.CharField(max_length=64, choices=STATUS_CHOICES)
+    alternative_requested_at = models.DateTimeField(null=True, blank=True)
     proposed_price_cents = models.IntegerField(null=True, blank=True)
     locked_reservation_fee_cents = models.IntegerField(
         null=True,

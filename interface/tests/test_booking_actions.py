@@ -97,7 +97,8 @@ class BookingActionTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(booking.status, "CANCELLED")
         self.assertEqual(payment_stub.released, ["pi_auth_expired"])
-        self.assertEqual(len(notifier_stub.messages), 2)
+        self.assertEqual(len(notifier_stub.messages), 3)
+        self.assertEqual(notifier_stub.messages[-1]["subject"], f"Demande expirée · {booking.booking_id}")
 
         confirmation = self.client.get(reverse("interface:client_confirmation", args=[booking.booking_id]), data={"status": "expired"})
         self.assertContains(confirmation, "Cette demande a expiré après 72h sans confirmation")
@@ -154,7 +155,8 @@ class BookingActionTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(booking.status, "CANCELLED")
         self.assertEqual(payment_stub.released, ["pi_auth_admin_expired"])
-        self.assertEqual(len(notifier_stub.messages), 2)
+        self.assertEqual(len(notifier_stub.messages), 3)
+        self.assertEqual(notifier_stub.messages[-1]["subject"], f"Demande annulée par Château Rose · {booking.booking_id}")
 
     def test_client_confirmation_uses_locked_reservation_fee_when_present(self):
         booking = Booking.objects.create(
