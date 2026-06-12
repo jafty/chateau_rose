@@ -45,6 +45,7 @@ Variables importantes :
 - `DJANGO_MAINTENANCE_MODE` : mettre à `True` pour afficher la page de maintenance sur les routes publiques ; les administrateurs connectés peuvent toujours naviguer sur le site public pour tester.
 - `MAINTENANCE_CONTACT_EMAIL` : email utilisé par le CTA de la page de maintenance.
 - `MAINTENANCE_RETRY_AFTER_SECONDS` : valeur de l'en-tête `Retry-After` renvoyé avec la maintenance.
+- `MAINTENANCE_PREVIEW_COOKIE_MAX_AGE_SECONDS` : durée du cookie signé permettant à un administrateur connecté de prévisualiser le site public pendant la maintenance.
 
 ## Médias (uploads)
 

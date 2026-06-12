@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core import signing
 from django.test import TestCase, override_settings
 
 
@@ -6,6 +7,7 @@ from django.test import TestCase, override_settings
     MAINTENANCE_MODE=True,
     MAINTENANCE_CONTACT_EMAIL="rdv@example.com",
     MAINTENANCE_RETRY_AFTER_SECONDS=120,
+    MAINTENANCE_PREVIEW_COOKIE_MAX_AGE_SECONDS=3600,
     STORAGES={
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
         "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
@@ -21,6 +23,11 @@ class MaintenanceModeMiddlewareTests(TestCase):
         self.assertIn("Nous préparons une plus belle expérience", content)
         self.assertIn("Prendre RDV par email", content)
         self.assertIn("mailto:rdv@example.com", content)
+        self.assertEqual(
+            response.headers["Cache-Control"],
+            "no-store, no-cache, must-revalidate, max-age=0",
+        )
+        self.assertEqual(response.headers["Pragma"], "no-cache")
 
     def test_admin_route_is_available_during_maintenance(self):
         response = self.client.get("/admin/")
@@ -46,6 +53,35 @@ class MaintenanceModeMiddlewareTests(TestCase):
             password="password",
         )
         self.client.force_login(user)
+
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 503)
+
+    def test_admin_route_sets_preview_cookie_for_admin_user(self):
+        user = get_user_model().objects.create_superuser(
+            username="preview-admin",
+            email="preview-admin@example.com",
+            password="password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get("/admin/")
+
+        self.assertIn("maintenance_preview", response.cookies)
+
+    def test_signed_preview_cookie_can_preview_public_site(self):
+        self.client.cookies["maintenance_preview"] = signing.dumps(
+            {"preview": "admin"},
+            salt="chateaurose.maintenance-preview",
+        )
+
+        response = self.client.get("/")
+
+        self.assertNotEqual(response.status_code, 503)
+
+    def test_invalid_preview_cookie_still_sees_maintenance_page(self):
+        self.client.cookies["maintenance_preview"] = "invalid"
 
         response = self.client.get("/")
 
