@@ -4,6 +4,7 @@ from chateaurose.domain.entities.booking import BookingRequest
 SUBMITTED = "SUBMITTED"
 PENDING_CLIENT_VALIDATION = "PENDING_CLIENT_VALIDATION"
 AWAITING_ALTERNATIVE_PROVIDER = "AWAITING_ALTERNATIVE_PROVIDER"
+WAITING_PROVIDER_ASSIGNMENT = "WAITING_PROVIDER_ASSIGNMENT"
 CANCELLED = "CANCELLED"
 EXPIRATION_DELAY = timedelta(hours=72)
 
@@ -23,11 +24,13 @@ def execute(
         return booking
 
     reference_time = (booking.alternative_requested_at or booking.updated_at or booking.created_at) if booking.status == AWAITING_ALTERNATIVE_PROVIDER else booking.created_at
-    if booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER) and now - reference_time >= EXPIRATION_DELAY:
+    if booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER, WAITING_PROVIDER_ASSIGNMENT) and now - reference_time >= EXPIRATION_DELAY:
         expired_while_finding_alternative = booking.status == AWAITING_ALTERNATIVE_PROVIDER
         booking.status = CANCELLED
         booking.updated_at = now
-        payment_gateway.release_auth(booking.payment_auth_id)
+        if booking.payment_auth_id:
+            payment_gateway.release_auth(booking.payment_auth_id)
+        booking.payment_status = "RELEASED" if booking.amount_due_now_cents > 0 else "WAIVED"
         euros = booking.estimated_price_cents / 100
         formatted_price = f"{euros:.2f}".replace(".", ",")
         formatted_price = f"{formatted_price} €"

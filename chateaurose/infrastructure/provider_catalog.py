@@ -37,6 +37,8 @@ class DjangoProviderCatalog:
             "deposit_cents": service.provider.deposit_cents,
             "deposit_percentage": service.provider.deposit_percentage,
             "service_fee_percentage": service.provider.service_fee_percentage,
+            "marketing_service_id": str(service.marketing_service_id) if service.marketing_service_id else None,
+            "marketing_sub_service_ids": [str(item) for item in service.marketing_sub_services.values_list("id", flat=True)],
         }
 
     def provider_covers_zone(self, provider_id: str, zone_name: str) -> bool:
@@ -89,3 +91,26 @@ class DjangoProviderCatalog:
 
     def provider_has_blocked_slot(self, provider_id: str, desired_date: str) -> bool:
         return self.get_blocked_slot_details(provider_id, desired_date) is not None
+
+    def provider_service_matches_intent(
+        self,
+        *,
+        provider_id: str,
+        service_id: str,
+        requested_marketing_service_id: str | None = None,
+        requested_marketing_sub_service_id: str | None = None,
+    ) -> bool:
+        try:
+            service = Service.objects.get(id=service_id, provider_id=provider_id)
+        except Service.DoesNotExist:
+            return False
+
+        if requested_marketing_sub_service_id:
+            return service.marketing_sub_services.filter(id=requested_marketing_sub_service_id).exists()
+
+        if requested_marketing_service_id:
+            if service.marketing_service_id and str(service.marketing_service_id) == str(requested_marketing_service_id):
+                return True
+            return service.provider.marketing_services.filter(id=requested_marketing_service_id).exists()
+
+        return True

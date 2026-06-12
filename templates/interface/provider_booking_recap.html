@@ -6,10 +6,10 @@
 <section class="booking-recap-page">
     <div class="container">
         <div class="recap-header">
-            <h1>Dernière étape{% if payload.client_name %}, {{ payload.client_name }}{% endif %} !</h1>
+            <h1>Vérifie ton récapitulatif{% if payload.client_name %}, {{ payload.client_name }}{% endif %}</h1>
             <p>
-                Vérifie les informations de ton rendez-vous et sécurise ta demande.
-                <strong>Tu ne seras pas débité(e) aujourd'hui.</strong>
+                Vérifie les informations de ton rendez-vous et confirme ta demande.
+                <strong>Château Rose ne collecte que ses propres frais de service.</strong>
             </p>
         </div>
 
@@ -34,8 +34,8 @@
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                             </div>
                             <div class="timeline-content">
-                                <h3>1. Empreinte bancaire (Maintenant)</h3>
-                                <p>Tu renseignes ta carte pour prouver ton sérieux. <strong>Aucun montant n'est prélevé.</strong></p>
+                                <h3>1. Frais Château Rose</h3>
+                                <p>Tu règles uniquement les frais de service Château Rose si un montant reste dû.</p>
                             </div>
                         </div>
                         <div class="timeline-step">
@@ -44,7 +44,7 @@
                             </div>
                             <div class="timeline-content">
                                 <h3>2. Validation par {{ provider.name }}</h3>
-                                <p>La prestataire a 48h pour accepter. Si elle accepte, l'empreinte est transformée en règlement. Si elle refuse, l'empreinte disparaît.</p>
+                                <p>La prestataire a 48h pour accepter, refuser ou proposer un ajustement.</p>
                             </div>
                         </div>
                         <div class="timeline-step">
@@ -53,7 +53,7 @@
                             </div>
                             <div class="timeline-content">
                                 <h3>3. Le jour de la coiffure</h3>
-                                <p>Tu règles le reste directement auprès de {{ provider.name }} selon les conditions indiquées.</p>
+                                <p>Tu règles la prestation coiffure directement auprès de {{ provider.name }}.</p>
                             </div>
                         </div>
                     </div>
@@ -173,10 +173,10 @@
                     </div>
 
                     <div class="price-highlight">
-                        <span>Empreinte sécurisée requise</span>
+                        <span>{% if amount_due_now_cents == 0 %}Aucun paiement en ligne requis{% else %}Frais Château Rose à régler{% endif %}</span>
                         <div class="amount">{{ deposit_price }}</div>
-                        <p>Dont acompte prestataire : {{ acompte_price }}.</p>
-                        <p>Débit uniquement si le RDV est validé par {{ provider.name }}.</p>
+                        <p>Ces frais couvrent la mise en relation Château Rose uniquement.</p>
+                        <p>La prestation coiffure est réglée directement à {{ provider.name }} le jour du rendez-vous.</p>
                     </div>
 
                     <div class="receipt-line receipt-line--strong">
@@ -191,16 +191,16 @@
                             {% csrf_token %}
                             <input type="hidden" name="action" value="confirm">
                             <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
-                            {% if stripe_public_key %}
-                                <label class="stripe-label">Saisis ta carte pour l'empreinte</label>
+                            {% if require_payment_auth %}
+                                <label class="stripe-label">Saisis ta carte pour régler les frais Château Rose</label>
                                 <div class="stripe-zone">
-                                    <p class="meta-line" id="payment-hint">Aucun débit avant confirmation finale par la prestataire.</p>
+                                    <p class="meta-line" id="payment-hint">La prestation coiffure restera à régler directement le jour du rendez-vous.</p>
                                     <div id="payment-element" class="payment-element payment-element--tall"></div>
                                     <div class="alert error" id="payment-error" hidden></div>
                                 </div>
                             {% endif %}
 
-                            <button type="submit" class="btn recap-submit-btn">Sécuriser ma demande</button>
+                            <button type="submit" class="btn recap-submit-btn">{% if amount_due_now_cents == 0 %}Confirmer ma demande{% else %}Sécuriser ma demande{% endif %}</button>
                         </form>
                     {% endif %}
 
@@ -221,7 +221,7 @@
         </div>
     </div>
 </section>
-{% if stripe_public_key and not is_completed %}
+{% if require_payment_auth and not is_completed %}
 <script src="https://js.stripe.com/v3"></script>
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     const paymentData = await response.json().catch(() => ({}));
     if (!response.ok || !paymentData.client_secret) {
-        showError(paymentData.error || "Impossible de préparer l'empreinte bancaire.");
+        showError(paymentData.error || "Impossible de préparer le paiement Château Rose.");
         return;
     }
 
