@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core import signing
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 
 
 @override_settings(
@@ -84,6 +84,16 @@ class MaintenanceModeMiddlewareTests(TestCase):
         self.client.cookies["maintenance_preview"] = "invalid"
 
         response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 503)
+
+    def test_request_without_session_shows_maintenance_page(self):
+        from chateaurose.middleware import MaintenanceModeMiddleware
+
+        request = RequestFactory().get("/")
+        middleware = MaintenanceModeMiddleware(lambda _request: None)
+
+        response = middleware(request)
 
         self.assertEqual(response.status_code, 503)
 

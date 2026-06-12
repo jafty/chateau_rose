@@ -81,7 +81,11 @@ class MaintenanceModeMiddleware:
         if user and user.is_authenticated and (user.is_staff or user.is_superuser):
             return True
 
-        user_id = request.session.get("_auth_user_id")
+        session = getattr(request, "session", None)
+        if session is None:
+            return False
+
+        user_id = session.get("_auth_user_id")
         if not user_id:
             return False
 
