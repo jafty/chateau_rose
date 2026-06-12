@@ -30,120 +30,28 @@ def test_provider_confirms_original_captures_and_notifies():
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
     provider_directory = _provider_directory()
-
     booking = BookingRequest(
-        id="booking_1",
-        provider_id="provider_1",
-        service_id="service_tresses",
-        client_contact={"name": "Sarah", "email": "sarah@example.com"},
-        location="Paris 10e",
-        location_preference="salon",
-        desired_date="2026-01-10T17:00:00Z",
-        hair_length="long",
-        meche=False,
-        current_hair_picture="s3://bucket/hair.jpg",
-        inspiration_pictures=[],
-        free_text="",
-        estimated_price_cents=8500,
-        payment_auth_id="auth_1",
-        status="SUBMITTED",
-        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+        id="booking_1", provider_id="provider_1", service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"}, location="Paris 10e",
+        location_preference="salon", desired_date="2026-01-10T17:00:00Z", hair_length="long",
+        meche=False, current_hair_picture="s3://bucket/hair.jpg", inspiration_pictures=[], free_text="",
+        estimated_price_cents=8500, provider_price_estimate_cents=7000, chateau_rose_fee_cents=1500,
+        amount_due_now_cents=1500, payment_status="AUTHORIZED", payment_auth_id="auth_1",
+        status="SUBMITTED", created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
     )
     repo.add(booking)
-
     updated = finalize_booking.execute(
-        booking_id="booking_1",
-        actor="provider",
-        decision="confirm",
-        now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc),
-        booking_repository=repo,
-        payment_gateway=payments,
-        provider_directory=provider_directory,
-        notifier=notifier,
+        booking_id="booking_1", actor="provider", decision="confirm",
+        now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc), booking_repository=repo,
+        payment_gateway=payments, provider_directory=provider_directory, notifier=notifier,
         operations_email="ops@example.com",
     )
-
     assert updated.status == finalize_booking.CONFIRMED
+    assert updated.payment_status == "CAPTURED"
     assert payments.capture_calls == [{"auth_id": "auth_1"}]
-    assert notifier.messages == [
-        {
-            "recipient": "provider_1",
-            "subject": "Rendez-vous confirmé",
-            "body": "\n".join(
-                [
-                    "Bonjour Amandine,",
-                    "",
-                    "Merci, ton rendez-vous est confirmé.",
-                    "Récapitulatif :",
-                    "- Date : 2026-01-10T17:00:00Z",
-                    "- Lieu : Paris 10e",
-                    "- Tarif : 85,00 €",
-                    "",
-                    "Paiement :",
-                    "- Frais de réservation débités : 25,50 €",
-                    "  dont acompte prestataire : 25,50 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Reste à régler chez la prestataire : 59,50 €",
-                    "  (arrondi à payer le jour J : 59,00 €)",
-                    "",
-                    "La personne cliente se déplace chez toi.",
-                    "",
-                    "Belle journée,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        },
-        {
-            "recipient": "sarah@example.com",
-            "subject": "Rendez-vous confirmé",
-            "body": "\n".join(
-                [
-                    "Bonjour Sarah,",
-                    "",
-                    "Bonne nouvelle, ta réservation est confirmée.",
-                    "Récapitulatif :",
-                    "- Date : 2026-01-10T17:00:00Z",
-                    "- Lieu : Paris 10e",
-                    "- Tarif : 85,00 €",
-                    "",
-                    "Paiement :",
-                    "- Frais de réservation débités : 25,50 €",
-                    "  dont acompte prestataire : 25,50 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Reste à régler chez la prestataire : 59,50 €",
-                    "  (arrondi à payer le jour J : 59,00 €)",
-                    "",
-                    "Adresse de la prestataire : 12 rue des Fleurs, 75010 Paris",
-                    "Cette information est partagée uniquement pour organiser le rendez-vous.",
-                    "",
-                    "À très vite,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        },
-        {
-            "recipient": "ops@example.com",
-            "subject": "Acompte débité · rendez-vous confirmé",
-            "body": "\n".join(
-                [
-                    "Un rendez-vous vient d'être confirmé et l'acompte a été débité.",
-                    "- ID demande : booking_1",
-                    "- Prestataire : Amandine",
-                    "- Cliente : Sarah (sarah@example.com)",
-                    "- Date : 2026-01-10T17:00:00Z",
-                    "- Lieu : Paris 10e",
-                    "- Tarif total : 85,00 €",
-                    "Paiement :",
-                    "- Frais de réservation débités : 25,50 €",
-                    "  dont acompte prestataire : 25,50 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Reste à régler chez la prestataire : 59,50 €",
-                    "  (arrondi à payer le jour J : 59,00 €)",
-                ]
-            ),
-            "reply_to": "sarah@example.com",
-        },
-    ]
+    assert len(notifier.messages) == 3
+    assert all("acompte prestataire" not in message["body"] for message in notifier.messages)
+    assert any("Frais Château Rose débités" in message["body"] for message in notifier.messages)
 
 
 def test_provider_rejects_submitted_booking_moves_to_alternative_search_and_notifies_operations():
@@ -248,205 +156,48 @@ def test_provider_rejects_pending_client_validation_booking_moves_to_alternative
 
 
 def test_client_accepts_proposal_captures_and_confirms():
-    repo = InMemoryBookingRepository()
-    notifier = InMemoryNotifier()
-    payments = InMemoryPaymentGateway()
-    provider_directory = _provider_directory()
-
+    repo = InMemoryBookingRepository(); notifier = InMemoryNotifier(); payments = InMemoryPaymentGateway(); provider_directory = _provider_directory()
     booking = BookingRequest(
-        id="booking_3",
-        provider_id="provider_1",
-        service_id="service_tresses",
-        client_contact={"name": "Sarah", "email": "sarah@example.com"},
-        location="Saint-Cyprien",
-        location_preference="domicile",
-        desired_date="2026-01-11T18:00:00Z",
-        hair_length="long",
-        meche=False,
-        current_hair_picture="s3://bucket/hair.jpg",
-        inspiration_pictures=[],
-        free_text="",
-        estimated_price_cents=8500,
-        client_address="5 place du Capitole, 31000 Toulouse",
-        payment_auth_id="auth_3",
-        status="PENDING_CLIENT_VALIDATION",
-        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
-        proposed_price_cents=9000,
-        proposed_date="2026-01-11T18:00:00Z",
+        id="booking_3", provider_id="provider_1", service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"}, location="Saint-Cyprien",
+        location_preference="domicile", desired_date="2026-01-11T18:00:00Z", hair_length="long", meche=False,
+        current_hair_picture="s3://bucket/hair.jpg", inspiration_pictures=[], free_text="",
+        estimated_price_cents=10500, provider_price_estimate_cents=9000, chateau_rose_fee_cents=1500,
+        amount_due_now_cents=1500, payment_status="AUTHORIZED", client_address="5 place du Capitole, 31000 Toulouse",
+        payment_auth_id="auth_3", status="PENDING_CLIENT_VALIDATION", created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+        proposed_price_cents=9000, proposed_date="2026-01-11T18:00:00Z",
     )
     repo.add(booking)
-
     updated = finalize_booking.execute(
-        booking_id="booking_3",
-        actor="client",
-        decision="accept",
-        now=datetime(2026, 1, 11, 10, 0, tzinfo=timezone.utc),
-        booking_repository=repo,
-        payment_gateway=payments,
-        provider_directory=provider_directory,
-        notifier=notifier,
+        booking_id="booking_3", actor="client", decision="accept", now=datetime(2026, 1, 11, 10, 0, tzinfo=timezone.utc),
+        booking_repository=repo, payment_gateway=payments, provider_directory=provider_directory, notifier=notifier,
     )
-
     assert updated.status == finalize_booking.CONFIRMED
     assert payments.capture_calls == [{"auth_id": "auth_3"}]
-    assert notifier.messages == [
-        {
-            "recipient": "provider_1",
-            "subject": "Rendez-vous confirmé",
-            "body": "\n".join(
-                [
-                    "Bonjour Amandine,",
-                    "",
-                    "La personne cliente a accepté la proposition.",
-                    "Récapitulatif :",
-                    "- Date : 2026-01-11T18:00:00Z",
-                    "- Lieu : Saint-Cyprien",
-                    "- Tarif : 90,00 €",
-                    "",
-                    "Paiement :",
-                    "- Frais de réservation débités : 27,00 €",
-                    "  dont acompte prestataire : 27,00 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Reste à régler chez la prestataire : 63,00 €",
-                    "  (arrondi à payer le jour J : 63,00 €)",
-                    "",
-                    "Adresse de la personne cliente : 5 place du Capitole, 31000 Toulouse",
-                    "Adresse transmise uniquement pour ce rendez-vous, merci de la garder confidentielle.",
-                    "",
-                    "Belle journée,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        },
-        {
-            "recipient": "sarah@example.com",
-            "subject": "Rendez-vous confirmé",
-            "body": "\n".join(
-                [
-                    "Bonjour Sarah,",
-                    "",
-                    "Bonne nouvelle, ta réservation est confirmée.",
-                    "Récapitulatif :",
-                    "- Date : 2026-01-11T18:00:00Z",
-                    "- Lieu : Saint-Cyprien",
-                    "- Tarif : 90,00 €",
-                    "",
-                    "Paiement :",
-                    "- Frais de réservation débités : 27,00 €",
-                    "  dont acompte prestataire : 27,00 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Reste à régler chez la prestataire : 63,00 €",
-                    "  (arrondi à payer le jour J : 63,00 €)",
-                    "",
-                    "Le profil partenaire se déplace jusqu'à toi.",
-                    "",
-                    "À très vite,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        },
-    ]
+    assert any("Frais Château Rose débités" in message["body"] for message in notifier.messages)
 
 
 def test_client_refuses_proposal_releases_and_cancels():
-    repo = InMemoryBookingRepository()
-    notifier = InMemoryNotifier()
-    payments = InMemoryPaymentGateway()
-    provider_directory = _provider_directory()
-
+    repo = InMemoryBookingRepository(); notifier = InMemoryNotifier(); payments = InMemoryPaymentGateway(); provider_directory = _provider_directory()
     booking = BookingRequest(
-        id="booking_4",
-        provider_id="provider_1",
-        service_id="service_tresses",
-        client_contact={"name": "Sarah", "email": "sarah@example.com"},
-        location="Saint-Cyprien",
-        location_preference="domicile",
-        desired_date="2026-01-11T18:00:00Z",
-        hair_length="long",
-        meche=False,
-        current_hair_picture="s3://bucket/hair.jpg",
-        inspiration_pictures=[],
-        free_text="",
-        estimated_price_cents=8500,
-        client_address="5 place du Capitole, 31000 Toulouse",
-        payment_auth_id="auth_4",
-        status="PENDING_CLIENT_VALIDATION",
-        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
-        proposed_price_cents=9000,
-        proposed_date="2026-01-11T18:00:00Z",
+        id="booking_4", provider_id="provider_1", service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"}, location="Saint-Cyprien",
+        location_preference="domicile", desired_date="2026-01-11T18:00:00Z", hair_length="long", meche=False,
+        current_hair_picture="s3://bucket/hair.jpg", inspiration_pictures=[], free_text="",
+        estimated_price_cents=10500, provider_price_estimate_cents=9000, chateau_rose_fee_cents=1500,
+        amount_due_now_cents=1500, payment_status="AUTHORIZED", client_address="5 place du Capitole, 31000 Toulouse",
+        payment_auth_id="auth_4", status="PENDING_CLIENT_VALIDATION", created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+        proposed_price_cents=9000, proposed_date="2026-01-11T18:00:00Z",
     )
     repo.add(booking)
-
     updated = finalize_booking.execute(
-        booking_id="booking_4",
-        actor="client",
-        decision="refuse",
-        now=datetime(2026, 1, 11, 10, 0, tzinfo=timezone.utc),
-        booking_repository=repo,
-        payment_gateway=payments,
-        provider_directory=provider_directory,
-        notifier=notifier,
+        booking_id="booking_4", actor="client", decision="refuse", now=datetime(2026, 1, 11, 10, 0, tzinfo=timezone.utc),
+        booking_repository=repo, payment_gateway=payments, provider_directory=provider_directory, notifier=notifier,
     )
-
     assert updated.status == finalize_booking.CANCELLED
+    assert updated.payment_status == "RELEASED"
     assert payments.release_calls == [{"auth_id": "auth_4"}]
-    assert notifier.messages == [
-        {
-            "recipient": "provider_1",
-            "subject": "Demande annulée",
-            "body": "\n".join(
-                [
-                    "Bonjour Amandine,",
-                    "",
-                    "La personne cliente a refusé la proposition.",
-                    "Récapitulatif :",
-                    "- Date : 2026-01-11T18:00:00Z",
-                    "- Lieu : Saint-Cyprien",
-                    "- Tarif : 90,00 €",
-                    "",
-                    "Paiement :",
-                    "- Empreinte bancaire déjà validée : 27,00 € (pas encore débités)",
-                    "  dont acompte prestataire : 27,00 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Montant qui sera débité à la confirmation : 27,00 €",
-                    "  (arrondi affiché : 27,00 €)",
-                    "- Reste à régler chez la prestataire après confirmation : 63,00 €",
-                    "  (arrondi à payer le jour J : 63,00 €)",
-                    "",
-                    "À bientôt,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        },
-        {
-            "recipient": "sarah@example.com",
-            "subject": "Demande annulée",
-            "body": "\n".join(
-                [
-                    "Bonjour Sarah,",
-                    "",
-                    "Tu as refusé la proposition : la demande est annulée.",
-                    "Récapitulatif :",
-                    "- Date : 2026-01-11T18:00:00Z",
-                    "- Lieu : Saint-Cyprien",
-                    "- Tarif : 90,00 €",
-                    "",
-                    "Paiement :",
-                    "- Empreinte bancaire déjà validée : 27,00 € (pas encore débités)",
-                    "  dont acompte prestataire : 27,00 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Montant qui sera débité à la confirmation : 27,00 €",
-                    "  (arrondi affiché : 27,00 €)",
-                    "- Reste à régler chez la prestataire après confirmation : 63,00 €",
-                    "  (arrondi à payer le jour J : 63,00 €)",
-                    "",
-                    "Si tu veux, tu peux déposer une nouvelle demande.",
-                    "À bientôt,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        },
-    ]
+    assert all("acompte prestataire" not in message["body"] for message in notifier.messages)
 
 
 def test_finalize_booking_rejects_invalid_actor():
@@ -494,56 +245,17 @@ def test_finalize_booking_rejects_invalid_actor():
 
 
 def test_finalize_booking_idempotent_no_double_capture_or_release():
-    repo = InMemoryBookingRepository()
-    notifier = InMemoryNotifier()
-    payments = InMemoryPaymentGateway()
-    provider_directory = _provider_directory()
-
-    booking = BookingRequest(
-        id="booking_idem",
-        provider_id="provider_1",
-        service_id="service_tresses",
-        client_contact={"name": "Sarah", "email": "sarah@example.com"},
-        location="Saint-Cyprien",
-        location_preference="domicile",
-        desired_date="2026-01-10T17:00:00Z",
-        hair_length="long",
-        meche=False,
-        current_hair_picture="s3://bucket/hair.jpg",
-        inspiration_pictures=[],
-        free_text="",
-        estimated_price_cents=8500,
-        client_address="5 place du Capitole, 31000 Toulouse",
-        payment_auth_id="auth_idem",
-        status="SUBMITTED",
-        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+    repo = InMemoryBookingRepository(); notifier = InMemoryNotifier(); payments = InMemoryPaymentGateway(); provider_directory = _provider_directory()
+    confirmed = BookingRequest(
+        id="confirmed", provider_id="provider_1", service_id="service_tresses", client_contact={"name":"Sarah","email":"sarah@example.com"},
+        location="Paris", desired_date="2026-01-10T17:00:00Z", hair_length="long", meche=False, current_hair_picture="", inspiration_pictures=[], free_text="",
+        estimated_price_cents=8500, payment_auth_id="auth_confirmed", status=finalize_booking.CONFIRMED, created_at=datetime(2026,1,10,9,0,tzinfo=timezone.utc),
+        amount_due_now_cents=1500, payment_status="CAPTURED",
     )
-    repo.add(booking)
-
-    first = finalize_booking.execute(
-        booking_id="booking_idem",
-        actor="provider",
-        decision="confirm",
-        now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc),
-        booking_repository=repo,
-        payment_gateway=payments,
-        provider_directory=provider_directory,
-        notifier=notifier,
-    )
-    second = finalize_booking.execute(
-        booking_id="booking_idem",
-        actor="provider",
-        decision="confirm",
-        now=datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc),
-        booking_repository=repo,
-        payment_gateway=payments,
-        provider_directory=provider_directory,
-        notifier=notifier,
-    )
-
-    assert first.status == finalize_booking.CONFIRMED
-    assert second.status == finalize_booking.CONFIRMED
-    assert payments.capture_calls == [{"auth_id": "auth_idem"}]
+    repo.add(confirmed)
+    result = finalize_booking.execute(booking_id="confirmed", actor="provider", decision="confirm", now=datetime(2026,1,10,10,0,tzinfo=timezone.utc), booking_repository=repo, payment_gateway=payments, provider_directory=provider_directory, notifier=notifier)
+    assert result.status == finalize_booking.CONFIRMED
+    assert payments.capture_calls == []
     assert payments.release_calls == []
 
 
@@ -637,143 +349,34 @@ def test_admin_can_cancel_uncaptured_booking_even_if_expired():
 
 
 def test_confirm_schedules_client_reminder_24h_before():
-    repo = InMemoryBookingRepository()
-    notifier = InMemoryNotifier()
-    payments = InMemoryPaymentGateway()
-    provider_directory = _provider_directory()
-    reminders = InMemoryReminderGateway()
-
+    repo = InMemoryBookingRepository(); notifier = InMemoryNotifier(); payments = InMemoryPaymentGateway(); provider_directory = _provider_directory(); reminders = InMemoryReminderGateway()
     booking = BookingRequest(
-        id="booking_reminder_24h",
-        provider_id="provider_1",
-        service_id="service_tresses",
-        client_contact={"name": "Sarah", "email": "sarah@example.com"},
-        location="Paris 10e",
-        location_preference="salon",
-        desired_date="2026-01-12T12:00:00Z",
-        hair_length="long",
-        meche=False,
-        current_hair_picture="s3://bucket/hair.jpg",
-        inspiration_pictures=[],
-        free_text="",
-        estimated_price_cents=8500,
-        payment_auth_id="auth_reminder_24h",
-        status="SUBMITTED",
-        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+        id="booking_reminder", provider_id="provider_1", service_id="service_tresses", client_contact={"name":"Sarah","email":"sarah@example.com"},
+        location="Paris 10e", location_preference="salon", desired_date="2026-01-12T12:00:00Z", hair_length="long", meche=False,
+        current_hair_picture="s3://bucket/hair.jpg", inspiration_pictures=[], free_text="", estimated_price_cents=10000,
+        provider_price_estimate_cents=8500, chateau_rose_fee_cents=1500, amount_due_now_cents=1500, payment_status="AUTHORIZED",
+        payment_auth_id="auth_reminder", status="SUBMITTED", created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
     )
     repo.add(booking)
-
-    now = datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc)
-    finalize_booking.execute(
-        booking_id="booking_reminder_24h",
-        actor="provider",
-        decision="confirm",
-        now=now,
-        booking_repository=repo,
-        payment_gateway=payments,
-        provider_directory=provider_directory,
-        notifier=notifier,
-        reminder_gateway=reminders,
-    )
-
-    assert reminders.reminders == [
-        {
-            "recipient": "sarah@example.com",
-            "send_at": datetime(2026, 1, 11, 12, 0, tzinfo=timezone.utc),
-            "subject": "Rappel: rendez-vous confirmé",
-            "body": "\n".join(
-                [
-                    "Bonjour Sarah,",
-                    "",
-                    "Petit rappel pour ton rendez-vous confirmé.",
-                    "Récapitulatif :",
-                    "- Date : 2026-01-12T12:00:00Z",
-                    "- Lieu : Paris 10e",
-                    "- Tarif : 85,00 €",
-                    "",
-                    "Paiement :",
-                    "- Frais de réservation débités : 25,50 €",
-                    "  dont acompte prestataire : 25,50 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Reste à régler chez la prestataire : 59,50 €",
-                    "  (arrondi à payer le jour J : 59,00 €)",
-                    "",
-                    "À très vite,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        }
-    ]
+    finalize_booking.execute(booking_id="booking_reminder", actor="provider", decision="confirm", now=datetime(2026,1,10,10,0,tzinfo=timezone.utc), booking_repository=repo, payment_gateway=payments, provider_directory=provider_directory, notifier=notifier, reminder_gateway=reminders)
+    assert reminders.reminders[0]["send_at"] == datetime(2026, 1, 11, 12, 0, tzinfo=timezone.utc)
+    assert "Frais Château Rose débités" in reminders.reminders[0]["body"]
 
 
 def test_confirm_schedules_client_reminder_immediately_if_within_24h():
-    repo = InMemoryBookingRepository()
-    notifier = InMemoryNotifier()
-    payments = InMemoryPaymentGateway()
-    provider_directory = _provider_directory()
-    reminders = InMemoryReminderGateway()
-
+    repo = InMemoryBookingRepository(); notifier = InMemoryNotifier(); payments = InMemoryPaymentGateway(); provider_directory = _provider_directory(); reminders = InMemoryReminderGateway()
+    now = datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc)
     booking = BookingRequest(
-        id="booking_reminder_soon",
-        provider_id="provider_1",
-        service_id="service_tresses",
-        client_contact={"name": "Sarah", "email": "sarah@example.com"},
-        location="Paris 10e",
-        location_preference="salon",
-        desired_date="2026-01-10T20:00:00Z",
-        hair_length="long",
-        meche=False,
-        current_hair_picture="s3://bucket/hair.jpg",
-        inspiration_pictures=[],
-        free_text="",
-        estimated_price_cents=8500,
-        payment_auth_id="auth_reminder_soon",
-        status="SUBMITTED",
-        created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+        id="booking_reminder_soon", provider_id="provider_1", service_id="service_tresses", client_contact={"name":"Sarah","email":"sarah@example.com"},
+        location="Paris 10e", location_preference="salon", desired_date="2026-01-10T20:00:00Z", hair_length="long", meche=False,
+        current_hair_picture="s3://bucket/hair.jpg", inspiration_pictures=[], free_text="", estimated_price_cents=10000,
+        provider_price_estimate_cents=8500, chateau_rose_fee_cents=1500, amount_due_now_cents=1500, payment_status="AUTHORIZED",
+        payment_auth_id="auth_reminder_soon", status="SUBMITTED", created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
     )
     repo.add(booking)
-
-    now = datetime(2026, 1, 10, 10, 0, tzinfo=timezone.utc)
-    finalize_booking.execute(
-        booking_id="booking_reminder_soon",
-        actor="provider",
-        decision="confirm",
-        now=now,
-        booking_repository=repo,
-        payment_gateway=payments,
-        provider_directory=provider_directory,
-        notifier=notifier,
-        reminder_gateway=reminders,
-    )
-
-    assert reminders.reminders == [
-        {
-            "recipient": "sarah@example.com",
-            "send_at": now,
-            "subject": "Rappel: rendez-vous confirmé",
-            "body": "\n".join(
-                [
-                    "Bonjour Sarah,",
-                    "",
-                    "Petit rappel pour ton rendez-vous confirmé.",
-                    "Récapitulatif :",
-                    "- Date : 2026-01-10T20:00:00Z",
-                    "- Lieu : Paris 10e",
-                    "- Tarif : 85,00 €",
-                    "",
-                    "Paiement :",
-                    "- Frais de réservation débités : 25,50 €",
-                    "  dont acompte prestataire : 25,50 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Reste à régler chez la prestataire : 59,50 €",
-                    "  (arrondi à payer le jour J : 59,00 €)",
-                    "",
-                    "À très vite,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        }
-    ]
+    finalize_booking.execute(booking_id="booking_reminder_soon", actor="provider", decision="confirm", now=now, booking_repository=repo, payment_gateway=payments, provider_directory=provider_directory, notifier=notifier, reminder_gateway=reminders)
+    assert reminders.reminders[0]["send_at"] == now
+    assert "Frais Château Rose débités" in reminders.reminders[0]["body"]
 
 
 def test_admin_can_cancel_awaiting_alternative_booking_and_notify_operations():

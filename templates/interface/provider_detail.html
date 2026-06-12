@@ -1215,7 +1215,7 @@
 
             const responsePayload = await response.json().catch(() => ({}));
             if (!response.ok) {
-                throw new Error(responsePayload.error || "Impossible de préparer l'empreinte bancaire.");
+                throw new Error(responsePayload.error || "Impossible de préparer le paiement Château Rose.");
             }
             return responsePayload;
         };
@@ -1517,13 +1517,13 @@
                     depositAmountDisplay.textContent = '-- €';
                 }
                 if (depositDetailsDisplay) {
-                    depositDetailsDisplay.textContent = "Sélectionne un service pour afficher l'acompte estimé.";
+                    depositDetailsDisplay.textContent = "Sélectionne un service pour afficher les frais Château Rose estimés.";
                 }
                 if (depositInlineDisplay) {
                     depositInlineDisplay.textContent = '-- €';
                 }
                 if (depositPaymentHint) {
-                    depositPaymentHint.textContent = "Frais de réservation estimés : -- € (empreinte bancaire).";
+                    depositPaymentHint.textContent = "Frais Château Rose estimés : -- €.";
                 }
                 if (generalAdjustmentsDisplay) {
                     generalAdjustmentsDisplay.textContent = '';
@@ -1551,12 +1551,11 @@
             const atHomeAdj = selectedLocationPreference === "domicile" ? pricing.at_home_bonus || 0 : 0;
             const computedTotalCents = base + lengthAdj + generalAdj + mecheAdj + atHomeAdj;
             const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : computedTotalCents;
-            const depositPercentage = pricing.deposit_percentage ?? 0;
             const serviceFeePercentage = pricing.service_fee_percentage ?? 15;
             const serviceFeeCents = Math.round(totalCents * serviceFeePercentage / 100);
             const totalWithFeesCents = totalCents + serviceFeeCents;
             const displayTotalWithFeesCents = ceilPriceForDisplay(totalWithFeesCents);
-            const depositCents = Math.round(totalCents * depositPercentage / 100) + serviceFeeCents;
+            const depositCents = serviceFeeCents;
             const depositStr = formatMarketingPrice(depositCents);
             const selectedOption = serviceSelect?.selectedOptions?.[0];
             const serviceName =
@@ -1575,12 +1574,12 @@
             const locationText = atHomeAdj > 0
                 ? `à domicile (+${formatAdjustmentWithFees(atHomeAdj, serviceFeePercentage)})`
                 : "chez la prestataire";
-            const remainingStr = formatPrice(Math.max(displayTotalWithFeesCents - depositCents, 0));
+            const remainingStr = formatPrice(Math.max(totalCents, 0));
             const serviceFeeStr = formatPrice(serviceFeeCents);
             if (Number.isFinite(fixedPriceCents)) {
-                finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). Frais de service inclus : ${serviceFeeStr}. À payer après acompte : ${remainingStr}.`;
+                finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). Frais Château Rose : ${serviceFeeStr}. Prestation à régler le jour J : ${remainingStr}.`;
             } else {
-                finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). Frais de service inclus : ${serviceFeeStr}. À payer après acompte : ${remainingStr}.`;
+                finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). Frais Château Rose : ${serviceFeeStr}. Prestation à régler le jour J : ${remainingStr}.`;
             } 
             if (generalAdjustmentsDisplay) {
                 const adjustmentsText = selectedAdjustments.length
@@ -1596,11 +1595,11 @@
                 depositInlineDisplay.textContent = depositStr;
             }
             if (depositPaymentHint) {
-                depositPaymentHint.textContent = `Frais de réservation estimés : ${depositStr} (acompte + frais de service).`; 
+                depositPaymentHint.textContent = `Frais Château Rose estimés : ${depositStr}.`; 
             }
             if (depositDetailsDisplay) {
                 depositDetailsDisplay.textContent =
-                    `Frais de réservation estimés (${depositPercentage} % d'acompte + ${serviceFeePercentage} % de frais de service), arrondis à l'euro supérieur pour l'affichage, prélevés seulement après confirmation.`;
+                    `Frais Château Rose estimés (${serviceFeePercentage} % de frais de service). La prestation coiffure se règle directement le jour J.`;
             }
         };
 
@@ -1627,7 +1626,7 @@
                 depositInlineDisplay.textContent = totalStr;
             }
             if (depositPaymentHint) {
-                depositPaymentHint.textContent = `Frais de réservation à régler : ${totalStr} (déduits du total).`;
+                depositPaymentHint.textContent = `Frais Château Rose à régler : ${totalStr}.`;
             }
         } else if (serviceSelect) {
             updateHairLengths(serviceSelect.value);

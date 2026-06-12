@@ -21,9 +21,7 @@ from chateaurose.domain.use_cases import (
 )
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
 from chateaurose.domain.services.pricing import (
-    ceil_price_for_display_cents,
     compute_checkout_amounts_from_total_cents,
-    floor_price_for_display_cents,
 )
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
@@ -63,63 +61,46 @@ def _format_price_from_cents(amount_cents: int) -> str:
 
 
 def _payment_summary(booking) -> dict:
-    effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
-    deposit_percentage = booking.provider.deposit_percentage if booking.provider.deposit_percentage is not None else 30
-    service_fee_percentage = booking.provider.service_fee_percentage if booking.provider.service_fee_percentage is not None else 0
-    checkout_amounts = compute_checkout_amounts_from_total_cents(
-        total_cents=effective_total_cents,
-        deposit_percentage=deposit_percentage,
-        service_fee_percentage=service_fee_percentage,
+    effective_total_cents = (
+        booking.proposed_price_cents
+        if booking.proposed_price_cents is not None
+        else booking.estimated_price_cents
     )
-    computed_reservation_fee_cents = checkout_amounts["reservation_fee_cents"]
-    reservation_fee_cents = (
-        booking.locked_reservation_fee_cents
-        if booking.locked_reservation_fee_cents is not None
-        else computed_reservation_fee_cents
-    )
-    service_fee_cents = checkout_amounts["service_fee_cents"]
-    deposit_cents = max(reservation_fee_cents - service_fee_cents, 0)
-    displayed_deposit_cents = ceil_price_for_display_cents(deposit_cents)
-    displayed_reservation_fee_cents = service_fee_cents + displayed_deposit_cents
-    displayed_remaining_cents = floor_price_for_display_cents(
-        max(effective_total_cents - displayed_reservation_fee_cents, 0)
-    )
+    service_fee_cents = getattr(booking, "chateau_rose_fee_cents", 0) or 0
+    provider_price_cents = booking.provider_price_estimate_cents
+
+    if provider_price_cents is None:
+        should_infer_legacy_fee = service_fee_cents == 0 and bool(getattr(booking, "payment_auth_id", "")) and getattr(booking, "provider", None)
+        if should_infer_legacy_fee:
+            service_fee_percentage = booking.provider.service_fee_percentage
+            if service_fee_percentage is None:
+                service_fee_percentage = Provider._meta.get_field("service_fee_percentage").default
+            checkout_amounts = compute_checkout_amounts_from_total_cents(
+                total_cents=effective_total_cents,
+                deposit_percentage=booking.provider.deposit_percentage or 30,
+                service_fee_percentage=service_fee_percentage or 0,
+            )
+            provider_price_cents = checkout_amounts["subtotal_cents"]
+            service_fee_cents = checkout_amounts["service_fee_cents"]
+        else:
+            provider_price_cents = max(effective_total_cents - service_fee_cents, 0)
+
+    amount_due_now_cents = getattr(booking, "amount_due_now_cents", 0) or service_fee_cents
     return {
-        "total": _format_price_from_cents(effective_total_cents),
-        "reservation_fee": _format_price_from_cents(displayed_reservation_fee_cents),
+        "total": _format_price_from_cents(provider_price_cents + service_fee_cents),
+        "reservation_fee": _format_price_from_cents(amount_due_now_cents),
+        "deposit": _format_price_from_cents(0),
         "service_fee": _format_price_from_cents(service_fee_cents),
-        "deposit": _format_price_from_cents(displayed_deposit_cents),
-        "remaining": _format_price_from_cents(displayed_remaining_cents),
+        "remaining": _format_price_from_cents(provider_price_cents),
     }
 
 
 def _locked_reservation_fee_cents(booking) -> int:
-    effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
-    deposit_percentage = booking.provider.deposit_percentage if booking.provider.deposit_percentage is not None else 30
-    service_fee_percentage = booking.provider.service_fee_percentage if booking.provider.service_fee_percentage is not None else 0
-    checkout_amounts = compute_checkout_amounts_from_total_cents(
-        total_cents=effective_total_cents,
-        deposit_percentage=deposit_percentage,
-        service_fee_percentage=service_fee_percentage,
-    )
-    return booking.locked_reservation_fee_cents if booking.locked_reservation_fee_cents is not None else checkout_amounts["reservation_fee_cents"]
+    return getattr(booking, "amount_due_now_cents", 0) or getattr(booking, "chateau_rose_fee_cents", 0) or 0
 
 
 def _locked_provider_deposit_cents(booking) -> int:
-    effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
-    deposit_percentage = booking.provider.deposit_percentage if booking.provider.deposit_percentage is not None else 30
-    service_fee_percentage = booking.provider.service_fee_percentage if booking.provider.service_fee_percentage is not None else 0
-    checkout_amounts = compute_checkout_amounts_from_total_cents(
-        total_cents=effective_total_cents,
-        deposit_percentage=deposit_percentage,
-        service_fee_percentage=service_fee_percentage,
-    )
-    reservation_fee_cents = (
-        booking.locked_reservation_fee_cents
-        if booking.locked_reservation_fee_cents is not None
-        else checkout_amounts["reservation_fee_cents"]
-    )
-    return max(reservation_fee_cents - checkout_amounts["service_fee_cents"], 0)
+    return 0
 
 
 class ProviderPasswordResetView(auth_views.PasswordResetView):
@@ -231,12 +212,7 @@ def booking_detail(request, booking_id):
                 remaining_price_cents = _parse_price_to_cents(
                     request.POST.get("proposed_price_euros")
                 )
-                reservation_fee_cents = _locked_reservation_fee_cents(booking)
-                price_cents = (
-                    reservation_fee_cents + remaining_price_cents
-                    if remaining_price_cents is not None
-                    else None
-                )
+                price_cents = remaining_price_cents
                 raw_date = request.POST.get("proposed_date", "")
                 proposed_date = raw_date.strip() or None
                 counter_proposal_message = request.POST.get("counter_proposal_message", "").strip() or None

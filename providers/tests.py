@@ -119,7 +119,7 @@ class ProviderDashboardTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(booking.status, "CANCELLED")
         self.assertEqual(payment_stub.released, ["auth_1"])
-        self.assertEqual(len(notifier_stub.messages), 2)
+        self.assertEqual(len(notifier_stub.messages), 3)
 
 
     def test_provider_reject_transfers_booking_to_alternative_search(self):
@@ -164,7 +164,7 @@ class ProviderDashboardTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(booking.status, "PENDING_CLIENT_VALIDATION")
-        self.assertEqual(booking.proposed_price_cents, 7544)
+        self.assertEqual(booking.proposed_price_cents, 5000)
         self.assertEqual(booking.proposed_date, "2026-02-01T10:00")
 
     def test_provider_can_propose_only_price(self):
@@ -184,7 +184,7 @@ class ProviderDashboardTests(TestCase):
         booking.refresh_from_db()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(booking.status, "PENDING_CLIENT_VALIDATION")
-        self.assertEqual(booking.proposed_price_cents, 8344)
+        self.assertEqual(booking.proposed_price_cents, 5800)
         self.assertIsNone(booking.proposed_date)
 
     def test_booking_detail_displays_optional_counter_proposal_message_field(self):
@@ -195,8 +195,8 @@ class ProviderDashboardTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "name=\"counter_proposal_message\"")
-        self.assertContains(response, "Empreinte déjà réservée")
-        self.assertContains(response, "dont acompte prestataire")
+        self.assertContains(response, "Frais Château Rose déjà traités")
+        self.assertNotContains(response, "dont acompte prestataire")
 
     def test_provider_can_propose_only_date(self):
         booking = self._create_booking()
@@ -218,7 +218,7 @@ class ProviderDashboardTests(TestCase):
         self.assertIsNone(booking.proposed_price_cents)
         self.assertEqual(booking.proposed_date, "2026-02-05T11:30")
 
-    def test_booking_detail_uses_provider_deposit_percentage_for_payment_summary(self):
+    def test_booking_detail_uses_platform_service_fee_for_payment_summary(self):
         self.provider.deposit_percentage = 10
         self.provider.save(update_fields=["deposit_percentage"])
         booking = self._create_booking()
@@ -226,11 +226,10 @@ class ProviderDashboardTests(TestCase):
         detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
         response = self.client.get(detail_url)
 
-        self.assertContains(response, "Empreinte bancaire validée")
-        self.assertContains(response, "14,48 €")
-        self.assertContains(response, "Frais Château Rose : 8,48 €")
-        self.assertContains(response, "Acompte prestataire : 6,00 €")
-        self.assertContains(response, "50,00 €")
+        self.assertContains(response, "Frais Château Rose")
+        self.assertContains(response, "8,48 €")
+        self.assertNotContains(response, "Acompte prestataire")
+        self.assertContains(response, "56,52 €")
 
     def test_booking_detail_shows_photos_and_prices_in_euros(self):
         booking = self._create_booking()
