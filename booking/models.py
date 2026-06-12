@@ -208,6 +208,18 @@ class Service(models.Model):
     general_adjustments = models.JSONField(default=dict, blank=True)
     meche_bonus_cents = models.IntegerField(default=0)
     at_home_bonus_cents = models.IntegerField(default=0)
+    marketing_service = models.ForeignKey(
+        "interface.MarketingService",
+        on_delete=models.SET_NULL,
+        related_name="provider_services",
+        null=True,
+        blank=True,
+    )
+    marketing_sub_services = models.ManyToManyField(
+        "interface.MarketingSubService",
+        related_name="provider_services",
+        blank=True,
+    )
 
     class Meta:
         unique_together = (("provider", "name"), ("provider", "slug"))
@@ -449,19 +461,64 @@ class ProviderMarketingService(models.Model):
 
 
 class Booking(models.Model):
+    STATUS_SUBMITTED = "SUBMITTED"
+    STATUS_PENDING_CLIENT_VALIDATION = "PENDING_CLIENT_VALIDATION"
+    STATUS_AWAITING_ALTERNATIVE_PROVIDER = "AWAITING_ALTERNATIVE_PROVIDER"
+    STATUS_WAITING_PROVIDER_ASSIGNMENT = "WAITING_PROVIDER_ASSIGNMENT"
+    STATUS_CONFIRMED = "CONFIRMED"
+    STATUS_CANCELLED = "CANCELLED"
     STATUS_CHOICES = [
-        ("SUBMITTED", "SUBMITTED"),
-        ("PENDING_CLIENT_VALIDATION", "PENDING_CLIENT_VALIDATION"),
-        ("AWAITING_ALTERNATIVE_PROVIDER", "AWAITING_ALTERNATIVE_PROVIDER"),
-        ("CONFIRMED", "CONFIRMED"),
-        ("CANCELLED", "CANCELLED"),
+        (STATUS_SUBMITTED, STATUS_SUBMITTED),
+        (STATUS_PENDING_CLIENT_VALIDATION, STATUS_PENDING_CLIENT_VALIDATION),
+        (STATUS_AWAITING_ALTERNATIVE_PROVIDER, STATUS_AWAITING_ALTERNATIVE_PROVIDER),
+        (STATUS_WAITING_PROVIDER_ASSIGNMENT, STATUS_WAITING_PROVIDER_ASSIGNMENT),
+        (STATUS_CONFIRMED, STATUS_CONFIRMED),
+        (STATUS_CANCELLED, STATUS_CANCELLED),
     ]
 
+    KIND_PROVIDER_SELECTED = "PROVIDER_SELECTED"
+    KIND_GENERIC = "GENERIC"
+    KIND_CHOICES = (
+        (KIND_PROVIDER_SELECTED, "Provider selected"),
+        (KIND_GENERIC, "Generic request"),
+    )
+
+    PAYMENT_STATUS_REQUIRES_PAYMENT = "REQUIRES_PAYMENT"
+    PAYMENT_STATUS_AUTHORIZED = "AUTHORIZED"
+    PAYMENT_STATUS_WAIVED = "WAIVED"
+    PAYMENT_STATUS_CAPTURED = "CAPTURED"
+    PAYMENT_STATUS_RELEASED = "RELEASED"
+    PAYMENT_STATUS_CHOICES = (
+        (PAYMENT_STATUS_REQUIRES_PAYMENT, "Requires payment"),
+        (PAYMENT_STATUS_AUTHORIZED, "Authorized"),
+        (PAYMENT_STATUS_WAIVED, "Waived"),
+        (PAYMENT_STATUS_CAPTURED, "Captured"),
+        (PAYMENT_STATUS_RELEASED, "Released"),
+    )
+
     booking_id = models.CharField(max_length=64, unique=True)
-    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="bookings")
-    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="bookings")
+    booking_kind = models.CharField(max_length=32, choices=KIND_CHOICES, default=KIND_PROVIDER_SELECTED)
+    provider = models.ForeignKey(Provider, on_delete=models.SET_NULL, related_name="bookings", null=True, blank=True)
+    service = models.ForeignKey(Service, on_delete=models.SET_NULL, related_name="bookings", null=True, blank=True)
+    requested_marketing_service = models.ForeignKey(
+        "interface.MarketingService",
+        on_delete=models.SET_NULL,
+        related_name="booking_intents",
+        null=True,
+        blank=True,
+    )
+    requested_marketing_sub_service = models.ForeignKey(
+        "interface.MarketingSubService",
+        on_delete=models.SET_NULL,
+        related_name="booking_intents",
+        null=True,
+        blank=True,
+    )
+    requested_service_label_snapshot = models.CharField(max_length=255, blank=True)
+    requested_options = models.JSONField(default=list, blank=True)
     client_name = models.CharField(max_length=255)
     client_email = models.EmailField()
+    client_phone = models.CharField(max_length=64, blank=True)
     location = models.CharField(max_length=255)
     location_preference = models.CharField(max_length=32, blank=True)
     client_address = models.TextField(blank=True)
@@ -469,11 +526,15 @@ class Booking(models.Model):
     hair_length = models.CharField(max_length=64)
     general_adjustments = models.JSONField(default=list, blank=True)
     meche = models.BooleanField()
-    current_hair_picture = models.CharField(max_length=255)
+    current_hair_picture = models.CharField(max_length=255, blank=True)
     inspiration_pictures = models.JSONField(default=list)
     free_text = models.TextField(blank=True)
     estimated_price_cents = models.IntegerField()
-    payment_auth_id = models.CharField(max_length=64)
+    provider_price_estimate_cents = models.IntegerField(null=True, blank=True)
+    chateau_rose_fee_cents = models.IntegerField(default=0)
+    amount_due_now_cents = models.IntegerField(default=0)
+    payment_status = models.CharField(max_length=32, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_REQUIRES_PAYMENT)
+    payment_auth_id = models.CharField(max_length=64, blank=True)
     status = models.CharField(max_length=64, choices=STATUS_CHOICES)
     alternative_requested_at = models.DateTimeField(null=True, blank=True)
     proposed_price_cents = models.IntegerField(null=True, blank=True)

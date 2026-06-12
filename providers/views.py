@@ -231,12 +231,7 @@ def booking_detail(request, booking_id):
                 remaining_price_cents = _parse_price_to_cents(
                     request.POST.get("proposed_price_euros")
                 )
-                reservation_fee_cents = _locked_reservation_fee_cents(booking)
-                price_cents = (
-                    reservation_fee_cents + remaining_price_cents
-                    if remaining_price_cents is not None
-                    else None
-                )
+                price_cents = remaining_price_cents
                 raw_date = request.POST.get("proposed_date", "")
                 proposed_date = raw_date.strip() or None
                 counter_proposal_message = request.POST.get("counter_proposal_message", "").strip() or None

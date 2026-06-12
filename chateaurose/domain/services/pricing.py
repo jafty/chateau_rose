@@ -81,6 +81,22 @@ def compute_checkout_amounts_cents(
     }
 
 
+def compute_service_fee_only_amounts_cents(
+    *,
+    subtotal_cents: int,
+    service_fee_percentage: int,
+    waive_service_fee: bool = False,
+) -> dict:
+    service_fee_cents = 0 if waive_service_fee else round(subtotal_cents * service_fee_percentage / 100)
+    return {
+        "subtotal_cents": subtotal_cents,
+        "provider_price_cents": subtotal_cents,
+        "service_fee_cents": service_fee_cents,
+        "amount_due_now_cents": service_fee_cents,
+        "remaining_cents": subtotal_cents,
+    }
+
+
 def compute_checkout_amounts_from_total_cents(
     *,
     total_cents: int,

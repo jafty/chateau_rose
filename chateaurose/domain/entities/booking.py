@@ -5,8 +5,8 @@ from datetime import datetime
 @dataclass
 class BookingRequest:
     id: str
-    provider_id: str
-    service_id: str
+    provider_id: str | None
+    service_id: str | None
     client_contact: dict
     location: str
     desired_date: str
@@ -26,3 +26,12 @@ class BookingRequest:
     updated_at: datetime | None = None
     location_preference: str | None = None
     client_address: str | None = None
+    booking_kind: str = "PROVIDER_SELECTED"
+    requested_marketing_service_id: str | None = None
+    requested_marketing_sub_service_id: str | None = None
+    requested_service_label_snapshot: str = ""
+    requested_options: list[str] | None = None
+    provider_price_estimate_cents: int | None = None
+    chateau_rose_fee_cents: int = 0
+    amount_due_now_cents: int = 0
+    payment_status: str = "REQUIRES_PAYMENT"

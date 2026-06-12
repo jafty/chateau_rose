@@ -33,6 +33,7 @@ from chateaurose.domain.services.marketing_content import GalleryImage, ServiceC
 from chateaurose.domain.services.pricing import (
     ceil_price_for_display_cents,
     compute_checkout_amounts_cents,
+    compute_service_fee_only_amounts_cents,
     compute_checkout_amounts_from_total_cents,
     estimate_service_price_cents,
     floor_price_for_display_cents,
@@ -566,7 +567,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
     salon_location_label = SALON_LOCATION_LABEL
     question_form = ProviderQuestionForm()
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
-    require_payment_auth = bool(stripe_public_key)
+    require_payment_auth = bool(stripe_public_key) and checkout_amounts["amount_due_now_cents"] > 0
     prefilled_payment_auth_id = ""
     payment_message = None
     fixed_price_cents = None
@@ -888,9 +889,8 @@ def provider_booking_recap(request, token):
 
     coupon_code = (payload.get("service_fee_coupon_code") or "").strip().upper()
     service_fee_waived = _provider_coupon_is_valid(provider, coupon_code)
-    checkout_amounts = compute_checkout_amounts_cents(
+    checkout_amounts = compute_service_fee_only_amounts_cents(
         subtotal_cents=total_cents,
-        deposit_percentage=provider.deposit_percentage if provider.deposit_percentage is not None else 30,
         service_fee_percentage=provider.service_fee_percentage if provider.service_fee_percentage is not None else 15,
         waive_service_fee=service_fee_waived,
     )
@@ -900,7 +900,7 @@ def provider_booking_recap(request, token):
     except (TypeError, ValueError):
         pass
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
-    require_payment_auth = bool(stripe_public_key)
+    require_payment_auth = bool(stripe_public_key) and checkout_amounts["amount_due_now_cents"] > 0
     error = None
 
     if request.method == "POST":
@@ -915,7 +915,7 @@ def provider_booking_recap(request, token):
 
         payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
         if require_payment_auth and not payment_auth_id:
-            error = "Ajoute ton empreinte bancaire pour sécuriser le créneau."
+            error = "Ajoute ton paiement Château Rose pour confirmer la demande."
         elif require_payment_auth and not _payment_auth_is_confirmed(payment_auth_id):
             error = "L'empreinte bancaire n'est pas confirmée. Merci de réessayer le paiement."
         else:
@@ -980,11 +980,9 @@ def provider_booking_recap(request, token):
                     f"{thank_you_url}?provider={provider.name}&provider_id={provider.id}"
                 )
 
-    displayed_deposit_cents = ceil_price_for_display_cents(checkout_amounts["deposit_cents"])
-    displayed_reservation_fee_cents = checkout_amounts["service_fee_cents"] + displayed_deposit_cents
-    displayed_remaining_cents = floor_price_for_display_cents(
-        checkout_amounts["total_cents"] - displayed_reservation_fee_cents
-    )
+    displayed_deposit_cents = 0
+    displayed_reservation_fee_cents = checkout_amounts["amount_due_now_cents"]
+    displayed_remaining_cents = floor_price_for_display_cents(checkout_amounts["provider_price_cents"])
 
     return render(
         request,
@@ -995,15 +993,16 @@ def provider_booking_recap(request, token):
             "payload": payload,
             "is_completed": bool(draft.completed_at),
             "edit_url": f"{reverse('interface:provider_detail', args=[provider.id])}?recap={draft.token}",
-            "total_price": booking_requests.format_price(checkout_amounts["total_cents"]),
+            "total_price": booking_requests.format_price(checkout_amounts["subtotal_cents"] + checkout_amounts["service_fee_cents"]),
             "subtotal_price": booking_requests.format_price(checkout_amounts["subtotal_cents"]),
             "service_fee_price": booking_requests.format_price(checkout_amounts["service_fee_cents"]),
             "acompte_price": booking_requests.format_price(displayed_deposit_cents),
             "deposit_price": booking_requests.format_price(displayed_reservation_fee_cents),
             "remaining_price": booking_requests.format_price(displayed_remaining_cents),
+            "amount_due_now_cents": checkout_amounts["amount_due_now_cents"],
             "service_fee_coupon_code": coupon_code,
             "service_fee_waived": service_fee_waived,
-            "reservation_label_details": "inclut l'acompte prestataire et les frais de service Château Rose",
+            "reservation_label_details": "frais de service Château Rose uniquement",
             "desired_date_display": desired_date_display,
             "stripe_public_key": stripe_public_key,
             "require_payment_auth": require_payment_auth,
@@ -1032,36 +1031,21 @@ def _payment_auth_is_confirmed(payment_auth_id: str) -> bool:
 
 
 def _payment_summary(booking, *, total_cents: int | None = None) -> dict:
-    effective_total_cents = total_cents
-    if effective_total_cents is None:
-        effective_total_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
-    deposit_percentage = booking.provider.deposit_percentage or 30
-    service_fee_percentage = booking.provider.service_fee_percentage
-    if service_fee_percentage is None:
-        service_fee_percentage = Provider._meta.get_field("service_fee_percentage").default
-    checkout_amounts = compute_checkout_amounts_from_total_cents(
-        total_cents=effective_total_cents,
-        deposit_percentage=deposit_percentage,
-        service_fee_percentage=service_fee_percentage,
-    )
-    computed_reservation_fee_cents = checkout_amounts["reservation_fee_cents"]
-    reservation_fee_cents = (
-        booking.locked_reservation_fee_cents
-        if booking.locked_reservation_fee_cents is not None
-        else computed_reservation_fee_cents
-    )
-    service_fee_cents = checkout_amounts["service_fee_cents"]
-    deposit_cents = max(reservation_fee_cents - service_fee_cents, 0)
-    displayed_deposit_cents = ceil_price_for_display_cents(deposit_cents)
-    displayed_reservation_fee_cents = service_fee_cents + displayed_deposit_cents
-    remaining_with_locked_reservation_cents = max(effective_total_cents - displayed_reservation_fee_cents, 0)
-    displayed_remaining_cents = floor_price_for_display_cents(remaining_with_locked_reservation_cents)
+    provider_price_cents = booking.provider_price_estimate_cents
+    if provider_price_cents is None:
+        if total_cents is not None:
+            provider_price_cents = total_cents
+        else:
+            provider_price_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
+            provider_price_cents = max(provider_price_cents - getattr(booking, "chateau_rose_fee_cents", 0), 0)
+    service_fee_cents = getattr(booking, "chateau_rose_fee_cents", 0)
+    amount_due_now_cents = getattr(booking, "amount_due_now_cents", service_fee_cents)
     return {
-        "total": _format_euros_from_cents(effective_total_cents),
-        "reservation_fee": _format_euros_from_cents(displayed_reservation_fee_cents),
-        "deposit": _format_euros_from_cents(displayed_deposit_cents),
+        "total": _format_euros_from_cents(provider_price_cents + service_fee_cents),
+        "reservation_fee": _format_euros_from_cents(amount_due_now_cents),
+        "deposit": _format_euros_from_cents(0),
         "service_fee": _format_euros_from_cents(service_fee_cents),
-        "remaining": _format_euros_from_cents(displayed_remaining_cents),
+        "remaining": _format_euros_from_cents(provider_price_cents),
     }
 
 
@@ -1171,21 +1155,17 @@ def provider_payment_intent(request):
                 return JsonResponse({"error": "Un ou plusieurs suppléments ne sont pas supportés."}, status=400)
             return JsonResponse({"error": "Informations manquantes."}, status=400)
 
-        deposit_percentage = service.get("deposit_percentage")
-        if deposit_percentage is not None:
-            amount_cents = compute_checkout_amounts_cents(
-                subtotal_cents=estimated_price_cents,
-                deposit_percentage=deposit_percentage,
-                service_fee_percentage=service.get("service_fee_percentage", 15),
-                waive_service_fee=service_fee_waived,
-            )["reservation_fee_cents"]
-        else:
-            amount_cents = service.get("deposit_cents")
-        if amount_cents is None:
-            return JsonResponse({"error": "Acompte non défini."}, status=400)
+        amount_cents = compute_service_fee_only_amounts_cents(
+            subtotal_cents=estimated_price_cents,
+            service_fee_percentage=service.get("service_fee_percentage", 15),
+            waive_service_fee=service_fee_waived,
+        )["amount_due_now_cents"]
 
     if validate_only:
-        return JsonResponse({"ok": True, "amount_cents": amount_cents})
+        return JsonResponse({"ok": True, "amount_cents": amount_cents, "payment_required": amount_cents > 0})
+
+    if amount_cents <= 0:
+        return JsonResponse({"payment_required": False, "amount_cents": 0, "payment_status": "WAIVED"})
 
     intent = payment_gateway.create_payment_intent(
         amount_cents=amount_cents,
@@ -1198,6 +1178,7 @@ def provider_payment_intent(request):
             "client_secret": intent["client_secret"],
             "payment_auth_id": intent["id"],
             "amount_cents": amount_cents,
+            "payment_required": True,
         }
     )
 
@@ -1374,6 +1355,7 @@ def client_confirmation(request, booking_id):
     is_confirmed = booking.status == finalize_booking_uc.CONFIRMED
     is_cancelled = booking.status == finalize_booking_uc.CANCELLED
     is_awaiting_alternative = booking.status == finalize_booking_uc.AWAITING_ALTERNATIVE_PROVIDER
+    is_waiting_provider_assignment = booking.status == getattr(expire_booking_uc, "WAITING_PROVIDER_ASSIGNMENT", "WAITING_PROVIDER_ASSIGNMENT")
     show_expired_notice = request.GET.get("status") == "expired"
     is_salon = booking.location_preference == "salon"
     client_moves = is_salon
@@ -1387,11 +1369,12 @@ def client_confirmation(request, booking_id):
             "is_confirmed": is_confirmed,
             "is_cancelled": is_cancelled,
             "is_awaiting_alternative": is_awaiting_alternative,
+            "is_waiting_provider_assignment": is_waiting_provider_assignment,
             "show_expired_notice": show_expired_notice,
             "client_moves": client_moves,
-            "provider_email": booking.provider.contact_email or "Non communiqué",
-            "provider_phone": booking.provider.contact_phone or "Non communiqué",
-            "provider_salon_address": booking.provider.salon_address or "Adresse à confirmer",
+            "provider_email": (booking.provider.contact_email if booking.provider else "Non communiqué"),
+            "provider_phone": (booking.provider.contact_phone if booking.provider else "Non communiqué"),
+            "provider_salon_address": (booking.provider.salon_address if booking.provider else "Adresse à confirmer"),
             "payment_summary": _payment_summary(booking),
         },
     )
