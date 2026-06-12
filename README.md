@@ -42,7 +42,7 @@ Variables importantes :
 - `DATABASE_URL` : URL Postgres pour remplacer SQLite en production.
 - `DJANGO_ALLOWED_HOSTS` : hôtes autorisés (CSV).
 - `DJANGO_CSRF_TRUSTED_ORIGINS` : origines HTTPS sûres pour les formulaires.
-- `DJANGO_MAINTENANCE_MODE` : mettre à `True` pour afficher la page de maintenance sur les routes publiques.
+- `DJANGO_MAINTENANCE_MODE` : mettre à `True` pour afficher la page de maintenance sur les routes publiques ; les administrateurs connectés peuvent toujours naviguer sur le site public pour tester.
 - `MAINTENANCE_CONTACT_EMAIL` : email utilisé par le CTA de la page de maintenance.
 - `MAINTENANCE_RETRY_AFTER_SECONDS` : valeur de l'en-tête `Retry-After` renvoyé avec la maintenance.
 

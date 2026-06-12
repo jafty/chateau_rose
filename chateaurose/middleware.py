@@ -34,7 +34,11 @@ class MaintenanceModeMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if settings.MAINTENANCE_MODE and not self._is_exempt_path(request.path_info):
+        if (
+            settings.MAINTENANCE_MODE
+            and not self._is_exempt_path(request.path_info)
+            and not self._is_admin_user(request)
+        ):
             response = render(
                 request,
                 "maintenance.html",
@@ -51,4 +55,12 @@ class MaintenanceModeMiddleware:
         return any(
             path == prefix.rstrip("/") or path.startswith(prefix)
             for prefix in self.exempt_path_prefixes
+        )
+
+    def _is_admin_user(self, request) -> bool:
+        user = getattr(request, "user", None)
+        return bool(
+            user
+            and user.is_authenticated
+            and (user.is_staff or user.is_superuser)
         )

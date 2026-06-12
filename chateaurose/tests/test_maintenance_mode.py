@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
 
@@ -25,6 +26,30 @@ class MaintenanceModeMiddlewareTests(TestCase):
         response = self.client.get("/admin/")
 
         self.assertNotEqual(response.status_code, 503)
+
+    def test_admin_user_can_preview_public_site_during_maintenance(self):
+        user = get_user_model().objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get("/")
+
+        self.assertNotEqual(response.status_code, 503)
+
+    def test_non_admin_user_still_sees_maintenance_page(self):
+        user = get_user_model().objects.create_user(
+            username="client",
+            email="client@example.com",
+            password="password",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 503)
 
 
 @override_settings(
