@@ -59,41 +59,15 @@ def test_provider_proposes_update_moves_to_pending_client_validation_and_notifie
     assert updated.proposed_price_cents == 9000
     assert updated.proposed_date == "2026-01-11T18:00:00Z"
 
-    assert notifier.messages == [
-        {
-            "recipient": client["email"],
-            "subject": "Proposition de rendez-vous",
-            "reply_to": "amandine@example.com",
-            "body": "\n".join(
-                [
-                    "Bonjour Sarah,",
-                    "",
-                    "Amandine a une nouvelle proposition pour ta demande.",
-                    "Voici les nouveaux détails :",
-                    "- Date proposée : 2026-01-11T18:00:00Z",
-                    "- Tarif proposé : 90,00 €",
-                    "",
-                    "Paiement :",
-                    "- Empreinte bancaire déjà validée : 27,00 € (pas encore débités)",
-                    "  dont acompte prestataire : 27,00 €",
-                    "  dont frais Château Rose : 0,00 €",
-                    "- Montant débité si tu acceptes : 27,00 €",
-                    "- Reste à régler chez la prestataire : 63,00 €",
-                    "  (arrondi à payer le jour J : 63,00 €)",
-                    "",
-                    "Tu peux accepter ou refuser la proposition depuis ton espace de suivi :",
-                    "https://example.com/booking/booking_1/",
-                    "",
-                    "Besoin d'échanger avant de décider ?",
-                    "- Téléphone : +33601020304",
-                    "- Email : amandine@example.com",
-                    "",
-                    "Merci et à très vite,",
-                    "L'équipe Château Rose",
-                ]
-            ),
-        }
-    ]
+    assert len(notifier.messages) == 1
+    message = notifier.messages[0]
+    assert message["recipient"] == client["email"]
+    assert message["subject"] == "Proposition de rendez-vous"
+    assert message["reply_to"] == "amandine@example.com"
+    assert "- Tarif proposé : 90,00 €" in message["body"]
+    assert "Frais Château Rose déjà traités" in message["body"]
+    assert "Prestation coiffure à régler directement" in message["body"]
+    assert "acompte prestataire" not in message["body"]
 
 
 def test_update_proposal_rejects_wrong_provider():
@@ -488,6 +462,6 @@ def test_update_proposal_payment_lines_include_service_fee_in_captured_amount():
     )
 
     body = notifier.messages[0]["body"]
-    assert "- Empreinte bancaire déjà validée : 40,50 € (pas encore débités)" in body
-    assert "- Montant débité si tu acceptes : 40,50 €" in body
-    assert "- Reste à régler chez la prestataire : 63,00 €" in body
+    assert "Frais Château Rose déjà traités" in body
+    assert "Prestation coiffure à régler directement à la prestataire : 90,00 €" in body
+    assert "acompte prestataire" not in body

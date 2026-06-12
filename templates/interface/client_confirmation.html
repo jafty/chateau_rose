@@ -7,7 +7,7 @@
     <div class="paper-card">
         <h1 class="section-title">Statut de ta demande</h1>
         {% if show_expired_notice %}
-            <p class="meta-line" style="margin: 0 0 12px; color: #8a5a00;">Cette demande a expiré après 72h sans confirmation. L'empreinte bancaire a été libérée automatiquement.</p>
+            <p class="meta-line" style="margin: 0 0 12px; color: #8a5a00;">Cette demande a expiré après 72h sans confirmation. Le paiement Château Rose a été libéré ou remboursé si nécessaire.</p>
         {% endif %}
         {% if is_confirmed %}
             <p class="lead">Merci {{ booking.client_name }}, ton rendez-vous est confirmé.</p>
@@ -28,10 +28,10 @@
         <ul class="meta-line" style="margin: 0; padding-left: 18px;">
             <li>Date : {{ effective_date }}</li>
             <li>Tarif : {{ effective_price }}</li>
-            <li>Prestation : {% if booking.service %}{{ booking.service.name }}{% else %}{{ booking.requested_service_label_snapshot }}{% endif %}</li>
+            <li>Prestation : {% if booking.service %}{{ booking.service.name }}{% else %}{{ booking.requested_service_label_snapshot|default:"À attribuer" }}{% endif %}</li>
             <li>Lieu : {{ booking.location }}</li>
         </ul>
-        {% if is_confirmed and client_moves %}
+        {% if is_confirmed and client_moves and booking.provider %}
             <p class="meta-line" style="margin: 12px 0 0;">
                 Adresse de la prestataire : {{ provider_salon_address }}
             </p>
@@ -51,10 +51,10 @@
     <div class="paper-card" style="margin-top: 24px;">
         <h2 class="section-title">Contacter le profil partenaire</h2>
         {% if booking.provider %}
-        <p class="meta-line" style="margin: 0;">Téléphone : {{ provider_phone }}</p>
-        <p class="meta-line" style="margin: 6px 0 0;">Email : {{ provider_email }}</p>
-    {% else %}
-        <p class="meta-line" style="margin: 0;">Une prestataire sera communiquée après attribution.</p>
+            <p class="meta-line" style="margin: 0;">Téléphone : {{ provider_phone }}</p>
+            <p class="meta-line" style="margin: 6px 0 0;">Email : {{ provider_email }}</p>
+        {% else %}
+            <p class="meta-line" style="margin: 0;">Une prestataire sera communiquée après attribution.</p>
         {% endif %}
     </div>
 </section>

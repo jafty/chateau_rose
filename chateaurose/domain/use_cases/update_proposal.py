@@ -1,9 +1,5 @@
 from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import InvalidState, PermissionError, ValidationError
-from chateaurose.domain.services.pricing import (
-    compute_checkout_amounts_cents,
-    floor_price_for_display_cents,
-)
 
 PENDING_CLIENT_VALIDATION = "PENDING_CLIENT_VALIDATION"
 
@@ -52,25 +48,15 @@ def execute(
     provider_name = provider_contact.get("name") or "La prestataire ou le prestataire"
     provider_phone = provider_contact.get("phone") or "Non renseigné"
     provider_email = provider_contact.get("email") or "Non renseigné"
-    deposit_percentage = provider_contact.get("deposit_percentage") or 30
-    service_fee_percentage = provider_contact.get("service_fee_percentage") or 0
-
     proposed_date = booking.proposed_date or booking.desired_date or "À confirmer"
     if new_price_cents is None:
         effective_price_cents = booking.estimated_price_cents
     else:
         effective_price_cents = booking.proposed_price_cents
     proposed_price = _format_euros(effective_price_cents)
-    checkout_amounts = compute_checkout_amounts_cents(
-        subtotal_cents=effective_price_cents,
-        deposit_percentage=deposit_percentage,
-        service_fee_percentage=service_fee_percentage,
-    )
-    deposit_cents = checkout_amounts["deposit_cents"]
-    service_fee_cents = checkout_amounts["service_fee_cents"]
-    reservation_fee_cents = checkout_amounts["reservation_fee_cents"]
-    remaining_cents = checkout_amounts["remaining_cents"]
-    remaining_rounded_cents = floor_price_for_display_cents(remaining_cents)
+    service_fee_cents = booking.chateau_rose_fee_cents
+    reservation_fee_cents = booking.amount_due_now_cents
+    remaining_cents = effective_price_cents
 
     normalized_counter_proposal_message = (
         counter_proposal_message.strip() if isinstance(counter_proposal_message, str) else None
@@ -97,12 +83,9 @@ def execute(
     message_lines.extend([
         "",
         "Paiement :",
-        f"- Empreinte bancaire déjà validée : {_format_euros(reservation_fee_cents)} (pas encore débités)",
-        f"  dont acompte prestataire : {_format_euros(deposit_cents)}",
+        f"- Frais Château Rose déjà traités : {_format_euros(reservation_fee_cents)}",
         f"  dont frais Château Rose : {_format_euros(service_fee_cents)}",
-        f"- Montant débité si tu acceptes : {_format_euros(reservation_fee_cents)}",
-        f"- Reste à régler chez la prestataire : {_format_euros(remaining_cents)}",
-        f"  (arrondi à payer le jour J : {_format_euros(remaining_rounded_cents)})",
+        f"- Prestation coiffure à régler directement à la prestataire : {_format_euros(remaining_cents)}",
         "",
         "Tu peux accepter ou refuser la proposition depuis ton espace de suivi :",
         client_control_url,

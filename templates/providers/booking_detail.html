@@ -94,7 +94,7 @@
                 <div class="booking-notes">
                     <h3>Paiement</h3>
                     <p><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
-                    <p><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }}<br>Frais Château Rose : {{ payment_summary.service_fee }}<br>Acompte prestataire : {{ payment_summary.deposit }}</p>
+                    <p><strong>Frais Château Rose :</strong> {{ payment_summary.service_fee }}<br>Montant en ligne : {{ payment_summary.reservation_fee }}</p>
                     <p><strong>Montant à régler le jour J :</strong> {{ payment_summary.remaining }}</p>
                 </div>
 
@@ -165,7 +165,7 @@
                             data-target="booking-negotiation-panel"
                             aria-expanded="false"
                         >
-                            Faire une contre-proposition (Reste/Date)
+                            Faire une contre-proposition (Tarif coiffure/Date)
                         </button>
 
                         <div class="booking-negotiation-panel" id="booking-negotiation-panel">
@@ -173,9 +173,9 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="propose" />
                                 <div class="form-field">
-                                    <label for="price">Nouveau reste à payer (€)</label>
+                                    <label for="price">Nouveau tarif coiffure à régler le jour J (€)</label>
                                     <input id="price" type="number" name="proposed_price_euros" min="0" step="0.01" inputmode="decimal" />
-                                    <small class="field-hint">Empreinte déjà réservée : {{ reserved_amount }} (dont acompte prestataire : {{ reserved_provider_deposit_amount }}). Laisse vide si tu ne modifies pas le reste à payer.</small>
+                                    <small class="field-hint">Frais Château Rose déjà traités : {{ reserved_amount }}. Laisse vide si tu ne modifies pas le tarif coiffure à régler le jour J.</small>
                                 </div>
                                 <div class="form-field">
                                     <label for="proposed_date">Nouvelle date</label>
@@ -256,7 +256,7 @@
 
             <div class="booking-help-box">
                 <strong>Besoin d'aide ?</strong><br />
-                Une empreinte bancaire a été réalisée côté client. En confirmant, les frais de réservation sont débités.
+                Les frais Château Rose ont été traités côté client. En confirmant, la demande devient un rendez-vous validé.
             </div>
         </aside>
     </div>
@@ -275,7 +275,7 @@
             toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
             toggleBtn.textContent = expanded
                 ? 'Masquer la contre-proposition'
-                : 'Faire une contre-proposition (Reste/Date)';
+                : 'Faire une contre-proposition (Tarif coiffure/Date)';
         });
     }
 </script>

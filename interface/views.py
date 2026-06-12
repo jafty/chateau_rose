@@ -208,7 +208,7 @@ def _build_recap_email_body(*, provider: Provider, recap_url: str, payload: dict
     lines.extend(
         [
             "",
-            "Tu peux soit modifier ta demande, soit finaliser avec l'acompte depuis ce même lien.",
+            "Tu peux soit modifier ta demande, soit confirmer depuis ce même lien.",
         ]
     )
     return "\n".join(lines)
@@ -401,7 +401,7 @@ def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
         "Nouvelle demande à confirmer",
         "\n".join(
             [
-                "Une demande rapide a été sécurisée (empreinte bancaire validée).",
+                "Une demande rapide a été sécurisée (frais Château Rose traités).",
                 "Le créneau n'est pas encore confirmé : confirme manuellement depuis ton espace.",
                 f"Client·e : {checkout.client_name} ({checkout.client_email})",
                 f"Prestation : {checkout.service.name}",
@@ -412,12 +412,12 @@ def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
     )
     client_confirmation_lines = [
         f"Merci {checkout.client_name} ! Ta demande pour {checkout.service.name} est bien enregistrée.",
-        "Ton empreinte bancaire est validée, mais le rendez-vous reste en attente de confirmation.",
+        "Tes frais Château Rose sont traités, mais le rendez-vous reste en attente de confirmation.",
         "",
         "Récapitulatif :",
         f"- Prestation : {checkout.service.name}",
         f"- Date demandée : {checkout.desired_date.isoformat()}",
-        f"- Montant qui sera débité à la confirmation : {booking_requests.format_price(checkout.reservation_fee_cents)}",
+        f"- Frais Château Rose : {booking_requests.format_price(checkout.reservation_fee_cents)}",
         f"- Reste à payer le jour J : {booking_requests.format_price(max(checkout.final_price_cents - checkout.reservation_fee_cents, 0))}",
         f"- ID demande : {booking.id}",
     ]
@@ -585,7 +585,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
         prefilled_payment_auth_id = (request.GET.get("payment_auth_id") or "").strip()
         if prefilled_payment_auth_id:
             payment_message = (
-                "Empreinte bancaire confirmée. Tu peux finaliser l'envoi de ta demande."
+                "Paiement Château Rose confirmé. Tu peux finaliser l'envoi de ta demande."
             )
         recap_token = (request.GET.get("recap") or "").strip()
         if recap_token:
@@ -791,7 +791,7 @@ def quick_checkout_page(request, checkout_id):
         prefilled_payment_auth_id = (request.GET.get("payment_auth_id") or "").strip()
         if prefilled_payment_auth_id:
             payment_message = (
-                "Empreinte bancaire confirmée. Tu peux finaliser l'envoi de ta demande."
+                "Paiement Château Rose confirmé. Tu peux finaliser l'envoi de ta demande."
             )
 
     if request.method == "POST":
@@ -802,9 +802,9 @@ def quick_checkout_page(request, checkout_id):
         if not is_domicile:
             client_address_value = ""
         if require_payment_auth and not payment_auth_id:
-            error = "Merci d'ajouter une empreinte bancaire pour sécuriser la demande."
+            error = "Merci d'ajouter ton paiement Château Rose pour sécuriser la demande."
         elif require_payment_auth and not _payment_auth_is_confirmed(payment_auth_id):
-            error = "L'empreinte bancaire n'est pas confirmée. Merci de réessayer le paiement."
+            error = "Le paiement Château Rose n'est pas confirmé. Merci de réessayer le paiement."
         elif is_domicile and not client_address_value:
             error = "Merci d'indiquer ton adresse complète pour le rendez-vous à domicile."
         else:
@@ -917,7 +917,7 @@ def provider_booking_recap(request, token):
         if require_payment_auth and not payment_auth_id:
             error = "Ajoute ton paiement Château Rose pour confirmer la demande."
         elif require_payment_auth and not _payment_auth_is_confirmed(payment_auth_id):
-            error = "L'empreinte bancaire n'est pas confirmée. Merci de réessayer le paiement."
+            error = "Le paiement Château Rose n'est pas confirmé. Merci de réessayer le paiement."
         else:
             booking_detail_path = reverse("providers:booking_detail", args=["BOOKING_ID"])
             provider_booking_url_base = request.build_absolute_uri(
@@ -1031,15 +1031,33 @@ def _payment_auth_is_confirmed(payment_auth_id: str) -> bool:
 
 
 def _payment_summary(booking, *, total_cents: int | None = None) -> dict:
+    effective_total_cents = (
+        total_cents
+        if total_cents is not None
+        else booking.proposed_price_cents
+        if booking.proposed_price_cents is not None
+        else booking.estimated_price_cents
+    )
+    service_fee_cents = getattr(booking, "chateau_rose_fee_cents", 0) or 0
     provider_price_cents = booking.provider_price_estimate_cents
+
     if provider_price_cents is None:
-        if total_cents is not None:
-            provider_price_cents = total_cents
+        should_infer_legacy_fee = service_fee_cents == 0 and bool(getattr(booking, "payment_auth_id", "")) and getattr(booking, "provider", None)
+        if should_infer_legacy_fee:
+            service_fee_percentage = booking.provider.service_fee_percentage
+            if service_fee_percentage is None:
+                service_fee_percentage = Provider._meta.get_field("service_fee_percentage").default
+            checkout_amounts = compute_checkout_amounts_from_total_cents(
+                total_cents=effective_total_cents,
+                deposit_percentage=booking.provider.deposit_percentage or 30,
+                service_fee_percentage=service_fee_percentage or 0,
+            )
+            provider_price_cents = checkout_amounts["subtotal_cents"]
+            service_fee_cents = checkout_amounts["service_fee_cents"]
         else:
-            provider_price_cents = booking.proposed_price_cents if booking.proposed_price_cents is not None else booking.estimated_price_cents
-            provider_price_cents = max(provider_price_cents - getattr(booking, "chateau_rose_fee_cents", 0), 0)
-    service_fee_cents = getattr(booking, "chateau_rose_fee_cents", 0)
-    amount_due_now_cents = getattr(booking, "amount_due_now_cents", service_fee_cents)
+            provider_price_cents = max(effective_total_cents - service_fee_cents, 0)
+
+    amount_due_now_cents = getattr(booking, "amount_due_now_cents", 0) or service_fee_cents
     return {
         "total": _format_euros_from_cents(provider_price_cents + service_fee_cents),
         "reservation_fee": _format_euros_from_cents(amount_due_now_cents),
@@ -1218,23 +1236,23 @@ def provider_payment_return(request):
                 completed_booking_id = ""
 
     if status in success_statuses:
-        headline = "Empreinte bancaire confirmée"
+        headline = "Paiement Château Rose confirmé"
         tone = "success"
         if completed_booking_id:
-            message = "Ton empreinte bancaire est validée. La demande est envoyée et reste en attente de confirmation manuelle."
+            message = "Ton paiement Château Rose est validé. La demande est envoyée et reste en attente de confirmation manuelle."
         else:
             message = (
-                "Ton empreinte bancaire a bien été enregistrée. Tu peux maintenant finaliser ta demande."
+                "Ton paiement Château Rose a bien été enregistré. Tu peux maintenant finaliser ta demande."
             )
     elif status in failure_statuses:
-        headline = "Empreinte bancaire refusée"
+        headline = "Paiement Château Rose refusé"
         tone = "error"
         message = "La banque a refusé la carte. Tu peux réessayer avec un autre moyen."
     else:
-        headline = "Empreinte bancaire en attente"
+        headline = "Paiement Château Rose en attente"
         tone = "warning"
         message = (
-            "Nous n'avons pas pu confirmer immédiatement l'empreinte bancaire. "
+            "Nous n'avons pas pu confirmer immédiatement le paiement Château Rose. "
             "Tu peux retourner au formulaire pour réessayer."
         )
 
@@ -2090,7 +2108,7 @@ def about(request):
         },
         {
             "question": "Comment se passe le paiement ?",
-            "answer": "Une empreinte bancaire est prise : l'acompte n'est validé qu'après accord commun avec la prestataire ou le prestataire, puis le reste se règle directement avec elle ou lui (cash, Lydia...).",
+            "answer": "Château Rose collecte uniquement ses frais de service en ligne ; la prestation coiffure se règle directement avec la prestataire ou le prestataire le jour du rendez-vous.",
         },
     ]
 
