@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Château Rose | Maintenance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="maintenance-page">
+    <main class="maintenance-shell" aria-labelledby="maintenance-title">
+        <section class="maintenance-card">
+            <p class="maintenance-eyebrow">Château Rose</p>
+            <h1 id="maintenance-title">Nous préparons une plus belle expérience de réservation.</h1>
+            <p>
+                Le site revient très vite. En attendant, écris-nous directement et nous t’aiderons à organiser ton rendez-vous.
+            </p>
+            <a class="btn btn-primary maintenance-cta" href="mailto:{{ contact_email }}?subject=Demande%20de%20rendez-vous%20Ch%C3%A2teau%20Rose">
+                Prendre RDV par email
+            </a>
+        </section>
+    </main>
+</body>
+</html>

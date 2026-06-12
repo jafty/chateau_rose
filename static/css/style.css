@@ -4558,3 +4558,57 @@ footer {
         position: static;
     }
 }
+
+/* --- MAINTENANCE PAGE --- */
+.maintenance-page {
+    min-height: 100vh;
+}
+
+.maintenance-page::before {
+    position: fixed;
+}
+
+.maintenance-shell {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: clamp(24px, 6vw, 72px);
+}
+
+.maintenance-card {
+    width: min(680px, 100%);
+    display: grid;
+    gap: clamp(1rem, 2vw, 1.5rem);
+    text-align: center;
+    background: var(--bg-paper);
+    border: 1px solid rgba(74, 59, 50, 0.08);
+    border-radius: clamp(22px, 4vw, 36px);
+    box-shadow: var(--shadow-lifted);
+    padding: clamp(2rem, 6vw, 4.5rem);
+}
+
+.maintenance-eyebrow {
+    color: var(--rose-accent);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.maintenance-card h1 {
+    color: var(--ink-dark);
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 6vw, 4rem);
+    line-height: 1.05;
+}
+
+.maintenance-card p:not(.maintenance-eyebrow) {
+    color: var(--ink-secondary);
+    font-size: clamp(1rem, 2vw, 1.15rem);
+    margin-inline: auto;
+    max-width: 560px;
+}
+
+.maintenance-cta {
+    justify-self: center;
+    margin-top: 0.25rem;
+}
