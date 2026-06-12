@@ -79,6 +79,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "chateaurose.middleware.MaintenanceModeMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -171,6 +172,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "/espace_pro/connexion/"
 LOGIN_REDIRECT_URL = "/espace_pro/"
 LOGOUT_REDIRECT_URL = "/"
+
+MAINTENANCE_MODE = _get_bool_env("DJANGO_MAINTENANCE_MODE", False)
+MAINTENANCE_CONTACT_EMAIL = os.environ.get(
+    "MAINTENANCE_CONTACT_EMAIL",
+    os.environ.get("OPERATIONS_EMAIL", "japhet.situmonana@gmail.com"),
+)
+MAINTENANCE_RETRY_AFTER_SECONDS = int(
+    os.environ.get("MAINTENANCE_RETRY_AFTER_SECONDS", "3600")
+)
 
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY", "")
