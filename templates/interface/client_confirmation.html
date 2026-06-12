@@ -14,7 +14,9 @@
         {% elif is_cancelled %}
             <p class="lead">La demande est annulée.</p>
         {% elif is_awaiting_alternative %}
-            <p class="lead">Château Rose cherche une autre coiffeuse compatible. Ton empreinte bancaire n'est pas débitée avant confirmation.</p>
+            <p class="lead">Château Rose cherche une autre coiffeuse compatible.</p>
+        {% elif is_waiting_provider_assignment %}
+            <p class="lead">Château Rose cherche une prestataire compatible pour ta demande.</p>
         {% else %}
             <p class="lead">Ta demande est en cours.</p>
         {% endif %}
@@ -26,7 +28,7 @@
         <ul class="meta-line" style="margin: 0; padding-left: 18px;">
             <li>Date : {{ effective_date }}</li>
             <li>Tarif : {{ effective_price }}</li>
-            <li>Prestation : {{ booking.service.name }}</li>
+            <li>Prestation : {% if booking.service %}{{ booking.service.name }}{% else %}{{ booking.requested_service_label_snapshot }}{% endif %}</li>
             <li>Lieu : {{ booking.location }}</li>
         </ul>
         {% if is_confirmed and client_moves %}
@@ -42,14 +44,18 @@
     <div class="paper-card" style="margin-top: 24px;">
         <h2 class="section-title">Paiement</h2>
         <p class="meta-line" style="margin: 0;"><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
-        <p class="meta-line" style="margin: 6px 0 0;"><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }}<br>Frais Château Rose : {{ payment_summary.service_fee }}<br>Acompte prestataire : {{ payment_summary.deposit }}</p>
+        <p class="meta-line" style="margin: 6px 0 0;"><strong>Frais Château Rose :</strong> {{ payment_summary.service_fee }}</p>
         <p class="meta-line" style="margin: 6px 0 0;"><strong>Montant à régler le jour J :</strong> {{ payment_summary.remaining }}</p>
     </div>
 
     <div class="paper-card" style="margin-top: 24px;">
         <h2 class="section-title">Contacter le profil partenaire</h2>
+        {% if booking.provider %}
         <p class="meta-line" style="margin: 0;">Téléphone : {{ provider_phone }}</p>
         <p class="meta-line" style="margin: 6px 0 0;">Email : {{ provider_email }}</p>
+    {% else %}
+        <p class="meta-line" style="margin: 0;">Une prestataire sera communiquée après attribution.</p>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

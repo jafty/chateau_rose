@@ -34,7 +34,7 @@ def execute(
         raise ValidationError("Missing client control link.")
 
     booking = booking_repository.get(booking_id)
-    if booking.provider_id != provider_id:
+    if str(booking.provider_id) != str(provider_id):
         raise PermissionError("Only owner provider can propose updates.")
     if booking.status not in ("SUBMITTED", PENDING_CLIENT_VALIDATION):
         raise InvalidState("Cannot propose update from terminal state")

@@ -38,3 +38,18 @@ class InMemoryProviderCatalog:
             if starts_at <= appointment_at < ends_at:
                 return True
         return False
+
+    def provider_service_matches_intent(
+        self,
+        *,
+        provider_id,
+        service_id,
+        requested_marketing_service_id=None,
+        requested_marketing_sub_service_id=None,
+    ):
+        service = self.get_service(provider_id, service_id)
+        if requested_marketing_sub_service_id:
+            return str(requested_marketing_sub_service_id) in {str(item) for item in service.get("marketing_sub_service_ids", [])}
+        if requested_marketing_service_id:
+            return str(service.get("marketing_service_id")) == str(requested_marketing_service_id)
+        return True

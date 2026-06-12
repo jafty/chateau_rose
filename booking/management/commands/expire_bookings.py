@@ -18,7 +18,7 @@ class Command(BaseCommand):
 
         booking_ids = list(
             Booking.objects.filter(
-                status__in=(expire_booking.SUBMITTED, expire_booking.PENDING_CLIENT_VALIDATION, expire_booking.AWAITING_ALTERNATIVE_PROVIDER),
+                status__in=(expire_booking.SUBMITTED, expire_booking.PENDING_CLIENT_VALIDATION, expire_booking.AWAITING_ALTERNATIVE_PROVIDER, expire_booking.WAITING_PROVIDER_ASSIGNMENT),
                 created_at__lte=threshold,
             )
             .order_by("created_at")

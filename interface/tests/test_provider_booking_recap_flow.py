@@ -82,7 +82,7 @@ class ProviderBookingRecapFlowTests(TestCase):
 
         recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
         self.assertContains(recap_page, "Vérifie ton récapitulatif")
-        self.assertContains(recap_page, "Sécuriser ce créneau")
+        self.assertContains(recap_page, "Sécuriser ma demande")
 
         prefill_page = self.client.get(
             reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={draft.token}"
@@ -148,9 +148,9 @@ class ProviderBookingRecapFlowTests(TestCase):
         recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
         self.assertContains(recap_page, "143.75 €")
         self.assertContains(recap_page, "18.75 €")
-        self.assertContains(recap_page, "56.75 €")
-        self.assertContains(recap_page, "Dont acompte prestataire : 38 €")
-        self.assertContains(recap_page, "87 €")
+        self.assertContains(recap_page, "Frais Château Rose à régler")
+        self.assertContains(recap_page, "La prestation coiffure est réglée directement")
+        self.assertContains(recap_page, "125 €")
 
     def test_recap_waives_service_fee_with_valid_coupon(self):
         ProviderServiceFeeCoupon.objects.create(provider=self.provider, code="vipzero")
@@ -168,9 +168,9 @@ class ProviderBookingRecapFlowTests(TestCase):
         recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
         self.assertContains(recap_page, "125 €")
         self.assertContains(recap_page, "0 €")
-        self.assertContains(recap_page, "38 €")
-        self.assertContains(recap_page, "Dont acompte prestataire : 38 €")
-        self.assertContains(recap_page, "87 €")
+        self.assertContains(recap_page, "Aucun paiement en ligne requis")
+        self.assertContains(recap_page, "Confirmer ma demande")
+        self.assertContains(recap_page, "125 €")
 
     def test_admin_seeded_draft_is_updated_in_place_when_client_completes_prefilled_form(self):
         admin_user = get_user_model().objects.create_user(

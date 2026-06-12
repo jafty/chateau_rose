@@ -307,6 +307,8 @@ class ServiceAdminForm(forms.ModelForm):
             "general_adjustments",
             "meche_bonus_cents",
             "at_home_bonus_cents",
+            "marketing_service",
+            "marketing_sub_services",
         )
 
     def __init__(self, *args, **kwargs):
@@ -338,8 +340,8 @@ class ServiceAdminForm(forms.ModelForm):
 
 @admin.register(Service)
 class ServiceAdmin(ImportExportModelAdmin):
-    list_display = ("name", "slug", "provider", "category", "base_price_cents", "image_preview")
-    list_filter = ("provider", "category")
+    list_display = ("name", "slug", "provider", "category", "marketing_service", "base_price_cents", "image_preview")
+    list_filter = ("provider", "category", "marketing_service")
     search_fields = ("name", "slug")
     resource_class = ServiceResource
     form = ServiceAdminForm
@@ -445,17 +447,23 @@ class ProviderMarketingServiceAdmin(ImportExportModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ("booking_id", "provider", "service", "status", "created_at", "inspiration_pictures_count")
-    list_filter = ("status", "provider")
+    list_display = ("booking_id", "booking_kind", "provider", "service", "status", "payment_status", "created_at", "inspiration_pictures_count")
+    list_filter = ("booking_kind", "status", "payment_status", "provider")
     search_fields = ("booking_id", "client_name", "client_email", "payment_auth_id")
     readonly_fields = ("current_hair_picture_preview", "inspiration_pictures_preview")
     fields = (
         "booking_id",
+        "booking_kind",
         "provider",
         "service",
+        "requested_marketing_service",
+        "requested_marketing_sub_service",
+        "requested_service_label_snapshot",
+        "requested_options",
         "status",
         "client_name",
         "client_email",
+        "client_phone",
         "location",
         "location_preference",
         "client_address",
@@ -465,6 +473,10 @@ class BookingAdmin(admin.ModelAdmin):
         "meche",
         "free_text",
         "estimated_price_cents",
+        "provider_price_estimate_cents",
+        "chateau_rose_fee_cents",
+        "amount_due_now_cents",
+        "payment_status",
         "proposed_price_cents",
         "proposed_date",
         "payment_auth_id",

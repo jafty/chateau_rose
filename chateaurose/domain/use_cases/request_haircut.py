@@ -1,25 +1,7 @@
-import uuid
-from datetime import timedelta
+from chateaurose.domain.use_cases import create_booking_request
 
-from chateaurose.domain.entities.booking import BookingRequest
-from chateaurose.domain.exceptions import ValidationError
-from chateaurose.domain.services.pricing import (
-    compute_checkout_amounts_cents,
-    estimate_service_price_cents,
-)
-
-SUBMITTED = "SUBMITTED"
-SALON_LOCATION_LABEL = "Salon"
-
-
-def _format_euros(amount_cents: int) -> str:
-    euros = amount_cents / 100
-    return f"{euros:.2f}".replace(".", ",") + " €"
-
-
-def _generate_id() -> str:
-    readable = uuid.uuid4().hex[:8].upper()
-    return f"BK-{readable}"
+SUBMITTED = create_booking_request.SUBMITTED
+SALON_LOCATION_LABEL = create_booking_request.SALON_LOCATION_LABEL
 
 
 def execute(
@@ -44,210 +26,59 @@ def execute(
     payment_auth_id: str | None = None,
     provider_booking_url_base: str | None = None,
     provider_salon_zone: str | None = None,
-    booking_repository,
-    provider_catalog,
-    payment_gateway,
-    notifier,
-    reminder_gateway,
-    clock,
+    booking_repository=None,
+    provider_catalog=None,
+    payment_gateway=None,
+    notifier=None,
+    reminder_gateway=None,
+    clock=None,
     send_submission_notifications: bool = True,
     operations_email: str | None = None,
 ):
-    required_fields = [
-        ("provider_id", provider_id),
-        ("service_id", service_id),
-        ("client_name", client_contact.get("name")),
-        ("client_email", client_contact.get("email")),
-        ("location_preference", location_preference),
-        ("desired_date", desired_date),
-    ]
-    if require_current_hair_picture:
-        required_fields.append(("current_hair_picture", current_hair_picture))
+    # Legacy provider-selected entry point kept for existing views/tests.
+    # New payment semantics: amount due online is only Château Rose's service fee;
+    # the hairstyle price is paid directly to the provider on appointment day.
+    from chateaurose.domain.exceptions import ValidationError
 
-    for field_name, value in required_fields:
-        if not value:
-            raise ValidationError(f"Missing required field: {field_name}")
     if meche is None:
         raise ValidationError("Missing required field: meche")
-
-    normalized_location_preference = location_preference
-    normalized_location = location
-    if normalized_location_preference == "salon":
-        if not provider_salon_zone:
-            raise ValidationError("Missing required field: provider_salon_zone")
-        normalized_location = provider_salon_zone
-    else:
-        if not normalized_location:
+    if location_preference == "salon" and not provider_salon_zone:
+        raise ValidationError("Missing required field: provider_salon_zone")
+    if location_preference != "salon":
+        if not location:
             raise ValidationError("Missing required field: location")
         if not client_address:
             raise ValidationError("Missing required field: client_address")
+    if require_current_hair_picture and not current_hair_picture:
+        raise ValidationError("Missing required field: current_hair_picture")
 
-    try:
-        service = provider_catalog.get_service(provider_id, service_id)
-    except KeyError:
-        raise ValidationError("Service not offered by provider")
-    coverage_location = (
-        SALON_LOCATION_LABEL
-        if normalized_location_preference == "salon"
-        else normalized_location
-    )
-    if not skip_coverage_validation and not provider_catalog.provider_covers_zone(provider_id, coverage_location):
-        raise ValidationError("Provider does not cover this zone")
-
-    has_blocked_slot = getattr(provider_catalog, "provider_has_blocked_slot", None)
-    if callable(has_blocked_slot) and has_blocked_slot(provider_id, desired_date):
-        raise ValidationError("Selected slot is unavailable")
-
-    estimated_price, hair_length, general_adjustments = estimate_service_price_cents(
-        service=service,
-        hair_length=hair_length,
-        general_adjustments=general_adjustments,
-        meche=meche,
-        location_preference=normalized_location_preference,
-    )
-    deposit_percentage = service.get("deposit_percentage")
-    if deposit_percentage is None:
-        deposit_cents = service.get("deposit_cents")
-        if deposit_cents is None:
-            raise ValidationError("Missing required field: deposit configuration")
-        checkout_amounts = {
-            "total_cents": estimated_price,
-            "reservation_fee_cents": deposit_cents,
-            "remaining_cents": max(estimated_price - deposit_cents, 0),
-        }
-    else:
-        checkout_amounts = compute_checkout_amounts_cents(
-            subtotal_cents=estimated_price,
-            deposit_percentage=deposit_percentage,
-            service_fee_percentage=service.get("service_fee_percentage", 0),
-            waive_service_fee=bool(service.get("waive_service_fee")) or waive_service_fee,
-        )
-        deposit_cents = checkout_amounts["reservation_fee_cents"]
-    if deposit_cents is None:
-        raise ValidationError("Missing required field: deposit configuration")
-
-    booking_id = _generate_id()
-    if not payment_auth_id:
-        payment_auth_id = payment_gateway.create_auth(
-            amount_cents=deposit_cents,
-            currency="EUR",
-            reference=booking_id,
-        )
-
-    created_at = clock.now()
-    booking = BookingRequest(
-        id=booking_id,
+    return create_booking_request.execute(
         provider_id=provider_id,
         service_id=service_id,
         client_contact=client_contact,
-        location=normalized_location,
-        location_preference=normalized_location_preference,
+        location=location,
+        location_preference=location_preference,
+        client_address=client_address,
         desired_date=desired_date,
         hair_length=hair_length,
         general_adjustments=general_adjustments,
+        requested_options=general_adjustments,
         meche=meche,
         current_hair_picture=current_hair_picture,
         inspiration_pictures=inspiration_pictures,
         free_text=free_text,
-        estimated_price_cents=checkout_amounts["total_cents"],
+        service_fee_coupon_code=service_fee_coupon_code,
+        waive_service_fee=waive_service_fee,
         payment_auth_id=payment_auth_id,
-        status=SUBMITTED,
-        created_at=created_at,
-        updated_at=created_at,
-        client_address=client_address,
+        provider_booking_url_base=provider_booking_url_base,
+        provider_salon_zone=provider_salon_zone,
+        skip_coverage_validation=skip_coverage_validation,
+        booking_repository=booking_repository,
+        provider_catalog=provider_catalog,
+        payment_gateway=payment_gateway,
+        notifier=notifier,
+        reminder_gateway=reminder_gateway,
+        clock=clock,
+        send_submission_notifications=send_submission_notifications,
+        operations_email=operations_email,
     )
-
-    booking_repository.add(booking)
-
-    provider_booking_url = None
-    if provider_booking_url_base:
-        provider_booking_url = f"{provider_booking_url_base.rstrip('/')}/{booking_id}/"
-
-    provider_message_lines = [
-        "Bonne nouvelle ! Tu as une nouvelle demande de coiffure.",
-        f"Client·e : {client_contact['name']} ({client_contact['email']})",
-        f"Prestation : {service['name']}",
-        f"Date souhaitée : {desired_date}",
-        f"Lieu : {location}",
-        f"Longueur : {hair_length}",
-        f"Mèches : {'oui' if meche else 'non'}",
-        f"ID demande : {booking_id}",
-        "",
-        "Paiement :",
-        f"- Empreinte bancaire validée : {_format_euros(deposit_cents)} (pas encore débités)",
-        f"  dont acompte prestataire : {_format_euros(checkout_amounts['deposit_cents'])}",
-        f"  dont frais Château Rose : {_format_euros(checkout_amounts['service_fee_cents'])}",
-        f"- Reste à régler chez la prestataire : {_format_euros(checkout_amounts['remaining_cents'])}",
-    ]
-    if free_text:
-        provider_message_lines.append(f"Message : {free_text}")
-    if provider_booking_url:
-        provider_message_lines.extend(
-            [
-                "",
-                "Pour répondre et proposer un créneau, ouvre la demande :",
-                provider_booking_url,
-            ]
-        )
-
-    client_message_lines = [
-        f"Merci {client_contact['name']} ! Ta demande pour {service['name']} est bien envoyée.",
-        "On revient vers toi dès que la coiffeuse te propose un créneau.",
-        "",
-        "Récapitulatif :",
-        f"- Prestation : {service['name']}",
-        f"- Date souhaitée : {desired_date}",
-        f"- Lieu : {location}",
-        f"- Longueur : {hair_length}",
-        f"- Mèches : {'oui' if meche else 'non'}",
-        f"- ID demande : {booking_id}",
-        "",
-        "Paiement :",
-        f"- Empreinte bancaire déjà validée : {_format_euros(deposit_cents)} (pas encore débités)",
-        f"  dont acompte prestataire : {_format_euros(checkout_amounts['deposit_cents'])}",
-        f"  dont frais Château Rose : {_format_euros(checkout_amounts['service_fee_cents'])}",
-        f"- Reste à régler chez la prestataire : {_format_euros(checkout_amounts['remaining_cents'])}",
-    ]
-    if free_text:
-        client_message_lines.append(f"- Ton message : {free_text}")
-
-    if send_submission_notifications:
-        notifier.notify(
-            provider_id,
-            "Nouvelle demande de coiffure",
-            "\n".join(provider_message_lines),
-        )
-        if operations_email:
-            notifier.notify(
-                operations_email,
-                f"Copie demande {booking_id}",
-                "\n".join(provider_message_lines),
-                reply_to=client_contact["email"],
-            )
-        notifier.notify(
-            client_contact["email"],
-            "Demande envoyée",
-            "\n".join(client_message_lines),
-        )
-
-    if reminder_gateway:
-        reminder_gateway.schedule(
-            recipient=provider_id,
-            send_at=created_at + timedelta(hours=24),
-            subject="Rappel: demande en attente",
-            body="Tu as une demande en attente de réponse.",
-        )
-        reminder_gateway.schedule(
-            recipient=provider_id,
-            send_at=created_at + timedelta(hours=48),
-            subject="Demande expirée",
-            body="La demande a expiré faute de confirmation.",
-        )
-        reminder_gateway.schedule(
-            recipient=client_contact["email"],
-            send_at=created_at + timedelta(hours=48),
-            subject="Demande expirée",
-            body="Ta demande a expiré faute de confirmation.",
-        )
-
-    return booking

@@ -28,36 +28,31 @@ def _payment_lines(
     deposit_percentage: int = 30,
     service_fee_percentage: int = 0,
 ) -> list[str]:
-    checkout_amounts = compute_checkout_amounts_from_total_cents(
-        total_cents=total_cents,
-        deposit_percentage=deposit_percentage,
-        service_fee_percentage=service_fee_percentage,
-    )
-    deposit_cents = checkout_amounts["deposit_cents"]
-    service_fee_cents = checkout_amounts["service_fee_cents"]
-    reservation_fee_cents = checkout_amounts["reservation_fee_cents"]
-    remaining_cents = checkout_amounts["remaining_cents"]
-    reservation_fee_rounded_cents = ceil_price_for_display_cents(reservation_fee_cents)
-    remaining_rounded_cents = floor_price_for_display_cents(remaining_cents)
+    service_fee_cents = round(total_cents * service_fee_percentage / (100 + service_fee_percentage)) if service_fee_percentage else 0
+    provider_price_cents = max(total_cents - service_fee_cents, 0)
     if captured:
         return [
             "Paiement :",
-            f"- Frais de réservation débités : {_format_euros(reservation_fee_cents)}",
-            f"  dont acompte prestataire : {_format_euros(deposit_cents)}",
-            f"  dont frais Château Rose : {_format_euros(service_fee_cents)}",
-            f"- Reste à régler chez la prestataire : {_format_euros(remaining_cents)}",
-            f"  (arrondi à payer le jour J : {_format_euros(remaining_rounded_cents)})",
+            f"- Frais Château Rose débités : {_format_euros(service_fee_cents)}",
+            f"- Prestation coiffure à régler directement à la prestataire : {_format_euros(provider_price_cents)}",
         ]
     return [
         "Paiement :",
-        f"- Empreinte bancaire déjà validée : {_format_euros(reservation_fee_cents)} (pas encore débités)",
-        f"  dont acompte prestataire : {_format_euros(deposit_cents)}",
-        f"  dont frais Château Rose : {_format_euros(service_fee_cents)}",
-        f"- Montant qui sera débité à la confirmation : {_format_euros(reservation_fee_cents)}",
-        f"  (arrondi affiché : {_format_euros(reservation_fee_rounded_cents)})",
-        f"- Reste à régler chez la prestataire après confirmation : {_format_euros(remaining_cents)}",
-        f"  (arrondi à payer le jour J : {_format_euros(remaining_rounded_cents)})",
+        f"- Frais Château Rose autorisés : {_format_euros(service_fee_cents)}",
+        f"- Prestation coiffure à régler directement à la prestataire : {_format_euros(provider_price_cents)}",
     ]
+
+
+def _capture_if_needed(payment_gateway, booking):
+    if booking.payment_auth_id and booking.amount_due_now_cents > 0:
+        payment_gateway.capture_auth(booking.payment_auth_id)
+    booking.payment_status = "CAPTURED" if booking.amount_due_now_cents > 0 else "WAIVED"
+
+
+def _release_if_needed(payment_gateway, booking):
+    if booking.payment_auth_id:
+        payment_gateway.release_auth(booking.payment_auth_id)
+    booking.payment_status = "RELEASED" if booking.amount_due_now_cents > 0 else "WAIVED"
 
 
 def _parse_datetime(value, *, reference_tz):
@@ -108,7 +103,7 @@ def execute(
     if booking.status in (CONFIRMED, CANCELLED):
         return booking
 
-    provider_contact = provider_directory.get_provider_contact(booking.provider_id)
+    provider_contact = provider_directory.get_provider_contact(booking.provider_id) if booking.provider_id else {}
     provider_name = provider_contact.get("name") or "La prestataire ou le prestataire"
     salon_address = provider_contact.get("salon_address") or "Adresse à confirmer"
     deposit_percentage = provider_contact.get("deposit_percentage") or 30
@@ -133,7 +128,7 @@ def execute(
     if actor == "provider":
         if decision == "confirm" and booking.status == SUBMITTED:
             booking.status = CONFIRMED
-            payment_gateway.capture_auth(booking.payment_auth_id)
+            _capture_if_needed(payment_gateway, booking)
             provider_location_lines = (
                 ["La personne cliente se déplace chez toi."]
                 if is_salon
@@ -310,7 +305,7 @@ def execute(
     elif actor == "client":
         if decision == "accept" and booking.status == PENDING_CLIENT_VALIDATION:
             booking.status = CONFIRMED
-            payment_gateway.capture_auth(booking.payment_auth_id)
+            _capture_if_needed(payment_gateway, booking)
             provider_location_lines = (
                 ["La personne cliente se déplace chez toi."]
                 if is_salon
@@ -417,7 +412,7 @@ def execute(
                 )
         elif decision == "refuse" and booking.status == PENDING_CLIENT_VALIDATION:
             booking.status = CANCELLED
-            payment_gateway.release_auth(booking.payment_auth_id)
+            _release_if_needed(payment_gateway, booking)
             notifier.notify(
                 booking.provider_id,
                 "Demande annulée",
@@ -481,7 +476,7 @@ def execute(
     elif actor == "admin":
         if decision == "cancel" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER):
             booking.status = CANCELLED
-            payment_gateway.release_auth(booking.payment_auth_id)
+            _release_if_needed(payment_gateway, booking)
             notifier.notify(
                 booking.provider_id,
                 "Demande annulée",
