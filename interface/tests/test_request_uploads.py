@@ -226,6 +226,14 @@ class ProviderRequestUploadTests(TestCase):
         self.assertContains(response, f'alt="{self.service.name} réalisée par {self.provider.name}"')
 
 
+    def test_provider_detail_renders_without_checkout_amounts_name_error(self):
+        with self.settings(STRIPE_PUBLIC_KEY="pk_test_enabled"):
+            response = self.client.get(
+                reverse("interface:provider_detail", args=[self.provider.id])
+            )
+
+        self.assertEqual(response.status_code, 200)
+
     @override_settings(STRIPE_PUBLIC_KEY="pk_test_public")
     def test_provider_detail_renders_with_stripe_enabled(self):
         response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
