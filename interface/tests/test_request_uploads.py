@@ -226,6 +226,13 @@ class ProviderRequestUploadTests(TestCase):
         self.assertContains(response, f'alt="{self.service.name} réalisée par {self.provider.name}"')
 
 
+    @override_settings(STRIPE_PUBLIC_KEY="pk_test_public")
+    def test_provider_detail_renders_with_stripe_enabled(self):
+        response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.provider.name)
+
     def test_provider_detail_uses_custom_seo_h1_when_configured(self):
         self.provider.seo_h1 = "Coiffeuse afro à Paris 10 · tresses naturelles et conseils personnalisés"
         self.provider.save(update_fields=["seo_h1"])

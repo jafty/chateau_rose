@@ -35,7 +35,7 @@
     <div class="paper-card" style="margin-top: 24px;">
         <h2 class="section-title">Paiement</h2>
         <p class="meta-line" style="margin: 0;"><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
-        <p class="meta-line" style="margin: 6px 0 0;"><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }}<br>Frais Château Rose : {{ payment_summary.service_fee }}<br>Acompte prestataire : {{ payment_summary.deposit }}</p>
+        <p class="meta-line" style="margin: 6px 0 0;"><strong>Frais Château Rose :</strong> {{ payment_summary.service_fee }}<br>Montant en ligne : {{ payment_summary.reservation_fee }}</p>
         <p class="meta-line" style="margin: 6px 0 0;"><strong>Montant à régler le jour J :</strong> {{ payment_summary.remaining }}</p>
     </div>
 

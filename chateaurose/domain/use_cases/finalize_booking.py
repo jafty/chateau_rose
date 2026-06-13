@@ -2,11 +2,6 @@ from datetime import datetime, timedelta
 
 from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import InvalidState
-from chateaurose.domain.services.pricing import (
-    ceil_price_for_display_cents,
-    compute_checkout_amounts_from_total_cents,
-    floor_price_for_display_cents,
-)
 from chateaurose.domain.use_cases.expire_booking import EXPIRATION_DELAY
 
 CONFIRMED = "CONFIRMED"
@@ -21,43 +16,36 @@ def _format_euros(amount_cents: int) -> str:
     return f"{euros:.2f}".replace(".", ",") + " €"
 
 
-def _payment_lines(
-    total_cents: int,
-    *,
-    captured: bool,
-    deposit_percentage: int = 30,
-    service_fee_percentage: int = 0,
-) -> list[str]:
-    checkout_amounts = compute_checkout_amounts_from_total_cents(
-        total_cents=total_cents,
-        deposit_percentage=deposit_percentage,
-        service_fee_percentage=service_fee_percentage,
-    )
-    deposit_cents = checkout_amounts["deposit_cents"]
-    service_fee_cents = checkout_amounts["service_fee_cents"]
-    reservation_fee_cents = checkout_amounts["reservation_fee_cents"]
-    remaining_cents = checkout_amounts["remaining_cents"]
-    reservation_fee_rounded_cents = ceil_price_for_display_cents(reservation_fee_cents)
-    remaining_rounded_cents = floor_price_for_display_cents(remaining_cents)
-    if captured:
-        return [
-            "Paiement :",
-            f"- Frais de réservation débités : {_format_euros(reservation_fee_cents)}",
-            f"  dont acompte prestataire : {_format_euros(deposit_cents)}",
-            f"  dont frais Château Rose : {_format_euros(service_fee_cents)}",
-            f"- Reste à régler chez la prestataire : {_format_euros(remaining_cents)}",
-            f"  (arrondi à payer le jour J : {_format_euros(remaining_rounded_cents)})",
-        ]
+def _payment_lines(booking: BookingRequest, *, captured: bool) -> list[str]:
+    service_fee_cents = booking.amount_due_now_cents or booking.chateau_rose_fee_cents
+    provider_price_cents = booking.provider_price_estimate_cents
+    if provider_price_cents is None:
+        effective_price_cents = (
+            booking.proposed_price_cents
+            if booking.proposed_price_cents is not None
+            else booking.estimated_price_cents
+        )
+        provider_price_cents = max(effective_price_cents - service_fee_cents, 0)
+
+    fee_label = "débités" if captured else "non débités"
     return [
         "Paiement :",
-        f"- Empreinte bancaire déjà validée : {_format_euros(reservation_fee_cents)} (pas encore débités)",
-        f"  dont acompte prestataire : {_format_euros(deposit_cents)}",
-        f"  dont frais Château Rose : {_format_euros(service_fee_cents)}",
-        f"- Montant qui sera débité à la confirmation : {_format_euros(reservation_fee_cents)}",
-        f"  (arrondi affiché : {_format_euros(reservation_fee_rounded_cents)})",
-        f"- Reste à régler chez la prestataire après confirmation : {_format_euros(remaining_cents)}",
-        f"  (arrondi à payer le jour J : {_format_euros(remaining_rounded_cents)})",
+        f"- Frais Château Rose {fee_label} : {_format_euros(service_fee_cents)}",
+        f"- Prestation coiffure à régler directement à la prestataire : {_format_euros(provider_price_cents)}",
     ]
+
+
+def _capture_if_needed(payment_gateway, booking):
+    should_capture = bool(booking.payment_auth_id) and booking.payment_status != "WAIVED" and booking.amount_due_now_cents > 0
+    if should_capture:
+        payment_gateway.capture_auth(booking.payment_auth_id)
+    booking.payment_status = "CAPTURED" if should_capture else "WAIVED"
+
+
+def _release_if_needed(payment_gateway, booking):
+    if booking.payment_auth_id:
+        payment_gateway.release_auth(booking.payment_auth_id)
+    booking.payment_status = "RELEASED" if booking.amount_due_now_cents > 0 else "WAIVED"
 
 
 def _parse_datetime(value, *, reference_tz):
@@ -108,12 +96,9 @@ def execute(
     if booking.status in (CONFIRMED, CANCELLED):
         return booking
 
-    provider_contact = provider_directory.get_provider_contact(booking.provider_id)
+    provider_contact = provider_directory.get_provider_contact(booking.provider_id) if booking.provider_id else {}
     provider_name = provider_contact.get("name") or "La prestataire ou le prestataire"
     salon_address = provider_contact.get("salon_address") or "Adresse à confirmer"
-    deposit_percentage = provider_contact.get("deposit_percentage") or 30
-    service_fee_percentage = provider_contact.get("service_fee_percentage") or 0
-
     effective_date = booking.proposed_date or booking.desired_date
     effective_price_cents = (
         booking.proposed_price_cents
@@ -133,7 +118,7 @@ def execute(
     if actor == "provider":
         if decision == "confirm" and booking.status == SUBMITTED:
             booking.status = CONFIRMED
-            payment_gateway.capture_auth(booking.payment_auth_id)
+            _capture_if_needed(payment_gateway, booking)
             provider_location_lines = (
                 ["La personne cliente se déplace chez toi."]
                 if is_salon
@@ -157,7 +142,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                        *_payment_lines(booking, captured=True),
                         "",
                         *provider_location_lines,
                         "",
@@ -179,7 +164,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                        *_payment_lines(booking, captured=True),
                         "",
                         *client_location_lines,
                         "",
@@ -205,7 +190,7 @@ def execute(
                                 f"- Lieu : {location_label}",
                                 f"- Tarif : {formatted_price}",
                                 "",
-                                *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                                *_payment_lines(booking, captured=True),
                                 "",
                                 "À très vite,",
                                 "L'équipe Château Rose",
@@ -215,10 +200,10 @@ def execute(
             if operations_email:
                 notifier.notify(
                     operations_email,
-                    "Acompte débité · rendez-vous confirmé",
+                    "Frais Château Rose débités · rendez-vous confirmé",
                     "\n".join(
                         [
-                            "Un rendez-vous vient d'être confirmé et l'acompte a été débité.",
+                            "Un rendez-vous vient d'être confirmé et les frais Château Rose ont été débités.",
                             f"- ID demande : {booking.id}",
                             f"- Prestataire : {provider_name}",
                             f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
@@ -227,12 +212,7 @@ def execute(
                             f"- Tarif total : {formatted_price}",
                             *[
                                 line.replace("directement au salon/prestataire", "chez la prestataire")
-                                for line in _payment_lines(
-                                    effective_price_cents,
-                                    captured=True,
-                                    deposit_percentage=deposit_percentage,
-                                    service_fee_percentage=service_fee_percentage,
-                                )
+                                for line in _payment_lines(booking, captured=True)
                             ],
                         ]
                     ),
@@ -276,8 +256,8 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif estimé : {formatted_price}",
                         "",
-                        "Paiement : ton empreinte bancaire reste en attente et aucun montant n'est débité avant confirmation d'un nouveau rendez-vous.",
-                        "Si aucune solution adaptée n'est trouvée rapidement, l'empreinte sera libérée.",
+                        "Paiement : tes frais Château Rose restent en attente et aucun montant n'est débité avant confirmation d'un nouveau rendez-vous.",
+                        "Si aucune solution adaptée n'est trouvée rapidement, le paiement sera annulé.",
                         "",
                         "À très vite,",
                         "L'équipe Château Rose",
@@ -297,7 +277,7 @@ def execute(
                             f"- Date souhaitée : {effective_date}",
                             f"- Lieu : {location_label}",
                             f"- Tarif estimé : {formatted_price}",
-                            f"- Empreinte bancaire : {booking.payment_auth_id}",
+                            f"- Paiement Château Rose : {booking.payment_auth_id}",
                             "",
                             "Action requise : contacter une autre coiffeuse compatible, puis proposer une solution à la cliente ou annuler la demande si aucune alternative n'est possible.",
                         ]
@@ -310,7 +290,7 @@ def execute(
     elif actor == "client":
         if decision == "accept" and booking.status == PENDING_CLIENT_VALIDATION:
             booking.status = CONFIRMED
-            payment_gateway.capture_auth(booking.payment_auth_id)
+            _capture_if_needed(payment_gateway, booking)
             provider_location_lines = (
                 ["La personne cliente se déplace chez toi."]
                 if is_salon
@@ -334,7 +314,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                        *_payment_lines(booking, captured=True),
                         "",
                         *provider_location_lines,
                         "",
@@ -356,7 +336,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                        *_payment_lines(booking, captured=True),
                         "",
                         *client_location_lines,
                         "",
@@ -382,7 +362,7 @@ def execute(
                                 f"- Lieu : {location_label}",
                                 f"- Tarif : {formatted_price}",
                                 "",
-                                *_payment_lines(effective_price_cents, captured=True, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                                *_payment_lines(booking, captured=True),
                                 "",
                                 "À très vite,",
                                 "L'équipe Château Rose",
@@ -392,10 +372,10 @@ def execute(
             if operations_email:
                 notifier.notify(
                     operations_email,
-                    "Acompte débité · rendez-vous confirmé",
+                    "Frais Château Rose débités · rendez-vous confirmé",
                     "\n".join(
                         [
-                            "Une proposition a été acceptée et l'acompte a été débité.",
+                            "Une proposition a été acceptée et les frais Château Rose ont été débités.",
                             f"- ID demande : {booking.id}",
                             f"- Prestataire : {provider_name}",
                             f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
@@ -404,12 +384,7 @@ def execute(
                             f"- Tarif total : {formatted_price}",
                             *[
                                 line.replace("directement au salon/prestataire", "chez la prestataire")
-                                for line in _payment_lines(
-                                    effective_price_cents,
-                                    captured=True,
-                                    deposit_percentage=deposit_percentage,
-                                    service_fee_percentage=service_fee_percentage,
-                                )
+                                for line in _payment_lines(booking, captured=True)
                             ],
                         ]
                     ),
@@ -417,7 +392,7 @@ def execute(
                 )
         elif decision == "refuse" and booking.status == PENDING_CLIENT_VALIDATION:
             booking.status = CANCELLED
-            payment_gateway.release_auth(booking.payment_auth_id)
+            _release_if_needed(payment_gateway, booking)
             notifier.notify(
                 booking.provider_id,
                 "Demande annulée",
@@ -431,7 +406,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                        *_payment_lines(booking, captured=False),
                         "",
                         "À bientôt,",
                         "L'équipe Château Rose",
@@ -451,7 +426,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                        *_payment_lines(booking, captured=False),
                         "",
                         "Si tu veux, tu peux déposer une nouvelle demande.",
                         "À bientôt,",
@@ -465,7 +440,7 @@ def execute(
                     f"Demande annulée par la cliente · {booking.id}",
                     "\n".join(
                         [
-                            "Une cliente a refusé une proposition. La demande est annulée et l'empreinte bancaire a été libérée.",
+                            "Une cliente a refusé une proposition. La demande est annulée et le paiement Château Rose a été annulé.",
                             f"- ID demande : {booking.id}",
                             f"- Prestataire : {provider_name}",
                             f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
@@ -481,7 +456,7 @@ def execute(
     elif actor == "admin":
         if decision == "cancel" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER):
             booking.status = CANCELLED
-            payment_gateway.release_auth(booking.payment_auth_id)
+            _release_if_needed(payment_gateway, booking)
             notifier.notify(
                 booking.provider_id,
                 "Demande annulée",
@@ -495,7 +470,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                        *_payment_lines(booking, captured=False),
                         "",
                         "À bientôt,",
                         "L'équipe Château Rose",
@@ -515,7 +490,7 @@ def execute(
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(effective_price_cents, captured=False, deposit_percentage=deposit_percentage, service_fee_percentage=service_fee_percentage),
+                        *_payment_lines(booking, captured=False),
                         "",
                         "Si tu veux, tu peux déposer une nouvelle demande.",
                         "À bientôt,",
@@ -529,7 +504,7 @@ def execute(
                     f"Demande annulée par Château Rose · {booking.id}",
                     "\n".join(
                         [
-                            "Une demande a été annulée par l'équipe Château Rose et l'empreinte bancaire a été libérée.",
+                            "Une demande a été annulée par l'équipe Château Rose et le paiement Château Rose a été annulé.",
                             f"- ID demande : {booking.id}",
                             f"- Prestataire : {provider_name}",
                             f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
