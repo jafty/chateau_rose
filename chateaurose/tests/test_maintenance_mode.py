@@ -87,6 +87,12 @@ class MaintenanceModeMiddlewareTests(TestCase):
 
         self.assertEqual(response.status_code, 503)
 
+    def test_favicon_is_available_during_maintenance(self):
+        response = self.client.get("/favicon.ico")
+
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response.headers["Location"], "/static/assets/cr_logo.svg")
+
     def test_request_without_session_shows_maintenance_page(self):
         from chateaurose.middleware import MaintenanceModeMiddleware
 
