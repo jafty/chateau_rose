@@ -67,6 +67,26 @@ class ServicePagesTests(TestCase):
         self.assertIn(self.provider_a.name, content)
         self.assertNotIn(self.provider_b.name, content)
 
+    def test_locks_service_page_renders_with_provider_cards(self):
+        locks = MarketingService.objects.create(
+            name="Locks",
+            slug="locks",
+            intro="Intro locks",
+            short_intro="Intro courte locks",
+            long_description="Description longue locks",
+            long_title="Titre long locks",
+        )
+        locks_provider = Provider.objects.create(name="Locks Studio")
+        ProviderMarketingService.objects.create(provider=locks_provider, service=locks)
+        ProviderZone.objects.create(provider=locks_provider, zone=self.toulouse)
+
+        response = self.client.get(reverse("interface:service_page", args=["locks"]))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Locks", content)
+        self.assertIn(locks_provider.name, content)
+
     def test_service_city_page_filters_providers_by_service_and_zone(self):
         ProviderMarketingService.objects.create(
             provider=self.provider_b, service=self.marketing_service
