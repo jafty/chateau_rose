@@ -30,7 +30,7 @@
             <div class="provider-service-grid service-subservices-grid">
                 {% for sub_service_item in sub_services %}
                     {% url 'interface:sub_service_page' service.slug sub_service_item.slug as sub_service_url %}
-                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url|add:"#service-request" card_cta="Réserver rapidement" %}
+                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url card_cta="Réserver rapidement" hide_price=True %}
                 {% endfor %}
             </div>
         </div>
@@ -41,7 +41,6 @@
         <div id="service-request" class="provider-form-card inline-form-card" style="margin-bottom:1.25rem;">
             <h2 class="wizard-heading">Réserver rapidement</h2>
             <p class="meta-line">Réponds à quelques questions : Château Rose cherchera ensuite une prestataire compatible. La prestation coiffure sera réglée directement à la prestataire le jour du rendez-vous.</p>
-            {% if sub_service and sub_service.price_display %}<p class="service-price">Dès <span class="price-value">{{ sub_service.price_display }}</span></p>{% endif %}
             <div class="step-progress" aria-label="Étapes de demande rapide">
                 <div class="step-indicator active" data-step-indicator="1">1</div>
                 <div class="step-indicator" data-step-indicator="2">2</div>
@@ -52,7 +51,9 @@
         </div>
         {% endif %}
         {% if providers %}
-        <div id="provider-comparison" class="providers-grid">
+        <section id="provider-comparison" class="providers-comparison-section">
+            <h2 class="service-subservices-heading">Choisir une prestataire disponible</h2>
+            <div class="providers-grid">
             {% for provider in providers %}
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                 <div class="provider-header">
@@ -89,7 +90,8 @@
                 </div>
             </a>
             {% endfor %}
-        </div>
+            </div>
+        </section>
         {% endif %}
 
         {% if seo_intro or seo_long_description %}
@@ -132,6 +134,13 @@
                 <li>Paiement sécurisé en ligne</li>
                 <li>SAV toulousain disponible</li>
             </ul>
+            <a class="btn contact-outline service-contact-cta" href="mailto:japhet.situmonana@gmail.com">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" focusable="false">
+                    <path d="M4.75 6.75h14.5v10.5H4.75z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="m5.25 7.25 6.75 5.5 6.75-5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Contacte-nous
+            </a>
         </div>
 
         {% if not is_at_home_page %}
@@ -238,8 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const updateEstimate = () => {
         const lengths = pricingData.lengths || {};
-        const selectedLength = hairLengthSelect.value || Object.keys(lengths)[0] || 'standard';
-        const lengthAdj = lengths[selectedLength] || 0;
+        const selectedLength = hairLengthSelect.value;
+        const lengthAdj = selectedLength ? (lengths[selectedLength] || 0) : 0;
         const adjustments = pricingData.general_adjustments || {};
         const adjustmentTotal = selectedAdjustments().reduce((total, key) => total + (adjustments[key] || 0), 0);
         const locationPreference = form.querySelector('input[name="location_preference"]:checked')?.value || 'salon';
@@ -251,9 +260,19 @@ document.addEventListener('DOMContentLoaded', () => {
             adjustments: [lengthAdj, adjustmentTotal, atHomeAdj],
         });
         const displayFee = ceilPriceForDisplay(fee);
+        const displayProviderDue = Math.max(displayTotalWithFees - displayFee, 0);
         finalPriceDisplay.textContent = formatPrice(displayFee);
         stickyPriceValue.textContent = formatPrice(displayFee);
-        finalDetailsDisplay.textContent = `${pricingData.name} · estimation totale indicative : ${formatPrice(displayTotalWithFees)}. Prestation estimée à régler le jour J : ${formatPrice(subtotal)}.`;
+        finalDetailsDisplay.replaceChildren();
+        const estimateLine = Object.assign(document.createElement('span'), {
+            className: 'estimate-highlight',
+            textContent: `Estimation totale indicative : ${formatPrice(displayTotalWithFees)}`,
+        });
+        const providerDueLine = Object.assign(document.createElement('span'), {
+            textContent: `Prestation estimée à régler le jour J : ${formatPrice(displayProviderDue)}`,
+        });
+        const serviceLine = Object.assign(document.createElement('span'), { textContent: pricingData.name });
+        finalDetailsDisplay.append(estimateLine, providerDueLine, serviceLine);
         const optionText = selectedAdjustments().join(' · ');
         generalAdjustmentsDisplay.textContent = optionText ? `Options : ${optionText}` : '';
         generalAdjustmentsDisplay.hidden = !optionText;
@@ -277,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const suffix = delta > 0 ? ` (+${formatPrice(displayDelta)})` : delta < 0 ? ` (${formatPrice(displayDelta)})` : '';
             hairLengthSelect.append(new Option(`${key}${suffix}`, key));
         });
-        hairLengthSelect.required = true;
+        hairLengthSelect.required = false;
         hairLengthField.hidden = false;
     };
     const buildAdjustments = () => {

@@ -157,3 +157,52 @@
 @media (max-width: 560px) {
     .provider-service-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Manual-test refinements for generic service pages. */
+.sticky-price-bar .total-label {
+    color: var(--ink-dark);
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+.sticky-price-bar .total-amount {
+    font-size: clamp(2rem, 1.45rem + 1vw, 2.6rem);
+    line-height: 1;
+}
+.sticky-price-bar #final-details-display {
+    display: grid;
+    gap: 0.35rem;
+}
+.sticky-price-bar .estimate-highlight {
+    color: var(--ink-primary);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.28rem, 1.05rem + 0.5vw, 1.65rem);
+    font-style: italic;
+    font-weight: 800;
+    line-height: 1.15;
+}
+.providers-comparison-section {
+    display: grid;
+    gap: 0.95rem;
+}
+.service-contact-cta {
+    margin-top: 1rem;
+    width: 100%;
+    justify-content: center;
+}
+.contact-outline {
+    background: transparent;
+    border: 1.5px solid var(--rose-accent);
+    color: var(--ink-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+.contact-outline:hover {
+    background: var(--rose-soft);
+    color: var(--ink-dark);
+}
+.contact-outline svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex: 0 0 auto;
+}

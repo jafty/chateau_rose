@@ -11,7 +11,7 @@
     <div class="provider-service-card__content">
         <div class="provider-service-card__top">
             <h4>{{ card.name }}</h4>
-            {% if card.price_display %}<span class="service-price">Dès <span class="price-value">{{ card.price_display }}</span></span>{% endif %}
+            {% if card.price_display and not hide_price %}<span class="service-price">Dès <span class="price-value">{{ card.price_display }}</span></span>{% endif %}
         </div>
         {% if card_url %}
             <a class="btn btn-accent provider-service-card__button" href="{{ card_url }}">{{ card_cta|default:"Réserver rapidement" }}</a>
