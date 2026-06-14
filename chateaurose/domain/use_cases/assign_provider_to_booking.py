@@ -63,6 +63,7 @@ def execute(
 
     booking.provider_id = provider_id
     booking.service_id = service_id
+    booking.booking_kind = "PROVIDER_SELECTED"
     booking.status = SUBMITTED
     booking.provider_price_estimate_cents = price_cents
     booking.estimated_price_cents = price_cents + booking.chateau_rose_fee_cents
