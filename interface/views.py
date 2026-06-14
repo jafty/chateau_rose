@@ -28,7 +28,7 @@ from booking.models import (
     ServiceCategory,
     Zone,
 )
-from chateaurose.domain.exceptions import DomainError, ValidationError
+from chateaurose.domain.exceptions import DomainError, NotFound, ValidationError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
 from chateaurose.domain.services.pricing import (
     ceil_price_for_display_cents,
@@ -1149,7 +1149,7 @@ def provider_payment_intent(request):
 
         try:
             service = provider_catalog.get_service(provider_id, service_id)
-        except KeyError:
+        except (KeyError, NotFound):
             return JsonResponse({"error": "Service non disponible."}, status=400)
 
         provider_for_coupon = Provider.objects.filter(id=provider_id).first()

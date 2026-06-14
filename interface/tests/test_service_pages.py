@@ -117,7 +117,7 @@ class ServicePagesTests(TestCase):
         content = response.content.decode()
         self.assertIn("Knotless braids", content)
         self.assertIn("/services/tresses/sous-services/knotless-braids/", content)
-        self.assertIn("Une question ? Écris-nous", content)
+        self.assertNotIn("Une question ? Écris-nous", content)
         self.assertIn('href="mailto:japhet.situmonana@gmail.com"', content)
 
     def test_sub_service_page_filters_providers_without_zone_filter(self):
