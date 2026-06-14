@@ -27,17 +27,23 @@
         {% if sub_services and not is_sub_service_page %}
         <div class="services-carousel-wrapper" style="margin-bottom:1.25rem;">
             <h2 class="service-subservices-heading">Affiner ta recherche par type de prestation</h2>
-            <div class="all-services-grid horizontal-scroll-mobile service-subservices-grid">
+            <div class="provider-service-grid service-subservices-grid">
                 {% for sub_service_item in sub_services %}
-                    <a href="{% url 'interface:sub_service_page' service.slug sub_service_item.slug %}" class="service-polaroid">
-                        <span class="tape top-center" aria-hidden="true"></span>
+                    <article class="provider-service-card">
+                        <span class="tape" aria-hidden="true"></span>
                         {% if sub_service_item.resolved_image %}
-                            <img src="{{ sub_service_item.resolved_image }}" alt="{{ sub_service_item.name }}" loading="lazy" decoding="async">
+                            <div class="provider-service-card__media"><img src="{{ sub_service_item.resolved_image }}" alt="{{ sub_service_item.name }}" loading="lazy" decoding="async"></div>
                         {% else %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ sub_service_item.name }}" loading="lazy" decoding="async">
+                            <div class="provider-service-card__media"><img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ sub_service_item.name }}" loading="lazy" decoding="async"></div>
                         {% endif %}
-                        <span class="service-label">{{ sub_service_item.name }}</span>
-                    </a>
+                        <div class="provider-service-card__content">
+                            <div class="provider-service-card__top">
+                                <h4>{{ sub_service_item.name }}</h4>
+                                {% if sub_service_item.price_display %}<span class="service-price">Dès <span class="price-value">{{ sub_service_item.price_display }}</span></span>{% endif %}
+                            </div>
+                            <a class="btn btn-accent provider-service-card__button" href="{% url 'interface:sub_service_page' service.slug sub_service_item.slug %}#service-request">Réserver rapidement</a>
+                        </div>
+                    </article>
                 {% endfor %}
             </div>
         </div>
@@ -48,6 +54,7 @@
         <div id="service-request" class="provider-form-card inline-form-card" style="margin-bottom:1.25rem;">
             <h2 class="wizard-heading">Réserver rapidement</h2>
             <p class="meta-line">Réponds à quelques questions : Château Rose cherchera ensuite une prestataire compatible. La prestation coiffure sera réglée directement à la prestataire le jour du rendez-vous.</p>
+            {% if sub_service and sub_service.price_display %}<p class="service-price">Dès <span class="price-value">{{ sub_service.price_display }}</span></p>{% endif %}
             <div class="step-progress" aria-label="Étapes de demande rapide">
                 <div class="step-indicator active" data-step-indicator="1">1</div>
                 <div class="step-indicator" data-step-indicator="2">2</div>
@@ -95,7 +102,7 @@
                             <span class="tag">{{ provider_service.name }}</span>
                         {% endfor %}
                     </div>
-                    <div class="card-actions"><span class="link service-card-link">Voir les tarifs</span></div>
+                    <div class="card-actions"><span class="link service-card-link">Choisir une coiffeuse</span></div>
                 </div>
             </a>
             {% endfor %}

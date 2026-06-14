@@ -1517,8 +1517,35 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
 
     if is_request_submission and form.is_valid():
         coupon_code = (form.cleaned_data.get("service_fee_coupon_code") or "").strip().upper()
-        generic_fee_cents = int(getattr(settings, "GENERIC_BOOKING_PLATFORM_FEE_CENTS", 0) or 0)
         waive_service_fee = coupon_code in {"VIPZERO", "ROSEZERO", "GRATUIT"}
+        provider_estimate_cents = 0
+        generic_fee_cents = int(getattr(settings, "GENERIC_BOOKING_PLATFORM_FEE_CENTS", 0) or 0)
+        if sub_service and sub_service.generic_booking_enabled:
+            try:
+                provider_estimate_cents, _, normalized_adjustments = estimate_service_price_cents(
+                    service={
+                        "base_price_cents": sub_service.generic_base_price_cents,
+                        "hair_length_adjustments": sub_service.generic_hair_length_adjustments,
+                        "general_adjustments": sub_service.generic_general_adjustments,
+                        "meche_bonus_cents": sub_service.generic_meche_bonus_cents,
+                        "at_home_bonus_cents": sub_service.generic_at_home_bonus_cents,
+                    },
+                    hair_length=form.cleaned_data.get("hair_length") or "",
+                    general_adjustments=form.cleaned_data.get("requested_options") or [],
+                    meche=False,
+                    location_preference=form.cleaned_data.get("location_preference") or "salon",
+                )
+            except DomainError as exc:
+                form.add_error(None, _friendly_domain_error_message(exc))
+                return form, request_success
+            amounts = compute_service_fee_only_amounts_cents(
+                subtotal_cents=provider_estimate_cents,
+                service_fee_percentage=sub_service.generic_service_fee_percentage,
+                waive_service_fee=waive_service_fee,
+            )
+            generic_fee_cents = amounts["amount_due_now_cents"]
+        else:
+            normalized_adjustments = form.cleaned_data.get("requested_options") or []
         try:
             booking = create_booking_request.execute(
                 client_contact={
@@ -1529,7 +1556,8 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
                 requested_marketing_service_id=str(service_meta.id) if service_meta else None,
                 requested_marketing_sub_service_id=str(sub_service.id) if sub_service else None,
                 requested_service_label_snapshot=_generic_booking_label(service_meta, sub_service),
-                requested_options=form.cleaned_data.get("requested_options") or [],
+                requested_options=normalized_adjustments,
+                generic_provider_price_estimate_cents=provider_estimate_cents,
                 chateau_rose_fee_cents=0 if waive_service_fee else generic_fee_cents,
                 waive_service_fee=waive_service_fee,
                 location=zone.name if zone else "À préciser",
