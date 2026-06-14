@@ -1,10 +1,7 @@
-import os
 import shutil
 import tempfile
-import json
 
 from django.conf import settings
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -56,11 +53,8 @@ class ProviderRequestUploadTests(TestCase):
             meche_bonus_cents=500,
         )
 
-    def test_request_uploads_are_saved_and_paths_stored(self):
+    def test_provider_request_creates_recap_without_picture_fields(self):
         url = reverse("interface:provider_detail", args=[self.provider.id])
-        current_file = SimpleUploadedFile("current.jpg", b"hair", content_type="image/jpeg")
-        insp1 = SimpleUploadedFile("insp1.jpg", b"ref1", content_type="image/jpeg")
-        insp2 = SimpleUploadedFile("insp2.jpg", b"ref2", content_type="image/jpeg")
 
         response = self.client.post(
             url,
@@ -76,74 +70,19 @@ class ProviderRequestUploadTests(TestCase):
                 "free_text": "Merci",
                 "location_preference": "domicile",
                 "payment_auth_id": "pi_test_auth",
-                "current_hair_picture_file": current_file,
-                "inspiration_pictures": [insp1, insp2],
             },
         )
 
         self.assertEqual(response.status_code, 302)
         draft = ProviderBookingDraft.objects.get()
         self.assertEqual(response.url, reverse("interface:provider_booking_recap", args=[draft.token]))
-        # Current hair picture path stored and file exists
-        self.assertTrue(draft.payload["current_hair_picture"])
-        self.assertTrue(os.path.exists(os.path.join(settings.MEDIA_ROOT, draft.payload["current_hair_picture"])))
-        # Inspiration pictures stored as a list of paths, files exist
-        self.assertEqual(len(draft.payload["inspiration_pictures"]), 2)
-        for path in draft.payload["inspiration_pictures"]:
-            self.assertTrue(os.path.exists(os.path.join(settings.MEDIA_ROOT, path)))
+        self.assertEqual(draft.payload["current_hair_picture"], "")
+        self.assertEqual(draft.payload["inspiration_pictures"], [])
         self.assertTrue(draft.payload["meche"])
         self.assertEqual(draft.payload["hair_length"], "medium")
 
-    def test_recap_edit_keeps_existing_inspiration_pictures_without_reupload(self):
-        first_response = self.client.post(
-            reverse("interface:provider_detail", args=[self.provider.id]),
-            data={
-                "service_id": self.service.id,
-                "client_name": "Alice",
-                "client_email": "test@example.com",
-                "location": self.zone.name,
-                "client_address": "5 place du Capitole, 31000 Toulouse",
-                "desired_date": "2026-01-01T12:00",
-                "hair_length": "medium",
-                "meche": "on",
-                "free_text": "Merci",
-                "location_preference": "domicile",
-                "payment_auth_id": "pi_test_auth",
-                "current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair", content_type="image/jpeg"),
-                "inspiration_pictures": [SimpleUploadedFile("insp1.jpg", b"ref1", content_type="image/jpeg")],
-            },
-        )
-        self.assertEqual(first_response.status_code, 302)
-        first_draft = ProviderBookingDraft.objects.latest("created_at")
-        existing_pictures = first_draft.payload["inspiration_pictures"]
-
-        second_response = self.client.post(
-            reverse("interface:provider_detail", args=[self.provider.id]),
-            data={
-                "service_id": self.service.id,
-                "client_name": "Alice",
-                "client_email": "test@example.com",
-                "location": self.zone.name,
-                "client_address": "5 place du Capitole, 31000 Toulouse",
-                "desired_date": "2026-01-02T12:00",
-                "hair_length": "medium",
-                "meche": "on",
-                "free_text": "Merci encore",
-                "location_preference": "domicile",
-                "payment_auth_id": "pi_test_auth_2",
-                "current_hair_picture": first_draft.payload["current_hair_picture"],
-                "existing_inspiration_pictures": json.dumps(existing_pictures),
-            },
-        )
-
-        self.assertEqual(second_response.status_code, 302)
-        second_draft = ProviderBookingDraft.objects.latest("created_at")
-        self.assertEqual(second_draft.payload["inspiration_pictures"], existing_pictures)
-
     def test_hybrid_provider_allows_salon_choice_without_zone(self):
         url = reverse("interface:provider_detail", args=[self.provider.id])
-        current_file = SimpleUploadedFile("current.jpg", b"hair", content_type="image/jpeg")
-
         response = self.client.post(
             url,
             data={
@@ -154,7 +93,6 @@ class ProviderRequestUploadTests(TestCase):
                 "desired_date": "2026-01-01T12:00",
                 "hair_length": "medium",
                 "payment_auth_id": "pi_test_auth",
-                "current_hair_picture_file": current_file,
             },
         )
 
@@ -207,7 +145,6 @@ class ProviderRequestUploadTests(TestCase):
                 "desired_date": "2026-01-01T12:00",
                 "hair_length": "medium",
                 "payment_auth_id": "pi_auth_to_release",
-                "current_hair_picture": "existing.jpg",
             },
         )
 
@@ -226,12 +163,22 @@ class ProviderRequestUploadTests(TestCase):
         self.assertContains(response, f'alt="{self.service.name} réalisée par {self.provider.name}"')
 
 
+    def test_provider_detail_renders_without_checkout_amounts_name_error(self):
+        with self.settings(STRIPE_PUBLIC_KEY="pk_test_enabled"):
+            response = self.client.get(
+                reverse("interface:provider_detail", args=[self.provider.id])
+            )
+
+        self.assertEqual(response.status_code, 200)
+
     @override_settings(STRIPE_PUBLIC_KEY="pk_test_public")
     def test_provider_detail_renders_with_stripe_enabled(self):
         response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.provider.name)
+        self.assertNotContains(response, "current_hair_picture_file")
+        self.assertNotContains(response, "inspiration_pictures")
 
     def test_provider_detail_uses_custom_seo_h1_when_configured(self):
         self.provider.seo_h1 = "Coiffeuse afro à Paris 10 · tresses naturelles et conseils personnalisés"

@@ -21,6 +21,7 @@ from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 from interface.sitemaps import sitemaps
 from interface import views as interface_views
@@ -31,6 +32,14 @@ urlpatterns = [
     path("booking/", include("booking.urls")),
     path("espace_pro/", include("providers.urls")),
     path("robots.txt", interface_views.robots_txt, name="robots_txt"),
+    path(
+        "favicon.ico",
+        RedirectView.as_view(
+            url=f"{settings.STATIC_URL}assets/cr_logo.svg",
+            permanent=True,
+        ),
+        name="favicon",
+    ),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps()}),
 ]
 

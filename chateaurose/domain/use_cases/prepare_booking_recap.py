@@ -29,7 +29,6 @@ def execute(
         ("desired_date_iso", desired_date_iso),
         ("location_preference", location_preference),
         ("location", location),
-        ("current_hair_picture", current_hair_picture),
     ]
     for field_name, value in required:
         if value in (None, ""):

@@ -215,16 +215,6 @@ def _build_recap_email_body(*, provider: Provider, recap_url: str, payload: dict
 
 
 def _build_provider_booking_recap_payload(*, provider: Provider, form: ProviderBookingRequestForm) -> dict:
-    current_hair_picture_file = form.cleaned_data.get("current_hair_picture_file")
-    if current_hair_picture_file:
-        current_picture = booking_requests.save_current_hair_picture(current_hair_picture_file)
-    else:
-        current_picture = (form.cleaned_data.get("current_hair_picture") or "").strip()
-
-    stored_inspiration_pictures = booking_requests.save_inspiration_pictures(form.get_inspiration_files())
-    if not stored_inspiration_pictures:
-        stored_inspiration_pictures = form.cleaned_data.get("existing_inspiration_pictures") or []
-
     service = Service.objects.filter(provider=provider, id=form.cleaned_data.get("service_id")).first()
     if service is None:
         raise ValidationError("Service non disponible.")
@@ -244,8 +234,8 @@ def _build_provider_booking_recap_payload(*, provider: Provider, form: ProviderB
         meche=form.cleaned_data.get("meche", False),
         free_text=form.cleaned_data.get("free_text", ""),
         service_fee_coupon_code=form.cleaned_data.get("service_fee_coupon_code", ""),
-        current_hair_picture=current_picture,
-        inspiration_pictures=stored_inspiration_pictures,
+        current_hair_picture="",
+        inspiration_pictures=[],
     )
 
 
@@ -292,16 +282,6 @@ def _save_partial_provider_booking_recap_prefill(*, provider: Provider, form: Pr
     if service is None:
         raise ValidationError("Service non disponible.")
 
-    current_hair_picture_file = form.cleaned_data.get("current_hair_picture_file")
-    if current_hair_picture_file:
-        current_picture = booking_requests.save_current_hair_picture(current_hair_picture_file)
-    else:
-        current_picture = (form.cleaned_data.get("current_hair_picture") or payload.get("current_hair_picture") or "").strip()
-
-    stored_inspiration_pictures = booking_requests.save_inspiration_pictures(form.get_inspiration_files())
-    if not stored_inspiration_pictures:
-        stored_inspiration_pictures = form.cleaned_data.get("existing_inspiration_pictures") or payload.get("inspiration_pictures") or []
-
     payload.update(
         {
             "provider_id": str(provider.id),
@@ -322,8 +302,8 @@ def _save_partial_provider_booking_recap_prefill(*, provider: Provider, form: Pr
                 or payload.get("service_fee_coupon_code")
                 or ""
             ).strip().upper(),
-            "current_hair_picture": current_picture,
-            "inspiration_pictures": stored_inspiration_pictures,
+            "current_hair_picture": "",
+            "inspiration_pictures": [],
         }
     )
 
@@ -369,7 +349,7 @@ def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
         hair_length=hair_length_value,
         general_adjustments=[],
         meche=False,
-        current_hair_picture="quick-checkout",
+        current_hair_picture="",
         require_current_hair_picture=False,
         skip_coverage_validation=True,
         inspiration_pictures=[],
@@ -567,7 +547,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
     salon_location_label = SALON_LOCATION_LABEL
     question_form = ProviderQuestionForm()
     stripe_public_key = settings.STRIPE_PUBLIC_KEY
-    require_payment_auth = bool(stripe_public_key) and checkout_amounts["amount_due_now_cents"] > 0
+    require_payment_auth = False
     prefilled_payment_auth_id = ""
     payment_message = None
     fixed_price_cents = None
@@ -636,7 +616,6 @@ def provider_detail(request, provider_id, quick_checkout=None):
             request.FILES,
             provider=provider,
             require_payment_auth=False,
-            require_current_hair_picture=not partial_prefill_mode,
             partial_prefill_mode=partial_prefill_mode,
         )
         if form.is_valid():
@@ -938,8 +917,9 @@ def provider_booking_recap(request, token):
                     hair_length=payload.get("hair_length") or "",
                     general_adjustments=payload.get("general_adjustments") or [],
                     meche=bool(payload.get("meche")),
-                    current_hair_picture=payload.get("current_hair_picture") or "",
-                    inspiration_pictures=payload.get("inspiration_pictures") or [],
+                    current_hair_picture="",
+                    require_current_hair_picture=False,
+                    inspiration_pictures=[],
                     free_text=payload.get("free_text") or "",
                     service_fee_coupon_code=coupon_code,
                     waive_service_fee=service_fee_waived,

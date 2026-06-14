@@ -75,7 +75,6 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "chateaurose.middleware.CanonicalHostRedirectMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "chateaurose.middleware.MaintenanceModeMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

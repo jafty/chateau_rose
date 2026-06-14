@@ -57,28 +57,8 @@
                             </fieldset>
 
                             <fieldset class="wizard-step" data-step="2" {% if is_quick_checkout %}hidden{% endif %}>
-                                <h4>2. Tes photos et tes infos</h4>
-                                <p class="meta-line" style="margin-bottom: 12px;">Ajoute les éléments utiles pour aider la prestataire à confirmer ta demande.</p>
-
-                                <div class="form-field full-width">
-                                    <label>Photo de tes cheveux actuels <span class="required-mark">*</span></label>
-                                    <div class="file-upload-wrapper">
-                                        <input type="file" name="current_hair_picture_file" id="current_hair_picture_file" accept="image/*" required onchange="updateFileLabel(this)">
-                                        <span class="file-upload-label">📸 Ajouter une photo de tes cheveux</span>
-                                        <span class="file-upload-info" id="file-label-current">Aucun fichier sélectionné</span>
-                                        <span class="file-upload-info" id="file-label-current-existing" hidden>Photo déjà enregistrée dans ton récapitulatif</span>
-                                    </div>
-                                </div>
-
-                                <div class="form-field full-width">
-                                    <label>Photos d'inspiration (Optionnel)</label>
-                                    <div class="file-upload-wrapper">
-                                        <input type="file" name="inspiration_pictures" id="inspiration_pictures" accept="image/*" multiple onchange="updateFileLabel(this, 'file-label-inspo')">
-                                        <span class="file-upload-label">✨ Ajouter des photos d'inspiration</span>
-                                        <span class="file-upload-info" id="file-label-inspo">Aucun fichier sélectionné</span>
-                                        <span class="file-upload-info" id="file-label-inspo-existing" hidden></span>
-                                    </div>
-                                </div>
+                                <h4>2. Tes infos</h4>
+                                <p class="meta-line" style="margin-bottom: 12px;">Ajoute les détails utiles pour aider la prestataire à confirmer ta demande.</p>
 
                                 <div class="form-field full-width">
                                     <label for="free_text">Précisions pour {{ provider.name }}</label>
@@ -183,7 +163,5 @@
 
                             <input type="hidden" name="provider_id" value="{{ provider.id }}">
                             <input type="hidden" name="recap_token" id="recap_token" value="{{ recap_token|default:'' }}">
-                            <input type="hidden" name="current_hair_picture" id="current_hair_picture" value="">
-                            <input type="hidden" name="existing_inspiration_pictures" id="existing_inspiration_pictures" value="[]">
                             <input type="hidden" name="quick_checkout_id" id="quick_checkout_id" value="{{ quick_checkout_id|default:'' }}">
                             

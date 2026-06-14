@@ -10,32 +10,6 @@ from chateaurose.infrastructure.provider_catalog import SALON_LOCATION_LABEL
 from interface.models import MarketingService, ServiceRequest
 
 
-class MultiFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-
-class MultipleFileField(forms.FileField):
-    widget = MultiFileInput
-
-    def clean(self, data, initial=None):
-        if not data:
-            return []
-        if not isinstance(data, (list, tuple)):
-            return [super().clean(data, initial)]
-
-        errors = []
-        cleaned_files = []
-        for item in data:
-            try:
-                cleaned_files.append(super().clean(item, initial))
-            except forms.ValidationError as exc:
-                errors.extend(exc.error_list)
-
-        if errors:
-            raise forms.ValidationError(errors)
-        return cleaned_files
-
-
 class ServiceRequestForm(forms.ModelForm):
     marketing_service = forms.ModelChoiceField(
         queryset=MarketingService.objects.all(),
@@ -116,14 +90,6 @@ class ProviderBookingRequestForm(forms.Form):
     hair_length = forms.CharField(label="Longueur de cheveux", required=False)
     general_adjustments = forms.JSONField(label="Suppléments", required=False)
     meche = forms.BooleanField(label="Besoin de mèches fournies", required=False)
-    current_hair_picture_file = forms.FileField(label="Photo de tes cheveux", required=False)
-    current_hair_picture = forms.CharField(required=False)
-    inspiration_pictures = MultipleFileField(
-        label="Photos d'inspiration",
-        required=False,
-        widget=MultiFileInput(attrs={"multiple": True}),
-    )
-    existing_inspiration_pictures = forms.JSONField(required=False)
     free_text = forms.CharField(label="Infos complémentaires", required=False, widget=forms.Textarea)
     service_fee_coupon_code = forms.CharField(label="Code partenaire", required=False)
     payment_auth_id = forms.CharField(required=False)
@@ -131,7 +97,6 @@ class ProviderBookingRequestForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.provider = kwargs.pop("provider", None)
         self.require_payment_auth = kwargs.pop("require_payment_auth", True)
-        self.require_current_hair_picture = kwargs.pop("require_current_hair_picture", True)
         self.partial_prefill_mode = kwargs.pop("partial_prefill_mode", False)
         super().__init__(*args, **kwargs)
         if self.partial_prefill_mode:
@@ -174,16 +139,6 @@ class ProviderBookingRequestForm(forms.Form):
                 cleaned_data["general_adjustments"] = [str(item).strip() for item in selected_adjustments if str(item).strip()]
             else:
                 raise forms.ValidationError("Format de suppléments invalide.")
-
-            existing_inspiration_pictures = cleaned_data.get("existing_inspiration_pictures")
-            if existing_inspiration_pictures in (None, ""):
-                cleaned_data["existing_inspiration_pictures"] = []
-            elif isinstance(existing_inspiration_pictures, list):
-                cleaned_data["existing_inspiration_pictures"] = [
-                    str(item).strip() for item in existing_inspiration_pictures if str(item).strip()
-                ]
-            else:
-                raise forms.ValidationError("Format des photos existantes invalide.")
             return cleaned_data
 
         if self.provider:
@@ -218,9 +173,6 @@ class ProviderBookingRequestForm(forms.Form):
         if not location:
             raise forms.ValidationError("Merci de choisir un lieu.")
 
-        if self.require_current_hair_picture and not cleaned_data.get("current_hair_picture_file") and not cleaned_data.get("current_hair_picture"):
-            raise forms.ValidationError("Merci d'ajouter une photo de tes cheveux.")
-
         if self.require_payment_auth and not cleaned_data.get("payment_auth_id"):
             raise forms.ValidationError(
                 "Merci d'ajouter une empreinte bancaire pour sécuriser la demande."
@@ -238,23 +190,10 @@ class ProviderBookingRequestForm(forms.Form):
         else:
             raise forms.ValidationError("Format de suppléments invalide.")
 
-        existing_inspiration_pictures = cleaned_data.get("existing_inspiration_pictures")
-        if existing_inspiration_pictures in (None, ""):
-            cleaned_data["existing_inspiration_pictures"] = []
-        elif isinstance(existing_inspiration_pictures, list):
-            cleaned_data["existing_inspiration_pictures"] = [
-                str(item).strip() for item in existing_inspiration_pictures if str(item).strip()
-            ]
-        else:
-            raise forms.ValidationError("Format des photos existantes invalide.")
-
         cleaned_data["location"] = location
         cleaned_data["location_preference"] = location_preference
         cleaned_data["client_address"] = client_address
         return cleaned_data
-
-    def get_inspiration_files(self):
-        return self.files.getlist("inspiration_pictures")
 
 
 class ProviderQuestionForm(forms.Form):

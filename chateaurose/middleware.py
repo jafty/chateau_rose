@@ -31,7 +31,7 @@ class CanonicalHostRedirectMiddleware:
 
 
 class MaintenanceModeMiddleware:
-    exempt_path_prefixes = ("/admin", "/static/", "/media/")
+    exempt_path_prefixes = ("/admin", "/static/", "/media/", "/favicon.ico")
     preview_cookie_name = "maintenance_preview"
     preview_cookie_salt = "chateaurose.maintenance-preview"
 
