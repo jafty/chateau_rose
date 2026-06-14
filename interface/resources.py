@@ -1,9 +1,15 @@
 from import_export import fields, resources
-from import_export.widgets import ForeignKeyWidget, JSONWidget
+from import_export.widgets import ForeignKeyWidget, JSONWidget, ManyToManyWidget
 
-from booking.models import Zone
+from booking.models import Provider, Zone
 
-from .models import MarketingService, MarketingServiceImage, MarketingServiceZone, MarketingZone
+from .models import (
+    MarketingService,
+    MarketingServiceImage,
+    MarketingServiceZone,
+    MarketingSubService,
+    MarketingZone,
+)
 
 
 class MarketingServiceResource(resources.ModelResource):
@@ -28,6 +34,53 @@ class MarketingServiceResource(resources.ModelResource):
             "highlights",
             "main_image_url",
             "meta_description",
+        )
+        export_order = fields
+
+
+class MarketingSubServiceResource(resources.ModelResource):
+    service = fields.Field(
+        column_name="service_slug",
+        attribute="service",
+        widget=ForeignKeyWidget(MarketingService, "slug"),
+    )
+    providers = fields.Field(
+        column_name="provider_ids",
+        attribute="providers",
+        widget=ManyToManyWidget(Provider, field="id", separator=","),
+    )
+    generic_hair_length_adjustments = fields.Field(
+        column_name="generic_hair_length_adjustments",
+        attribute="generic_hair_length_adjustments",
+        widget=JSONWidget(),
+    )
+    generic_general_adjustments = fields.Field(
+        column_name="generic_general_adjustments",
+        attribute="generic_general_adjustments",
+        widget=JSONWidget(),
+    )
+
+    class Meta:
+        model = MarketingSubService
+        fields = (
+            "id",
+            "service",
+            "name",
+            "slug",
+            "intro",
+            "short_intro",
+            "image_url",
+            "providers",
+            "generic_booking_enabled",
+            "generic_base_price_cents",
+            "generic_hair_length_adjustments",
+            "generic_general_adjustments",
+            "generic_meche_bonus_cents",
+            "generic_at_home_bonus_cents",
+            "generic_service_fee_percentage",
+            "generic_price_label",
+            "is_visible",
+            "order",
         )
         export_order = fields
 

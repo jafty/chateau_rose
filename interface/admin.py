@@ -9,6 +9,7 @@ from interface.resources import (
     MarketingServiceImageResource,
     MarketingServiceResource,
     MarketingServiceZoneResource,
+    MarketingSubServiceResource,
     MarketingZoneResource,
 )
 
@@ -83,7 +84,7 @@ class MarketingServiceAdmin(ImportExportModelAdmin):
 
 
 @admin.register(MarketingSubService)
-class MarketingSubServiceAdmin(admin.ModelAdmin):
+class MarketingSubServiceAdmin(ImportExportModelAdmin):
     class Form(forms.ModelForm):
         providers = forms.ModelMultipleChoiceField(
             queryset=None,
@@ -107,6 +108,7 @@ class MarketingSubServiceAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug", "service__name")
     prepopulated_fields = {"slug": ("name",)}
     autocomplete_fields = ("service",)
+    resource_class = MarketingSubServiceResource
     actions = ("recompress_subservice_images",)
 
     @admin.action(description="Optimiser les images sous-service sélectionnées")
