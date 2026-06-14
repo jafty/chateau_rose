@@ -297,3 +297,14 @@ class ProviderRequestUploadTests(TestCase):
         self.assertContains(response, "Clientes satisfaites")
         self.assertContains(response, "À propos de Divine")
         self.assertContains(response, "Estimer et réserver")
+
+    def test_provider_detail_uses_reduced_universal_request_form(self):
+        response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "1. Ta demande")
+        self.assertContains(response, "2. Tes coordonnées")
+        self.assertNotContains(response, "Photo de tes cheveux actuels")
+        self.assertNotContains(response, "Photos d'inspiration")
+        self.assertNotContains(response, "Précisions pour")
+        self.assertNotContains(response, 'data-step-indicator="3"')

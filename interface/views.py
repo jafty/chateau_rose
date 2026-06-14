@@ -636,7 +636,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
             request.FILES,
             provider=provider,
             require_payment_auth=False,
-            require_current_hair_picture=not partial_prefill_mode,
+            require_current_hair_picture=False,
             partial_prefill_mode=partial_prefill_mode,
         )
         if form.is_valid():

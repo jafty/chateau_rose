@@ -248,10 +248,7 @@ class ProviderBookingRequestForm(forms.Form):
                 raise forms.ValidationError(
                     "L'adresse de la prestataire doit être renseignée pour confirmer un rendez-vous."
                 )
-        elif not client_address:
-            raise forms.ValidationError("Merci d'indiquer ton adresse complète.")
-
-        if not location:
+        elif not location:
             raise forms.ValidationError("Merci de choisir un lieu.")
 
         if self.require_current_hair_picture and not cleaned_data.get("current_hair_picture_file") and not cleaned_data.get("current_hair_picture"):

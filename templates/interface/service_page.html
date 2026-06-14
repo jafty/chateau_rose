@@ -49,33 +49,15 @@
             <h2 class="wizard-heading">Réserver rapidement</h2>
             <p class="meta-line">Réponds à quelques questions : Château Rose cherchera ensuite une prestataire compatible. La prestation coiffure sera réglée directement à la prestataire le jour du rendez-vous.</p>
             <div class="step-progress" aria-label="Étapes de demande rapide">
-                <div class="step-indicator active" data-generic-step-indicator="1">1</div>
-                <div class="step-indicator" data-generic-step-indicator="2">2</div>
+                <div class="step-indicator active" data-step-indicator="1">1</div>
+                <div class="step-indicator" data-step-indicator="2">2</div>
             </div>
             {% if request_success %}<div class="alert success">Ta demande est bien enregistrée. Château Rose revient vers toi rapidement.</div>{% endif %}
             {% if request_form.non_field_errors %}<div class="alert error">{{ request_form.non_field_errors|join:", " }}</div>{% endif %}
             <form method="post" class="provider-form-grid" data-generic-booking-form>
                 {% csrf_token %}
                 <input type="hidden" name="request_service" value="1">
-                <section data-generic-step="1">
-                    <h3 class="section-title provider-section-title">Tes disponibilités</h3>
-                    <label>Date ou disponibilités {{ request_form.desired_date }}</label>
-                    <label>Préférence de lieu {{ request_form.location_preference }}</label>
-                    <label>Longueur de cheveux {{ request_form.hair_length }}</label>
-                    <label>Options utiles {{ request_form.requested_options }}</label>
-                    <div class="form-actions"><button class="btn primary" type="button" data-generic-next>Continuer</button></div>
-                </section>
-                <section data-generic-step="2" hidden>
-                    <h3 class="section-title provider-section-title">Tes coordonnées</h3>
-                    <label>Nom complet {{ request_form.client_name }}</label>
-                    <label>Email {{ request_form.client_email }}</label>
-                    <label>Téléphone {{ request_form.client_phone }}</label>
-                    <label>Code promo {{ request_form.service_fee_coupon_code }}</label>
-                    <div class="form-actions" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-                        <button class="btn secondary" type="button" data-generic-prev>Retour</button>
-                        <button class="btn primary" type="submit">Confirmer ma demande</button>
-                    </div>
-                </section>
+                {% include "interface/partials/provider_standard_booking_form_fields.html" with generic_request_mode=True %}
             </form>
         </div>
         {% endif %}
@@ -195,14 +177,35 @@
 document.addEventListener('DOMContentLoaded', function() {
     const genericForm = document.querySelector('[data-generic-booking-form]');
     if (genericForm) {
-        const steps = genericForm.querySelectorAll('[data-generic-step]');
-        const indicators = document.querySelectorAll('[data-generic-step-indicator]');
+        const steps = genericForm.querySelectorAll('.wizard-step');
+        const indicators = document.querySelectorAll('[data-step-indicator]');
+        let currentStep = 1;
         const showStep = (step) => {
-            steps.forEach((item) => { item.hidden = item.dataset.genericStep !== String(step); });
-            indicators.forEach((item) => { item.classList.toggle('active', item.dataset.genericStepIndicator === String(step)); });
+            currentStep = step;
+            steps.forEach((item) => { item.classList.toggle('active', item.dataset.step === String(step)); });
+            indicators.forEach((item) => {
+                const stepNumber = Number.parseInt(item.dataset.stepIndicator, 10);
+                item.classList.toggle('active', stepNumber === step);
+                item.classList.toggle('completed', stepNumber < step);
+            });
         };
-        genericForm.querySelector('[data-generic-next]')?.addEventListener('click', () => showStep(2));
-        genericForm.querySelector('[data-generic-prev]')?.addEventListener('click', () => showStep(1));
+        const validateStep = () => {
+            const currentStepEl = genericForm.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+            if (!currentStepEl) return true;
+            for (const input of currentStepEl.querySelectorAll('input, select, textarea')) {
+                if (!input.checkValidity()) {
+                    input.reportValidity();
+                    return false;
+                }
+            }
+            return true;
+        };
+        genericForm.querySelectorAll('.btn-next').forEach((button) => {
+            button.addEventListener('click', () => { if (validateStep()) showStep(Math.min(currentStep + 1, steps.length)); });
+        });
+        genericForm.querySelectorAll('.btn-prev').forEach((button) => {
+            button.addEventListener('click', () => showStep(Math.max(currentStep - 1, 1)));
+        });
         showStep(1);
     }
 });
