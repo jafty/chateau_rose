@@ -872,7 +872,6 @@
         const displayId = labelId || 'file-label-current';
         const displayEl = document.getElementById(displayId);
         if (!displayEl) return;
-        const currentPictureExistingLabel = document.getElementById('file-label-current-existing');
         if (input.files && input.files.length > 0) {
             const count = input.files.length;
             displayEl.textContent = count === 1 ? input.files[0].name : `${count} fichiers sélectionnés`;
@@ -922,11 +921,6 @@
         const depositInlineDisplay = document.getElementById('deposit-amount-inline');
         const depositPaymentHint = document.getElementById('deposit-payment-hint');
 
-        const currentHairPictureInput = document.getElementById('current_hair_picture');
-        const currentHairPictureFileInput = document.getElementById('current_hair_picture_file');
-        const existingInspirationPicturesInput = document.getElementById('existing_inspiration_pictures');
-        const currentPictureExistingLabel = document.getElementById('file-label-current-existing');
-        const inspirationExistingLabel = document.getElementById('file-label-inspo-existing');
         const stripePublicKey = form?.dataset?.stripePublicKey;
         const paymentIntentUrl = form?.dataset?.paymentIntentUrl;
         const paymentReturnUrl = form?.dataset?.paymentReturnUrl;
@@ -988,15 +982,6 @@
             selectServiceFromCard(serviceFromQuery);
         }
 
-        const syncCurrentHairPictureRequirement = () => {
-            if (!currentHairPictureFileInput) return;
-            const hasFile = Boolean(currentHairPictureFileInput.files && currentHairPictureFileInput.files.length > 0);
-            const hasExistingPicture = Boolean((currentHairPictureInput?.value || '').trim());
-            currentHairPictureFileInput.required = !hasFile && !hasExistingPicture;
-        };
-
-        currentHairPictureFileInput?.addEventListener('change', syncCurrentHairPictureRequirement);
-
         const applyRecapPrefill = () => {
             if (!Object.keys(recapPrefill).length) return;
             const setValue = (name, value) => {
@@ -1010,20 +995,6 @@
             setValue('free_text', recapPrefill.free_text || '');
             setValue('service_fee_coupon_code', recapPrefill.service_fee_coupon_code || '');
             setValue('client_address', recapPrefill.client_address || '');
-            if (currentHairPictureInput && recapPrefill.current_hair_picture) {
-                currentHairPictureInput.value = recapPrefill.current_hair_picture;
-                if (currentPictureExistingLabel) {
-                    currentPictureExistingLabel.hidden = false;
-                }
-            }
-            if (existingInspirationPicturesInput) {
-                const inspirationPictures = Array.isArray(recapPrefill.inspiration_pictures) ? recapPrefill.inspiration_pictures : [];
-                existingInspirationPicturesInput.value = JSON.stringify(inspirationPictures);
-                if (inspirationExistingLabel && inspirationPictures.length > 0) {
-                    inspirationExistingLabel.hidden = false;
-                    inspirationExistingLabel.textContent = `${inspirationPictures.length} photo(s) déjà enregistrée(s). Ajoute de nouveaux fichiers seulement si tu veux les remplacer.`;
-                }
-            }
             if (serviceSelect && recapPrefill.service_id) {
                 const recapServiceId = String(recapPrefill.service_id);
                 const hasServiceOption = Array.from(serviceSelect.options).some((opt) => opt.value === recapServiceId);
@@ -1056,7 +1027,6 @@
                 }
             }
             setValue('location', recapPrefill.location || '');
-            syncCurrentHairPictureRequirement();
             refreshEstimate();
         };
         const syncLocationPreference = () => {
@@ -1265,7 +1235,7 @@
                 if (
                     canSavePartialPrefill
                     && currentStep === 2
-                    && ['client_name', 'client_email', 'current_hair_picture_file'].includes(input.id)
+                    && ['client_name', 'client_email'].includes(input.id)
                 ) {
                     return;
                 }
