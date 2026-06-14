@@ -11,14 +11,14 @@ def execute(
     desired_date_iso: str,
     location_preference: str,
     location: str,
-    client_address: str,
+    client_address: str = "",
     hair_length: str,
     general_adjustments: list[str] | None,
     meche: bool,
-    free_text: str,
-    service_fee_coupon_code: str | None,
-    current_hair_picture: str,
-    inspiration_pictures: list[str] | None,
+    free_text: str = "",
+    service_fee_coupon_code: str | None = None,
+    current_hair_picture: str = "",
+    inspiration_pictures: list[str] | None = None,
 ) -> dict:
     required = [
         ("provider_id", provider_id),
@@ -29,7 +29,6 @@ def execute(
         ("desired_date_iso", desired_date_iso),
         ("location_preference", location_preference),
         ("location", location),
-        ("current_hair_picture", current_hair_picture),
     ]
     for field_name, value in required:
         if value in (None, ""):
@@ -41,9 +40,6 @@ def execute(
     normalized_adjustments = [item.strip() for item in (general_adjustments or []) if str(item).strip()]
     normalized_inspiration = [item.strip() for item in (inspiration_pictures or []) if str(item).strip()]
     normalized_address = (client_address or "").strip()
-
-    if location_preference == "domicile" and not normalized_address:
-        raise ValidationError("Missing required field: client_address")
 
     return {
         "provider_id": str(provider_id),

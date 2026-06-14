@@ -1,4 +1,3 @@
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from booking.models import Provider, Zone
@@ -26,7 +25,6 @@ class ProviderBookingRequestFormTests(TestCase):
                 "desired_date": "invalid-date",
                 "payment_auth_id": "pi_123",
             },
-            files={"current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair")},
             provider=self.provider,
         )
 
@@ -45,7 +43,6 @@ class ProviderBookingRequestFormTests(TestCase):
                 "desired_date": "2026-01-01T12:00",
                 "payment_auth_id": "pi_123",
             },
-            files={"current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair")},
             provider=self.provider,
         )
 
@@ -69,14 +66,13 @@ class ProviderBookingRequestFormTests(TestCase):
                 "desired_date": "2026-01-01T12:00",
                 "payment_auth_id": "pi_123",
             },
-            files={"current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair")},
             provider=self.provider,
         )
 
         self.assertFalse(form.is_valid())
         self.assertIn("Merci de choisir un lieu.", form.non_field_errors())
 
-    def test_missing_current_hair_picture_returns_error(self):
+    def test_salon_request_no_longer_requires_hair_picture(self):
         form = ProviderBookingRequestForm(
             data={
                 "service_id": 1,
@@ -87,24 +83,6 @@ class ProviderBookingRequestFormTests(TestCase):
                 "payment_auth_id": "pi_123",
             },
             provider=self.provider,
-        )
-
-        self.assertFalse(form.is_valid())
-        self.assertIn("Merci d'ajouter une photo de tes cheveux.", form.non_field_errors())
-
-
-    def test_checkout_mode_can_skip_current_hair_picture_requirement(self):
-        form = ProviderBookingRequestForm(
-            data={
-                "service_id": 1,
-                "client_name": "Alice",
-                "client_email": "test@example.com",
-                "location_preference": "salon",
-                "desired_date": "2026-01-01T12:00",
-                "payment_auth_id": "pi_123",
-            },
-            provider=self.provider,
-            require_current_hair_picture=False,
         )
 
         self.assertTrue(form.is_valid())

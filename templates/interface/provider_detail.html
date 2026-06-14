@@ -448,7 +448,6 @@
         border: 1px solid #ddd5d0;
         background: rgba(255,255,255,0.98);
     }
-    .file-upload-wrapper { border-radius: 14px; }
     .choice-pill { border-radius: 14px; }
     .secure-badge { border-radius: 16px; }
     @media (max-width: 1200px) {
@@ -741,7 +740,6 @@
                     <div class="step-progress">
                         <div class="step-indicator active" data-step-indicator="1">1</div>
                         <div class="step-indicator" data-step-indicator="2">2</div>
-                        <div class="step-indicator" data-step-indicator="3">3</div>
                     </div>
                     {% endif %}
 
@@ -869,24 +867,6 @@
 <script src="https://js.stripe.com/v3"></script>
 <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 <script>
-    const updateFileLabel = (input, labelId = null) => {
-        const displayId = labelId || 'file-label-current';
-        const displayEl = document.getElementById(displayId);
-        if (!displayEl) return;
-        const currentPictureExistingLabel = document.getElementById('file-label-current-existing');
-        if (input.files && input.files.length > 0) {
-            const count = input.files.length;
-            displayEl.textContent = count === 1 ? input.files[0].name : `${count} fichiers sélectionnés`;
-            displayEl.style.color = 'var(--ink-primary)';
-            displayEl.style.fontWeight = 'bold';
-            if (!labelId && currentPictureExistingLabel) {
-                currentPictureExistingLabel.hidden = true;
-            }
-        } else {
-            displayEl.textContent = 'Aucun fichier sélectionné';
-        }
-    };
-
     document.addEventListener('DOMContentLoaded', () => {
         const pricingData = JSON.parse('{{ pricing_data|default:"{}"|escapejs }}');
         const recapPrefill = JSON.parse('{{ recap_prefill|default:"{}"|escapejs }}');
@@ -923,11 +903,6 @@
         const depositInlineDisplay = document.getElementById('deposit-amount-inline');
         const depositPaymentHint = document.getElementById('deposit-payment-hint');
 
-        const currentHairPictureInput = document.getElementById('current_hair_picture');
-        const currentHairPictureFileInput = document.getElementById('current_hair_picture_file');
-        const existingInspirationPicturesInput = document.getElementById('existing_inspiration_pictures');
-        const currentPictureExistingLabel = document.getElementById('file-label-current-existing');
-        const inspirationExistingLabel = document.getElementById('file-label-inspo-existing');
         const stripePublicKey = form?.dataset?.stripePublicKey;
         const paymentIntentUrl = form?.dataset?.paymentIntentUrl;
         const paymentReturnUrl = form?.dataset?.paymentReturnUrl;
@@ -938,7 +913,6 @@
         const locationSelectWrapper = document.querySelector('[data-location-select]');
         const salonZone = document.querySelector('[data-salon-zone]');
         const salonOption = document.querySelector('[data-salon-option]');
-        const clientAddressField = document.querySelector('[data-client-address]');
         const locationPreferenceRadios = document.querySelectorAll('input[name="location_preference"]');
         const locationPreferenceInput = document.querySelector('input[name="location_preference"]');
         const locationChoiceLabels = document.querySelectorAll('[data-location-choice]');
@@ -989,15 +963,6 @@
             selectServiceFromCard(serviceFromQuery);
         }
 
-        const syncCurrentHairPictureRequirement = () => {
-            if (!currentHairPictureFileInput) return;
-            const hasFile = Boolean(currentHairPictureFileInput.files && currentHairPictureFileInput.files.length > 0);
-            const hasExistingPicture = Boolean((currentHairPictureInput?.value || '').trim());
-            currentHairPictureFileInput.required = !hasFile && !hasExistingPicture;
-        };
-
-        currentHairPictureFileInput?.addEventListener('change', syncCurrentHairPictureRequirement);
-
         const applyRecapPrefill = () => {
             if (!Object.keys(recapPrefill).length) return;
             const setValue = (name, value) => {
@@ -1008,23 +973,7 @@
             setValue('client_name', recapPrefill.client_name || '');
             setValue('client_email', recapPrefill.client_email || '');
             setValue('desired_date', (recapPrefill.desired_date || '').slice(0, 16));
-            setValue('free_text', recapPrefill.free_text || '');
             setValue('service_fee_coupon_code', recapPrefill.service_fee_coupon_code || '');
-            setValue('client_address', recapPrefill.client_address || '');
-            if (currentHairPictureInput && recapPrefill.current_hair_picture) {
-                currentHairPictureInput.value = recapPrefill.current_hair_picture;
-                if (currentPictureExistingLabel) {
-                    currentPictureExistingLabel.hidden = false;
-                }
-            }
-            if (existingInspirationPicturesInput) {
-                const inspirationPictures = Array.isArray(recapPrefill.inspiration_pictures) ? recapPrefill.inspiration_pictures : [];
-                existingInspirationPicturesInput.value = JSON.stringify(inspirationPictures);
-                if (inspirationExistingLabel && inspirationPictures.length > 0) {
-                    inspirationExistingLabel.hidden = false;
-                    inspirationExistingLabel.textContent = `${inspirationPictures.length} photo(s) déjà enregistrée(s). Ajoute de nouveaux fichiers seulement si tu veux les remplacer.`;
-                }
-            }
             if (serviceSelect && recapPrefill.service_id) {
                 const recapServiceId = String(recapPrefill.service_id);
                 const hasServiceOption = Array.from(serviceSelect.options).some((opt) => opt.value === recapServiceId);
@@ -1057,7 +1006,6 @@
                 }
             }
             setValue('location', recapPrefill.location || '');
-            syncCurrentHairPictureRequirement();
             refreshEstimate();
         };
         const syncLocationPreference = () => {
@@ -1082,18 +1030,6 @@
             if (salonZone) {
                 salonZone.hidden = !isSalonChoice;
             }
-            if (clientAddressField) {
-                clientAddressField.hidden = isSalonChoice;
-                const input = clientAddressField.querySelector('input');
-                if (input) {
-                    input.required = !isSalonChoice;
-                    input.disabled = isSalonChoice;
-                    if (isSalonChoice) {
-                        input.value = '';
-                    }
-                }
-            }
-
             if (isSalonChoice && salonOption) {
                 salonOption.disabled = false;
                 salonOption.hidden = false;
@@ -1266,7 +1202,7 @@
                 if (
                     canSavePartialPrefill
                     && currentStep === 2
-                    && ['client_name', 'client_email', 'current_hair_picture_file'].includes(input.id)
+                    && ['client_name', 'client_email'].includes(input.id)
                 ) {
                     return;
                 }
@@ -1285,7 +1221,8 @@
                     return;
                 }
 
-                if (currentStep === 3) {
+                const currentStepEl = document.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+                if (currentStepEl?.querySelector('[name="desired_date"]')) {
                     const isAvailable = await validateDesiredDateAvailability();
                     if (!isAvailable) {
                         return;
