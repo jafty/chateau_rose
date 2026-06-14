@@ -290,13 +290,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         hairLengthSelect.append(new Option('Sélectionne ta longueur', '', true, true));
+        hairLengthSelect.required = true;
         keys.sort().forEach((key) => {
             const delta = lengths[key] || 0;
             const displayDelta = adjustmentWithFees(delta);
             const suffix = delta > 0 ? ` (+${formatPrice(displayDelta)})` : delta < 0 ? ` (${formatPrice(displayDelta)})` : '';
             hairLengthSelect.append(new Option(`${key}${suffix}`, key));
         });
-        hairLengthSelect.required = false;
         hairLengthField.hidden = false;
     };
     const buildAdjustments = () => {

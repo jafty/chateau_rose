@@ -84,7 +84,7 @@ def test_assign_compatible_provider_to_generic_booking():
     assert booking.status == "SUBMITTED"
     assert booking.provider_id == "provider-1"
     assert booking.service_id == "svc-1"
-    assert booking.booking_kind == "PROVIDER_SELECTED"
+    assert booking.booking_kind == "GENERIC"
     assert booking.provider_price_estimate_cents == 12500
     assert booking.estimated_price_cents == 13400
     assert len(notifier.messages) == 2
@@ -184,10 +184,40 @@ def test_assign_generic_booking_with_existing_generic_estimate_keeps_client_faci
     assert booking.general_adjustments == ["extra-long"]
 
 
+def test_reassign_rejected_generic_booking_keeps_original_generic_estimate():
+    repo, catalog, notifier, clock = _deps(_service(base_price_cents=6000, general_adjustments={}))
+    rejected_generic_booking = repo.get("BK-GENERIC")
+    rejected_generic_booking.booking_kind = "PROVIDER_SELECTED"
+    rejected_generic_booking.provider_id = "previous-provider"
+    rejected_generic_booking.service_id = "previous-service"
+    rejected_generic_booking.provider_price_estimate_cents = 18000
+    rejected_generic_booking.estimated_price_cents = 18900
+    rejected_generic_booking.status = "AWAITING_ALTERNATIVE_PROVIDER"
+    repo.update(rejected_generic_booking)
+
+    booking = assign_provider_to_booking.execute(
+        booking_id="BK-GENERIC",
+        provider_id="provider-1",
+        service_id="svc-1",
+        booking_repository=repo,
+        provider_catalog=catalog,
+        notifier=notifier,
+        clock=clock,
+    )
+
+    assert booking.status == "SUBMITTED"
+    assert booking.booking_kind == "GENERIC"
+    assert booking.provider_price_estimate_cents == 18000
+    assert booking.estimated_price_cents == 18900
+
+
 def test_assign_non_generic_alternative_recalculates_from_selected_provider_service():
     repo, catalog, notifier, clock = _deps(_service(base_price_cents=6000, general_adjustments={}))
     alternative_booking = repo.get("BK-GENERIC")
     alternative_booking.booking_kind = "PROVIDER_SELECTED"
+    alternative_booking.requested_marketing_service_id = None
+    alternative_booking.requested_marketing_sub_service_id = None
+    alternative_booking.requested_service_label_snapshot = ""
     alternative_booking.provider_price_estimate_cents = 18000
     alternative_booking.estimated_price_cents = 18900
     alternative_booking.status = "AWAITING_ALTERNATIVE_PROVIDER"
