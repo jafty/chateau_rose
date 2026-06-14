@@ -27,17 +27,10 @@
         {% if sub_services and not is_sub_service_page %}
         <div class="services-carousel-wrapper" style="margin-bottom:1.25rem;">
             <h2 class="service-subservices-heading">Affiner ta recherche par type de prestation</h2>
-            <div class="all-services-grid horizontal-scroll-mobile service-subservices-grid">
+            <div class="provider-service-grid service-subservices-grid">
                 {% for sub_service_item in sub_services %}
-                    <a href="{% url 'interface:sub_service_page' service.slug sub_service_item.slug %}" class="service-polaroid">
-                        <span class="tape top-center" aria-hidden="true"></span>
-                        {% if sub_service_item.resolved_image %}
-                            <img src="{{ sub_service_item.resolved_image }}" alt="{{ sub_service_item.name }}" loading="lazy" decoding="async">
-                        {% else %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ sub_service_item.name }}" loading="lazy" decoding="async">
-                        {% endif %}
-                        <span class="service-label">{{ sub_service_item.name }}</span>
-                    </a>
+                    {% url 'interface:sub_service_page' service.slug sub_service_item.slug as sub_service_url %}
+                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url|add:"#service-request" card_cta="Réserver rapidement" %}
                 {% endfor %}
             </div>
         </div>
@@ -48,17 +41,14 @@
         <div id="service-request" class="provider-form-card inline-form-card" style="margin-bottom:1.25rem;">
             <h2 class="wizard-heading">Réserver rapidement</h2>
             <p class="meta-line">Réponds à quelques questions : Château Rose cherchera ensuite une prestataire compatible. La prestation coiffure sera réglée directement à la prestataire le jour du rendez-vous.</p>
+            {% if sub_service and sub_service.price_display %}<p class="service-price">Dès <span class="price-value">{{ sub_service.price_display }}</span></p>{% endif %}
             <div class="step-progress" aria-label="Étapes de demande rapide">
                 <div class="step-indicator active" data-step-indicator="1">1</div>
                 <div class="step-indicator" data-step-indicator="2">2</div>
             </div>
             {% if request_success %}<div class="alert success">Ta demande est bien enregistrée. Château Rose revient vers toi rapidement.</div>{% endif %}
             {% if request_form.non_field_errors %}<div class="alert error">{{ request_form.non_field_errors|join:", " }}</div>{% endif %}
-            <form method="post" class="provider-form-grid" data-generic-booking-form>
-                {% csrf_token %}
-                <input type="hidden" name="request_service" value="1">
-                {% include "interface/partials/provider_standard_booking_form_fields.html" with generic_request_mode=True %}
-            </form>
+            {% include "interface/partials/generic_booking_form.html" %}
         </div>
         {% endif %}
         {% if providers %}
@@ -95,7 +85,7 @@
                             <span class="tag">{{ provider_service.name }}</span>
                         {% endfor %}
                     </div>
-                    <div class="card-actions"><span class="link service-card-link">Voir les tarifs</span></div>
+                    <div class="card-actions"><span class="link service-card-link">Choisir une coiffeuse</span></div>
                 </div>
             </a>
             {% endfor %}
@@ -174,41 +164,153 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const genericForm = document.querySelector('[data-generic-booking-form]');
-    if (genericForm) {
-        const steps = genericForm.querySelectorAll('.wizard-step');
-        const indicators = document.querySelectorAll('[data-step-indicator]');
-        let currentStep = 1;
-        const showStep = (step) => {
-            currentStep = step;
-            steps.forEach((item) => { item.classList.toggle('active', item.dataset.step === String(step)); });
-            indicators.forEach((item) => {
-                const stepNumber = Number.parseInt(item.dataset.stepIndicator, 10);
-                item.classList.toggle('active', stepNumber === step);
-                item.classList.toggle('completed', stepNumber < step);
-            });
-        };
-        const validateStep = () => {
-            const currentStepEl = genericForm.querySelector(`.wizard-step[data-step="${currentStep}"]`);
-            if (!currentStepEl) return true;
-            for (const input of currentStepEl.querySelectorAll('input, select, textarea')) {
-                if (!input.checkValidity()) {
-                    input.reportValidity();
-                    return false;
-                }
-            }
-            return true;
-        };
-        genericForm.querySelectorAll('.btn-next').forEach((button) => {
-            button.addEventListener('click', () => { if (validateStep()) showStep(Math.min(currentStep + 1, steps.length)); });
+{% if request_form and sub_service %}
+document.addEventListener('DOMContentLoaded', () => {
+    const pricingData = JSON.parse('{{ generic_pricing_data|default:"{}"|escapejs }}');
+    const form = document.getElementById('generic-request-form');
+    if (!form || !pricingData.base && pricingData.base !== 0) return;
+
+    const steps = [...document.querySelectorAll('.wizard-step')];
+    const indicators = [...document.querySelectorAll('[data-step-indicator]')];
+    const serviceSelect = document.getElementById('service_id');
+    const hairLengthSelect = document.getElementById('hair_length');
+    const hairLengthField = document.querySelector('[data-hair-length-field]');
+    const adjustmentsContainer = document.getElementById('general_adjustments');
+    const adjustmentsField = document.querySelector('[data-general-adjustment-field]');
+    const adjustmentsInput = document.getElementById('general_adjustments_input');
+    const finalPriceDisplay = document.getElementById('final-price-display');
+    const finalDetailsDisplay = document.getElementById('final-details-display');
+    const stickyPriceValue = document.getElementById('sticky-price-value');
+    const generalAdjustmentsDisplay = document.getElementById('general-adjustments-display');
+    const locationChoices = [...document.querySelectorAll('[data-location-choice]')];
+    let currentStep = 1;
+
+    const formatPrice = (cents) => {
+        return `${Math.round(cents / 100)} €`;
+    };
+    const ceilPriceForDisplay = (cents) => {
+        if (!Number.isFinite(cents) || cents <= 0) return 0;
+        const euros = Math.floor(cents / 100);
+        return (euros + (cents % 100 > 0 ? 1 : 0)) * 100;
+    };
+    const serviceFee = (subtotal) => Math.round(subtotal * (pricingData.service_fee_percentage || 0) / 100);
+    const adjustmentWithFees = (adjustmentCents) => {
+        if (!Number.isFinite(adjustmentCents) || adjustmentCents === 0) return 0;
+        const sign = adjustmentCents < 0 ? -1 : 1;
+        const absoluteAdjustment = Math.abs(adjustmentCents);
+        return sign * ceilPriceForDisplay(absoluteAdjustment + serviceFee(absoluteAdjustment));
+    };
+    const displayEstimateWithFees = ({ base, adjustments }) => (
+        ceilPriceForDisplay(base + serviceFee(base)) +
+        adjustments.reduce((total, adjustment) => total + adjustmentWithFees(adjustment), 0)
+    );
+
+    const updateWizardUI = () => {
+        steps.forEach((step) => step.classList.toggle('active', Number(step.dataset.step) === currentStep));
+        indicators.forEach((indicator) => {
+            const step = Number(indicator.dataset.stepIndicator);
+            indicator.classList.toggle('active', step === currentStep);
+            indicator.classList.toggle('completed', step < currentStep);
         });
-        genericForm.querySelectorAll('.btn-prev').forEach((button) => {
-            button.addEventListener('click', () => showStep(Math.max(currentStep - 1, 1)));
+    };
+    const validateCurrentStep = () => {
+        const current = document.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+        return [...current.querySelectorAll('input, select, textarea')].every((field) => {
+            if (field.disabled || field.checkValidity()) return true;
+            field.reportValidity();
+            return false;
         });
-        showStep(1);
-    }
+    };
+    document.querySelectorAll('.btn-next').forEach((button) => button.addEventListener('click', () => {
+        if (!validateCurrentStep() || currentStep >= steps.length) return;
+        currentStep += 1;
+        updateWizardUI();
+    }));
+    document.querySelectorAll('.btn-prev').forEach((button) => button.addEventListener('click', () => {
+        if (currentStep <= 1) return;
+        currentStep -= 1;
+        updateWizardUI();
+    }));
+
+    const selectedAdjustments = () => [...adjustmentsContainer.querySelectorAll('input:checked')].map((input) => input.value);
+    const syncAdjustments = () => {
+        adjustmentsInput.value = selectedAdjustments().join(', ');
+    };
+    const updateEstimate = () => {
+        const lengths = pricingData.lengths || {};
+        const selectedLength = hairLengthSelect.value || Object.keys(lengths)[0] || 'standard';
+        const lengthAdj = lengths[selectedLength] || 0;
+        const adjustments = pricingData.general_adjustments || {};
+        const adjustmentTotal = selectedAdjustments().reduce((total, key) => total + (adjustments[key] || 0), 0);
+        const locationPreference = form.querySelector('input[name="location_preference"]:checked')?.value || 'salon';
+        const atHomeAdj = locationPreference === 'domicile' ? (pricingData.at_home_bonus || 0) : 0;
+        const subtotal = pricingData.base + lengthAdj + adjustmentTotal + atHomeAdj;
+        const fee = serviceFee(subtotal);
+        const displayTotalWithFees = displayEstimateWithFees({
+            base: pricingData.base,
+            adjustments: [lengthAdj, adjustmentTotal, atHomeAdj],
+        });
+        const displayFee = ceilPriceForDisplay(fee);
+        finalPriceDisplay.textContent = formatPrice(displayFee);
+        stickyPriceValue.textContent = formatPrice(displayFee);
+        finalDetailsDisplay.textContent = `${pricingData.name} · estimation totale indicative : ${formatPrice(displayTotalWithFees)}. Prestation estimée à régler le jour J : ${formatPrice(subtotal)}.`;
+        const optionText = selectedAdjustments().join(' · ');
+        generalAdjustmentsDisplay.textContent = optionText ? `Options : ${optionText}` : '';
+        generalAdjustmentsDisplay.hidden = !optionText;
+    };
+
+    const buildHairLengths = () => {
+        const lengths = pricingData.lengths || {};
+        const keys = Object.keys(lengths);
+        hairLengthSelect.innerHTML = '';
+        if (keys.length <= 1) {
+            const key = keys[0] || 'standard';
+            hairLengthSelect.append(new Option(key, key, true, true));
+            hairLengthSelect.disabled = true;
+            hairLengthField.hidden = true;
+            return;
+        }
+        hairLengthSelect.append(new Option('Sélectionne ta longueur', '', true, true));
+        keys.sort().forEach((key) => {
+            const delta = lengths[key] || 0;
+            const displayDelta = adjustmentWithFees(delta);
+            const suffix = delta > 0 ? ` (+${formatPrice(displayDelta)})` : delta < 0 ? ` (${formatPrice(displayDelta)})` : '';
+            hairLengthSelect.append(new Option(`${key}${suffix}`, key));
+        });
+        hairLengthSelect.required = true;
+        hairLengthField.hidden = false;
+    };
+    const buildAdjustments = () => {
+        const adjustments = pricingData.general_adjustments || {};
+        const keys = Object.keys(adjustments).filter((key) => key.toLowerCase() !== 'standard');
+        adjustmentsContainer.innerHTML = '';
+        adjustmentsField.hidden = !keys.length;
+        keys.sort().forEach((key) => {
+            const id = `generic-adjustment-${key}`.replace(/[^a-zA-Z0-9_-]/g, '-');
+            const input = Object.assign(document.createElement('input'), { type: 'checkbox', id, value: key });
+            const label = Object.assign(document.createElement('label'), { htmlFor: id, textContent: `${key} (+${formatPrice(adjustmentWithFees(adjustments[key] || 0))})` });
+            const wrapper = document.createElement('div');
+            wrapper.className = 'supplement-option';
+            wrapper.append(input, label);
+            adjustmentsContainer.append(wrapper);
+            input.addEventListener('change', () => { syncAdjustments(); updateEstimate(); });
+        });
+    };
+
+    locationChoices.forEach((choice) => choice.addEventListener('change', () => {
+        const selected = form.querySelector('input[name="location_preference"]:checked')?.value;
+        locationChoices.forEach((item) => item.classList.toggle('is-selected', item.dataset.locationChoice === selected));
+        updateEstimate();
+    }));
+    hairLengthSelect.addEventListener('change', updateEstimate);
+    buildHairLengths();
+    buildAdjustments();
+    syncAdjustments();
+    updateEstimate();
+    updateWizardUI();
 });
+{% endif %}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     const toggle = document.querySelector('[data-zone-accordion-trigger]');

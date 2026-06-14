@@ -125,7 +125,7 @@ def test_manual_assignment_can_skip_service_intent_match_when_operator_accepts_c
     assert booking.provider_id == "provider-1"
 
 
-def test_manual_assignment_can_skip_unsupported_option_when_operator_accepts_counter_proposal_risk():
+def test_manual_assignment_skips_unsupported_options_by_default_for_counter_proposal_risk():
     repo, catalog, notifier, clock = _deps(_service(general_adjustments={}))
 
     booking = assign_provider_to_booking.execute(
@@ -136,9 +136,73 @@ def test_manual_assignment_can_skip_unsupported_option_when_operator_accepts_cou
         provider_catalog=catalog,
         notifier=notifier,
         clock=clock,
-        enforce_pricing_options=False,
     )
 
     assert booking.status == "SUBMITTED"
     assert booking.provider_price_estimate_cents == 10000
     assert booking.general_adjustments == ["extra-long"]
+
+
+def test_manual_assignment_can_enforce_pricing_options_when_needed():
+    repo, catalog, notifier, clock = _deps(_service(general_adjustments={}))
+
+    with pytest.raises(ValidationError, match="General adjustment"):
+        assign_provider_to_booking.execute(
+            booking_id="BK-GENERIC",
+            provider_id="provider-1",
+            service_id="svc-1",
+            booking_repository=repo,
+            provider_catalog=catalog,
+            notifier=notifier,
+            clock=clock,
+            enforce_pricing_options=True,
+        )
+
+    assert repo.get("BK-GENERIC").provider_id is None
+
+
+def test_assign_generic_booking_with_existing_generic_estimate_keeps_client_facing_price():
+    repo, catalog, notifier, clock = _deps(_service(base_price_cents=6000, general_adjustments={}))
+    generic_booking = repo.get("BK-GENERIC")
+    generic_booking.provider_price_estimate_cents = 18000
+    generic_booking.estimated_price_cents = 18900
+    repo.update(generic_booking)
+
+    booking = assign_provider_to_booking.execute(
+        booking_id="BK-GENERIC",
+        provider_id="provider-1",
+        service_id="svc-1",
+        booking_repository=repo,
+        provider_catalog=catalog,
+        notifier=notifier,
+        clock=clock,
+    )
+
+    assert booking.status == "SUBMITTED"
+    assert booking.provider_price_estimate_cents == 18000
+    assert booking.estimated_price_cents == 18900
+    assert booking.general_adjustments == ["extra-long"]
+
+
+def test_assign_non_generic_alternative_recalculates_from_selected_provider_service():
+    repo, catalog, notifier, clock = _deps(_service(base_price_cents=6000, general_adjustments={}))
+    alternative_booking = repo.get("BK-GENERIC")
+    alternative_booking.booking_kind = "PROVIDER_SELECTED"
+    alternative_booking.provider_price_estimate_cents = 18000
+    alternative_booking.estimated_price_cents = 18900
+    alternative_booking.status = "AWAITING_ALTERNATIVE_PROVIDER"
+    repo.update(alternative_booking)
+
+    booking = assign_provider_to_booking.execute(
+        booking_id="BK-GENERIC",
+        provider_id="provider-1",
+        service_id="svc-1",
+        booking_repository=repo,
+        provider_catalog=catalog,
+        notifier=notifier,
+        clock=clock,
+    )
+
+    assert booking.status == "SUBMITTED"
+    assert booking.provider_price_estimate_cents == 6000
+    assert booking.estimated_price_cents == 6900

@@ -762,11 +762,11 @@
                         {% if not is_quick_checkout %}
                         <aside class="provider-form-aside">
                             <div class="sticky-price-bar" id="sticky-price-bar">
-                                <span class="total-label">Estimation totale</span>
+                                <span class="total-label">Frais Château Rose à payer immédiatement</span>
                                 <span class="total-amount" id="final-price-display">...</span>
                                 <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher ton estimation.</p>
                                 <p class="meta-line" id="general-adjustments-display" hidden></p>
-                                <p class="meta-line">Le montant à régler maintenant est précisé au récapitulatif.</p>
+                                <p class="meta-line">L'estimation totale peut évoluer selon la prestataire et sera confirmée au récapitulatif.</p>
                                 <span class="sr-only" id="sticky-price-value">-- €</span>
                             </div>
                             <div class="sticky-price-bar sticky-price-bar--reassurance sticky-price-bar--support">
@@ -1259,8 +1259,7 @@
 
         const formatPrice = (cents) => {
             if (cents === null || cents === undefined) return '...';
-            const euros = cents / 100;
-            return euros % 1 === 0 ? `${euros.toFixed(0)} €` : `${euros.toFixed(2)} €`;
+            return `${Math.round(cents / 100)} €`;
         };
         // Backward-compatible alias kept to avoid runtime errors in stale inline handlers/cached snippets.
         const formatMarketingPrice = formatPrice;
@@ -1274,16 +1273,23 @@
 
         const adjustmentWithFeesCents = (adjustmentCents, serviceFeePercentage) => {
             if (!Number.isFinite(adjustmentCents) || adjustmentCents === 0) return 0;
-            const feeCents = Math.round(adjustmentCents * (serviceFeePercentage || 0) / 100);
-            return adjustmentCents + feeCents;
+            const sign = adjustmentCents < 0 ? -1 : 1;
+            const absoluteAdjustment = Math.abs(adjustmentCents);
+            const feeCents = Math.round(absoluteAdjustment * (serviceFeePercentage || 0) / 100);
+            return sign * ceilPriceForDisplay(absoluteAdjustment + feeCents);
         };
 
         const formatAdjustmentWithFees = (adjustmentCents, serviceFeePercentage) => {
             const totalAdjustmentCents = adjustmentWithFeesCents(adjustmentCents, serviceFeePercentage);
-            if (totalAdjustmentCents > 0) {
-                return formatPrice(ceilPriceForDisplay(totalAdjustmentCents));
-            }
             return formatPrice(totalAdjustmentCents);
+        };
+
+        const displayEstimateWithFeesCents = ({ base, adjustments, serviceFeePercentage }) => {
+            const baseWithFees = base + Math.round(base * (serviceFeePercentage || 0) / 100);
+            return ceilPriceForDisplay(baseWithFees) + adjustments.reduce(
+                (total, adjustment) => total + adjustmentWithFeesCents(adjustment, serviceFeePercentage),
+                0
+            );
         };
 
         const toggleHairLengthField = (isVisible) => {
@@ -1490,18 +1496,23 @@
             const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : computedTotalCents;
             const serviceFeePercentage = pricing.service_fee_percentage ?? 15;
             const serviceFeeCents = Math.round(totalCents * serviceFeePercentage / 100);
-            const totalWithFeesCents = totalCents + serviceFeeCents;
-            const displayTotalWithFeesCents = ceilPriceForDisplay(totalWithFeesCents);
+            const displayTotalWithFeesCents = Number.isFinite(fixedPriceCents)
+                ? ceilPriceForDisplay(totalCents + serviceFeeCents)
+                : displayEstimateWithFeesCents({
+                    base,
+                    adjustments: [lengthAdj, generalAdj, mecheAdj, atHomeAdj],
+                    serviceFeePercentage,
+                });
             const depositCents = serviceFeeCents;
-            const depositStr = formatMarketingPrice(depositCents);
+            const depositStr = formatMarketingPrice(ceilPriceForDisplay(depositCents));
             const selectedOption = serviceSelect?.selectedOptions?.[0];
             const serviceName =
                 pricing.name ||
                 (selectedOption ? selectedOption.textContent.split(' - ')[0].trim() : null) ||
                 'Service';
 
-            stickyPriceValue.textContent = formatMarketingPrice(displayTotalWithFeesCents);
-            finalPriceDisplay.textContent = formatMarketingPrice(displayTotalWithFeesCents);
+            stickyPriceValue.textContent = depositStr;
+            finalPriceDisplay.textContent = depositStr;
             const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
             const mecheText = mecheCheckbox
                 ? mecheCheckbox.checked
@@ -1511,12 +1522,13 @@
             const locationText = atHomeAdj > 0
                 ? `à domicile (+${formatAdjustmentWithFees(atHomeAdj, serviceFeePercentage)})`
                 : "chez la prestataire";
+            const displayedAppointmentEstimateStr = formatMarketingPrice(displayTotalWithFeesCents);
             const remainingStr = formatPrice(Math.max(totalCents, 0));
-            const serviceFeeStr = formatPrice(serviceFeeCents);
+            const serviceFeeStr = depositStr;
             if (Number.isFinite(fixedPriceCents)) {
-                finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). Frais Château Rose : ${serviceFeeStr}. Prestation à régler le jour J : ${remainingStr}.`;
+                finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). Estimation totale : ${displayedAppointmentEstimateStr}. Prestation estimée à régler le jour J : ${remainingStr}.`;
             } else {
-                finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). Frais Château Rose : ${serviceFeeStr}. Prestation à régler le jour J : ${remainingStr}.`;
+                finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). Estimation totale indicative : ${displayedAppointmentEstimateStr}. Prestation estimée à régler le jour J : ${remainingStr}.`;
             } 
             if (generalAdjustmentsDisplay) {
                 const adjustmentsText = selectedAdjustments.length
