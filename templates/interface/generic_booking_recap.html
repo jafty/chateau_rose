@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Récapitulatif de ta demande | Château Rose{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/design_system_tweaks.css' %}">{% endblock %}
+
+{% block content %}
+<section class="container" style="padding: clamp(2rem, 4vw, 4rem) 0;">
+    <div class="provider-form-card inline-form-card" style="max-width: 920px; margin: 0 auto;">
+        <h1 class="wizard-heading">Récapitulatif de ta demande</h1>
+        <p class="meta-line">Vérifie l'estimation, puis sécurise les frais Château Rose. La prestation coiffure sera réglée directement à la prestataire le jour du rendez-vous.</p>
+        {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+        <div class="provider-form-layout">
+            <div>
+                <h3>{{ service_label }}</h3>
+                <p><strong>Date souhaitée :</strong> {{ desired_date_display }}</p>
+                <p><strong>Lieu :</strong> {% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la prestataire{% endif %}</p>
+                {% if payload.hair_length %}<p><strong>Longueur :</strong> {{ payload.hair_length }}</p>{% endif %}
+                {% if payload.requested_options %}<p><strong>Options :</strong> {{ payload.requested_options|join:", " }}</p>{% endif %}
+                <p><strong>Contact :</strong> {{ payload.client_name }} · {{ payload.client_email }}</p>
+            </div>
+            <aside class="provider-form-aside">
+                <div class="sticky-price-bar">
+                    <span class="total-label">Estimation totale</span>
+                    <span class="total-amount">{{ total_price }}</span>
+                    <p class="meta-line">Frais Château Rose : {{ service_fee_price }}</p>
+                    <p class="meta-line">Prestation estimée à régler le jour J : {{ subtotal_price }}</p>
+                    <form method="post" id="generic-recap-confirm-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
+                        {% if require_payment_auth %}
+                            <label class="stripe-label">Saisis ta carte pour régler les frais Château Rose</label>
+                            <div class="stripe-zone">
+                                <div id="payment-element" class="payment-element payment-element--tall"></div>
+                                <div class="alert error" id="payment-error" hidden></div>
+                            </div>
+                        {% endif %}
+                        <button type="submit" class="btn recap-submit-btn">{% if amount_due_now_cents == 0 %}Confirmer ma demande{% else %}Sécuriser ma demande{% endif %}</button>
+                    </form>
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if require_payment_auth %}
+<script src="https://js.stripe.com/v3"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const form = document.getElementById('generic-recap-confirm-form');
+    const paymentElementContainer = document.getElementById('payment-element');
+    const paymentError = document.getElementById('payment-error');
+    const paymentAuthInput = document.getElementById('payment_auth_id');
+    if (!form || !paymentElementContainer || !paymentAuthInput) return;
+    const showError = (message = '') => { paymentError.textContent = message; paymentError.hidden = !message; };
+    const response = await fetch('{{ payment_intent_url }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': form.querySelector('input[name="csrfmiddlewaretoken"]').value},
+        body: JSON.stringify({
+            generic_sub_service_id: '{{ generic_sub_service_id }}',
+            desired_date: '{{ payload.desired_date|escapejs }}',
+            hair_length: '{{ payload.hair_length|default:""|escapejs }}',
+            location_preference: '{{ payload.location_preference|default:"salon"|escapejs }}',
+            general_adjustments: {{ payload_options_json|safe }},
+            service_fee_coupon_code: '{{ payload.service_fee_coupon_code|default:""|escapejs }}'
+        })
+    });
+    const paymentData = await response.json().catch(() => ({}));
+    if (!response.ok || !paymentData.client_secret) { showError(paymentData.error || "Impossible de préparer le paiement Château Rose."); return; }
+    const stripe = Stripe('{{ stripe_public_key|escapejs }}');
+    const elements = stripe.elements({ clientSecret: paymentData.client_secret });
+    elements.create('payment').mount('#payment-element');
+    form.addEventListener('submit', async (event) => {
+        if (paymentAuthInput.value) return;
+        event.preventDefault();
+        showError('');
+        const { error, paymentIntent } = await stripe.confirmPayment({ elements, redirect: 'if_required' });
+        if (error) { showError(error.message || "Erreur de paiement."); return; }
+        if (paymentIntent?.id) { paymentAuthInput.value = paymentIntent.id; form.submit(); }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

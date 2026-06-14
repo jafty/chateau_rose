@@ -106,7 +106,9 @@ class DjangoProviderCatalog:
             return False
 
         if requested_marketing_sub_service_id:
-            return service.marketing_sub_services.filter(id=requested_marketing_sub_service_id).exists()
+            if service.marketing_sub_services.filter(id=requested_marketing_sub_service_id).exists():
+                return True
+            return service.provider.marketing_sub_services.filter(id=requested_marketing_sub_service_id).exists()
 
         if requested_marketing_service_id:
             if service.marketing_service_id and str(service.marketing_service_id) == str(requested_marketing_service_id):

@@ -16,6 +16,7 @@ def execute(
     notifier,
     clock,
     provider_booking_url_base: str | None = None,
+    operations_email: str | None = None,
     enforce_service_intent_match: bool = True,
     enforce_pricing_options: bool = True,
 ):
@@ -97,4 +98,15 @@ def execute(
             f"ID demande : {booking.id}",
         ]),
     )
+    if operations_email:
+        notifier.notify(
+            operations_email,
+            "Copie attribution demande",
+            "\n".join([
+                "Une demande a été assignée manuellement.",
+                f"ID demande : {booking.id}",
+                f"Prestataire : {provider_id}",
+                f"Prestation : {service.get('name')}",
+            ]),
+        )
     return booking

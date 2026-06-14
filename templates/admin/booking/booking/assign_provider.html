@@ -1,0 +1,20 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div id="content-main">
+    <p><a href="{% url 'admin:booking_booking_change' booking.pk %}">← Retour à la demande {{ booking.booking_id }}</a></p>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            <h2>{% if booking.status == "AWAITING_ALTERNATIVE_PROVIDER" %}Assigner une alternative{% else %}Assigner une prestataire{% endif %}</h2>
+            <p class="help">Cette action appelle le use case d'assignation : elle ne modifie pas directement la prestataire, le service ou le statut depuis l'admin.</p>
+            {{ form.as_div }}
+        </fieldset>
+        <div class="submit-row">
+            <input type="submit" class="default" value="Assigner via le use case">
+            <a class="closelink" href="{% url 'admin:booking_booking_change' booking.pk %}">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
