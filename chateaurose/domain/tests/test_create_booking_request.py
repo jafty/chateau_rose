@@ -149,3 +149,35 @@ def test_create_generic_booking_with_waived_fee_skips_payment():
     assert booking.amount_due_now_cents == 0
     assert booking.payment_status == "WAIVED"
     assert deps["payment_gateway"].auth_calls == []
+
+
+def test_generic_booking_can_store_subservice_price_estimate():
+    deps = _deps()
+
+    booking = create_booking_request.execute(
+        client_contact={"name": "Awa", "email": "awa@example.com"},
+        requested_marketing_service_id="mkt-1",
+        requested_marketing_sub_service_id="sub-1",
+        requested_service_label_snapshot="Braids · Vanilles",
+        requested_options=["long"],
+        generic_provider_price_estimate_cents=12000,
+        chateau_rose_fee_cents=1800,
+        location="À préciser",
+        location_preference="salon",
+        desired_date="2026-02-01T10:00:00+00:00",
+        hair_length="long",
+        current_hair_picture="",
+        inspiration_pictures=[],
+        free_text="",
+        **deps,
+    )
+
+    assert booking.booking_kind == "GENERIC"
+    assert booking.provider_id is None
+    assert booking.service_id is None
+    assert booking.requested_marketing_sub_service_id == "sub-1"
+    assert booking.status == "WAITING_PROVIDER_ASSIGNMENT"
+    assert booking.provider_price_estimate_cents == 12000
+    assert booking.chateau_rose_fee_cents == 1800
+    assert booking.amount_due_now_cents == 1800
+    assert booking.payment_status == "AUTHORIZED"
