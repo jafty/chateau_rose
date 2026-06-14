@@ -1490,6 +1490,21 @@ def _generic_booking_label(service_meta: MarketingService | None, sub_service: M
     return service_meta.name if service_meta else "Prestation demandée"
 
 
+def _generic_sub_service_pricing_data(sub_service: MarketingSubService | None) -> dict:
+    if not sub_service:
+        return {}
+    return {
+        "id": "generic-sub-service",
+        "name": sub_service.name,
+        "base": sub_service.generic_base_price_cents,
+        "lengths": sub_service.generic_hair_length_adjustments or {"standard": 0},
+        "general_adjustments": sub_service.generic_general_adjustments or {},
+        "meche_bonus": sub_service.generic_meche_bonus_cents,
+        "at_home_bonus": sub_service.generic_at_home_bonus_cents,
+        "service_fee_percentage": sub_service.generic_service_fee_percentage,
+    }
+
+
 def _build_service_request_form(request, service_meta: MarketingService | None, zone, sub_service: MarketingSubService | None = None):
     is_request_submission = request.method == "POST" and request.POST.get("request_service") == "1"
     use_legacy_quick_request = is_request_submission and "contact" in request.POST
@@ -1702,13 +1717,12 @@ def service_page(request, service_slug: str):
     if service_request_redirect:
         return service_request_redirect
 
-    request_form, request_success = _build_service_request_form(
-        request, service_meta, zone=None
-    )
-    if request_form == "redirect":
-        return redirect("interface:thank_you_quick_request")
-    if request_form is None:
-        return redirect(f"{request.path}?anchor=service-request")
+    if request.method == "POST" and "contact" in request.POST:
+        request_form, request_success = _build_service_request_form(request, service_meta, zone=None)
+        if request_form == "redirect":
+            return redirect("interface:thank_you_quick_request")
+    else:
+        request_form, request_success = None, False
     service_content = _to_service_content(service_meta)
     marketing_content = build_marketing_content(service=service_content)
     hero_image = marketing_content.hero_image
@@ -1751,6 +1765,7 @@ def service_page(request, service_slug: str):
             "seo_long_description": long_description,
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
+            "generic_pricing_data": json.dumps({}, ensure_ascii=False),
         },
     )
 
@@ -1791,13 +1806,12 @@ def service_city_page(request, service_slug: str, city_slug: str):
     if service_request_redirect:
         return service_request_redirect
 
-    request_form, request_success = _build_service_request_form(
-        request, service_meta, zone=zone
-    )
-    if request_form == "redirect":
-        return redirect("interface:thank_you_quick_request")
-    if request_form is None:
-        return redirect(f"{request.path}?anchor=service-request")
+    if request.method == "POST" and "contact" in request.POST:
+        request_form, request_success = _build_service_request_form(request, service_meta, zone=zone)
+        if request_form == "redirect":
+            return redirect("interface:thank_you_quick_request")
+    else:
+        request_form, request_success = None, False
 
     gallery_images = marketing_content.gallery
     hero_image = marketing_content.hero_image
@@ -1834,6 +1848,7 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "seo_long_description": long_description,
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
+            "generic_pricing_data": json.dumps({}, ensure_ascii=False),
         },
     )
 
@@ -1874,13 +1889,7 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     if service_request_redirect:
         return service_request_redirect
 
-    request_form, request_success = _build_service_request_form(
-        request, service_meta, zone=zone
-    )
-    if request_form == "redirect":
-        return redirect("interface:thank_you_quick_request")
-    if request_form is None:
-        return redirect(f"{request.path}?anchor=service-request")
+    request_form, request_success = None, False
 
     gallery_images = marketing_content.gallery
     hero_image = marketing_content.hero_image or service_meta.resolved_main_image
@@ -1917,6 +1926,7 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             "seo_long_description": long_description,
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
+            "generic_pricing_data": json.dumps({}, ensure_ascii=False),
         },
     )
 
@@ -1982,6 +1992,7 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
             "seo_long_description": "",
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
+            "generic_pricing_data": json.dumps(_generic_sub_service_pricing_data(sub_service), ensure_ascii=False),
         },
     )
 

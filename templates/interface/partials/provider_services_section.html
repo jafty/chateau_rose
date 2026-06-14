@@ -32,19 +32,7 @@
             <div class="provider-category-panel">
                 <div class="provider-service-grid">
                     {% for service in category.services %}
-                        <article class="provider-service-card">
-                            <span class="tape" aria-hidden="true"></span>
-                            <div class="provider-service-card__media">
-                                <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
-                            </div>
-                            <div class="provider-service-card__content">
-                                <div class="provider-service-card__top">
-                                    <h4>{{ service.name }}</h4>
-                                    <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
-                                </div>
-                                <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Estimer et réserver</button>
-                            </div>
-                        </article>
+                        {% include "interface/partials/service_booking_card.html" with card=service card_cta="Estimer et réserver" %}
                     {% endfor %}
                 </div>
             </div>
@@ -53,19 +41,7 @@
 {% else %}
     <div class="provider-service-grid">
         {% for service in services %}
-            <article class="provider-service-card">
-                <span class="tape" aria-hidden="true"></span>
-                <div class="provider-service-card__media">
-                    <img src="{{ service.resolved_image }}" alt="{{ service.name }} réalisée par {{ provider.name }}" loading="lazy" decoding="async">
-                </div>
-                    <div class="provider-service-card__content">
-                        <div class="provider-service-card__top">
-                            <h4>{{ service.name }}</h4>
-                            <span class="service-price">Dès <span class="price-value">{{ service.price_display }}</span></span>
-                        </div>
-                    <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ service.id }}">Estimer et réserver</button>
-                </div>
-            </article>
+            {% include "interface/partials/service_booking_card.html" with card=service card_cta="Estimer et réserver" %}
         {% empty %}
             <p class="meta-line lead--no-margin">Tarifs à confirmer avec la prestataire.</p>
         {% endfor %}

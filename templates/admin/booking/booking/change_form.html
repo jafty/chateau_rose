@@ -4,11 +4,10 @@
 {% if original and can_assign_provider %}
 <fieldset class="module aligned">
     <h2>{% if original.status == "AWAITING_ALTERNATIVE_PROVIDER" %}Assigner une alternative{% else %}Assigner une prestataire{% endif %}</h2>
-    <form method="post" action="{% url 'admin:booking_booking_assign_provider' original.pk %}">
-        {% csrf_token %}
-        {{ assignment_form.as_div }}
-        <div class="submit-row"><input type="submit" class="default" value="Assigner via le use case"></div>
-    </form>
+    <p>Utilise le workflow sécurisé : il appelle le use case d'assignation et repasse la demande en SUBMITTED si l'assignation réussit.</p>
+    <div class="submit-row">
+        <a class="button" href="{% url 'admin:booking_booking_assign_provider' original.pk %}">Ouvrir l'assignation</a>
+    </div>
 </fieldset>
 {% endif %}
 {% endblock %}

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
@@ -525,6 +525,19 @@ class BookingAdmin(admin.ModelAdmin):
         if booking.status not in {Booking.STATUS_AWAITING_ALTERNATIVE_PROVIDER, Booking.STATUS_WAITING_PROVIDER_ASSIGNMENT}:
             messages.error(request, "Cette demande n'est pas en attente d'assignation prestataire.")
             return redirect(reverse("admin:booking_booking_change", args=[object_id]))
+
+        if getattr(request, "method", "POST") != "POST":
+            return render(
+                request,
+                "admin/booking/booking/assign_provider.html",
+                {
+                    **self.admin_site.each_context(request),
+                    "title": "Assigner une prestataire",
+                    "booking": booking,
+                    "form": BookingProviderAssignmentForm(),
+                    "opts": self.model._meta,
+                },
+            )
 
         post_data = request.POST.copy()
         if "service_id" in post_data and "service" not in post_data:
