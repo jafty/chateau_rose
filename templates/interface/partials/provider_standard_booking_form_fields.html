@@ -1,3 +1,56 @@
+{% if generic_request_mode %}
+<fieldset class="wizard-step active" data-step="1">
+    <h4>1. Tes disponibilités</h4>
+    <p class="meta-line" style="margin-bottom: 12px;">Indique l'essentiel : Château Rose cherchera ensuite une prestataire compatible.</p>
+
+    <div class="form-field full-width">
+        <label for="id_desired_date">Date ou disponibilités <span class="required-mark">*</span></label>
+        {{ request_form.desired_date }}
+    </div>
+    <div class="form-field full-width">
+        <label for="id_location_preference">Lieu préféré</label>
+        {{ request_form.location_preference }}
+    </div>
+    <div class="form-field full-width">
+        <label for="id_hair_length">Longueur ou épaisseur souhaitée</label>
+        {{ request_form.hair_length }}
+    </div>
+    <div class="form-field full-width">
+        <label for="id_requested_options">Options utiles</label>
+        {{ request_form.requested_options }}
+        <p class="meta-line">Sépare les options par des virgules si besoin.</p>
+    </div>
+
+    <div class="wizard-actions full-width">
+        <button type="button" class="btn btn-next">Continuer</button>
+    </div>
+</fieldset>
+
+<fieldset class="wizard-step" data-step="2">
+    <h4>2. Tes coordonnées</h4>
+    <div class="form-field">
+        <label for="id_client_name">Ton prénom / nom <span class="required-mark">*</span></label>
+        {{ request_form.client_name }}
+    </div>
+    <div class="form-field">
+        <label for="id_client_email">Ton Email <span class="required-mark">*</span></label>
+        {{ request_form.client_email }}
+    </div>
+    <div class="form-field">
+        <label for="id_client_phone">Téléphone / WhatsApp <span class="required-mark">*</span></label>
+        {{ request_form.client_phone }}
+    </div>
+    <div class="form-field">
+        <label for="id_service_fee_coupon_code">Code promo (optionnel)</label>
+        {{ request_form.service_fee_coupon_code }}
+    </div>
+
+    <div class="wizard-actions full-width">
+        <button type="button" class="btn btn-prev btn-secondary">Retour</button>
+        <button type="submit" class="btn">Confirmer ma demande</button>
+    </div>
+</fieldset>
+{% else %}
 <fieldset class="wizard-step active" data-step="1" {% if is_quick_checkout %}hidden{% endif %}>
                                 <h4>1. Choisis ta prestation</h4>
 

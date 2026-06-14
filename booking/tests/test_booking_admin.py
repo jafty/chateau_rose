@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.admin.sites import AdminSite
 from django.test import TestCase, override_settings
 
@@ -55,3 +57,37 @@ class BookingAdminTests(TestCase):
         self.assertIn('/media/bookings/inspiration/b.jpg', html)
         self.assertIn("Ouvrir l'image 1", html)
         self.assertIn("Ouvrir l'image 2", html)
+
+    def test_assign_provider_view_uses_assignment_use_case(self):
+        waiting = Booking.objects.create(
+            booking_id="BK-GEN01",
+            booking_kind=Booking.KIND_GENERIC,
+            requested_service_label_snapshot="Tresses",
+            client_name="Awa",
+            client_email="awa@example.com",
+            location="Toulouse",
+            location_preference="domicile",
+            desired_date="2026-01-02T10:00:00+00:00",
+            hair_length="",
+            general_adjustments=[],
+            meche=False,
+            current_hair_picture="",
+            inspiration_pictures=[],
+            free_text="",
+            estimated_price_cents=0,
+            payment_auth_id="",
+            payment_status=Booking.PAYMENT_STATUS_WAIVED,
+            status=Booking.STATUS_WAITING_PROVIDER_ASSIGNMENT,
+            created_at="2026-01-01T09:00:00+00:00",
+        )
+        request = type("Request", (), {"POST": {"service_id": str(self.service.id)}, "GET": {}})()
+        request._messages = type("Messages", (), {"add": lambda *args, **kwargs: None})()
+
+        with patch("booking.admin.assign_provider_to_booking.execute") as execute_mock:
+            execute_mock.return_value = None
+            self.model_admin.assign_provider_view(request, str(waiting.pk))
+
+        execute_mock.assert_called_once()
+        self.assertEqual(execute_mock.call_args.kwargs["booking_id"], "BK-GEN01")
+        self.assertEqual(execute_mock.call_args.kwargs["provider_id"], str(self.provider.id))
+        self.assertEqual(execute_mock.call_args.kwargs["service_id"], str(self.service.id))

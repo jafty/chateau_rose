@@ -367,6 +367,26 @@ class QuickCheckoutModelValidationTests(TestCase):
 
         self.assertIn("service", exc_info.exception.message_dict)
 
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_provider_payment_intent_returns_clear_error_for_service_not_offered(self):
+        response = self.client.post(
+            reverse("interface:provider_payment_intent"),
+            data={
+                "provider_id": self.provider.id,
+                "service_id": 999999,
+                "hair_length": "",
+                "general_adjustments": [],
+                "meche": False,
+                "location_preference": "salon",
+                "desired_date": "2026-03-15T10:00",
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(response.content, {"error": "Service non disponible."})
+
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_uses_fixed_quick_checkout_price(self):
         from interface import views

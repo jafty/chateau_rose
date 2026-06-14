@@ -741,7 +741,6 @@
                     <div class="step-progress">
                         <div class="step-indicator active" data-step-indicator="1">1</div>
                         <div class="step-indicator" data-step-indicator="2">2</div>
-                        <div class="step-indicator" data-step-indicator="3">3</div>
                     </div>
                     {% endif %}
 
@@ -1255,7 +1254,8 @@
                     return;
                 }
 
-                if (currentStep === 3) {
+                const currentStepEl = document.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+                if (currentStepEl?.querySelector('[name="desired_date"]')) {
                     const isAvailable = await validateDesiredDateAvailability();
                     if (!isAvailable) {
                         return;
