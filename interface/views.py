@@ -203,8 +203,6 @@ def _build_recap_email_body(*, provider: Provider, recap_url: str, payload: dict
         f"- Date souhaitée : {payload.get('desired_date', '')}",
         f"- Lieu : {'Chez la prestataire' if payload.get('location_preference') == 'salon' else 'À domicile'}",
     ]
-    if payload.get("location_preference") == "domicile":
-        lines.append(f"- Adresse : {payload.get('client_address', '')}")
     lines.extend(
         [
             "",
@@ -228,11 +226,11 @@ def _build_provider_booking_recap_payload(*, provider: Provider, form: ProviderB
         desired_date_iso=form.cleaned_data.get("desired_date"),
         location_preference=form.cleaned_data.get("location_preference"),
         location=form.cleaned_data.get("location"),
-        client_address=form.cleaned_data.get("client_address"),
+        client_address="",
         hair_length=form.cleaned_data.get("hair_length"),
         general_adjustments=form.cleaned_data.get("general_adjustments", []),
         meche=form.cleaned_data.get("meche", False),
-        free_text=form.cleaned_data.get("free_text", ""),
+        free_text="",
         service_fee_coupon_code=form.cleaned_data.get("service_fee_coupon_code", ""),
         current_hair_picture="",
         inspiration_pictures=[],
@@ -292,11 +290,11 @@ def _save_partial_provider_booking_recap_prefill(*, provider: Provider, form: Pr
             "desired_date": (form.cleaned_data.get("desired_date") or payload.get("desired_date") or "").strip(),
             "location_preference": (form.cleaned_data.get("location_preference") or payload.get("location_preference") or "").strip(),
             "location": (form.cleaned_data.get("location") or payload.get("location") or "").strip(),
-            "client_address": (form.cleaned_data.get("client_address") or payload.get("client_address") or "").strip(),
+            "client_address": "",
             "hair_length": (form.cleaned_data.get("hair_length") or payload.get("hair_length") or "").strip(),
             "general_adjustments": form.cleaned_data.get("general_adjustments") or [],
             "meche": bool(form.cleaned_data.get("meche")),
-            "free_text": (form.cleaned_data.get("free_text") or payload.get("free_text") or "").strip(),
+            "free_text": "",
             "service_fee_coupon_code": (
                 form.cleaned_data.get("service_fee_coupon_code")
                 or payload.get("service_fee_coupon_code")
@@ -350,7 +348,6 @@ def _complete_quick_checkout(checkout: QuickCheckoutPage, payment_auth_id: str):
         general_adjustments=[],
         meche=False,
         current_hair_picture="",
-        require_current_hair_picture=False,
         skip_coverage_validation=True,
         inspiration_pictures=[],
         free_text=checkout.free_text,
@@ -613,10 +610,8 @@ def provider_detail(request, provider_id, quick_checkout=None):
         )
         form = ProviderBookingRequestForm(
             request.POST,
-            request.FILES,
             provider=provider,
             require_payment_auth=False,
-            require_current_hair_picture=False,
             partial_prefill_mode=partial_prefill_mode,
         )
         if form.is_valid():
@@ -919,9 +914,8 @@ def provider_booking_recap(request, token):
                     general_adjustments=payload.get("general_adjustments") or [],
                     meche=bool(payload.get("meche")),
                     current_hair_picture="",
-                    require_current_hair_picture=False,
                     inspiration_pictures=[],
-                    free_text=payload.get("free_text") or "",
+                    free_text="",
                     service_fee_coupon_code=coupon_code,
                     waive_service_fee=service_fee_waived,
                     payment_auth_id=payment_auth_id or None,

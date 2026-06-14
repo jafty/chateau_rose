@@ -103,9 +103,6 @@
                                         À domicile
                                     {% endif %}
                                 </span>
-                                {% if payload.location_preference != "salon" %}
-                                    <span class="detail">{{ payload.client_address|default:"Adresse non renseignée" }}</span>
-                                {% endif %}
                             </div>
                         </div>
                         <div class="summary-item">
@@ -116,15 +113,6 @@
                                 <span class="detail">{{ payload.client_email|default:"Email non renseigné" }}</span>
                             </div>
                         </div>
-                        {% if payload.free_text %}
-                            <div class="summary-item">
-                                <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                <div class="summary-item-content">
-                                    <strong>Précisions</strong>
-                                    <span class="detail recap-free-text">{{ payload.free_text }}</span>
-                                </div>
-                            </div>
-                        {% endif %}
                         {% if service_fee_coupon_code %}
                             <div class="summary-item">
                                 <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41 11 3.83a2 2 0 0 0-1.41-.58H4a2 2 0 0 0-2 2v5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l5.6-5.6a2 2 0 0 0 0-2.83Z"></path><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"></circle></svg>

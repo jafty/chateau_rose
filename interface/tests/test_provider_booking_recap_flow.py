@@ -51,9 +51,7 @@ class ProviderBookingRecapFlowTests(TestCase):
     def test_create_recap_sends_email_and_redirects_to_recap_page(self):
         response = self.client.post(
             reverse("interface:provider_detail", args=[self.provider.id]),
-            data={
-                **self._base_payload(),
-            },
+            data=self._base_payload(),
         )
 
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
@@ -85,9 +83,7 @@ class ProviderBookingRecapFlowTests(TestCase):
     def test_recap_page_can_prefill_provider_form_and_complete_booking(self):
         create_response = self.client.post(
             reverse("interface:provider_detail", args=[self.provider.id]),
-            data={
-                **self._base_payload(),
-            },
+            data=self._base_payload(),
         )
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
         self.assertEqual(create_response.status_code, 302)
@@ -129,9 +125,7 @@ class ProviderBookingRecapFlowTests(TestCase):
     def test_recap_edit_redirects_to_booking_section(self):
         self.client.post(
             reverse("interface:provider_detail", args=[self.provider.id]),
-            data={
-                **self._base_payload(),
-            },
+            data=self._base_payload(),
         )
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
 
@@ -149,9 +143,7 @@ class ProviderBookingRecapFlowTests(TestCase):
     def test_recap_includes_service_fee_in_totals_without_coupon(self):
         self.client.post(
             reverse("interface:provider_detail", args=[self.provider.id]),
-            data={
-                **self._base_payload(),
-            },
+            data=self._base_payload(),
         )
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
 
@@ -236,7 +228,6 @@ class ProviderBookingRecapFlowTests(TestCase):
                 "hair_length": "long",
                 "general_adjustments": "[]",
                 "meche": "",
-                "free_text": "Infos admin draft",
                 "recap_token": str(seeded.token),
             },
         )
@@ -251,7 +242,7 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertEqual(seeded.source, ProviderBookingDraft.SOURCE_ADMIN)
         self.assertEqual(seeded.client_name, "Nouveau client")
         self.assertEqual(seeded.client_email, "nouveau@example.com")
-        self.assertEqual(seeded.payload["free_text"], "Infos admin draft")
+        self.assertEqual(seeded.payload["free_text"], "")
 
     def test_admin_can_save_partial_prefill_without_client_identity_or_pictures(self):
         admin_user = get_user_model().objects.create_user(
@@ -300,7 +291,6 @@ class ProviderBookingRecapFlowTests(TestCase):
                 "hair_length": "long",
                 "general_adjustments": "[]",
                 "meche": "",
-                "free_text": "Lead WhatsApp: disponible vendredi",
                 "recap_token": str(seeded.token),
                 "action": "save_prefill",
             },
@@ -314,5 +304,5 @@ class ProviderBookingRecapFlowTests(TestCase):
         seeded.refresh_from_db()
         self.assertEqual(seeded.client_name, "")
         self.assertEqual(seeded.client_email, "")
-        self.assertEqual(seeded.payload["free_text"], "Lead WhatsApp: disponible vendredi")
+        self.assertEqual(seeded.payload["free_text"], "")
         self.assertEqual(seeded.payload["hair_length"], "long")

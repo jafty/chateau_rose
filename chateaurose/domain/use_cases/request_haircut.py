@@ -16,11 +16,10 @@ def execute(
     hair_length: str,
     general_adjustments: list[str] | None = None,
     meche: bool,
-    current_hair_picture: str,
-    require_current_hair_picture: bool = True,
+    current_hair_picture: str = "",
     skip_coverage_validation: bool = False,
-    inspiration_pictures: list,
-    free_text: str,
+    inspiration_pictures: list | None = None,
+    free_text: str = "",
     service_fee_coupon_code: str | None = None,
     waive_service_fee: bool = False,
     payment_auth_id: str | None = None,
@@ -47,10 +46,6 @@ def execute(
     if location_preference != "salon":
         if not location:
             raise ValidationError("Missing required field: location")
-        if not client_address:
-            raise ValidationError("Missing required field: client_address")
-    if require_current_hair_picture and not current_hair_picture:
-        raise ValidationError("Missing required field: current_hair_picture")
 
     return create_booking_request.execute(
         provider_id=provider_id,
@@ -65,7 +60,7 @@ def execute(
         requested_options=general_adjustments,
         meche=meche,
         current_hair_picture=current_hair_picture,
-        inspiration_pictures=inspiration_pictures,
+        inspiration_pictures=inspiration_pictures or [],
         free_text=free_text,
         service_fee_coupon_code=service_fee_coupon_code,
         waive_service_fee=waive_service_fee,

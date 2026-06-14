@@ -71,3 +71,18 @@ class ProviderBookingRequestFormTests(TestCase):
 
         self.assertFalse(form.is_valid())
         self.assertIn("Merci de choisir un lieu.", form.non_field_errors())
+
+    def test_salon_request_no_longer_requires_hair_picture(self):
+        form = ProviderBookingRequestForm(
+            data={
+                "service_id": 1,
+                "client_name": "Alice",
+                "client_email": "test@example.com",
+                "location_preference": "salon",
+                "desired_date": "2026-01-01T12:00",
+                "payment_auth_id": "pi_123",
+            },
+            provider=self.provider,
+        )
+
+        self.assertTrue(form.is_valid())

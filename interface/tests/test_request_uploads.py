@@ -53,34 +53,6 @@ class ProviderRequestUploadTests(TestCase):
             meche_bonus_cents=500,
         )
 
-    def test_provider_request_creates_recap_without_picture_fields(self):
-        url = reverse("interface:provider_detail", args=[self.provider.id])
-
-        response = self.client.post(
-            url,
-            data={
-                "service_id": self.service.id,
-                "client_name": "Alice",
-                "client_email": "test@example.com",
-                "location": self.zone.name,
-                "client_address": "5 place du Capitole, 31000 Toulouse",
-                "desired_date": "2026-01-01",
-                "hair_length": "medium",
-                "meche": "on",
-                "free_text": "Merci",
-                "location_preference": "domicile",
-                "payment_auth_id": "pi_test_auth",
-            },
-        )
-
-        self.assertEqual(response.status_code, 302)
-        draft = ProviderBookingDraft.objects.get()
-        self.assertEqual(response.url, reverse("interface:provider_booking_recap", args=[draft.token]))
-        self.assertEqual(draft.payload["current_hair_picture"], "")
-        self.assertEqual(draft.payload["inspiration_pictures"], [])
-        self.assertTrue(draft.payload["meche"])
-        self.assertEqual(draft.payload["hair_length"], "medium")
-
     def test_hybrid_provider_allows_salon_choice_without_zone(self):
         url = reverse("interface:provider_detail", args=[self.provider.id])
         response = self.client.post(
@@ -111,8 +83,7 @@ class ProviderRequestUploadTests(TestCase):
                 "client_name": "Alice",
                 "client_email": "test@example.com",
                 "location": self.zone.name,
-                "client_address": "",
-                "desired_date": "2026-01-01",
+                "desired_date": "not-a-date",
                 "hair_length": "medium",
                 "location_preference": "domicile",
                 "payment_auth_id": "pi_auth_saved",

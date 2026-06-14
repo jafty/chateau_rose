@@ -34,7 +34,7 @@ def test_prepare_booking_recap_normalizes_payload():
     assert recap["meche"] is True
 
 
-def test_prepare_booking_recap_allows_missing_current_hair_picture():
+def test_prepare_booking_recap_allows_domicile_without_exact_address_or_pictures():
     recap = prepare_booking_recap.execute(
         provider_id=12,
         service_id=44,
@@ -42,43 +42,17 @@ def test_prepare_booking_recap_allows_missing_current_hair_picture():
         client_name="Sarah",
         client_email="sarah@example.com",
         desired_date_iso="2026-04-01T10:30:00+00:00",
-        location_preference="salon",
-        location="Toulouse Centre",
+        location_preference="domicile",
+        location="Toulouse",
         client_address="",
         hair_length="long",
         general_adjustments=[],
         meche=False,
-        free_text="",
-        service_fee_coupon_code="",
-        current_hair_picture="",
-        inspiration_pictures=[],
     )
 
+    assert recap["client_address"] == ""
     assert recap["current_hair_picture"] == ""
-
-
-def test_prepare_booking_recap_requires_address_for_domicile():
-    with pytest.raises(ValidationError) as exc:
-        prepare_booking_recap.execute(
-            provider_id=12,
-            service_id=44,
-            service_name="Knotless braids",
-            client_name="Sarah",
-            client_email="sarah@example.com",
-            desired_date_iso="2026-04-01T10:30:00+00:00",
-            location_preference="domicile",
-            location="Toulouse",
-            client_address="",
-            hair_length="long",
-            general_adjustments=[],
-            meche=False,
-            free_text="",
-            service_fee_coupon_code="",
-            current_hair_picture="bookings/current/photo.jpg",
-            inspiration_pictures=[],
-        )
-
-    assert str(exc.value) == "Missing required field: client_address"
+    assert recap["inspiration_pictures"] == []
 
 
 def test_prepare_booking_recap_rejects_invalid_location_preference():

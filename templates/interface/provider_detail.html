@@ -448,7 +448,6 @@
         border: 1px solid #ddd5d0;
         background: rgba(255,255,255,0.98);
     }
-    .file-upload-wrapper { border-radius: 14px; }
     .choice-pill { border-radius: 14px; }
     .secure-badge { border-radius: 16px; }
     @media (max-width: 1200px) {
@@ -868,23 +867,6 @@
 <script src="https://js.stripe.com/v3"></script>
 <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 <script>
-    const updateFileLabel = (input, labelId = null) => {
-        const displayId = labelId || 'file-label-current';
-        const displayEl = document.getElementById(displayId);
-        if (!displayEl) return;
-        if (input.files && input.files.length > 0) {
-            const count = input.files.length;
-            displayEl.textContent = count === 1 ? input.files[0].name : `${count} fichiers sélectionnés`;
-            displayEl.style.color = 'var(--ink-primary)';
-            displayEl.style.fontWeight = 'bold';
-            if (!labelId && currentPictureExistingLabel) {
-                currentPictureExistingLabel.hidden = true;
-            }
-        } else {
-            displayEl.textContent = 'Aucun fichier sélectionné';
-        }
-    };
-
     document.addEventListener('DOMContentLoaded', () => {
         const pricingData = JSON.parse('{{ pricing_data|default:"{}"|escapejs }}');
         const recapPrefill = JSON.parse('{{ recap_prefill|default:"{}"|escapejs }}');
@@ -931,7 +913,6 @@
         const locationSelectWrapper = document.querySelector('[data-location-select]');
         const salonZone = document.querySelector('[data-salon-zone]');
         const salonOption = document.querySelector('[data-salon-option]');
-        const clientAddressField = document.querySelector('[data-client-address]');
         const locationPreferenceRadios = document.querySelectorAll('input[name="location_preference"]');
         const locationPreferenceInput = document.querySelector('input[name="location_preference"]');
         const locationChoiceLabels = document.querySelectorAll('[data-location-choice]');
@@ -992,9 +973,7 @@
             setValue('client_name', recapPrefill.client_name || '');
             setValue('client_email', recapPrefill.client_email || '');
             setValue('desired_date', (recapPrefill.desired_date || '').slice(0, 16));
-            setValue('free_text', recapPrefill.free_text || '');
             setValue('service_fee_coupon_code', recapPrefill.service_fee_coupon_code || '');
-            setValue('client_address', recapPrefill.client_address || '');
             if (serviceSelect && recapPrefill.service_id) {
                 const recapServiceId = String(recapPrefill.service_id);
                 const hasServiceOption = Array.from(serviceSelect.options).some((opt) => opt.value === recapServiceId);
@@ -1051,18 +1030,6 @@
             if (salonZone) {
                 salonZone.hidden = !isSalonChoice;
             }
-            if (clientAddressField) {
-                clientAddressField.hidden = isSalonChoice;
-                const input = clientAddressField.querySelector('input');
-                if (input) {
-                    input.required = !isSalonChoice;
-                    input.disabled = isSalonChoice;
-                    if (isSalonChoice) {
-                        input.value = '';
-                    }
-                }
-            }
-
             if (isSalonChoice && salonOption) {
                 salonOption.disabled = false;
                 salonOption.hidden = false;
