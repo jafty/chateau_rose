@@ -15,10 +15,10 @@
         <div class="breadcrumbs"><a href="{% url 'interface:home' %}">Accueil</a> &nbsp;/&nbsp; <a href="{% url 'interface:home' %}#catalogue">Services</a> &nbsp;/&nbsp; {{ page_service_name|default:service.name }}</div>
         <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
-        <a class="btn secondary" href="mailto:japhet.situmonana@gmail.com" style="display:inline-flex;align-items:center;gap:0.45rem;margin-top:0.8rem;">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m3 7 9 6 9-6"></path></svg>
-            Une question ? Écris-nous
-        </a>
+        <div class="service-header-actions" style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:0.8rem;">
+            <a class="btn primary" href="#service-request">Réserver rapidement</a>
+            <a class="btn secondary" href="#provider-comparison">Choisir ma coiffeuse</a>
+        </div>
     </div>
 </section>
 
@@ -43,8 +43,44 @@
         </div>
         {% endif %}
 
+
+        {% if request_form %}
+        <div id="service-request" class="provider-form-card inline-form-card" style="margin-bottom:1.25rem;">
+            <h2 class="wizard-heading">Réserver rapidement</h2>
+            <p class="meta-line">Réponds à quelques questions : Château Rose cherchera ensuite une prestataire compatible. La prestation coiffure sera réglée directement à la prestataire le jour du rendez-vous.</p>
+            <div class="step-progress" aria-label="Étapes de demande rapide">
+                <div class="step-indicator active" data-generic-step-indicator="1">1</div>
+                <div class="step-indicator" data-generic-step-indicator="2">2</div>
+            </div>
+            {% if request_success %}<div class="alert success">Ta demande est bien enregistrée. Château Rose revient vers toi rapidement.</div>{% endif %}
+            {% if request_form.non_field_errors %}<div class="alert error">{{ request_form.non_field_errors|join:", " }}</div>{% endif %}
+            <form method="post" class="provider-form-grid" data-generic-booking-form>
+                {% csrf_token %}
+                <input type="hidden" name="request_service" value="1">
+                <section data-generic-step="1">
+                    <h3 class="section-title provider-section-title">Tes disponibilités</h3>
+                    <label>Date ou disponibilités {{ request_form.desired_date }}</label>
+                    <label>Préférence de lieu {{ request_form.location_preference }}</label>
+                    <label>Longueur de cheveux {{ request_form.hair_length }}</label>
+                    <label>Options utiles {{ request_form.requested_options }}</label>
+                    <div class="form-actions"><button class="btn primary" type="button" data-generic-next>Continuer</button></div>
+                </section>
+                <section data-generic-step="2" hidden>
+                    <h3 class="section-title provider-section-title">Tes coordonnées</h3>
+                    <label>Nom complet {{ request_form.client_name }}</label>
+                    <label>Email {{ request_form.client_email }}</label>
+                    <label>Téléphone {{ request_form.client_phone }}</label>
+                    <label>Code promo {{ request_form.service_fee_coupon_code }}</label>
+                    <div class="form-actions" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                        <button class="btn secondary" type="button" data-generic-prev>Retour</button>
+                        <button class="btn primary" type="submit">Confirmer ma demande</button>
+                    </div>
+                </section>
+            </form>
+        </div>
+        {% endif %}
         {% if providers %}
-        <div class="providers-grid">
+        <div id="provider-comparison" class="providers-grid">
             {% for provider in providers %}
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
                 <div class="provider-header">
@@ -156,6 +192,21 @@
 
 {% block extra_js %}
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const genericForm = document.querySelector('[data-generic-booking-form]');
+    if (genericForm) {
+        const steps = genericForm.querySelectorAll('[data-generic-step]');
+        const indicators = document.querySelectorAll('[data-generic-step-indicator]');
+        const showStep = (step) => {
+            steps.forEach((item) => { item.hidden = item.dataset.genericStep !== String(step); });
+            indicators.forEach((item) => { item.classList.toggle('active', item.dataset.genericStepIndicator === String(step)); });
+        };
+        genericForm.querySelector('[data-generic-next]')?.addEventListener('click', () => showStep(2));
+        genericForm.querySelector('[data-generic-prev]')?.addEventListener('click', () => showStep(1));
+        showStep(1);
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     const toggle = document.querySelector('[data-zone-accordion-trigger]');
     const content = document.querySelector('[data-zone-accordion-content]');
