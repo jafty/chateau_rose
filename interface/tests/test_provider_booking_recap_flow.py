@@ -1,5 +1,4 @@
 from django.core import mail
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -54,7 +53,6 @@ class ProviderBookingRecapFlowTests(TestCase):
             reverse("interface:provider_detail", args=[self.provider.id]),
             data={
                 **self._base_payload(),
-                "current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair"),
             },
         )
 
@@ -69,12 +67,26 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(str(draft.token), mail.outbox[0].body)
 
+
+    def test_create_recap_without_current_hair_picture(self):
+        response = self.client.post(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            data=self._base_payload(),
+        )
+
+        draft = ProviderBookingDraft.objects.get(provider=self.provider)
+        self.assertRedirects(
+            response,
+            reverse("interface:provider_booking_recap", args=[draft.token]),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(draft.payload["current_hair_picture"], "")
+
     def test_recap_page_can_prefill_provider_form_and_complete_booking(self):
         create_response = self.client.post(
             reverse("interface:provider_detail", args=[self.provider.id]),
             data={
                 **self._base_payload(),
-                "current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair"),
             },
         )
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
@@ -119,7 +131,6 @@ class ProviderBookingRecapFlowTests(TestCase):
             reverse("interface:provider_detail", args=[self.provider.id]),
             data={
                 **self._base_payload(),
-                "current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair"),
             },
         )
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
@@ -140,7 +151,6 @@ class ProviderBookingRecapFlowTests(TestCase):
             reverse("interface:provider_detail", args=[self.provider.id]),
             data={
                 **self._base_payload(),
-                "current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair"),
             },
         )
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
@@ -160,7 +170,6 @@ class ProviderBookingRecapFlowTests(TestCase):
             reverse("interface:provider_detail", args=[self.provider.id]),
             data={
                 **payload,
-                "current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair"),
             },
         )
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
@@ -198,8 +207,6 @@ class ProviderBookingRecapFlowTests(TestCase):
                 "general_adjustments": [],
                 "meche": False,
                 "free_text": "",
-                "current_hair_picture": "",
-                "inspiration_pictures": [],
             },
         )
         self.client.force_login(admin_user)
@@ -230,7 +237,6 @@ class ProviderBookingRecapFlowTests(TestCase):
                 "general_adjustments": "[]",
                 "meche": "",
                 "free_text": "Infos admin draft",
-                "current_hair_picture_file": SimpleUploadedFile("current.jpg", b"hair"),
                 "recap_token": str(seeded.token),
             },
         )
@@ -273,8 +279,6 @@ class ProviderBookingRecapFlowTests(TestCase):
                 "general_adjustments": [],
                 "meche": False,
                 "free_text": "",
-                "current_hair_picture": "",
-                "inspiration_pictures": [],
             },
         )
         anonymous_prefill_page = self.client.get(
