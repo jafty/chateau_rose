@@ -527,7 +527,7 @@ class Booking(models.Model):
     general_adjustments = models.JSONField(default=list, blank=True)
     meche = models.BooleanField()
     current_hair_picture = models.CharField(max_length=255, blank=True)
-    inspiration_pictures = models.JSONField(default=list)
+    inspiration_pictures = models.JSONField(default=list, blank=True)
     free_text = models.TextField(blank=True)
     estimated_price_cents = models.IntegerField()
     provider_price_estimate_cents = models.IntegerField(null=True, blank=True)

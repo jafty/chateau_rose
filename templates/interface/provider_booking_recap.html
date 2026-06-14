@@ -43,7 +43,7 @@
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                             </div>
                             <div class="timeline-content">
-                                <h3>2. Validation par {{ provider.name }}</h3>
+                                <h3>2. Validation par {{ provider_name_display }}</h3>
                                 <p>La prestataire a 48h pour accepter, refuser ou proposer un ajustement.</p>
                             </div>
                         </div>
@@ -53,7 +53,7 @@
                             </div>
                             <div class="timeline-content">
                                 <h3>3. Le jour de la coiffure</h3>
-                                <p>Tu règles la prestation coiffure directement auprès de {{ provider.name }}.</p>
+                                <p>Tu règles la prestation coiffure directement auprès de {{ provider_name_display }}.</p>
                             </div>
                         </div>
                     </div>
@@ -69,7 +69,7 @@
                             <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                             <div class="summary-item-content">
                                 <strong>Prestataire</strong>
-                                <span>{{ provider.name }}</span>
+                                <span>{{ provider_name_display }}</span>
                             </div>
                         </div>
                         <div class="summary-item">
@@ -125,11 +125,13 @@
                     </div>
 
                     <div class="recap-actions">
+                        {% if edit_url %}
                         <form method="post" action="">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="edit">
                             <button type="submit" class="btn secondary recap-edit-btn">Modifier ma demande</button>
                         </form>
+                        {% endif %}
                     </div>
                 </article>
             </div>
@@ -164,7 +166,7 @@
                         <span>{% if amount_due_now_cents == 0 %}Aucun paiement en ligne requis{% else %}Frais Château Rose à régler{% endif %}</span>
                         <div class="amount">{{ deposit_price }}</div>
                         <p>Ces frais couvrent la mise en relation Château Rose uniquement.</p>
-                        <p>La prestation coiffure est réglée directement à {{ provider.name }} le jour du rendez-vous.</p>
+                        <p>La prestation coiffure est réglée directement à {{ provider_name_display }} le jour du rendez-vous.</p>
                     </div>
 
                     <div class="receipt-line receipt-line--strong">
@@ -204,7 +206,7 @@
                     </div>
                 </article>
 
-                <p class="meta-line recap-link-note">Tu as aussi reçu ce lien par email, tu peux y revenir quand tu veux.</p>
+                {% if not is_generic_booking %}<p class="meta-line recap-link-note">Tu as aussi reçu ce lien par email, tu peux y revenir quand tu veux.</p>{% endif %}
             </aside>
         </div>
     </div>
@@ -229,13 +231,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const payload = {
+        {% if is_generic_booking %}
+        generic_sub_service_id: '{{ generic_sub_service_id }}',
+        {% else %}
         provider_id: '{{ provider_id }}',
         service_id: '{{ service_id }}',
+        {% endif %}
         desired_date: '{{ payload.desired_date|escapejs }}',
         hair_length: '{{ payload.hair_length|default:""|escapejs }}',
         location_preference: '{{ payload.location_preference|default:"salon"|escapejs }}',
         meche: {{ payload.meche|yesno:"true,false" }},
-        general_adjustments: {{ payload.general_adjustments|default:"[]"|safe }},
+        general_adjustments: {{ payload_options_json|default:"[]"|safe }},
         service_fee_coupon_code: '{{ payload.service_fee_coupon_code|default:""|escapejs }}',
     };
 

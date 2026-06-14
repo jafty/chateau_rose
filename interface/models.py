@@ -91,6 +91,14 @@ class MarketingSubService(models.Model):
         related_name="marketing_sub_services",
         blank=True,
     )
+    generic_booking_enabled = models.BooleanField(default=False)
+    generic_base_price_cents = models.IntegerField(default=0)
+    generic_hair_length_adjustments = models.JSONField(default=dict, blank=True)
+    generic_general_adjustments = models.JSONField(default=dict, blank=True)
+    generic_meche_bonus_cents = models.IntegerField(default=0)
+    generic_at_home_bonus_cents = models.IntegerField(default=0)
+    generic_service_fee_percentage = models.PositiveSmallIntegerField(default=15)
+    generic_price_label = models.CharField(max_length=64, blank=True)
     is_visible = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0)
 
@@ -111,6 +119,14 @@ class MarketingSubService(models.Model):
         if self.image:
             return self.image.url
         return self.image_url or self.service.resolved_main_image
+
+    @property
+    def price_display(self):
+        if self.generic_price_label:
+            return self.generic_price_label
+        if not self.generic_base_price_cents:
+            return ""
+        return f"{self.generic_base_price_cents / 100:.0f}€"
 
     def save(self, *args, **kwargs):
         if _should_compress_image(self, "image"):
