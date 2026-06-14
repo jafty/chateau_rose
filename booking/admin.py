@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.shortcuts import redirect, render
@@ -566,6 +567,7 @@ class BookingAdmin(admin.ModelAdmin):
                 provider_catalog=DjangoProviderCatalog(),
                 notifier=EmailNotifier(),
                 clock=type("Clock", (), {"now": timezone.now}),
+                operations_email=getattr(settings, "OPERATIONS_EMAIL", "") or getattr(settings, "DEFAULT_FROM_EMAIL", ""),
                 enforce_service_intent_match=not form.cleaned_data["compatibility_override"],
             )
         except DomainError as exc:

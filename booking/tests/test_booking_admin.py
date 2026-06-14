@@ -170,7 +170,7 @@ class BookingAdminAssignmentWorkflowTests(TestCase):
         self.assertEqual(self.booking.amount_due_now_cents, 900)
         self.assertEqual(self.booking.chateau_rose_fee_cents, 900)
         self.assertEqual(self.booking.payment_status, Booking.PAYMENT_STATUS_AUTHORIZED)
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertGreaterEqual(len(mail.outbox), 2)
         self.assertIn("Nouvelle demande attribuée", {message.subject for message in mail.outbox})
         self.assertIn("Ta demande a été transmise à une prestataire", {message.subject for message in mail.outbox})
 
@@ -193,3 +193,19 @@ class BookingAdminAssignmentWorkflowTests(TestCase):
         self.booking.save()
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.current_hair_picture, "")
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend", BREVO_API_KEY="", OPERATIONS_EMAIL="ops@example.com")
+    def test_admin_assignment_allows_provider_level_subservice_match_and_sends_operator_copy(self):
+        self.service.marketing_sub_services.clear()
+        self.provider.marketing_sub_services.add(self.sub_service)
+        request = self._post({"provider": self.provider.id, "service": self.service.id})
+
+        self.model_admin.assign_provider_view(request, str(self.booking.pk))
+
+        self.booking.refresh_from_db()
+        self.assertEqual(self.booking.status, Booking.STATUS_SUBMITTED)
+        self.assertEqual(self.booking.provider, self.provider)
+        subjects = {message.subject for message in mail.outbox}
+        self.assertIn("Nouvelle demande attribuée", subjects)
+        self.assertIn("Ta demande a été transmise à une prestataire", subjects)
+        self.assertIn("Copie attribution demande", subjects)

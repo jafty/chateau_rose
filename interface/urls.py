@@ -24,6 +24,11 @@ urlpatterns = [
         views.provider_booking_recap,
         name="provider_booking_recap",
     ),
+    path(
+        "recapitulatif-generique/<uuid:token>/",
+        views.generic_booking_recap,
+        name="generic_booking_recap",
+    ),
     path("checkout-rapide/<int:checkout_id>/", views.quick_checkout_page, name="quick_checkout_page"),
     path(
         "checkout-rapide/confirmation/<str:booking_id>/",

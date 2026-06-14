@@ -433,7 +433,8 @@ def home(request):
 
     request_form, request_success = _build_service_request_form(request, service_meta=None, zone=None)
     if request_form == "redirect":
-        return redirect("interface:thank_you_quick_request")
+        redirect_url = request.session.pop("generic_booking_recap_redirect_url", None)
+        return redirect(redirect_url or reverse("interface:thank_you_quick_request"))
     if request_form is None:
         return redirect(f"{request.path}?anchor=service-request")
     homepage_reviews = _get_homepage_reviews()
@@ -1071,6 +1072,112 @@ def quick_checkout_confirmation(request, booking_id):
     )
 
 
+def generic_booking_recap(request, token):
+    payload = _get_generic_booking_recap_payload(request, str(token))
+    if not payload:
+        raise Http404("Récapitulatif introuvable.")
+
+    sub_service = get_object_or_404(
+        MarketingSubService.objects.select_related("service"),
+        id=payload.get("requested_marketing_sub_service_id"),
+        generic_booking_enabled=True,
+    )
+    coupon_code = (payload.get("service_fee_coupon_code") or "").strip().upper()
+    service_fee_waived = coupon_code in {"VIPZERO", "ROSEZERO", "GRATUIT"}
+    try:
+        amounts = _estimate_generic_sub_service_booking(
+            sub_service,
+            payload,
+            waive_service_fee=service_fee_waived,
+        )
+    except ValidationError as exc:
+        raise Http404(str(exc))
+
+    desired_date_display = payload.get("desired_date") or "Non renseignée"
+    try:
+        desired_date_display = timezone.localtime(datetime.fromisoformat(str(payload.get("desired_date")))).strftime("%d/%m/%Y à %H:%M")
+    except (TypeError, ValueError):
+        pass
+
+    stripe_public_key = settings.STRIPE_PUBLIC_KEY
+    require_payment_auth = bool(stripe_public_key) and amounts["amount_due_now_cents"] > 0
+    error = None
+
+    if request.method == "POST":
+        payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
+        if require_payment_auth and not payment_auth_id:
+            error = "Ajoute ton paiement Château Rose pour confirmer la demande."
+        elif require_payment_auth and not _payment_auth_is_confirmed(payment_auth_id):
+            error = "Le paiement Château Rose n'est pas confirmé. Merci de réessayer le paiement."
+        else:
+            try:
+                booking = create_booking_request.execute(
+                    client_contact={
+                        "name": payload.get("client_name") or "",
+                        "email": payload.get("client_email") or "",
+                        "phone": payload.get("client_phone") or "",
+                    },
+                    requested_marketing_service_id=payload.get("requested_marketing_service_id"),
+                    requested_marketing_sub_service_id=payload.get("requested_marketing_sub_service_id"),
+                    requested_service_label_snapshot=payload.get("requested_service_label_snapshot") or _generic_booking_label(sub_service.service, sub_service),
+                    requested_options=amounts["requested_options"],
+                    generic_provider_price_estimate_cents=amounts["provider_price_cents"],
+                    chateau_rose_fee_cents=amounts["amount_due_now_cents"],
+                    waive_service_fee=service_fee_waived,
+                    location=payload.get("location") or "À préciser",
+                    location_preference=payload.get("location_preference") or "salon",
+                    desired_date=payload.get("desired_date") or "",
+                    hair_length=amounts["hair_length"],
+                    current_hair_picture="",
+                    inspiration_pictures=[],
+                    free_text="",
+                    payment_auth_id=payment_auth_id or None,
+                    operations_email=SUPPORT_EMAIL,
+                    booking_repository=repo,
+                    provider_catalog=provider_catalog,
+                    payment_gateway=payment_gateway,
+                    notifier=notifier,
+                    clock=type("Clock", (), {"now": timezone.now}),
+                )
+            except DomainError as exc:
+                _release_payment_auth_safely(payment_auth_id)
+                error = _friendly_domain_error_message(exc)
+            else:
+                _create_interaction(
+                    kind=Interaction.KIND_QUICK_REQUEST,
+                    source_label="Demande générique",
+                    contact_name=payload.get("client_name") or "",
+                    contact_email=payload.get("client_email") or "",
+                    contact_phone=payload.get("client_phone") or "",
+                    subject=f"Demande générique {booking.id}",
+                    next_action="Assigner une prestataire manuellement",
+                    metadata={"booking_id": booking.id, "service": payload.get("requested_service_label_snapshot")},
+                )
+                _delete_generic_booking_recap(request, str(token))
+                request.session["service_request_success"] = True
+                return redirect("interface:thank_you_quick_request")
+
+    return render(
+        request,
+        "interface/generic_booking_recap.html",
+        {
+            "payload": payload,
+            "payload_options_json": json.dumps(payload.get("requested_options") or []),
+            "service_label": payload.get("requested_service_label_snapshot") or _generic_booking_label(sub_service.service, sub_service),
+            "desired_date_display": desired_date_display,
+            "total_price": booking_requests.format_price(amounts["subtotal_cents"] + amounts["service_fee_cents"]),
+            "subtotal_price": booking_requests.format_price(amounts["subtotal_cents"]),
+            "service_fee_price": booking_requests.format_price(amounts["service_fee_cents"]),
+            "amount_due_now_cents": amounts["amount_due_now_cents"],
+            "stripe_public_key": stripe_public_key,
+            "require_payment_auth": require_payment_auth,
+            "payment_intent_url": reverse("interface:provider_payment_intent"),
+            "generic_sub_service_id": sub_service.id,
+            "error": error,
+        },
+    )
+
+
 def provider_payment_intent(request):
     if request.method != "POST":
         return HttpResponseBadRequest("Méthode non autorisée")
@@ -1092,10 +1199,33 @@ def provider_payment_intent(request):
     desired_date = payload.get("desired_date")
     service_fee_coupon_code = (payload.get("service_fee_coupon_code") or "").strip().upper()
     quick_checkout_id = payload.get("quick_checkout_id")
+    generic_sub_service_id = payload.get("generic_sub_service_id")
     validate_only = bool(payload.get("validate_only"))
 
     quick_checkout = None
-    if quick_checkout_id:
+    if generic_sub_service_id:
+        sub_service = MarketingSubService.objects.filter(id=generic_sub_service_id, generic_booking_enabled=True).first()
+        if sub_service is None:
+            return JsonResponse({"error": "Sous-service indisponible."}, status=400)
+        try:
+            generic_amounts = _estimate_generic_sub_service_booking(
+                sub_service,
+                {
+                    "hair_length": hair_length or "",
+                    "requested_options": general_adjustments,
+                    "location_preference": location_preference or "salon",
+                },
+                waive_service_fee=service_fee_coupon_code in {"VIPZERO", "ROSEZERO", "GRATUIT"},
+            )
+        except ValidationError as exc:
+            message = str(exc)
+            if "hair_length" in message:
+                return JsonResponse({"error": "Longueur de cheveux non supportée."}, status=400)
+            if "General adjustment" in message:
+                return JsonResponse({"error": "Un ou plusieurs suppléments ne sont pas supportés."}, status=400)
+            return JsonResponse({"error": "Informations manquantes."}, status=400)
+        amount_cents = generic_amounts["amount_due_now_cents"]
+    elif quick_checkout_id:
         quick_checkout = QuickCheckoutPage.objects.filter(
             id=quick_checkout_id,
             is_active=True,
@@ -1505,6 +1635,53 @@ def _generic_sub_service_pricing_data(sub_service: MarketingSubService | None) -
     }
 
 
+def _store_generic_booking_recap(request, payload: dict) -> str:
+    token = str(uuid.uuid4())
+    recaps = request.session.get("generic_booking_recaps") or {}
+    recaps[token] = payload
+    request.session["generic_booking_recaps"] = recaps
+    request.session.modified = True
+    return token
+
+
+def _get_generic_booking_recap_payload(request, token: str) -> dict:
+    return (request.session.get("generic_booking_recaps") or {}).get(str(token)) or {}
+
+
+def _delete_generic_booking_recap(request, token: str) -> None:
+    recaps = request.session.get("generic_booking_recaps") or {}
+    if str(token) in recaps:
+        recaps.pop(str(token), None)
+        request.session["generic_booking_recaps"] = recaps
+        request.session.modified = True
+
+
+def _estimate_generic_sub_service_booking(sub_service: MarketingSubService, payload: dict, *, waive_service_fee: bool = False) -> dict:
+    provider_estimate_cents, hair_length, normalized_adjustments = estimate_service_price_cents(
+        service={
+            "base_price_cents": sub_service.generic_base_price_cents,
+            "hair_length_adjustments": sub_service.generic_hair_length_adjustments,
+            "general_adjustments": sub_service.generic_general_adjustments,
+            "meche_bonus_cents": sub_service.generic_meche_bonus_cents,
+            "at_home_bonus_cents": sub_service.generic_at_home_bonus_cents,
+        },
+        hair_length=payload.get("hair_length") or "",
+        general_adjustments=payload.get("requested_options") or [],
+        meche=False,
+        location_preference=payload.get("location_preference") or "salon",
+    )
+    amounts = compute_service_fee_only_amounts_cents(
+        subtotal_cents=provider_estimate_cents,
+        service_fee_percentage=sub_service.generic_service_fee_percentage,
+        waive_service_fee=waive_service_fee,
+    )
+    return {
+        **amounts,
+        "hair_length": hair_length,
+        "requested_options": normalized_adjustments,
+    }
+
+
 def _build_service_request_form(request, service_meta: MarketingService | None, zone, sub_service: MarketingSubService | None = None):
     is_request_submission = request.method == "POST" and request.POST.get("request_service") == "1"
     use_legacy_quick_request = is_request_submission and "contact" in request.POST
@@ -1537,28 +1714,37 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
         generic_fee_cents = int(getattr(settings, "GENERIC_BOOKING_PLATFORM_FEE_CENTS", 0) or 0)
         if sub_service and sub_service.generic_booking_enabled:
             try:
-                provider_estimate_cents, _, normalized_adjustments = estimate_service_price_cents(
-                    service={
-                        "base_price_cents": sub_service.generic_base_price_cents,
-                        "hair_length_adjustments": sub_service.generic_hair_length_adjustments,
-                        "general_adjustments": sub_service.generic_general_adjustments,
-                        "meche_bonus_cents": sub_service.generic_meche_bonus_cents,
-                        "at_home_bonus_cents": sub_service.generic_at_home_bonus_cents,
+                estimate = _estimate_generic_sub_service_booking(
+                    sub_service,
+                    {
+                        "hair_length": form.cleaned_data.get("hair_length") or "",
+                        "requested_options": form.cleaned_data.get("requested_options") or [],
+                        "location_preference": form.cleaned_data.get("location_preference") or "salon",
                     },
-                    hair_length=form.cleaned_data.get("hair_length") or "",
-                    general_adjustments=form.cleaned_data.get("requested_options") or [],
-                    meche=False,
-                    location_preference=form.cleaned_data.get("location_preference") or "salon",
+                    waive_service_fee=waive_service_fee,
                 )
             except DomainError as exc:
                 form.add_error(None, _friendly_domain_error_message(exc))
                 return form, request_success
-            amounts = compute_service_fee_only_amounts_cents(
-                subtotal_cents=provider_estimate_cents,
-                service_fee_percentage=sub_service.generic_service_fee_percentage,
-                waive_service_fee=waive_service_fee,
+            token = _store_generic_booking_recap(
+                request,
+                {
+                    "client_name": form.cleaned_data["client_name"],
+                    "client_email": form.cleaned_data["client_email"],
+                    "client_phone": form.cleaned_data["client_phone"],
+                    "desired_date": form.cleaned_data["desired_date"],
+                    "location": zone.name if zone else "À préciser",
+                    "location_preference": form.cleaned_data.get("location_preference") or "salon",
+                    "hair_length": estimate["hair_length"],
+                    "requested_options": estimate["requested_options"],
+                    "service_fee_coupon_code": coupon_code,
+                    "requested_marketing_service_id": str(service_meta.id) if service_meta else None,
+                    "requested_marketing_sub_service_id": str(sub_service.id),
+                    "requested_service_label_snapshot": _generic_booking_label(service_meta, sub_service),
+                },
             )
-            generic_fee_cents = amounts["amount_due_now_cents"]
+            request.session["generic_booking_recap_redirect_url"] = reverse("interface:generic_booking_recap", args=[token])
+            return "redirect", False
         else:
             normalized_adjustments = form.cleaned_data.get("requested_options") or []
         try:
@@ -1953,7 +2139,8 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
         request, service_meta, zone=None, sub_service=sub_service
     )
     if request_form == "redirect":
-        return redirect("interface:thank_you_quick_request")
+        redirect_url = request.session.pop("generic_booking_recap_redirect_url", None)
+        return redirect(redirect_url or reverse("interface:thank_you_quick_request"))
     if request_form is None:
         return redirect(f"{request.path}?anchor=service-request")
 

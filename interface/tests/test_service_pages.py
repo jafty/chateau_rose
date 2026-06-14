@@ -548,3 +548,39 @@ class ServicePagesTests(TestCase):
         self.assertEqual(booking.requested_marketing_service, self.marketing_service)
         self.assertEqual(booking.requested_marketing_sub_service, self.sub_service)
         self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_WAIVED)
+
+    def test_enabled_generic_booking_redirects_to_recap_then_creates_booking(self):
+        self.sub_service.generic_booking_enabled = True
+        self.sub_service.generic_base_price_cents = 10000
+        self.sub_service.generic_hair_length_adjustments = {"standard": 0}
+        self.sub_service.generic_general_adjustments = {"extra-long": 2500}
+        self.sub_service.generic_service_fee_percentage = 0
+        self.sub_service.save()
+
+        response = self.client.post(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]),
+            {
+                "request_service": "1",
+                "client_name": "Awa Diallo",
+                "client_email": "awa-recap@example.com",
+                "client_phone": "0600000000",
+                "desired_date": "2026-02-01T10:00",
+                "location_preference": "salon",
+                "hair_length": "standard",
+                "requested_options": "extra-long",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("interface:generic_booking_recap", args=["00000000-0000-0000-0000-000000000000"]).rsplit("/", 2)[0], response["Location"])
+        recap_response = self.client.post(response["Location"])
+        self.assertRedirects(recap_response, reverse("interface:thank_you_quick_request"))
+
+        from booking.models import Booking
+
+        booking = Booking.objects.get(client_email="awa-recap@example.com")
+        self.assertIsNone(booking.provider)
+        self.assertEqual(booking.status, Booking.STATUS_WAITING_PROVIDER_ASSIGNMENT)
+        self.assertEqual(booking.provider_price_estimate_cents, 12500)
+        self.assertEqual(booking.amount_due_now_cents, 0)
+        self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_WAIVED)
