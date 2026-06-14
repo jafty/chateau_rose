@@ -148,6 +148,8 @@ class ProviderRequestUploadTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.provider.name)
+        self.assertNotContains(response, "current_hair_picture_file")
+        self.assertNotContains(response, "inspiration_pictures")
 
     def test_provider_detail_uses_custom_seo_h1_when_configured(self):
         self.provider.seo_h1 = "Coiffeuse afro à Paris 10 · tresses naturelles et conseils personnalisés"
