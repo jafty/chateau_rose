@@ -210,14 +210,17 @@ def execute(
                     f"- Téléphone : {client_contact.get('phone') or 'Non communiqué'}",
                     f"- Prestation : {requested_service_label_snapshot or requested_marketing_sub_service_id or requested_marketing_service_id}",
                     f"- Date souhaitée : {desired_date}",
+                    f"- Options / longueur : {', '.join(normalized_options) or hair_length or 'Non précisées'}",
                     f"- Frais Château Rose : {_format_euros(amount_due_now_cents)}",
+                    f"- Statut paiement : {payment_status}",
+                    "Action : assigner manuellement une prestataire compatible.",
                 ]),
                 reply_to=client_contact["email"],
             )
 
         client_lines = [
             f"Merci {client_contact['name']} ! Ta demande est bien enregistrée.",
-            "Château Rose revient vers toi dès qu'une prestataire compatible peut prendre la demande." if not provider_id else "La prestataire va maintenant valider la demande.",
+            "Château Rose a reçu ta demande. Aucune prestataire n'est encore assignée : nous recherchons une prestataire compatible." if not provider_id else "La prestataire va maintenant valider la demande.",
             "",
             "Récapitulatif :",
             f"- Prestation : {service_name}",
@@ -229,6 +232,11 @@ def execute(
             f"- Frais Château Rose : {_format_euros(amount_due_now_cents)}",
             "- La prestation coiffure sera réglée directement à la prestataire le jour du rendez-vous.",
         ]
+        if not provider_id:
+            client_lines.extend([
+                "",
+                "Château Rose pourra te demander l'adresse exacte, des photos ou des détails complémentaires si nécessaire.",
+            ])
         notifier.notify(client_contact["email"], "Demande enregistrée", "\n".join(client_lines))
 
     return booking

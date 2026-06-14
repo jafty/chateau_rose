@@ -1,7 +1,9 @@
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.urls import reverse
+from django.shortcuts import redirect
+from django.urls import path, reverse
+from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 
 from import_export.admin import ImportExportModelAdmin
@@ -29,6 +31,11 @@ from .models import (
     Zone,
 )
 from interface.models import MarketingService, MarketingSubService, ProviderBookingDraft
+from chateaurose.domain.exceptions import DomainError
+from chateaurose.domain.use_cases import assign_provider_to_booking
+from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
+from chateaurose.infrastructure.email_notifier import EmailNotifier
+from chateaurose.infrastructure.provider_catalog import DjangoProviderCatalog
 from interface.services.booking_requests import resolve_stored_media_url
 from interface.services.image_processing import compress_image_field
 
@@ -489,6 +496,51 @@ class BookingAdmin(admin.ModelAdmin):
         "updated_at",
         "client_reminder_sent_at",
     )
+
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/assign-provider/",
+                self.admin_site.admin_view(self.assign_provider_view),
+                name="booking_booking_assign_provider",
+            ),
+        ]
+        return custom_urls + urls
+
+    def assign_provider_view(self, request, object_id):
+        booking = self.get_object(request, object_id)
+        if booking is None:
+            messages.error(request, "Demande introuvable.")
+            return redirect("..")
+
+        service_id = (request.POST.get("service_id") or request.GET.get("service_id") or "").strip()
+        service = Service.objects.select_related("provider").filter(id=service_id).first()
+        if not service:
+            messages.error(request, "Sélectionne un service prestataire valide.")
+            return redirect(reverse("admin:booking_booking_change", args=[object_id]))
+
+        try:
+            assign_provider_to_booking.execute(
+                booking_id=booking.booking_id,
+                provider_id=str(service.provider_id),
+                service_id=str(service.id),
+                booking_repository=DjangoBookingRepository(),
+                provider_catalog=DjangoProviderCatalog(),
+                notifier=EmailNotifier(),
+                clock=type("Clock", (), {"now": timezone.now}),
+            )
+        except DomainError as exc:
+            messages.error(request, f"Assignation impossible : {exc}")
+        else:
+            messages.success(request, f"Demande assignée à {service.provider.name} · {service.name}.")
+        return redirect(reverse("admin:booking_booking_change", args=[object_id]))
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["assign_provider_services"] = Service.objects.select_related("provider").order_by("provider__name", "name")
+        return super().change_view(request, object_id, form_url, extra_context)
 
     @admin.display(description="Photos")
     def inspiration_pictures_count(self, obj):

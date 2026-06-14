@@ -122,3 +122,30 @@ def test_create_generic_booking_waits_for_provider_assignment():
     assert booking.requested_options == ["extra-long"]
     assert booking.amount_due_now_cents == 900
     assert deps["payment_gateway"].auth_calls[0]["amount_cents"] == 900
+
+
+def test_create_generic_booking_with_waived_fee_skips_payment():
+    deps = _deps()
+
+    booking = create_booking_request.execute(
+        client_contact={"name": "Awa", "email": "awa@example.com", "phone": "0600000000"},
+        requested_marketing_service_id="mkt-1",
+        requested_service_label_snapshot="Vanilles",
+        chateau_rose_fee_cents=0,
+        location="À préciser",
+        location_preference="salon",
+        desired_date="Samedi après-midi",
+        hair_length="standard",
+        requested_options=[],
+        meche=False,
+        current_hair_picture="",
+        inspiration_pictures=[],
+        free_text="",
+        operations_email="ops@example.com",
+        **deps,
+    )
+
+    assert booking.status == "WAITING_PROVIDER_ASSIGNMENT"
+    assert booking.amount_due_now_cents == 0
+    assert booking.payment_status == "WAIVED"
+    assert deps["payment_gateway"].auth_calls == []
