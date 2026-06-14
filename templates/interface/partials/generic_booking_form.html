@@ -1,0 +1,79 @@
+<div class="provider-form-layout">
+    <form method="post" class="provider-form-grid" id="generic-request-form" data-generic-booking-form>
+        {% csrf_token %}
+        <input type="hidden" name="request_service" value="1">
+        <input type="hidden" name="requested_options" id="general_adjustments_input" value="">
+
+        <fieldset class="wizard-step active" data-step="1">
+            <h4>1. Ta demande</h4>
+            <div class="form-field full-width">
+                <label>Prestation sélectionnée</label>
+                <select id="service_id" disabled>
+                    <option value="generic-sub-service" selected>{{ sub_service.name }}</option>
+                </select>
+            </div>
+            <div class="form-field full-width" data-hair-length-field hidden>
+                <label for="hair_length">Longueur ou épaisseur souhaitée <span class="required-mark">*</span></label>
+                <select name="hair_length" id="hair_length"></select>
+            </div>
+            <div class="form-field full-width" data-general-adjustment-field hidden>
+                <label>Options (facultatif)</label>
+                <div id="general_adjustments" class="supplements-list"></div>
+            </div>
+            <div class="form-field full-width">
+                <label>Lieu de rendez-vous <span class="required-mark">*</span></label>
+                <div class="location-choice-group">
+                    <label class="location-choice is-selected" data-location-choice="salon">
+                        <input type="radio" name="location_preference" value="salon" checked>
+                        <span>Chez la prestataire</span>
+                    </label>
+                    <label class="location-choice" data-location-choice="domicile">
+                        <input type="radio" name="location_preference" value="domicile">
+                        <span>À domicile</span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-field full-width">
+                <label for="desired_date">Date & heure souhaitées <span class="required-mark">*</span></label>
+                <input type="datetime-local" name="desired_date" id="desired_date" required>
+            </div>
+            <div class="wizard-actions full-width">
+                <button type="button" class="btn btn-next">Continuer</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="wizard-step" data-step="2">
+            <h4>2. Tes coordonnées</h4>
+            <div class="form-field">
+                <label for="id_client_name">Ton prénom / nom <span class="required-mark">*</span></label>
+                {{ request_form.client_name }}
+            </div>
+            <div class="form-field">
+                <label for="id_client_email">Ton Email <span class="required-mark">*</span></label>
+                {{ request_form.client_email }}
+            </div>
+            <div class="form-field">
+                <label for="id_client_phone">Téléphone / WhatsApp <span class="required-mark">*</span></label>
+                {{ request_form.client_phone }}
+            </div>
+            <div class="form-field">
+                <label for="id_service_fee_coupon_code">Code promo (optionnel)</label>
+                {{ request_form.service_fee_coupon_code }}
+            </div>
+            <div class="wizard-actions full-width">
+                <button type="button" class="btn btn-prev btn-secondary">Retour</button>
+                <button type="submit" class="btn">Confirmer ma demande</button>
+            </div>
+        </fieldset>
+    </form>
+    <aside class="provider-form-aside">
+        <div class="sticky-price-bar" id="sticky-price-bar">
+            <span class="total-label">Estimation totale</span>
+            <span class="total-amount" id="final-price-display">...</span>
+            <p class="meta-line" id="final-details-display">Ajuste les options pour afficher ton estimation.</p>
+            <p class="meta-line" id="general-adjustments-display" hidden></p>
+            <p class="meta-line">Tu règles uniquement les frais Château Rose maintenant. La prestation coiffure se règle à la prestataire le jour J.</p>
+            <span class="sr-only" id="sticky-price-value">-- €</span>
+        </div>
+    </aside>
+</div>

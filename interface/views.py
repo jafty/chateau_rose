@@ -1490,6 +1490,21 @@ def _generic_booking_label(service_meta: MarketingService | None, sub_service: M
     return service_meta.name if service_meta else "Prestation demandée"
 
 
+def _generic_sub_service_pricing_data(sub_service: MarketingSubService | None) -> dict:
+    if not sub_service:
+        return {}
+    return {
+        "id": "generic-sub-service",
+        "name": sub_service.name,
+        "base": sub_service.generic_base_price_cents,
+        "lengths": sub_service.generic_hair_length_adjustments or {"standard": 0},
+        "general_adjustments": sub_service.generic_general_adjustments or {},
+        "meche_bonus": sub_service.generic_meche_bonus_cents,
+        "at_home_bonus": sub_service.generic_at_home_bonus_cents,
+        "service_fee_percentage": sub_service.generic_service_fee_percentage,
+    }
+
+
 def _build_service_request_form(request, service_meta: MarketingService | None, zone, sub_service: MarketingSubService | None = None):
     is_request_submission = request.method == "POST" and request.POST.get("request_service") == "1"
     use_legacy_quick_request = is_request_submission and "contact" in request.POST
@@ -1517,8 +1532,35 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
 
     if is_request_submission and form.is_valid():
         coupon_code = (form.cleaned_data.get("service_fee_coupon_code") or "").strip().upper()
-        generic_fee_cents = int(getattr(settings, "GENERIC_BOOKING_PLATFORM_FEE_CENTS", 0) or 0)
         waive_service_fee = coupon_code in {"VIPZERO", "ROSEZERO", "GRATUIT"}
+        provider_estimate_cents = 0
+        generic_fee_cents = int(getattr(settings, "GENERIC_BOOKING_PLATFORM_FEE_CENTS", 0) or 0)
+        if sub_service and sub_service.generic_booking_enabled:
+            try:
+                provider_estimate_cents, _, normalized_adjustments = estimate_service_price_cents(
+                    service={
+                        "base_price_cents": sub_service.generic_base_price_cents,
+                        "hair_length_adjustments": sub_service.generic_hair_length_adjustments,
+                        "general_adjustments": sub_service.generic_general_adjustments,
+                        "meche_bonus_cents": sub_service.generic_meche_bonus_cents,
+                        "at_home_bonus_cents": sub_service.generic_at_home_bonus_cents,
+                    },
+                    hair_length=form.cleaned_data.get("hair_length") or "",
+                    general_adjustments=form.cleaned_data.get("requested_options") or [],
+                    meche=False,
+                    location_preference=form.cleaned_data.get("location_preference") or "salon",
+                )
+            except DomainError as exc:
+                form.add_error(None, _friendly_domain_error_message(exc))
+                return form, request_success
+            amounts = compute_service_fee_only_amounts_cents(
+                subtotal_cents=provider_estimate_cents,
+                service_fee_percentage=sub_service.generic_service_fee_percentage,
+                waive_service_fee=waive_service_fee,
+            )
+            generic_fee_cents = amounts["amount_due_now_cents"]
+        else:
+            normalized_adjustments = form.cleaned_data.get("requested_options") or []
         try:
             booking = create_booking_request.execute(
                 client_contact={
@@ -1529,7 +1571,8 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
                 requested_marketing_service_id=str(service_meta.id) if service_meta else None,
                 requested_marketing_sub_service_id=str(sub_service.id) if sub_service else None,
                 requested_service_label_snapshot=_generic_booking_label(service_meta, sub_service),
-                requested_options=form.cleaned_data.get("requested_options") or [],
+                requested_options=normalized_adjustments,
+                generic_provider_price_estimate_cents=provider_estimate_cents,
                 chateau_rose_fee_cents=0 if waive_service_fee else generic_fee_cents,
                 waive_service_fee=waive_service_fee,
                 location=zone.name if zone else "À préciser",
@@ -1674,13 +1717,12 @@ def service_page(request, service_slug: str):
     if service_request_redirect:
         return service_request_redirect
 
-    request_form, request_success = _build_service_request_form(
-        request, service_meta, zone=None
-    )
-    if request_form == "redirect":
-        return redirect("interface:thank_you_quick_request")
-    if request_form is None:
-        return redirect(f"{request.path}?anchor=service-request")
+    if request.method == "POST" and "contact" in request.POST:
+        request_form, request_success = _build_service_request_form(request, service_meta, zone=None)
+        if request_form == "redirect":
+            return redirect("interface:thank_you_quick_request")
+    else:
+        request_form, request_success = None, False
     service_content = _to_service_content(service_meta)
     marketing_content = build_marketing_content(service=service_content)
     hero_image = marketing_content.hero_image
@@ -1723,6 +1765,7 @@ def service_page(request, service_slug: str):
             "seo_long_description": long_description,
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
+            "generic_pricing_data": json.dumps({}, ensure_ascii=False),
         },
     )
 
@@ -1763,13 +1806,12 @@ def service_city_page(request, service_slug: str, city_slug: str):
     if service_request_redirect:
         return service_request_redirect
 
-    request_form, request_success = _build_service_request_form(
-        request, service_meta, zone=zone
-    )
-    if request_form == "redirect":
-        return redirect("interface:thank_you_quick_request")
-    if request_form is None:
-        return redirect(f"{request.path}?anchor=service-request")
+    if request.method == "POST" and "contact" in request.POST:
+        request_form, request_success = _build_service_request_form(request, service_meta, zone=zone)
+        if request_form == "redirect":
+            return redirect("interface:thank_you_quick_request")
+    else:
+        request_form, request_success = None, False
 
     gallery_images = marketing_content.gallery
     hero_image = marketing_content.hero_image
@@ -1806,6 +1848,7 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "seo_long_description": long_description,
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
+            "generic_pricing_data": json.dumps({}, ensure_ascii=False),
         },
     )
 
@@ -1846,13 +1889,7 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
     if service_request_redirect:
         return service_request_redirect
 
-    request_form, request_success = _build_service_request_form(
-        request, service_meta, zone=zone
-    )
-    if request_form == "redirect":
-        return redirect("interface:thank_you_quick_request")
-    if request_form is None:
-        return redirect(f"{request.path}?anchor=service-request")
+    request_form, request_success = None, False
 
     gallery_images = marketing_content.gallery
     hero_image = marketing_content.hero_image or service_meta.resolved_main_image
@@ -1889,6 +1926,7 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             "seo_long_description": long_description,
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
+            "generic_pricing_data": json.dumps({}, ensure_ascii=False),
         },
     )
 
@@ -1954,6 +1992,7 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
             "seo_long_description": "",
             "support_phone_display": SUPPORT_PHONE_DISPLAY,
             "support_phone_tel": SUPPORT_PHONE_TEL,
+            "generic_pricing_data": json.dumps(_generic_sub_service_pricing_data(sub_service), ensure_ascii=False),
         },
     )
 

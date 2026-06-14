@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html, format_html_join
@@ -43,6 +43,30 @@ from interface.services.image_processing import compress_image_field
 class MarketingSubServiceMultipleChoiceField(forms.ModelMultipleChoiceField):
     def label_from_instance(self, obj):
         return f"{obj.service.name} · {obj.name}"
+
+
+class BookingProviderAssignmentForm(forms.Form):
+    provider = forms.ModelChoiceField(
+        queryset=Provider.objects.order_by("name"),
+        label="Prestataire",
+    )
+    service = forms.ModelChoiceField(
+        queryset=Service.objects.select_related("provider").order_by("provider__name", "name"),
+        label="Service prestataire",
+    )
+    compatibility_override = forms.BooleanField(
+        required=False,
+        label="Forcer malgré une incompatibilité d'intention",
+        help_text="À utiliser uniquement pour les anciennes demandes dont le rattachement marketing est incomplet.",
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        provider = cleaned_data.get("provider")
+        service = cleaned_data.get("service")
+        if provider and service and service.provider_id != provider.id:
+            raise forms.ValidationError("Le service sélectionné n'appartient pas à cette prestataire.")
+        return cleaned_data
 
 
 class ProviderAdminForm(forms.ModelForm):
@@ -458,43 +482,26 @@ class BookingAdmin(admin.ModelAdmin):
     list_filter = ("booking_kind", "status", "payment_status", "provider")
     search_fields = ("booking_id", "client_name", "client_email", "payment_auth_id")
     readonly_fields = ("current_hair_picture_preview", "inspiration_pictures_preview")
-    fields = (
-        "booking_id",
-        "booking_kind",
-        "provider",
-        "service",
-        "requested_marketing_service",
-        "requested_marketing_sub_service",
-        "requested_service_label_snapshot",
-        "requested_options",
-        "status",
-        "client_name",
-        "client_email",
-        "client_phone",
-        "location",
-        "location_preference",
-        "client_address",
-        "desired_date",
-        "hair_length",
-        "general_adjustments",
-        "meche",
-        "free_text",
-        "estimated_price_cents",
-        "provider_price_estimate_cents",
-        "chateau_rose_fee_cents",
-        "amount_due_now_cents",
-        "payment_status",
-        "proposed_price_cents",
-        "proposed_date",
-        "payment_auth_id",
-        "locked_reservation_fee_cents",
-        "current_hair_picture",
-        "current_hair_picture_preview",
-        "inspiration_pictures",
-        "inspiration_pictures_preview",
-        "created_at",
-        "updated_at",
-        "client_reminder_sent_at",
+    fieldsets = (
+        (None, {"fields": (
+            "booking_id", "booking_kind", "provider", "service",
+            "requested_marketing_service", "requested_marketing_sub_service",
+            "requested_service_label_snapshot", "requested_options", "status",
+            "client_name", "client_email", "client_phone", "location",
+            "location_preference", "client_address", "desired_date", "hair_length",
+            "general_adjustments", "meche", "free_text", "estimated_price_cents",
+            "provider_price_estimate_cents", "chateau_rose_fee_cents",
+            "amount_due_now_cents", "payment_status", "proposed_price_cents",
+            "proposed_date", "payment_auth_id", "locked_reservation_fee_cents",
+            "created_at", "updated_at", "client_reminder_sent_at",
+        )}),
+        ("Legacy photos", {
+            "classes": ("collapse",),
+            "fields": (
+                "current_hair_picture", "current_hair_picture_preview",
+                "inspiration_pictures", "inspiration_pictures_preview",
+            ),
+        }),
     )
 
 
@@ -515,21 +522,51 @@ class BookingAdmin(admin.ModelAdmin):
             messages.error(request, "Demande introuvable.")
             return redirect("..")
 
-        service_id = (request.POST.get("service_id") or request.GET.get("service_id") or "").strip()
-        service = Service.objects.select_related("provider").filter(id=service_id).first()
-        if not service:
-            messages.error(request, "Sélectionne un service prestataire valide.")
+        if booking.status not in {Booking.STATUS_AWAITING_ALTERNATIVE_PROVIDER, Booking.STATUS_WAITING_PROVIDER_ASSIGNMENT}:
+            messages.error(request, "Cette demande n'est pas en attente d'assignation prestataire.")
             return redirect(reverse("admin:booking_booking_change", args=[object_id]))
+
+        if getattr(request, "method", "POST") != "POST":
+            return render(
+                request,
+                "admin/booking/booking/assign_provider.html",
+                {
+                    **self.admin_site.each_context(request),
+                    "title": "Assigner une prestataire",
+                    "booking": booking,
+                    "form": BookingProviderAssignmentForm(),
+                    "opts": self.model._meta,
+                },
+            )
+
+        post_data = request.POST.copy()
+        if "service_id" in post_data and "service" not in post_data:
+            legacy_service = Service.objects.select_related("provider").filter(id=post_data.get("service_id")).first()
+            if legacy_service:
+                post_data["service"] = str(legacy_service.id)
+                post_data["provider"] = str(legacy_service.provider_id)
+        form = BookingProviderAssignmentForm(post_data or None)
+        if not form.is_valid():
+            for error in form.non_field_errors():
+                messages.error(request, error)
+            for field, errors in form.errors.items():
+                if field != "__all__":
+                    messages.error(request, f"{form.fields[field].label} : {', '.join(errors)}")
+            return redirect(reverse("admin:booking_booking_change", args=[object_id]))
+
+        provider = form.cleaned_data["provider"]
+        service = form.cleaned_data["service"]
 
         try:
             assign_provider_to_booking.execute(
                 booking_id=booking.booking_id,
-                provider_id=str(service.provider_id),
+                provider_id=str(provider.id),
                 service_id=str(service.id),
                 booking_repository=DjangoBookingRepository(),
                 provider_catalog=DjangoProviderCatalog(),
                 notifier=EmailNotifier(),
                 clock=type("Clock", (), {"now": timezone.now}),
+                enforce_service_intent_match=not form.cleaned_data["compatibility_override"],
             )
         except DomainError as exc:
             messages.error(request, f"Assignation impossible : {exc}")
@@ -539,7 +576,11 @@ class BookingAdmin(admin.ModelAdmin):
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = extra_context or {}
-        extra_context["assign_provider_services"] = Service.objects.select_related("provider").order_by("provider__name", "name")
+        obj = self.get_object(request, object_id)
+        extra_context["assignment_form"] = BookingProviderAssignmentForm()
+        extra_context["can_assign_provider"] = bool(
+            obj and obj.status in {Booking.STATUS_AWAITING_ALTERNATIVE_PROVIDER, Booking.STATUS_WAITING_PROVIDER_ASSIGNMENT}
+        )
         return super().change_view(request, object_id, form_url, extra_context)
 
     @admin.display(description="Photos")

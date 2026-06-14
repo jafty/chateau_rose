@@ -1,22 +1,13 @@
 {% extends "admin/change_form.html" %}
 {% block after_field_sets %}
 {{ block.super }}
-{% if original and original.status == "WAITING_PROVIDER_ASSIGNMENT" %}
+{% if original and can_assign_provider %}
 <fieldset class="module aligned">
-    <h2>Assigner une prestataire</h2>
-    <form method="post" action="{% url 'admin:booking_booking_assign_provider' original.pk %}">
-        {% csrf_token %}
-        <div class="form-row">
-            <label for="assign-service-id">Service prestataire compatible :</label>
-            <select id="assign-service-id" name="service_id" required>
-                <option value="">---------</option>
-                {% for service in assign_provider_services %}
-                    <option value="{{ service.id }}">{{ service.provider.name }} · {{ service.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="submit-row"><input type="submit" class="default" value="Assigner via le use case"></div>
-    </form>
+    <h2>{% if original.status == "AWAITING_ALTERNATIVE_PROVIDER" %}Assigner une alternative{% else %}Assigner une prestataire{% endif %}</h2>
+    <p>Utilise le workflow sécurisé : il appelle le use case d'assignation et repasse la demande en SUBMITTED si l'assignation réussit.</p>
+    <div class="submit-row">
+        <a class="button" href="{% url 'admin:booking_booking_assign_provider' original.pk %}">Ouvrir l'assignation</a>
+    </div>
 </fieldset>
 {% endif %}
 {% endblock %}

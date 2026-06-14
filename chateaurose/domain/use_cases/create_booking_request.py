@@ -52,6 +52,7 @@ def execute(
     requested_marketing_sub_service_id: str | None = None,
     requested_service_label_snapshot: str = "",
     chateau_rose_fee_cents: int | None = None,
+    generic_provider_price_estimate_cents: int | None = None,
     service_fee_coupon_code: str | None = None,
     waive_service_fee: bool = False,
     payment_auth_id: str | None = None,
@@ -93,7 +94,7 @@ def execute(
     elif not normalized_location:
         normalized_location = "À préciser"
 
-    provider_price_estimate_cents = None
+    provider_price_estimate_cents = generic_provider_price_estimate_cents
     amount_due_now_cents = chateau_rose_fee_cents
     service_name = requested_service_label_snapshot or "prestation demandée"
 
