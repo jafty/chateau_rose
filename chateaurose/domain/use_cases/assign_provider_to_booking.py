@@ -48,8 +48,16 @@ def execute(
         raise ValidationError("Selected slot is unavailable")
 
     existing_generic_estimate_cents = booking.provider_price_estimate_cents
-    should_keep_generic_estimate = (
+    was_generic_service_booking = (
         booking.booking_kind == "GENERIC"
+        or (
+            booking.status == AWAITING_ALTERNATIVE_PROVIDER
+            and booking.requested_marketing_sub_service_id is not None
+            and booking.requested_service_label_snapshot
+        )
+    )
+    should_keep_generic_estimate = (
+        was_generic_service_booking
         and existing_generic_estimate_cents is not None
     )
     if should_keep_generic_estimate:
@@ -74,7 +82,7 @@ def execute(
 
     booking.provider_id = provider_id
     booking.service_id = service_id
-    booking.booking_kind = "PROVIDER_SELECTED"
+    booking.booking_kind = "GENERIC" if was_generic_service_booking else "PROVIDER_SELECTED"
     booking.status = SUBMITTED
     booking.provider_price_estimate_cents = price_cents
     booking.estimated_price_cents = price_cents + booking.chateau_rose_fee_cents
