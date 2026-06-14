@@ -186,8 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentStep = 1;
 
     const formatPrice = (cents) => {
-        const euros = cents / 100;
-        return euros % 1 === 0 ? `${euros.toFixed(0)} €` : `${euros.toFixed(2)} €`;
+        return `${Math.round(cents / 100)} €`;
     };
     const ceilPriceForDisplay = (cents) => {
         if (!Number.isFinite(cents) || cents <= 0) return 0;
@@ -195,7 +194,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return (euros + (cents % 100 > 0 ? 1 : 0)) * 100;
     };
     const serviceFee = (subtotal) => Math.round(subtotal * (pricingData.service_fee_percentage || 0) / 100);
-    const adjustmentWithFees = (adjustmentCents) => adjustmentCents + serviceFee(adjustmentCents);
+    const adjustmentWithFees = (adjustmentCents) => {
+        if (!Number.isFinite(adjustmentCents) || adjustmentCents === 0) return 0;
+        const sign = adjustmentCents < 0 ? -1 : 1;
+        const absoluteAdjustment = Math.abs(adjustmentCents);
+        return sign * ceilPriceForDisplay(absoluteAdjustment + serviceFee(absoluteAdjustment));
+    };
+    const displayEstimateWithFees = ({ base, adjustments }) => (
+        ceilPriceForDisplay(base + serviceFee(base)) +
+        adjustments.reduce((total, adjustment) => total + adjustmentWithFees(adjustment), 0)
+    );
 
     const updateWizardUI = () => {
         steps.forEach((step) => step.classList.toggle('active', Number(step.dataset.step) === currentStep));
@@ -238,10 +246,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const atHomeAdj = locationPreference === 'domicile' ? (pricingData.at_home_bonus || 0) : 0;
         const subtotal = pricingData.base + lengthAdj + adjustmentTotal + atHomeAdj;
         const fee = serviceFee(subtotal);
-        const totalWithFees = ceilPriceForDisplay(subtotal + fee);
-        finalPriceDisplay.textContent = formatPrice(totalWithFees);
-        stickyPriceValue.textContent = formatPrice(totalWithFees);
-        finalDetailsDisplay.textContent = `${pricingData.name} · frais Château Rose estimés : ${formatPrice(fee)}. Prestation à régler le jour J : ${formatPrice(subtotal)}.`;
+        const displayTotalWithFees = displayEstimateWithFees({
+            base: pricingData.base,
+            adjustments: [lengthAdj, adjustmentTotal, atHomeAdj],
+        });
+        const displayFee = ceilPriceForDisplay(fee);
+        finalPriceDisplay.textContent = formatPrice(displayFee);
+        stickyPriceValue.textContent = formatPrice(displayFee);
+        finalDetailsDisplay.textContent = `${pricingData.name} · estimation totale indicative : ${formatPrice(displayTotalWithFees)}. Prestation estimée à régler le jour J : ${formatPrice(subtotal)}.`;
         const optionText = selectedAdjustments().join(' · ');
         generalAdjustmentsDisplay.textContent = optionText ? `Options : ${optionText}` : '';
         generalAdjustmentsDisplay.hidden = !optionText;
@@ -261,8 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
         hairLengthSelect.append(new Option('Sélectionne ta longueur', '', true, true));
         keys.sort().forEach((key) => {
             const delta = lengths[key] || 0;
-            const displayDelta = adjustmentWithFees(Math.abs(delta));
-            const suffix = delta > 0 ? ` (+${formatPrice(displayDelta)})` : delta < 0 ? ` (${formatPrice(-displayDelta)})` : '';
+            const displayDelta = adjustmentWithFees(delta);
+            const suffix = delta > 0 ? ` (+${formatPrice(displayDelta)})` : delta < 0 ? ` (${formatPrice(displayDelta)})` : '';
             hairLengthSelect.append(new Option(`${key}${suffix}`, key));
         });
         hairLengthSelect.required = true;

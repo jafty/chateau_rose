@@ -3,9 +3,9 @@
     <span class="tape" aria-hidden="true"></span>
     <div class="provider-service-card__media">
         {% if card.resolved_image %}
-            <img src="{{ card.resolved_image }}" alt="{{ card.name }}" loading="lazy" decoding="async">
+            <img src="{{ card.resolved_image }}" alt="{% if provider %}{{ card.name }} réalisée par {{ provider.name }}{% else %}{{ card.name }}{% endif %}" loading="lazy" decoding="async">
         {% else %}
-            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ card.name }}" loading="lazy" decoding="async">
+            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{% if provider %}{{ card.name }} réalisée par {{ provider.name }}{% else %}{{ card.name }}{% endif %}" loading="lazy" decoding="async">
         {% endif %}
     </div>
     <div class="provider-service-card__content">

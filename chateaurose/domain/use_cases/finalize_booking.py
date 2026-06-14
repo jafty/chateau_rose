@@ -8,6 +8,7 @@ CONFIRMED = "CONFIRMED"
 CANCELLED = "CANCELLED"
 PENDING_CLIENT_VALIDATION = "PENDING_CLIENT_VALIDATION"
 AWAITING_ALTERNATIVE_PROVIDER = "AWAITING_ALTERNATIVE_PROVIDER"
+WAITING_PROVIDER_ASSIGNMENT = "WAITING_PROVIDER_ASSIGNMENT"
 SUBMITTED = "SUBMITTED"
 
 
@@ -454,7 +455,7 @@ def execute(
         else:
             raise InvalidState("Invalid state for client decision")
     elif actor == "admin":
-        if decision == "cancel" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER):
+        if decision == "cancel" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER, WAITING_PROVIDER_ASSIGNMENT):
             booking.status = CANCELLED
             _release_if_needed(payment_gateway, booking)
             notifier.notify(

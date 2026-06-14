@@ -47,20 +47,30 @@ def execute(
     if callable(has_blocked_slot) and has_blocked_slot(provider_id, booking.desired_date):
         raise ValidationError("Selected slot is unavailable")
 
-    try:
-        price_cents, hair_length, general_adjustments = estimate_service_price_cents(
-            service=service,
-            hair_length=booking.hair_length,
-            general_adjustments=booking.general_adjustments or booking.requested_options or [],
-            meche=booking.meche,
-            location_preference=booking.location_preference,
-        )
-    except ValidationError:
-        if enforce_pricing_options:
-            raise
-        price_cents = service["base_price_cents"]
+    existing_generic_estimate_cents = booking.provider_price_estimate_cents
+    should_keep_generic_estimate = (
+        booking.booking_kind == "GENERIC"
+        and existing_generic_estimate_cents is not None
+    )
+    if should_keep_generic_estimate:
+        price_cents = existing_generic_estimate_cents
         hair_length = booking.hair_length
         general_adjustments = booking.general_adjustments or booking.requested_options or []
+    else:
+        try:
+            price_cents, hair_length, general_adjustments = estimate_service_price_cents(
+                service=service,
+                hair_length=booking.hair_length,
+                general_adjustments=booking.general_adjustments or booking.requested_options or [],
+                meche=booking.meche,
+                location_preference=booking.location_preference,
+            )
+        except ValidationError:
+            if enforce_pricing_options:
+                raise
+            price_cents = service["base_price_cents"]
+            hair_length = booking.hair_length
+            general_adjustments = booking.general_adjustments or booking.requested_options or []
 
     booking.provider_id = provider_id
     booking.service_id = service_id

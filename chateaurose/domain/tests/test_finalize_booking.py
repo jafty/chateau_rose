@@ -472,3 +472,55 @@ def test_client_refusal_notifies_operations_when_email_is_configured():
     assert payments.release_calls == [{"auth_id": "auth_client_refusal_ops"}]
     assert notifier.messages[-1]["recipient"] == "ops@example.com"
     assert notifier.messages[-1]["subject"] == "Demande annulée par la cliente · booking_client_refusal_ops"
+
+
+def test_admin_can_cancel_waiting_provider_assignment_booking():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+    payments = InMemoryPaymentGateway()
+    provider_directory = _provider_directory()
+    created_at = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    booking = BookingRequest(
+        id="booking_waiting_assignment_cancel",
+        booking_kind="GENERIC",
+        provider_id=None,
+        service_id=None,
+        requested_marketing_service_id="mkt-1",
+        requested_marketing_sub_service_id="sub-1",
+        requested_service_label_snapshot="Tresses plaquées",
+        requested_options=["avec motifs"],
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="À préciser",
+        location_preference="salon",
+        desired_date="2026-01-10T17:00:00Z",
+        hair_length="standard",
+        general_adjustments=["avec motifs"],
+        meche=False,
+        current_hair_picture="",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=9000,
+        provider_price_estimate_cents=8000,
+        chateau_rose_fee_cents=1000,
+        amount_due_now_cents=1000,
+        payment_status="AUTHORIZED",
+        payment_auth_id="auth_waiting_assignment_cancel",
+        status=finalize_booking.WAITING_PROVIDER_ASSIGNMENT,
+        created_at=created_at,
+    )
+    repo.add(booking)
+
+    updated = finalize_booking.execute(
+        booking_id="booking_waiting_assignment_cancel",
+        actor="admin",
+        decision="cancel",
+        now=created_at + timedelta(hours=2),
+        booking_repository=repo,
+        payment_gateway=payments,
+        provider_directory=provider_directory,
+        notifier=notifier,
+        operations_email="ops@example.com",
+    )
+
+    assert updated.status == finalize_booking.CANCELLED
+    assert payments.release_calls == [{"auth_id": "auth_waiting_assignment_cancel"}]

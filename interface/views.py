@@ -530,7 +530,7 @@ def at_home_provider_list(request):
 
 
 def provider_detail(request, provider_id, quick_checkout=None):
-    provider = get_object_or_404(Provider, id=provider_id)
+    provider = get_object_or_404(Provider.objects.visible_on_website(), id=provider_id)
     services = list(
         Service.objects.filter(provider=provider)
         .select_related("category")

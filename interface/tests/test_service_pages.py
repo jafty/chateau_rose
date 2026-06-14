@@ -408,6 +408,14 @@ class ServicePagesTests(TestCase):
         self.assertIn(self.provider_a.name, content)
         self.assertNotIn(self.provider_b.name, content)
 
+    def test_hidden_provider_detail_is_not_public(self):
+        self.provider_b.is_visible_on_website = False
+        self.provider_b.save()
+
+        response = self.client.get(reverse("interface:provider_detail", args=[self.provider_b.id]))
+
+        self.assertEqual(response.status_code, 404)
+
     def test_hidden_provider_is_excluded_from_service_pages(self):
         ProviderMarketingService.objects.create(
             provider=self.provider_b, service=self.marketing_service
