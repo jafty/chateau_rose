@@ -28,7 +28,7 @@ from booking.models import (
     ServiceCategory,
     Zone,
 )
-from chateaurose.domain.exceptions import DomainError, ValidationError
+from chateaurose.domain.exceptions import DomainError, NotFound, ValidationError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
 from chateaurose.domain.services.pricing import (
     ceil_price_for_display_cents,
@@ -40,7 +40,7 @@ from chateaurose.domain.services.pricing import (
 )
 from chateaurose.domain.use_cases import expire_booking as expire_booking_uc
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
-from chateaurose.domain.use_cases import prepare_booking_recap, request_haircut, update_proposal
+from chateaurose.domain.use_cases import create_booking_request, prepare_booking_recap, request_haircut, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
 from chateaurose.infrastructure.email_notifier import EmailNotifier
@@ -49,7 +49,7 @@ from chateaurose.infrastructure.provider_catalog import (
     DjangoProviderCatalog,
     SALON_LOCATION_LABEL,
 )
-from interface.forms import ProviderBookingRequestForm, ProviderQuestionForm, ServiceRequestForm
+from interface.forms import GenericBookingRequestForm, ProviderBookingRequestForm, ProviderQuestionForm, ServiceRequestForm
 from interface.marketing_cities import CITY_PAGE_COPY, MARKETING_CITY_ENTRIES
 from interface.models import (
     ClientReview,
@@ -636,7 +636,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
             request.FILES,
             provider=provider,
             require_payment_auth=False,
-            require_current_hair_picture=not partial_prefill_mode,
+            require_current_hair_picture=False,
             partial_prefill_mode=partial_prefill_mode,
         )
         if form.is_valid():
@@ -1149,7 +1149,7 @@ def provider_payment_intent(request):
 
         try:
             service = provider_catalog.get_service(provider_id, service_id)
-        except KeyError:
+        except (KeyError, NotFound):
             return JsonResponse({"error": "Service non disponible."}, status=400)
 
         provider_for_coupon = Provider.objects.filter(id=provider_id).first()
@@ -1509,26 +1509,83 @@ def _build_service_request_redirect(request):
     return redirect(f"{request.path}#service-request")
 
 
-def _build_service_request_form(request, service_meta: MarketingService | None, zone):
+def _generic_booking_label(service_meta: MarketingService | None, sub_service: MarketingSubService | None = None) -> str:
+    if sub_service:
+        return f"{service_meta.name} · {sub_service.name}"
+    return service_meta.name if service_meta else "Prestation demandée"
+
+
+def _build_service_request_form(request, service_meta: MarketingService | None, zone, sub_service: MarketingSubService | None = None):
     is_request_submission = request.method == "POST" and request.POST.get("request_service") == "1"
-    form = ServiceRequestForm(request.POST if is_request_submission else None)
+    use_legacy_quick_request = is_request_submission and "contact" in request.POST
     request_success = request.session.pop("service_request_success", False)
 
-    if service_meta:
-        form.fields["marketing_service"].initial = service_meta
-        form.fields["marketing_service"].widget = forms.HiddenInput()
-        form.fields["marketing_service"].required = False
+    if use_legacy_quick_request:
+        legacy_form = ServiceRequestForm(request.POST)
+        if service_meta:
+            legacy_form.fields["marketing_service"].initial = service_meta
+            legacy_form.fields["marketing_service"].widget = forms.HiddenInput()
+            legacy_form.fields["marketing_service"].required = False
+        if legacy_form.is_valid():
+            record = legacy_form.save(commit=False)
+            record.marketing_service = service_meta or legacy_form.cleaned_data.get("marketing_service")
+            if zone:
+                record.zone = zone
+            record.inspiration_picture_urls = []
+            record.save()
+            _notify_service_request(record)
+            request.session["service_request_success"] = True
+            return "redirect", False
+        return legacy_form, request_success
+
+    form = GenericBookingRequestForm(request.POST if is_request_submission else None)
 
     if is_request_submission and form.is_valid():
-        record = form.save(commit=False)
-        record.marketing_service = service_meta or form.cleaned_data.get("marketing_service")
-        if zone:
-            record.zone = zone
-        record.inspiration_picture_urls = []
-        record.save()
-        _notify_service_request(record)
-        request.session["service_request_success"] = True
-        return "redirect", False
+        coupon_code = (form.cleaned_data.get("service_fee_coupon_code") or "").strip().upper()
+        generic_fee_cents = int(getattr(settings, "GENERIC_BOOKING_PLATFORM_FEE_CENTS", 0) or 0)
+        waive_service_fee = coupon_code in {"VIPZERO", "ROSEZERO", "GRATUIT"}
+        try:
+            booking = create_booking_request.execute(
+                client_contact={
+                    "name": form.cleaned_data["client_name"],
+                    "email": form.cleaned_data["client_email"],
+                    "phone": form.cleaned_data["client_phone"],
+                },
+                requested_marketing_service_id=str(service_meta.id) if service_meta else None,
+                requested_marketing_sub_service_id=str(sub_service.id) if sub_service else None,
+                requested_service_label_snapshot=_generic_booking_label(service_meta, sub_service),
+                requested_options=form.cleaned_data.get("requested_options") or [],
+                chateau_rose_fee_cents=0 if waive_service_fee else generic_fee_cents,
+                waive_service_fee=waive_service_fee,
+                location=zone.name if zone else "À préciser",
+                location_preference=form.cleaned_data.get("location_preference") or "salon",
+                desired_date=form.cleaned_data["desired_date"],
+                hair_length=form.cleaned_data.get("hair_length") or "",
+                current_hair_picture="",
+                inspiration_pictures=[],
+                free_text="",
+                operations_email=SUPPORT_EMAIL,
+                booking_repository=repo,
+                provider_catalog=provider_catalog,
+                payment_gateway=payment_gateway,
+                notifier=notifier,
+                clock=type("Clock", (), {"now": timezone.now}),
+            )
+        except DomainError as exc:
+            form.add_error(None, _friendly_domain_error_message(exc))
+        else:
+            _create_interaction(
+                kind=Interaction.KIND_QUICK_REQUEST,
+                source_label="Demande générique",
+                contact_name=form.cleaned_data["client_name"],
+                contact_email=form.cleaned_data["client_email"],
+                contact_phone=form.cleaned_data["client_phone"],
+                subject=f"Demande générique {booking.id}",
+                next_action="Assigner une prestataire manuellement",
+                metadata={"booking_id": booking.id, "service": _generic_booking_label(service_meta, sub_service)},
+            )
+            request.session["service_request_success"] = True
+            return "redirect", False
 
     return form, request_success
 
@@ -1880,7 +1937,7 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
         return service_request_redirect
 
     request_form, request_success = _build_service_request_form(
-        request, service_meta, zone=None
+        request, service_meta, zone=None, sub_service=sub_service
     )
     if request_form == "redirect":
         return redirect("interface:thank_you_quick_request")
