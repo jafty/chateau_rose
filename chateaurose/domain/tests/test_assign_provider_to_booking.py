@@ -84,6 +84,7 @@ def test_assign_compatible_provider_to_generic_booking():
     assert booking.status == "SUBMITTED"
     assert booking.provider_id == "provider-1"
     assert booking.service_id == "svc-1"
+    assert booking.booking_kind == "PROVIDER_SELECTED"
     assert booking.provider_price_estimate_cents == 12500
     assert booking.estimated_price_cents == 13400
     assert len(notifier.messages) == 2

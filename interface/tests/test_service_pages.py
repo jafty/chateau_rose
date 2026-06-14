@@ -515,3 +515,36 @@ class ServicePagesTests(TestCase):
         self.assertEqual(providers.status_code, 200)
         self.assertIn(reverse("interface:at_home_provider_list"), home.content.decode())
         self.assertIn(reverse("interface:at_home_provider_list"), providers.content.decode())
+
+    def test_service_page_shows_quick_booking_primary_cta_and_provider_choice_secondary_cta(self):
+        response = self.client.get(reverse("interface:service_page", args=["tresses"]))
+
+        self.assertContains(response, "Réserver rapidement")
+        self.assertContains(response, "Choisir ma coiffeuse")
+
+    @override_settings(GENERIC_BOOKING_PLATFORM_FEE_CENTS=0)
+    def test_generic_booking_form_creates_waiting_booking_without_provider(self):
+        response = self.client.post(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]),
+            {
+                "request_service": "1",
+                "client_name": "Awa Diallo",
+                "client_email": "awa@example.com",
+                "client_phone": "0600000000",
+                "desired_date": "2026-02-01T10:00",
+                "location_preference": "salon",
+                "hair_length": "standard",
+                "requested_options": "extra-long",
+            },
+        )
+
+        self.assertRedirects(response, reverse("interface:thank_you_quick_request"))
+        from booking.models import Booking
+
+        booking = Booking.objects.get(client_email="awa@example.com")
+        self.assertIsNone(booking.provider)
+        self.assertEqual(booking.status, Booking.STATUS_WAITING_PROVIDER_ASSIGNMENT)
+        self.assertEqual(booking.booking_kind, Booking.KIND_GENERIC)
+        self.assertEqual(booking.requested_marketing_service, self.marketing_service)
+        self.assertEqual(booking.requested_marketing_sub_service, self.sub_service)
+        self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_WAIVED)
