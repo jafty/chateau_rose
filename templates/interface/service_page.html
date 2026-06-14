@@ -195,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return (euros + (cents % 100 > 0 ? 1 : 0)) * 100;
     };
     const serviceFee = (subtotal) => Math.round(subtotal * (pricingData.service_fee_percentage || 0) / 100);
+    const adjustmentWithFees = (adjustmentCents) => adjustmentCents + serviceFee(adjustmentCents);
 
     const updateWizardUI = () => {
         steps.forEach((step) => step.classList.toggle('active', Number(step.dataset.step) === currentStep));
@@ -260,7 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
         hairLengthSelect.append(new Option('Sélectionne ta longueur', '', true, true));
         keys.sort().forEach((key) => {
             const delta = lengths[key] || 0;
-            const suffix = delta > 0 ? ` (+${formatPrice(delta)})` : delta < 0 ? ` (${formatPrice(delta)})` : '';
+            const displayDelta = adjustmentWithFees(Math.abs(delta));
+            const suffix = delta > 0 ? ` (+${formatPrice(displayDelta)})` : delta < 0 ? ` (${formatPrice(-displayDelta)})` : '';
             hairLengthSelect.append(new Option(`${key}${suffix}`, key));
         });
         hairLengthSelect.required = true;
@@ -274,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
         keys.sort().forEach((key) => {
             const id = `generic-adjustment-${key}`.replace(/[^a-zA-Z0-9_-]/g, '-');
             const input = Object.assign(document.createElement('input'), { type: 'checkbox', id, value: key });
-            const label = Object.assign(document.createElement('label'), { htmlFor: id, textContent: `${key} (+${formatPrice(adjustments[key] || 0)})` });
+            const label = Object.assign(document.createElement('label'), { htmlFor: id, textContent: `${key} (+${formatPrice(adjustmentWithFees(adjustments[key] || 0))})` });
             const wrapper = document.createElement('div');
             wrapper.className = 'supplement-option';
             wrapper.append(input, label);

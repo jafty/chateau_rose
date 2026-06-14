@@ -965,10 +965,13 @@ def provider_booking_recap(request, token):
         "interface/provider_booking_recap.html",
         {
             "provider": provider,
+            "provider_name_display": provider.name,
             "draft": draft,
             "payload": payload,
+            "payload_options_json": json.dumps(payload.get("general_adjustments") or []),
             "is_completed": bool(draft.completed_at),
             "edit_url": f"{reverse('interface:provider_detail', args=[provider.id])}?recap={draft.token}",
+            "is_generic_booking": False,
             "total_price": booking_requests.format_price(checkout_amounts["subtotal_cents"] + checkout_amounts["service_fee_cents"]),
             "subtotal_price": booking_requests.format_price(checkout_amounts["subtotal_cents"]),
             "service_fee_price": booking_requests.format_price(checkout_amounts["service_fee_cents"]),
@@ -1157,18 +1160,34 @@ def generic_booking_recap(request, token):
                 request.session["service_request_success"] = True
                 return redirect("interface:thank_you_quick_request")
 
+    recap_payload = {
+        **payload,
+        "service_name": payload.get("requested_service_label_snapshot") or _generic_booking_label(sub_service.service, sub_service),
+        "general_adjustments": payload.get("requested_options") or [],
+    }
     return render(
         request,
-        "interface/generic_booking_recap.html",
+        "interface/provider_booking_recap.html",
         {
-            "payload": payload,
-            "payload_options_json": json.dumps(payload.get("requested_options") or []),
-            "service_label": payload.get("requested_service_label_snapshot") or _generic_booking_label(sub_service.service, sub_service),
-            "desired_date_display": desired_date_display,
+            "provider": None,
+            "provider_name_display": "la prestataire assignée",
+            "draft": None,
+            "payload": recap_payload,
+            "payload_options_json": json.dumps(recap_payload["general_adjustments"]),
+            "is_completed": False,
+            "is_generic_booking": True,
+            "edit_url": "",
             "total_price": booking_requests.format_price(amounts["subtotal_cents"] + amounts["service_fee_cents"]),
             "subtotal_price": booking_requests.format_price(amounts["subtotal_cents"]),
             "service_fee_price": booking_requests.format_price(amounts["service_fee_cents"]),
+            "acompte_price": booking_requests.format_price(0),
+            "deposit_price": booking_requests.format_price(amounts["amount_due_now_cents"]),
+            "remaining_price": booking_requests.format_price(amounts["provider_price_cents"]),
             "amount_due_now_cents": amounts["amount_due_now_cents"],
+            "service_fee_coupon_code": coupon_code,
+            "service_fee_waived": service_fee_waived,
+            "reservation_label_details": "frais de service Château Rose uniquement",
+            "desired_date_display": desired_date_display,
             "stripe_public_key": stripe_public_key,
             "require_payment_auth": require_payment_auth,
             "payment_intent_url": reverse("interface:provider_payment_intent"),

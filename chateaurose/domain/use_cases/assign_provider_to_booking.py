@@ -18,7 +18,7 @@ def execute(
     provider_booking_url_base: str | None = None,
     operations_email: str | None = None,
     enforce_service_intent_match: bool = True,
-    enforce_pricing_options: bool = True,
+    enforce_pricing_options: bool = False,
 ):
     booking = booking_repository.get(booking_id)
     if booking.status not in (WAITING_PROVIDER_ASSIGNMENT, AWAITING_ALTERNATIVE_PROVIDER):
