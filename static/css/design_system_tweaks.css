@@ -211,3 +211,26 @@
 #service-subservices {
     scroll-margin-top: 110px;
 }
+.sticky-price-bar .payment-reassurance {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.55rem;
+    align-items: start;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid rgba(138, 91, 63, 0.18);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(253, 244, 236, 0.95), rgba(255, 255, 255, 0.92));
+    color: var(--ink-dark);
+    font-size: 0.86rem;
+    line-height: 1.35;
+}
+.sticky-price-bar .payment-reassurance__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--ink-primary);
+    margin-top: 0.05rem;
+    flex: none;
+}
+.sticky-price-bar .payment-reassurance strong {
+    color: var(--ink-primary);
+}

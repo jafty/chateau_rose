@@ -767,6 +767,14 @@
                                 <p class="meta-line" id="final-details-display">Sélectionne un service pour afficher ton estimation.</p>
                                 <p class="meta-line" id="general-adjustments-display" hidden></p>
                                 <p class="meta-line">L'estimation totale peut évoluer selon la prestataire et sera confirmée au récapitulatif.</p>
+                                <div class="payment-reassurance" aria-label="Information paiement">
+                                    <svg class="payment-reassurance__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                        <path d="M9 16l2 2 4-4"></path>
+                                    </svg>
+                                    <span><strong>Aucun débit maintenant :</strong> simple empreinte bancaire, débitée uniquement si le rendez-vous est confirmé.</span>
+                                </div>
                                 <span class="sr-only" id="sticky-price-value">-- €</span>
                             </div>
                             <div class="sticky-price-bar sticky-price-bar--reassurance sticky-price-bar--support">
@@ -1525,11 +1533,20 @@
             const displayedAppointmentEstimateStr = formatMarketingPrice(displayTotalWithFeesCents);
             const remainingStr = formatPrice(Math.max(totalCents, 0));
             const serviceFeeStr = depositStr;
-            if (Number.isFinite(fixedPriceCents)) {
-                finalDetailsDisplay.textContent = `${serviceName} (forfait défini par l'équipe). Estimation totale : ${displayedAppointmentEstimateStr}. Prestation estimée à régler le jour J : ${remainingStr}.`;
-            } else {
-                finalDetailsDisplay.textContent = `${serviceName} (${lengthText}, ${mecheText}, ${locationText}). Estimation totale indicative : ${displayedAppointmentEstimateStr}. Prestation estimée à régler le jour J : ${remainingStr}.`;
-            } 
+            finalDetailsDisplay.replaceChildren();
+            const serviceLine = Object.assign(document.createElement('span'), {
+                textContent: Number.isFinite(fixedPriceCents)
+                    ? `${serviceName} (forfait défini par l'équipe).`
+                    : `${serviceName} (${lengthText}, ${mecheText}, ${locationText}).`,
+            });
+            const estimateLine = Object.assign(document.createElement('span'), {
+                className: 'estimate-highlight',
+                textContent: `${Number.isFinite(fixedPriceCents) ? 'Estimation totale' : 'Estimation totale indicative'} : ${displayedAppointmentEstimateStr}`,
+            });
+            const providerDueLine = Object.assign(document.createElement('span'), {
+                textContent: `Prestation estimée à régler le jour J : ${remainingStr}`,
+            });
+            finalDetailsDisplay.append(serviceLine, estimateLine, providerDueLine); 
             if (generalAdjustmentsDisplay) {
                 const adjustmentsText = selectedAdjustments.length
                     ? `Suppléments : ${selectedAdjustments.map((item) => formatAdjustment(item, adjustments[item] || 0, serviceFeePercentage)).filter(Boolean).join(' · ')}`
