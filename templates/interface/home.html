@@ -4,7 +4,6 @@
 {% block title %}Coiffure afro à Toulouse | Réserve ton RDV | Château Rose{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/design_system_tweaks.css' %}">
 <link rel="preconnect" href="https://chateau-rose-bucket.s3.amazonaws.com" crossorigin>
 {% with lcp_service=services|first %}
     {% if lcp_service and lcp_service.resolved_main_image %}

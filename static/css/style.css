@@ -839,7 +839,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 30px;
-    padding: 40px 24px 60px;
+    padding: 18px 24px 60px;
     width: min(1200px, 100%);
     margin: 0 auto;
 }
@@ -2473,6 +2473,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .zone-list-full { margin-top: 12px; }
+.zone-list-full[hidden] { display: none !important; }
 .zone-accordion { display: flex; flex-direction: column; gap: 10px; }
 .zone-accordion .zone-list-full { display: none; }
 .zone-accordion .zone-list-full.is-open { display: flex; }
@@ -4019,7 +4020,6 @@ footer {
 }
 
 .provider-form-card,
-.provider-service-card,
 .location-choice .choice-pill,
 .choice-toggle,
 .gallery-thumb,
@@ -4050,6 +4050,215 @@ footer {
     border-radius: 12px;
 }
 
+
+/* Shared provider/generic service booking cards: extracted from provider page polaroid design. */
+.provider-service-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.provider-service-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 0.45rem 0.45rem 0.9rem;
+    cursor: pointer;
+    overflow: visible;
+    transition: transform .25s ease, box-shadow .25s ease;
+    border-radius: 0;
+    background: #fff;
+    border: 1px solid rgba(74, 59, 50, 0.08);
+    box-shadow: 0 14px 30px rgba(74, 59, 50, 0.12);
+}
+
+.provider-service-card:hover {
+    transform: translateY(-4px) rotate(0deg) !important;
+    z-index: 2;
+    box-shadow: 0 22px 42px rgba(74, 59, 50, 0.18);
+}
+
+.provider-service-card:nth-child(4n+1) { transform: rotate(1deg); }
+.provider-service-card:nth-child(4n+2) { transform: rotate(-2deg); }
+.provider-service-card:nth-child(4n+3) { transform: rotate(2deg); }
+.provider-service-card:nth-child(4n+4) { transform: rotate(-1deg); }
+
+.provider-service-card .tape {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 64px;
+    height: 18px;
+    transform: translateX(-50%) rotate(-2deg);
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(2px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    z-index: 3;
+}
+
+.provider-service-card:nth-child(even) .tape { left: auto; right: 0.8rem; transform: rotate(4deg); }
+.provider-service-card:nth-child(3n) .tape { left: 1rem; transform: rotate(-4deg); }
+
+.provider-service-card__media {
+    aspect-ratio: 1 / 1;
+    background:#f4efea;
+    overflow:hidden;
+}
+
+.provider-service-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 22%;
+    display: block;
+    filter: sepia(8%) contrast(0.96);
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.provider-service-card:hover .provider-service-card__media img {
+    filter: none;
+    transform: scale(1.04);
+}
+
+.provider-service-card__content {
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    gap:0.35rem;
+    padding: 0.7rem 0.45rem 0;
+    text-align:center;
+}
+
+.provider-service-card h4 {
+    margin: 0;
+    font-size: 1.02rem;
+    line-height:1.2;
+    font-weight: 700;
+}
+
+.provider-service-card .service-price {
+    color: var(--ink-secondary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.provider-service-card .service-price strong,
+.provider-service-card .service-price .price-value {
+    color: var(--rose-accent);
+    font-size: 1.02rem;
+    letter-spacing: 0;
+    text-transform:none;
+}
+
+.provider-service-card__button {
+    width:100%;
+    margin-top:auto;
+    padding:0.62rem 1rem;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+}
+
+@media (max-width: 900px) {
+    .provider-service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+    .provider-service-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Generic service page refinements. */
+.sticky-price-bar .total-label {
+    color: var(--ink-dark);
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.sticky-price-bar .total-amount {
+    font-size: clamp(2rem, 1.45rem + 1vw, 2.6rem);
+    line-height: 1;
+}
+
+.sticky-price-bar #final-details-display {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.sticky-price-bar .estimate-highlight {
+    color: var(--ink-primary);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.28rem, 1.05rem + 0.5vw, 1.65rem);
+    font-style: italic;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.providers-comparison-section {
+    display: grid;
+    gap: 0.95rem;
+}
+
+.service-contact-cta {
+    margin-top: 1rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.contact-outline {
+    background: transparent;
+    border: 1.5px solid var(--rose-accent);
+    color: var(--ink-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.contact-outline:hover {
+    background: var(--rose-soft);
+    color: var(--ink-dark);
+}
+
+.contact-outline svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex: 0 0 auto;
+}
+
+#service-request,
+#service-subservices {
+    scroll-margin-top: 110px;
+}
+
+.sticky-price-bar .payment-reassurance {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.55rem;
+    align-items: start;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid rgba(138, 91, 63, 0.18);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(253, 244, 236, 0.95), rgba(255, 255, 255, 0.92));
+    color: var(--ink-dark);
+    font-size: 0.86rem;
+    line-height: 1.35;
+}
+
+.sticky-price-bar .payment-reassurance__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--ink-primary);
+    margin-top: 0.05rem;
+    flex: none;
+}
+
+.sticky-price-bar .payment-reassurance strong {
+    color: var(--ink-primary);
+}
+
 /* --- HOME & SERVICE REBUILD ALIGNMENT --- */
 .home-hero .all-services-grid {
     display: grid;
@@ -4071,11 +4280,13 @@ footer {
 }
 
 .service-header-wrap {
+    width: 100%;
     padding: 40px 0 30px;
     max-width: 800px;
 }
 
 .service-header-paper {
+    width: 100%;
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(163, 124, 91, 0.24);
     border-radius: 14px;
@@ -4131,6 +4342,10 @@ footer {
     gap: 24px;
 }
 
+.service-hub-layout .provider-card {
+    width: 100%;
+}
+
 .service-hub-layout .provider-header {
     height: 260px;
 }
@@ -4140,13 +4355,39 @@ footer {
     gap: 8px;
 }
 
+.service-hub-layout .provider-name {
+    font-size: 1.4rem;
+    line-height: 1.2;
+    margin-bottom: 0;
+}
+
 .service-hub-layout .provider-loc {
     font-size: 0.95rem;
     margin-bottom: 10px;
 }
 
+.service-hub-layout .tags {
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
 .service-hub-layout .tag {
     background: #fafafa;
+}
+
+.service-hub-layout .card-actions {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px dashed #eee;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.service-hub-layout .card-actions .link,
+.service-hub-layout .card-actions .service-card-link {
+    color: var(--rose-accent);
+    border-bottom: none;
 }
 
 .service-hub-layout .service-sidebar {
@@ -4161,7 +4402,7 @@ footer {
 }
 
 .service-aside-note {
-    padding: 0 10px;
+    padding: 1.5rem;
 }
 
 .service-aside-note-title {
@@ -4177,13 +4418,18 @@ footer {
     line-height: 1.6;
 }
 
+.service-aside-note-copy > * + * {
+    margin-top: 0.75rem;
+}
+
 .service-aside-note-list {
-    margin-top: 10px;
+    margin-top: 14px;
 }
 
 .service-aside-note-list li {
     font-size: 0.85rem;
     color: var(--ink-secondary);
+    line-height: 1.55;
 }
 
 .seo-content {
