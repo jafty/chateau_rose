@@ -207,6 +207,7 @@
     flex: 0 0 auto;
 }
 
-#service-request {
+#service-request,
+#service-subservices {
     scroll-margin-top: 110px;
 }

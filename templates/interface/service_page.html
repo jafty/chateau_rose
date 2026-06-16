@@ -16,7 +16,7 @@
         <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
         <div class="service-header-actions" style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:0.8rem;">
-            <a class="btn primary" href="#service-request">Réserver rapidement</a>
+            <a class="btn primary" href="#{% if sub_services and not is_sub_service_page %}service-subservices{% else %}service-request{% endif %}">Réserver rapidement</a>
             <a class="btn secondary" href="#provider-comparison">Choisir ma coiffeuse</a>
         </div>
     </div>
@@ -25,7 +25,7 @@
 <section class="container service-hub-layout">
     <div class="main-content">
         {% if sub_services and not is_sub_service_page %}
-        <div class="services-carousel-wrapper" style="margin-bottom:1.25rem;">
+        <div id="service-subservices" class="services-carousel-wrapper" style="margin-bottom:1.25rem;">
             <h2 class="service-subservices-heading">Affiner ta recherche par type de prestation</h2>
             <div class="provider-service-grid service-subservices-grid">
                 {% for sub_service_item in sub_services %}
