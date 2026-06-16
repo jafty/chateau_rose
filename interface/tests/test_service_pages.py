@@ -528,7 +528,14 @@ class ServicePagesTests(TestCase):
         response = self.client.get(reverse("interface:service_page", args=["tresses"]))
 
         self.assertContains(response, "Réserver rapidement")
+        self.assertContains(response, 'href="#service-subservices"')
+        self.assertContains(response, 'id="service-subservices"')
         self.assertContains(response, "Choisir ma coiffeuse")
+
+    def test_sub_service_page_quick_booking_cta_targets_request_form(self):
+        response = self.client.get(reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]))
+
+        self.assertContains(response, 'href="#service-request"')
 
     @override_settings(GENERIC_BOOKING_PLATFORM_FEE_CENTS=0)
     def test_generic_booking_form_creates_waiting_booking_without_provider(self):
