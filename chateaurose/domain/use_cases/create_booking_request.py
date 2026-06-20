@@ -200,6 +200,27 @@ def execute(
             if provider_booking_url:
                 provider_lines.extend(["", "Pour répondre :", provider_booking_url])
             notifier.notify(provider_id, "Nouvelle demande de coiffure", "\n".join(provider_lines))
+            if operations_email:
+                operations_lines = [
+                    "Copie Château Rose d'une nouvelle demande envoyée à une prestataire.",
+                    f"- ID demande : {booking_id}",
+                    f"- Cliente : {client_contact['name']} ({client_contact['email']})",
+                    f"- Téléphone : {client_contact.get('phone') or 'Non communiqué'}",
+                    f"- Prestataire : {provider_id}",
+                    f"- Prestation : {service_name}",
+                    f"- Date souhaitée : {desired_date}",
+                    f"- Lieu : {normalized_location}",
+                    f"- Frais Château Rose : {_format_euros(amount_due_now_cents)}",
+                    f"- Statut paiement : {payment_status}",
+                ]
+                if provider_booking_url:
+                    operations_lines.extend(["", "Lien prestataire :", provider_booking_url])
+                notifier.notify(
+                    operations_email,
+                    f"Copie nouvelle demande · {booking_id}",
+                    "\n".join(operations_lines),
+                    reply_to=client_contact["email"],
+                )
         elif operations_email:
             notifier.notify(
                 operations_email,

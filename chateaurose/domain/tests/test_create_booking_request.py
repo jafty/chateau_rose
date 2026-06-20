@@ -67,6 +67,40 @@ def test_create_provider_selected_booking_authorizes_service_fee_only():
     assert deps["payment_gateway"].auth_calls[0]["amount_cents"] == 1500
 
 
+def test_create_provider_selected_booking_sends_operations_copy():
+    deps = _deps()
+
+    booking = create_booking_request.execute(
+        provider_id="provider-1",
+        service_id="svc-1",
+        client_contact={"name": "Awa", "email": "awa@example.com", "phone": "0600000000"},
+        location="Toulouse",
+        location_preference="domicile",
+        desired_date="2026-02-01T10:00:00+00:00",
+        hair_length="standard",
+        general_adjustments=[],
+        meche=False,
+        current_hair_picture="",
+        inspiration_pictures=[],
+        free_text="",
+        operations_email="ops@example.com",
+        provider_booking_url_base="https://example.com/pro/bookings/",
+        **deps,
+    )
+
+    assert [message["recipient"] for message in deps["notifier"].messages] == [
+        "provider-1",
+        "ops@example.com",
+        "awa@example.com",
+    ]
+    operations_copy = deps["notifier"].messages[1]
+    assert operations_copy["subject"] == f"Copie nouvelle demande · {booking.id}"
+    assert operations_copy["reply_to"] == "awa@example.com"
+    assert f"- ID demande : {booking.id}" in operations_copy["body"]
+    assert "- Prestataire : provider-1" in operations_copy["body"]
+    assert "https://example.com/pro/bookings/" in operations_copy["body"]
+
+
 def test_create_provider_selected_booking_with_waived_fee_skips_payment():
     deps = _deps()
 
