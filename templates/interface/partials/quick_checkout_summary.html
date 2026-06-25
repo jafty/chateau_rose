@@ -20,7 +20,7 @@
             <dd>{{ quick_checkout.desired_date|date:"d/m/Y H:i" }}</dd>
         </div>
         <div>
-            <dt>Cliente</dt>
+            <dt>Client</dt>
             <dd>{{ quick_checkout.client_name }}</dd>
         </div>
         <div>
@@ -29,7 +29,7 @@
         </div>
         <div>
             <dt>Frais de réservation</dt>
-            <dd>{{ quick_checkout.reservation_fee_cents|cents_to_euros }} (déduits du prix final)</dd>
+            <dd>{{ quick_checkout.reservation_fee_cents|cents_to_euros }} (débités seulement si confirmé)</dd>
         </div>
         {% if quick_checkout.free_text %}
         <div style="grid-column: 1 / -1;">
