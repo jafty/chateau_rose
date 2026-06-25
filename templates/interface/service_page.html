@@ -15,8 +15,8 @@
         <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
         <div class="service-header-actions" style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:0.8rem;">
-            <a class="btn primary" href="#{% if sub_services and not is_sub_service_page %}service-subservices{% else %}service-request{% endif %}">Réserver rapidement</a>
-            <a class="btn secondary" href="#provider-comparison">Choisir ma coiffeuse</a>
+            <a class="btn primary" href="#{% if sub_services and not is_sub_service_page %}service-subservices{% else %}service-request{% endif %}">Demander une recherche</a>
+            <a class="btn secondary" href="#provider-comparison">Choisir un profil</a>
         </div>
     </div>
 </section>
@@ -29,7 +29,7 @@
             <div class="provider-service-grid service-subservices-grid">
                 {% for sub_service_item in sub_services %}
                     {% url 'interface:sub_service_page' service.slug sub_service_item.slug as sub_service_url %}
-                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url card_cta="Réserver rapidement" hide_price=True %}
+                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url card_cta="Demander une recherche" hide_price=True %}
                 {% endfor %}
             </div>
         </div>
@@ -38,8 +38,8 @@
 
         {% if request_form %}
         <div id="service-request" class="provider-form-card inline-form-card" style="margin-bottom:1.25rem;">
-            <h2 class="wizard-heading">Réserver rapidement</h2>
-            <p class="meta-line">Réponds à quelques questions : Château Rose cherchera ensuite une prestataire compatible. La prestation coiffure sera réglée directement à la prestataire le jour du rendez-vous.</p>
+            <h2 class="wizard-heading">Demander une recherche</h2>
+            <p class="meta-line">Réponds à quelques questions : Château Rose cherche une prestataire compatible. L'empreinte bancaire n'est débitée que si un RDV est confirmé.</p>
             <div class="step-progress" aria-label="Étapes de demande rapide">
                 <div class="step-indicator active" data-step-indicator="1">1</div>
                 <div class="step-indicator" data-step-indicator="2">2</div>
@@ -51,7 +51,7 @@
         {% endif %}
         {% if providers %}
         <section id="provider-comparison" class="providers-comparison-section">
-            <h2 class="service-subservices-heading">Choisir une prestataire disponible</h2>
+            <h2 class="service-subservices-heading">Choisir une coiffeuse disponible</h2>
             <div class="providers-grid">
             {% for provider in providers %}
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
@@ -130,8 +130,8 @@
             <ul class="highlight-list pink-checks">
                 <li>Profils vérifiés par nos soins</li>
                 <li>Photos 100% réelles</li>
-                <li>Paiement sécurisé en ligne</li>
-                <li>SAV toulousain disponible</li>
+                <li>Empreinte bancaire sans débit immédiat</li>
+                <li>Recherche d'alternative si besoin</li>
             </ul>
             <a class="btn contact-outline service-contact-cta" href="mailto:japhet.situmonana@gmail.com">
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" focusable="false">

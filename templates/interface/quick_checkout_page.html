@@ -11,7 +11,7 @@
         {% if requires_reservation_fee %}
             <p class="lead lead--no-margin">Finalise ta demande avec une empreinte bancaire sécurisée. Le rendez-vous sera confirmé manuellement par {{ provider.name }}.</p>
         {% else %}
-            <p class="lead lead--no-margin">Ton rendez-vous est offert (aucun frais de réservation). Il sera confirmé manuellement par {{ provider.name }}.</p>
+            <p class="lead lead--no-margin">Ta demande est sans frais de réservation. Le rendez-vous sera confirmé manuellement par {{ provider.name }}.</p>
         {% endif %}
     </div>
 
@@ -56,15 +56,15 @@
                     <div class="secure-badge secure-badge--success">
                         <span class="secure-badge__emoji" aria-hidden="true">🔐</span>
                         <div>
-                            <strong>Empreinte bancaire sécurisée · Montant qui sera débité uniquement à la confirmation : <span id="deposit-amount-inline">{{ reservation_fee_cents|cents_to_euros }}</span>.</strong><br>
-                            Ces frais sont <strong>déduits du prix total</strong>. Aucun débit immédiat tant que le créneau n'est pas confirmé. Le reste ({{ remaining_price_cents|cents_to_euros }}) sera réglé directement à {{ provider.name }} le jour du rendez-vous.
+                            <strong>Empreinte bancaire sécurisée · Frais débités uniquement à la confirmation : <span id="deposit-amount-inline">{{ reservation_fee_cents|cents_to_euros }}</span>.</strong><br>
+                            Aucun débit immédiat tant que le créneau n'est pas confirmé. La prestation ({{ remaining_price_cents|cents_to_euros }}) sera réglée directement à {{ provider.name }} le jour du rendez-vous.
                         </div>
                     </div>
                 {% else %}
                     <div class="secure-badge secure-badge--success">
                         <span class="secure-badge__emoji" aria-hidden="true">🎁</span>
                         <div>
-                            <strong>Réservation offerte · Aucun frais de réservation à payer.</strong><br>
+                            <strong>Aucun frais de réservation à payer.</strong><br>
                             Ta demande est transmise directement à {{ provider.name }} pour validation manuelle du créneau. Le montant à régler le jour du rendez-vous reste {{ remaining_price_cents|cents_to_euros }}.
                         </div>
                     </div>
@@ -73,7 +73,7 @@
                 {% if stripe_public_key and require_payment_auth %}
                     <div class="form-field full-width form-field--top-gap">
                         <label>Saisir la carte pour valider l'empreinte bancaire</label>
-                        <p class="field-hint" id="deposit-payment-hint">Montant bloqué à titre d'empreinte : {{ reservation_fee_cents|cents_to_euros }} (déduits du total si confirmé).</p>
+                        <p class="field-hint" id="deposit-payment-hint">Montant bloqué à titre d'empreinte : {{ reservation_fee_cents|cents_to_euros }} (débit uniquement si confirmé).</p>
                         <div id="payment-element" class="payment-element payment-element--tall"></div>
                         <div class="alert error form-field--top-gap" id="payment-error" hidden></div>
                     </div>

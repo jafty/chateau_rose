@@ -7,7 +7,7 @@
 <section class="container" style="padding: clamp(2rem, 4vw, 4rem) 0;">
     <div class="provider-form-card inline-form-card" style="max-width: 920px; margin: 0 auto;">
         <h1 class="wizard-heading">Récapitulatif de ta demande</h1>
-        <p class="meta-line">Vérifie l'estimation, puis sécurise les frais Château Rose. La prestation coiffure sera réglée directement à la prestataire le jour du rendez-vous.</p>
+        <p class="meta-line">Vérifie l'estimation, puis valide l'empreinte bancaire. Aucun frais n'est débité tant qu'un rendez-vous n'est pas confirmé.</p>
         {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
         <div class="provider-form-layout">
             <div>
@@ -28,7 +28,7 @@
                         {% csrf_token %}
                         <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
                         {% if require_payment_auth %}
-                            <label class="stripe-label">Saisis ta carte pour régler les frais Château Rose</label>
+                            <label class="stripe-label">Saisis ta carte pour valider l'empreinte bancaire</label>
                             <div class="stripe-zone">
                                 <div id="payment-element" class="payment-element payment-element--tall"></div>
                                 <div class="alert error" id="payment-error" hidden></div>

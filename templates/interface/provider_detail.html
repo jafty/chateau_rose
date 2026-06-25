@@ -1449,7 +1449,7 @@
                     depositInlineDisplay.textContent = '-- €';
                 }
                 if (depositPaymentHint) {
-                    depositPaymentHint.textContent = "Frais Château Rose estimés : -- €.";
+                    depositPaymentHint.textContent = "Frais Château Rose à sécuriser : -- €.";
                 }
                 if (generalAdjustmentsDisplay) {
                     generalAdjustmentsDisplay.textContent = '';
@@ -1536,11 +1536,11 @@
                 depositInlineDisplay.textContent = depositStr;
             }
             if (depositPaymentHint) {
-                depositPaymentHint.textContent = `Frais Château Rose estimés : ${depositStr}.`; 
+                depositPaymentHint.textContent = `Frais Château Rose à sécuriser : ${depositStr}.`;
             }
             if (depositDetailsDisplay) {
                 depositDetailsDisplay.textContent =
-                    `Frais Château Rose estimés (${serviceFeePercentage} % de frais de service). La prestation coiffure se règle directement le jour J.`;
+                    `Frais Château Rose estimés (${serviceFeePercentage} % de frais de service), débités uniquement après confirmation. La prestation coiffure se règle directement le jour J.`;
             }
         };
 
@@ -1567,7 +1567,7 @@
                 depositInlineDisplay.textContent = totalStr;
             }
             if (depositPaymentHint) {
-                depositPaymentHint.textContent = `Frais Château Rose à régler : ${totalStr}.`;
+                depositPaymentHint.textContent = `Frais Château Rose à sécuriser : ${totalStr}.`;
             }
         } else if (serviceSelect) {
             updateHairLengths(serviceSelect.value);
