@@ -7,6 +7,7 @@ from .models import (
     MarketingService,
     MarketingServiceImage,
     MarketingServiceZone,
+    MarketingSubServiceImage,
     MarketingSubService,
     MarketingZone,
 )
@@ -125,6 +126,25 @@ class MarketingServiceImageResource(resources.ModelResource):
         fields = (
             "id",
             "service",
+            "image_url",
+            "caption",
+            "order",
+        )
+        export_order = fields
+
+
+class MarketingSubServiceImageResource(resources.ModelResource):
+    sub_service = fields.Field(
+        column_name="sub_service_slug",
+        attribute="sub_service",
+        widget=ForeignKeyWidget(MarketingSubService, "slug"),
+    )
+
+    class Meta:
+        model = MarketingSubServiceImage
+        fields = (
+            "id",
+            "sub_service",
             "image_url",
             "caption",
             "order",

@@ -261,6 +261,39 @@ class MarketingServiceImage(models.Model):
         return super().save(*args, **kwargs)
 
 
+class MarketingSubServiceImage(models.Model):
+    sub_service = models.ForeignKey(MarketingSubService, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="marketing/sub_services/gallery/", blank=True)
+    image_url = models.CharField(
+        max_length=500,
+        blank=True,
+        validators=[validate_absolute_or_root_relative_url],
+        help_text=(
+            "Upload an image or provide an absolute URL, /root-relative path, "
+            "or relative static asset path."
+        ),
+    )
+    caption = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ("order", "id")
+
+    def __str__(self):
+        return f"Image pour {self.sub_service}"
+
+    @property
+    def resolved_url(self):
+        if self.image:
+            return self.image.url
+        return self.image_url or None
+
+    def save(self, *args, **kwargs):
+        if _should_compress_image(self, "image"):
+            compress_image_field(self.image, max_px=800, quality=80)
+        return super().save(*args, **kwargs)
+
+
 class ServiceRequest(models.Model):
     LOCATION_PREFERENCE_CLIENT_HOME = "client_home"
     LOCATION_PREFERENCE_SALON = "salon"

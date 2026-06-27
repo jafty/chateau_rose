@@ -8,6 +8,7 @@ from interface.models import (
     ClientReview,
     Interaction,
     MarketingService,
+    MarketingSubServiceImage,
     MarketingServiceZone,
     MarketingSubService,
     MarketingZone,
@@ -136,6 +137,23 @@ class ServicePagesTests(TestCase):
         self.assertNotIn("Affiner par zone", content)
         self.assertIn("Knotless braids : l&#x27;essentiel", content)
         self.assertNotIn("Description longue tresses", content)
+
+    def test_sub_service_page_renders_dedicated_gallery_images(self):
+        MarketingSubServiceImage.objects.create(
+            sub_service=self.sub_service,
+            image_url="https://static.example.com/knotless-result.jpg",
+            caption="Résultat knotless",
+        )
+
+        response = self.client.get(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Inspirations & résultats", content)
+        self.assertIn("https://static.example.com/knotless-result.jpg", content)
+        self.assertIn("Résultat knotless", content)
 
     def test_service_at_home_page_filters_only_mobile_providers(self):
         self.provider_a.location_mode = Provider.LOCATION_MODE_HYBRID

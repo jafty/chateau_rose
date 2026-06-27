@@ -9,6 +9,7 @@ from interface.resources import (
     MarketingServiceImageResource,
     MarketingServiceResource,
     MarketingServiceZoneResource,
+    MarketingSubServiceImageResource,
     MarketingSubServiceResource,
     MarketingZoneResource,
 )
@@ -18,6 +19,7 @@ from interface.models import (
     MarketingService,
     MarketingSubService,
     MarketingServiceImage,
+    MarketingSubServiceImage,
     MarketingServiceZone,
     MarketingZone,
     ServiceRequest,
@@ -31,6 +33,12 @@ from interface.services.image_processing import compress_image_field
 
 class MarketingServiceImageInline(admin.TabularInline):
     model = MarketingServiceImage
+    extra = 1
+    fields = ("image", "caption", "order")
+
+
+class MarketingSubServiceImageInline(admin.TabularInline):
+    model = MarketingSubServiceImage
     extra = 1
     fields = ("image", "caption", "order")
 
@@ -108,6 +116,7 @@ class MarketingSubServiceAdmin(ImportExportModelAdmin):
     search_fields = ("name", "slug", "service__name")
     prepopulated_fields = {"slug": ("name",)}
     autocomplete_fields = ("service",)
+    inlines = [MarketingSubServiceImageInline]
     resource_class = MarketingSubServiceResource
     actions = ("recompress_subservice_images",)
 
@@ -315,6 +324,31 @@ class MarketingServiceImageAdmin(ImportExportModelAdmin):
         self.message_user(
             request,
             f"{processed} image(s) galerie optimisée(s).",
+            level=messages.SUCCESS if processed else messages.WARNING,
+        )
+
+
+@admin.register(MarketingSubServiceImage)
+class MarketingSubServiceImageAdmin(ImportExportModelAdmin):
+    list_display = ("sub_service", "caption", "order")
+    list_filter = ("sub_service__service",)
+    search_fields = ("sub_service__name", "caption")
+    autocomplete_fields = ("sub_service",)
+    resource_class = MarketingSubServiceImageResource
+    actions = ("recompress_gallery_images",)
+
+    @admin.action(description="Optimiser les images galerie sous-service sélectionnées")
+    def recompress_gallery_images(self, request, queryset):
+        processed = 0
+        for image in queryset:
+            if not image.image:
+                continue
+            compress_image_field(image.image, max_px=800, quality=80)
+            image.save(update_fields=["image"])
+            processed += 1
+        self.message_user(
+            request,
+            f"{processed} image(s) galerie sous-service optimisée(s).",
             level=messages.SUCCESS if processed else messages.WARNING,
         )
 
