@@ -25,12 +25,16 @@ def execute(
 
     reference_time = (booking.alternative_requested_at or booking.updated_at or booking.created_at) if booking.status == AWAITING_ALTERNATIVE_PROVIDER else booking.created_at
     if booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER, WAITING_PROVIDER_ASSIGNMENT) and now - reference_time >= EXPIRATION_DELAY:
+        expired_while_waiting_provider = booking.status == SUBMITTED
         expired_while_finding_alternative = booking.status == AWAITING_ALTERNATIVE_PROVIDER
-        booking.status = CANCELLED
+        previous_status = booking.status
+        booking.status = AWAITING_ALTERNATIVE_PROVIDER if expired_while_waiting_provider else CANCELLED
         booking.updated_at = now
-        if booking.payment_auth_id:
+        if expired_while_waiting_provider:
+            booking.alternative_requested_at = now
+        elif booking.payment_auth_id:
             payment_gateway.release_auth(booking.payment_auth_id)
-        booking.payment_status = "RELEASED" if booking.amount_due_now_cents > 0 else "WAIVED"
+            booking.payment_status = "RELEASED" if booking.amount_due_now_cents > 0 else "WAIVED"
         euros = booking.estimated_price_cents / 100
         formatted_price = f"{euros:.2f}".replace(".", ",")
         formatted_price = f"{formatted_price} €"
@@ -42,7 +46,7 @@ def execute(
                 [
                     "Bonjour,",
                     "",
-                    "La recherche d'alternative a expiré." if expired_while_finding_alternative else "La demande a expiré faute de confirmation.",
+                    "La prestataire initiale n'a pas répondu dans le délai prévu. Château Rose prend le relais pour chercher une alternative." if expired_while_waiting_provider else "La recherche d'alternative a expiré." if expired_while_finding_alternative else "La demande a expiré faute de confirmation.",
                     "Récapitulatif :",
                     f"- Date : {effective_date}",
                     f"- Lieu : {booking.location}",
@@ -60,13 +64,13 @@ def execute(
                 [
                     f"Bonjour {booking.client_contact['name']},",
                     "",
-                    "Nous n'avons pas trouvé d'alternative compatible dans le délai prévu." if expired_while_finding_alternative else "La demande a expiré faute de confirmation.",
+                    "La prestataire initiale n'a pas répondu dans le délai prévu. On cherche maintenant une autre coiffeuse compatible, sans nouveau paiement de ta part." if expired_while_waiting_provider else "Nous n'avons pas trouvé d'alternative compatible dans le délai prévu." if expired_while_finding_alternative else "La demande a expiré faute de confirmation.",
                     "Récapitulatif :",
                     f"- Date : {effective_date}",
                     f"- Lieu : {booking.location}",
                     f"- Tarif : {formatted_price}",
                     "",
-                    "Ton empreinte bancaire a été libérée. Si tu veux, tu peux déposer une nouvelle demande." if expired_while_finding_alternative else "Si tu veux, tu peux déposer une nouvelle demande.",
+                    "Ton empreinte bancaire reste simplement réservée : aucun montant n'est débité tant qu'un nouveau rendez-vous n'est pas confirmé." if expired_while_waiting_provider else "Ton empreinte bancaire a été libérée. Si tu veux, tu peux déposer une nouvelle demande." if expired_while_finding_alternative else "Si tu veux, tu peux déposer une nouvelle demande.",
                     "À bientôt,",
                     "L'équipe Château Rose",
                 ]
@@ -78,13 +82,13 @@ def execute(
                 f"Demande expirée · {booking.id}",
                 "\n".join(
                     [
-                        "Une demande a expiré et l'empreinte bancaire a été libérée.",
+                        "Une prestataire n'a pas répondu à temps. La demande passe en recherche d'alternative." if expired_while_waiting_provider else "Une demande a expiré et l'empreinte bancaire a été libérée.",
                         f"- ID demande : {booking.id}",
                         f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
                         f"- Date : {effective_date}",
                         f"- Lieu : {booking.location}",
                         f"- Tarif : {formatted_price}",
-                        f"- Statut précédent : {'alternative en recherche' if expired_while_finding_alternative else 'en attente'}",
+                        f"- Statut précédent : {previous_status}",
                     ]
                 ),
                 reply_to=booking.client_contact["email"],

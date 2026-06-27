@@ -7,7 +7,7 @@ from chateaurose.domain.tests.stubs.payment_gateway import InMemoryPaymentGatewa
 from chateaurose.domain.use_cases import expire_booking
 
 
-def test_expire_booking_after_72h_releases_and_notifies():
+def test_submitted_booking_after_72h_moves_to_alternative_search_without_releasing_payment():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()
     payments = InMemoryPaymentGateway()
@@ -34,7 +34,7 @@ def test_expire_booking_after_72h_releases_and_notifies():
     )
     repo.add(booking)
 
-    expired = expire_booking.execute(
+    moved_to_alternative = expire_booking.execute(
         booking_id="booking_5",
         now=now,
         booking_repository=repo,
@@ -42,8 +42,9 @@ def test_expire_booking_after_72h_releases_and_notifies():
         notifier=notifier,
     )
 
-    assert expired.status == expire_booking.CANCELLED
-    assert payments.release_calls == [{"auth_id": "auth_5"}]
+    assert moved_to_alternative.status == expire_booking.AWAITING_ALTERNATIVE_PROVIDER
+    assert moved_to_alternative.alternative_requested_at == now
+    assert payments.release_calls == []
     assert notifier.messages == [
         {
             "recipient": "provider_1",
@@ -52,7 +53,7 @@ def test_expire_booking_after_72h_releases_and_notifies():
                 [
                     "Bonjour,",
                     "",
-                    "La demande a expiré faute de confirmation.",
+                    "La prestataire initiale n'a pas répondu dans le délai prévu. Château Rose prend le relais pour chercher une alternative.",
                     "Récapitulatif :",
                     "- Date : 2026-01-10T17:00:00Z",
                     "- Lieu : Saint-Cyprien",
@@ -70,13 +71,13 @@ def test_expire_booking_after_72h_releases_and_notifies():
                 [
                     "Bonjour Sarah,",
                     "",
-                    "La demande a expiré faute de confirmation.",
+                    "La prestataire initiale n'a pas répondu dans le délai prévu. On cherche maintenant une autre coiffeuse compatible, sans nouveau paiement de ta part.",
                     "Récapitulatif :",
                     "- Date : 2026-01-10T17:00:00Z",
                     "- Lieu : Saint-Cyprien",
                     "- Tarif : 85,00 €",
                     "",
-                    "Si tu veux, tu peux déposer une nouvelle demande.",
+                    "Ton empreinte bancaire reste simplement réservée : aucun montant n'est débité tant qu'un nouveau rendez-vous n'est pas confirmé.",
                     "À bientôt,",
                     "L'équipe Château Rose",
                 ]
@@ -247,4 +248,5 @@ def test_expire_booking_notifies_operations_when_configured():
 
     assert notifier.messages[-1]["recipient"] == "ops@example.com"
     assert notifier.messages[-1]["subject"] == "Demande expirée · booking_expire_ops"
+    assert "passe en recherche d'alternative" in notifier.messages[-1]["body"]
     assert notifier.messages[-1]["reply_to"] == "sarah@example.com"

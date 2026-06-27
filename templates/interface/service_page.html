@@ -29,7 +29,7 @@
             <div class="provider-service-grid service-subservices-grid">
                 {% for sub_service_item in sub_services %}
                     {% url 'interface:sub_service_page' service.slug sub_service_item.slug as sub_service_url %}
-                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url card_cta="Demander une recherche" hide_price=True %}
+                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url card_cta="Réserver rapidement" %}
                 {% endfor %}
             </div>
         </div>
