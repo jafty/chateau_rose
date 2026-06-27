@@ -15,7 +15,7 @@
         <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
         <div class="service-header-actions" style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:0.8rem;">
-            <a class="btn primary" href="#{% if sub_services and not is_sub_service_page %}service-subservices{% else %}service-request{% endif %}">Demander une recherche</a>
+            <a class="btn primary" href="#{% if sub_services and not is_sub_service_page %}service-subservices{% else %}service-request{% endif %}">Réserver rapidement</a>
             <a class="btn secondary" href="#provider-comparison">Choisir un profil</a>
         </div>
     </div>
@@ -38,8 +38,8 @@
 
         {% if request_form %}
         <div id="service-request" class="provider-form-card inline-form-card" style="margin-bottom:1.25rem;">
-            <h2 class="wizard-heading">Demander une recherche</h2>
-            <p class="meta-line">Réponds à quelques questions : Château Rose cherche une prestataire compatible. L'empreinte bancaire n'est débitée que si un RDV est confirmé.</p>
+            <h2 class="wizard-heading">Réserver rapidement</h2>
+            <p class="meta-line">Indique ton créneau idéal et tes préférences : Château Rose lance tout de suite la recherche d'une prestataire compatible. L'empreinte bancaire n'est débitée que si un RDV est confirmé.</p>
             <div class="step-progress" aria-label="Étapes de demande rapide">
                 <div class="step-indicator active" data-step-indicator="1">1</div>
                 <div class="step-indicator" data-step-indicator="2">2</div>
@@ -48,6 +48,49 @@
             {% if request_form.non_field_errors %}<div class="alert error">{{ request_form.non_field_errors|join:", " }}</div>{% endif %}
             {% include "interface/partials/generic_booking_form.html" %}
         </div>
+        {% endif %}
+
+        {% if is_sub_service_page and gallery_images %}
+        <section class="content-section" id="service-gallery">
+            <h3 class="section-title provider-section-title">Inspirations & résultats</h3>
+            <div class="provider-gallery-card">
+                <div class="photo-grid provider-gallery-grid" data-gallery-grid>
+                    {% for image in gallery_images|slice:":7" %}
+                        <button
+                            type="button"
+                            class="gallery-thumb"
+                            data-gallery-index="{{ forloop.counter0 }}"
+                            data-gallery-src="{{ image.url }}"
+                            data-gallery-caption="{{ image.caption|default:page_service_name }}"
+                        >
+                            <span class="tape" aria-hidden="true"></span>
+                            <img src="{{ image.url }}" alt="{{ image.caption|default:page_service_name }}" loading="lazy" decoding="async">
+                            <span class="gallery-thumb__overlay">Zoomer</span>
+                        </button>
+                    {% endfor %}
+                    {% if gallery_images|length > 7 %}
+                        <button type="button" class="gallery-more-card" data-gallery-index="7" data-gallery-src="{{ gallery_images.7.url|default:gallery_images.0.url }}" data-gallery-caption="Voir plus d'inspirations {{ page_service_name }}">
+                            <span class="tape" aria-hidden="true"></span>
+                            +{{ gallery_images|length|add:"-7" }} voir tout
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="gallery-modal" data-gallery-modal hidden>
+                <div class="gallery-modal__backdrop" data-gallery-close></div>
+                <div class="gallery-modal__dialog" role="dialog" aria-modal="true" aria-label="Galerie des inspirations">
+                    <button type="button" class="gallery-modal__close" data-gallery-close aria-label="Fermer la galerie">✕</button>
+                    <div class="gallery-modal__main">
+                        <button type="button" class="gallery-modal__nav" data-gallery-prev aria-label="Photo précédente">‹</button>
+                        <figure class="gallery-modal__figure" data-gallery-figure>
+                            <figcaption class="gallery-modal__caption" data-gallery-caption></figcaption>
+                        </figure>
+                        <button type="button" class="gallery-modal__nav" data-gallery-next aria-label="Photo suivante">›</button>
+                    </div>
+                    <div class="gallery-modal__thumbs" data-gallery-thumbs></div>
+                </div>
+            </div>
+        </section>
         {% endif %}
         {% if providers %}
         <section id="provider-comparison" class="providers-comparison-section">
@@ -348,6 +391,84 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setState(false);
     toggle.addEventListener('click', () => setState(!content.classList.contains('is-open')));
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const galleryItems = Array.from(document.querySelectorAll('[data-gallery-index]')).map((item) => ({
+        trigger: item,
+        src: item.dataset.gallerySrc,
+        caption: item.dataset.galleryCaption,
+        alt: item.querySelector('img')?.alt || 'Réalisation',
+    }));
+    const galleryModal = document.querySelector('[data-gallery-modal]');
+    if (!galleryItems.length || !galleryModal) return;
+
+    const galleryFigure = galleryModal.querySelector('[data-gallery-figure]');
+    const galleryCaption = galleryModal.querySelector('[data-gallery-caption]');
+    const galleryThumbs = galleryModal.querySelector('[data-gallery-thumbs]');
+    const galleryPrev = galleryModal.querySelector('[data-gallery-prev]');
+    const galleryNext = galleryModal.querySelector('[data-gallery-next]');
+    const galleryCloseButtons = galleryModal.querySelectorAll('[data-gallery-close]');
+    let galleryIndex = 0;
+    let galleryKeyHandler = null;
+
+    const renderGallery = (index) => {
+        const item = galleryItems[index];
+        if (!item || !galleryFigure) return;
+        galleryFigure.querySelector('[data-gallery-view]')?.remove();
+        const image = document.createElement('img');
+        image.setAttribute('data-gallery-view', '');
+        image.src = item.src;
+        image.alt = item.alt;
+        galleryFigure.prepend(image);
+        if (galleryCaption) galleryCaption.textContent = item.caption || 'Réalisation';
+        galleryThumbs?.querySelectorAll('button').forEach((thumb, thumbIndex) => {
+            thumb.classList.toggle('is-active', thumbIndex === index);
+        });
+        galleryIndex = index;
+    };
+    const showNext = () => renderGallery((galleryIndex + 1) % galleryItems.length);
+    const showPrev = () => renderGallery((galleryIndex - 1 + galleryItems.length) % galleryItems.length);
+    const closeGallery = () => {
+        galleryModal.hidden = true;
+        galleryModal.classList.remove('is-open');
+        document.body.classList.remove('has-gallery-modal');
+        if (galleryKeyHandler) document.removeEventListener('keydown', galleryKeyHandler);
+        galleryKeyHandler = null;
+    };
+    const openGallery = (index) => {
+        galleryModal.hidden = false;
+        galleryModal.classList.add('is-open');
+        document.body.classList.add('has-gallery-modal');
+        renderGallery(index);
+        galleryCloseButtons[0]?.focus();
+        galleryKeyHandler = (event) => {
+            if (event.key === 'Escape') closeGallery();
+            if (event.key === 'ArrowRight') showNext();
+            if (event.key === 'ArrowLeft') showPrev();
+        };
+        document.addEventListener('keydown', galleryKeyHandler);
+    };
+
+    if (galleryThumbs) {
+        galleryThumbs.innerHTML = '';
+        galleryItems.forEach((item, index) => {
+            const thumbButton = document.createElement('button');
+            thumbButton.type = 'button';
+            thumbButton.setAttribute('aria-label', item.caption || `Réalisation ${index + 1}`);
+            const thumbImage = document.createElement('img');
+            thumbImage.src = item.src;
+            thumbImage.alt = item.alt;
+            thumbButton.appendChild(thumbImage);
+            thumbButton.addEventListener('click', () => renderGallery(index));
+            galleryThumbs.appendChild(thumbButton);
+        });
+    }
+
+    galleryItems.forEach((item, index) => item.trigger.addEventListener('click', () => openGallery(index)));
+    galleryCloseButtons.forEach((button) => button.addEventListener('click', closeGallery));
+    galleryPrev?.addEventListener('click', showPrev);
+    galleryNext?.addEventListener('click', showNext);
 });
 </script>
 {% endblock %}

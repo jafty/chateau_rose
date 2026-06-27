@@ -1823,6 +1823,16 @@ def _gallery_from_service(service_meta: MarketingService):
     return images
 
 
+def _gallery_from_sub_service(sub_service: MarketingSubService):
+    images = []
+    for image in sub_service.images.all():
+        resolved = image.resolved_url
+        if not resolved:
+            continue
+        images.append(GalleryImage(url=resolved, caption=image.caption))
+    return images
+
+
 def _to_service_content(service_meta: MarketingService) -> ServiceContent:
     return ServiceContent(
         name=service_meta.name,
@@ -2163,6 +2173,7 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
     if request_form is None:
         return redirect(f"{request.path}?anchor=service-request")
 
+    sub_service_gallery = _gallery_from_sub_service(sub_service)
     service_content = _to_service_content(service_meta)
     marketing_content = build_marketing_content(service=service_content)
     service_schema = _build_service_schema(request, sub_service.name, None)
@@ -2182,7 +2193,7 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
             "city_intro": marketing_content.location_intro,
             "highlights": marketing_content.highlights,
             "hero_image": sub_service.resolved_image or marketing_content.hero_image,
-            "gallery_images": marketing_content.gallery,
+            "gallery_images": sub_service_gallery or marketing_content.gallery,
             "meta_description": marketing_content.meta_description,
             "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
             "request_form": request_form,
