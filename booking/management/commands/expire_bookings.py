@@ -33,7 +33,7 @@ class Command(BaseCommand):
         payment_gateway = StripePaymentGateway()
         notifier = EmailNotifier()
 
-        expired_count = 0
+        processed_count = 0
         for booking_id in booking_ids:
             result = expire_booking.execute(
                 booking_id=booking_id,
@@ -43,7 +43,7 @@ class Command(BaseCommand):
                 notifier=notifier,
                 operations_email=(getattr(settings, "OPERATIONS_EMAIL", "") or "").strip() or None,
             )
-            if result.status == expire_booking.CANCELLED:
-                expired_count += 1
+            if result.status in (expire_booking.CANCELLED, expire_booking.AWAITING_ALTERNATIVE_PROVIDER):
+                processed_count += 1
 
-        self.stdout.write(self.style.SUCCESS(f"Expired {expired_count} booking(s)."))
+        self.stdout.write(self.style.SUCCESS(f"Processed {processed_count} stale booking(s)."))

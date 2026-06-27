@@ -43,7 +43,7 @@ class ExpireBookingsCommandTests(TestCase):
         )
 
     def _create_booking(self, booking_id: str, *, status: str, created_at):
-        return Booking.objects.create(
+        booking = Booking.objects.create(
             booking_id=booking_id,
             provider=self.provider,
             service=self.service,
@@ -64,8 +64,11 @@ class ExpireBookingsCommandTests(TestCase):
             status=status,
             created_at=created_at,
         )
+        Booking.objects.filter(pk=booking.pk).update(created_at=created_at)
+        booking.refresh_from_db()
+        return booking
 
-    def test_command_expires_only_bookings_past_72h_threshold(self):
+    def test_command_moves_stale_submitted_booking_to_alternative_search(self):
         old_booking = self._create_booking(
             "BK-OLD-1",
             status="SUBMITTED",
@@ -89,7 +92,7 @@ class ExpireBookingsCommandTests(TestCase):
         old_booking.refresh_from_db()
         fresh_booking.refresh_from_db()
 
-        self.assertEqual(old_booking.status, "CANCELLED")
+        self.assertEqual(old_booking.status, Booking.STATUS_AWAITING_ALTERNATIVE_PROVIDER)
         self.assertEqual(fresh_booking.status, "SUBMITTED")
-        self.assertEqual(payment_stub.released, ["pi_auth_BK-OLD-1"])
+        self.assertEqual(payment_stub.released, [])
         self.assertEqual(len(notifier_stub.messages), 2)

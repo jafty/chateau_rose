@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Coiffure afro à Toulouse | Réserve ton RDV | Château Rose{% endblock %}
+{% block title %}Coiffure tous types de cheveux à Toulouse | Château Rose{% endblock %}
 
 {% block extra_head %}
 <link rel="preconnect" href="https://chateau-rose-bucket.s3.amazonaws.com" crossorigin>
@@ -62,8 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <div class="hero-compact-header">
             <div class="trust-pill-micro"><span class="trust-icon">✓</span> Profils vérifiés</div>
-            <h1 class="hero-title-compact">Réserve rapidement ta coiffure <span>Afro</span> à Toulouse.</h1>
-            <p class="hero-text-compact">Dépose une demande rapide ou choisis ton profil préféré : on sécurise le rendez-vous sans débit avant confirmation.</p>
+            <h1 class="hero-title-compact">Réserve une coiffure pour <span>tous types de cheveux</span> à Toulouse.</h1>
+            <p class="hero-text-compact">Afro, bouclés, lisses, frisés, crépus ou locks : dépose une demande rapide ou choisis ton profil préféré, on sécurise le rendez-vous sans débit avant confirmation.</p>
             <p class="hero-question-compact">Que souhaites-tu réaliser ?</p>
         </div>
 
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="providers-section" id="providers">
     <div class="container">
         <div class="section-paper-head">
-            <h2 class="section-title">Nos as de la coiffure afro à Toulouse</h2>
+            <h2 class="section-title">Nos as de la coiffure, tous types de cheveux</h2>
             <p class="section-subtitle">Compare les tarifs, portfolios et disponibilités, puis envoie ta demande au profil qui te correspond.</p>
         </div>
         <div class="homepage-providers-grid" aria-label="Top 3 des prestataires">
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             </div>
-            <div class="image-frame-tilted-wrap"><div class="image-frame-tilted"><img src="{% static 'demo_pictures/pf_afro_robe_jaune.jpg' %}" alt="Coiffeuse afro à Toulouse" loading="lazy" decoding="async"></div></div>
+            <div class="image-frame-tilted-wrap"><div class="image-frame-tilted"><img src="{% static 'demo_pictures/pf_afro_robe_jaune.jpg' %}" alt="Coiffeuse à Toulouse pour tous types de cheveux" loading="lazy" decoding="async"></div></div>
         </div>
     </div>
 </section>
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 {% if provider.resolved_cover_image %}
                     <img src="{{ provider.resolved_cover_image }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async" draggable="false">
                 {% else %}
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure afro" loading="lazy" decoding="async" draggable="false">
+                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure tous types de cheveux" loading="lazy" decoding="async" draggable="false">
                 {% endif %}
                 <p>{{ provider.name }}</p>
             </div>
@@ -250,17 +250,17 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
 </section>
 
-<section class="cta-pro" id="pro"><div class="container"><h3 class="cta-pro-title">Tu es coiffeuse ou coiffeur afro à Toulouse ?</h3><p class="cta-pro-copy">Reçois des demandes claires, sécurise les rendez-vous et garde la main sur tes prix et tes créneaux.</p><a href="{% url 'providers:signup' %}" class="btn secondary">Créer mon espace pro</a></div></section>
+<section class="cta-pro" id="pro"><div class="container"><h3 class="cta-pro-title">Tu es coiffeuse ou coiffeur à Toulouse ?</h3><p class="cta-pro-copy">Reçois des demandes claires, sécurise les rendez-vous et garde la main sur tes prix et tes créneaux.</p><a href="{% url 'providers:signup' %}" class="btn secondary">Créer mon espace pro</a></div></section>
 
 <section class="city-discovery" aria-label="Pages ville coiffure afro">
     <div class="container city-discovery-inner">
-        <h2 class="section-title">Coiffure afro à Toulouse et alentours</h2>
+        <h2 class="section-title">Coiffure tous types de cheveux à Toulouse et alentours</h2>
         <div class="toulouse-spotlight">
             <img class="toulouse-spotlight-image" src="https://images.ladepeche.fr/api/v1/images/view/63b461fb9de9df0e596e20b5/large/image.jpg?v=1" alt="Saint-Cyprien et rue de la République à Toulouse" loading="lazy" decoding="async">
             <div class="toulouse-spotlight-copy">
                 <h3>Flemme de courir d'une adresse à l'autre ou d'attendre ton tour ?</h3>
                 <p>
-                    De Saint-Cyprien à Compans en passant par les Arènes : les adresses coiffure afro ne manquent pas à Toulouse.<br/>
+                    De Saint-Cyprien à Compans en passant par les Arènes : les adresses coiffure pour tous types de cheveux ne manquent pas à Toulouse.<br/>
                     Mais tu n'as peut-être pas envie de traverser la ville ni d'attendre des heures dans une salle bondée. <br/>
                     Ça tombe très bien : Château Rose réunit des coiffeuses indépendantes qui te reçoivent ou se déplacent chez toi, et t'aide à trouver une alternative si besoin.
                 </p>
@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="city-chip-list">
             {% for city in marketing_city_links %}
-                <a class="city-chip" href="{{ city.url }}">Coiffure afro à {{ city.name }}</a>
+                <a class="city-chip" href="{{ city.url }}">Coiffure à {{ city.name }}</a>
             {% endfor %}
         </div>
     </div>

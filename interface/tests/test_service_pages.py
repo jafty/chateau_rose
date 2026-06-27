@@ -55,6 +55,7 @@ class ServicePagesTests(TestCase):
             service=self.marketing_service,
             name="Knotless braids",
             slug="knotless-braids",
+            generic_base_price_cents=6500,
         )
         self.sub_service.providers.add(self.provider_a)
 
@@ -447,9 +448,9 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn('Coiffure afro à Toulouse et alentours', content)
+        self.assertIn('Coiffure tous types de cheveux à Toulouse et alentours', content)
         self.assertIn('/villes/balma/', content)
-        self.assertIn('Coiffure afro à Tournefeuille', content)
+        self.assertIn('Coiffure à Tournefeuille', content)
         self.assertNotIn('SEO local', content)
 
     def test_home_hides_marketing_services_marked_hidden(self):
@@ -527,10 +528,12 @@ class ServicePagesTests(TestCase):
     def test_service_page_shows_quick_booking_primary_cta_and_provider_choice_secondary_cta(self):
         response = self.client.get(reverse("interface:service_page", args=["tresses"]))
 
+        self.assertContains(response, "Dès")
+        self.assertContains(response, "65€")
         self.assertContains(response, "Réserver rapidement")
         self.assertContains(response, 'href="#service-subservices"')
         self.assertContains(response, 'id="service-subservices"')
-        self.assertContains(response, "Choisir ma coiffeuse")
+        self.assertContains(response, "Choisir un profil")
 
     def test_sub_service_page_quick_booking_cta_targets_request_form(self):
         response = self.client.get(reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]))
