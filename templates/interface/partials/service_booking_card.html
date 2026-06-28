@@ -1,22 +1,30 @@
 {% load static %}
-<article class="provider-service-card">
-    <span class="tape" aria-hidden="true"></span>
-    <div class="provider-service-card__media">
-        {% if card.resolved_image %}
-            <img src="{{ card.resolved_image }}" alt="{% if provider %}{{ card.name }} réalisée par {{ provider.name }}{% else %}{{ card.name }}{% endif %}" loading="lazy" decoding="async">
-        {% else %}
-            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{% if provider %}{{ card.name }} réalisée par {{ provider.name }}{% else %}{{ card.name }}{% endif %}" loading="lazy" decoding="async">
-        {% endif %}
-    </div>
-    <div class="provider-service-card__content">
-        <div class="provider-service-card__top">
-            <h4>{{ card.name }}</h4>
-            {% if card.price_display and not hide_price %}<span class="service-price">Dès <span class="price-value">{{ card.price_display }}</span></span>{% endif %}
+{% if card_url %}
+    <a class="provider-service-card provider-service-card--link" href="{{ card_url }}" aria-label="{{ card_cta|default:"Réserver rapidement" }} : {{ card.name }}">
+{% else %}
+    <article class="provider-service-card">
+{% endif %}
+        <span class="tape" aria-hidden="true"></span>
+        <div class="provider-service-card__media">
+            {% if card.resolved_image %}
+                <img src="{{ card.resolved_image }}" alt="{% if provider %}{{ card.name }} réalisée par {{ provider.name }}{% else %}{{ card.name }}{% endif %}" loading="lazy" decoding="async">
+            {% else %}
+                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{% if provider %}{{ card.name }} réalisée par {{ provider.name }}{% else %}{{ card.name }}{% endif %}" loading="lazy" decoding="async">
+            {% endif %}
         </div>
-        {% if card_url %}
-            <a class="btn btn-accent provider-service-card__button" href="{{ card_url }}">{{ card_cta|default:"Réserver rapidement" }}</a>
-        {% else %}
-            <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ card.id }}">{{ card_cta|default:"Estimer et réserver" }}</button>
-        {% endif %}
-    </div>
-</article>
+        <div class="provider-service-card__content">
+            <div class="provider-service-card__top">
+                <h4>{{ card.name }}</h4>
+                {% if card.price_display and not hide_price %}<span class="service-price">Dès <span class="price-value">{{ card.price_display }}</span></span>{% endif %}
+            </div>
+            {% if card_url %}
+                <span class="btn btn-accent provider-service-card__button" aria-hidden="true">{{ card_cta|default:"Réserver rapidement" }}</span>
+            {% else %}
+                <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ card.id }}">{{ card_cta|default:"Estimer et réserver" }}</button>
+            {% endif %}
+        </div>
+{% if card_url %}
+    </a>
+{% else %}
+    </article>
+{% endif %}
