@@ -1825,11 +1825,18 @@ def _gallery_from_service(service_meta: MarketingService):
 
 def _gallery_from_sub_service(sub_service: MarketingSubService):
     images = []
+    seen_urls = set()
+    main_image = sub_service.resolved_image
+    if main_image:
+        images.append(GalleryImage(url=main_image, caption=sub_service.name))
+        seen_urls.add(main_image)
+
     for image in sub_service.images.all():
         resolved = image.resolved_url
-        if not resolved:
+        if not resolved or resolved in seen_urls:
             continue
         images.append(GalleryImage(url=resolved, caption=image.caption))
+        seen_urls.add(resolved)
     return images
 
 
