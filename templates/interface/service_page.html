@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<section class="container service-header service-header-wrap">
+<section class="container service-header service-header-wrap{% if is_sub_service_page and gallery_images %} service-header-with-collage{% endif %}">
     <div class="service-header-paper">
         <div class="breadcrumbs"><a href="{% url 'interface:home' %}">Accueil</a> &nbsp;/&nbsp; <a href="{% url 'interface:home' %}#catalogue">Services</a> &nbsp;/&nbsp; {{ page_service_name|default:service.name }}</div>
         <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
@@ -19,6 +19,18 @@
             <a class="btn secondary" href="#provider-comparison">Choisir un profil</a>
         </div>
     </div>
+    {% if is_sub_service_page and gallery_images %}
+        <div class="service-hero-collage" aria-label="Aperçu des inspirations {{ page_service_name|default:service.name }}">
+            {% for image in gallery_images|slice:":4" %}
+                <figure class="service-hero-polaroid">
+                    <span class="tape" aria-hidden="true"></span>
+                    <div class="service-hero-polaroid-media">
+                        <img src="{{ image.url }}" alt="{{ image.caption|default:page_service_name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async">
+                    </div>
+                </figure>
+            {% endfor %}
+        </div>
+    {% endif %}
 </section>
 
 <section class="container service-hub-layout">
