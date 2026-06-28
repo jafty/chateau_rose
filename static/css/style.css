@@ -1204,9 +1204,14 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 }
 
 .service-gallery-title { margin-top: 30px; }
+.service-section-heading {
+    margin: 0 0 14px;
+    text-align: left;
+    font-size: clamp(2rem, 1.55rem + 1.45vw, 2.65rem);
+    line-height: 1.05;
+}
 .service-subservices-heading {
     margin: 0 0 14px;
-    font-size: clamp(1.25rem, 1.1rem + 0.45vw, 1.65rem);
 }
 
 .services-grid {

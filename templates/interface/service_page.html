@@ -37,7 +37,7 @@
     <div class="main-content">
         {% if sub_services and not is_sub_service_page %}
         <div id="service-subservices" class="services-carousel-wrapper" style="margin-bottom:1.25rem;">
-            <h2 class="service-subservices-heading">Affiner ta recherche par type de prestation</h2>
+            <h2 class="section-title service-section-heading service-subservices-heading">Affiner ta recherche par type de prestation</h2>
             <div class="provider-service-grid service-subservices-grid">
                 {% for sub_service_item in sub_services %}
                     {% url 'interface:sub_service_page' service.slug sub_service_item.slug as sub_service_url %}
@@ -64,7 +64,7 @@
 
         {% if is_sub_service_page and gallery_images %}
         <section class="content-section" id="service-gallery">
-            <h3 class="section-title provider-section-title">Inspirations & résultats</h3>
+            <h2 class="section-title service-section-heading provider-section-title">Inspirations & résultats</h2>
             <div class="provider-gallery-card">
                 <div class="photo-grid provider-gallery-grid" data-gallery-grid>
                     {% for image in gallery_images|slice:":7" %}
@@ -106,7 +106,7 @@
         {% endif %}
         {% if providers %}
         <section id="provider-comparison" class="providers-comparison-section">
-            <h2 class="service-subservices-heading">Choisir une coiffeuse disponible</h2>
+            <h2 class="section-title service-section-heading service-subservices-heading">Choisir une coiffeuse disponible</h2>
             <div class="providers-grid">
             {% for provider in providers %}
             <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
