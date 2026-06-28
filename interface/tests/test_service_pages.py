@@ -138,6 +138,39 @@ class ServicePagesTests(TestCase):
         self.assertIn("Knotless braids : l&#x27;essentiel", content)
         self.assertNotIn("Description longue tresses", content)
 
+
+    def test_sub_service_page_includes_card_image_in_gallery_by_default(self):
+        self.sub_service.image_url = "https://static.example.com/knotless-card.jpg"
+        self.sub_service.save()
+
+        response = self.client.get(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Inspirations & résultats", content)
+        self.assertIn("service-header-with-collage", content)
+        self.assertIn("https://static.example.com/knotless-card.jpg", content)
+        self.assertIn('data-gallery-caption="Knotless braids"', content)
+
+    def test_sub_service_gallery_does_not_duplicate_card_image(self):
+        self.sub_service.image_url = "https://static.example.com/knotless-card.jpg"
+        self.sub_service.save()
+        MarketingSubServiceImage.objects.create(
+            sub_service=self.sub_service,
+            image_url="https://static.example.com/knotless-card.jpg",
+            caption="Duplicate card image",
+        )
+
+        response = self.client.get(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "https://static.example.com/knotless-card.jpg", count=3)
+        self.assertNotIn("Duplicate card image", response.content.decode())
+
     def test_sub_service_page_renders_dedicated_gallery_images(self):
         MarketingSubServiceImage.objects.create(
             sub_service=self.sub_service,
