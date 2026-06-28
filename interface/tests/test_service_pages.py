@@ -214,6 +214,23 @@ class ServicePagesTests(TestCase):
         self.assertNotIn(self.provider_a.name, content)
         self.assertIn("Knotless braids à domicile", content)
 
+    def test_sub_service_at_home_page_reuses_dedicated_gallery_images(self):
+        MarketingSubServiceImage.objects.create(
+            sub_service=self.sub_service,
+            image_url="https://static.example.com/knotless-at-home.jpg",
+            caption="Résultat knotless à domicile",
+        )
+
+        response = self.client.get(
+            reverse("interface:sub_service_at_home_page", args=["tresses", "knotless-braids"])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Inspirations & résultats", content)
+        self.assertIn("https://static.example.com/knotless-at-home.jpg", content)
+        self.assertIn("Résultat knotless à domicile", content)
+
     def test_service_page_uses_static_main_image_when_no_upload(self):
         self.marketing_service.main_image_url = "https://static.example.com/tresses.jpg"
         self.marketing_service.save()
