@@ -2285,6 +2285,7 @@ def sub_service_at_home_page(request, service_slug: str, sub_service_slug: str):
         .distinct()
     )
 
+    sub_service_gallery = _gallery_from_sub_service(sub_service)
     service_content = _to_service_content(service_meta)
     marketing_content = build_marketing_content(service=service_content)
     page_service_name = f"{sub_service.name} à domicile"
@@ -2305,7 +2306,7 @@ def sub_service_at_home_page(request, service_slug: str, sub_service_slug: str):
             "city_intro": marketing_content.location_intro,
             "highlights": marketing_content.highlights,
             "hero_image": sub_service.resolved_image or marketing_content.hero_image,
-            "gallery_images": marketing_content.gallery,
+            "gallery_images": sub_service_gallery or marketing_content.gallery,
             "meta_description": f"Trouve facilement {sub_service.name.lower()} à domicile à Toulouse.",
             "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
             "request_form": None,
