@@ -155,6 +155,28 @@ class ServicePagesTests(TestCase):
         self.assertIn("https://static.example.com/knotless-result.jpg", content)
         self.assertIn("Résultat knotless", content)
 
+    def test_sub_service_page_renders_first_four_gallery_images_in_hero_collage(self):
+        for index in range(5):
+            MarketingSubServiceImage.objects.create(
+                sub_service=self.sub_service,
+                image_url=f"https://static.example.com/knotless-hero-{index}.jpg",
+                caption=f"Résultat knotless {index}",
+                order=index,
+            )
+
+        response = self.client.get(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("service-header-with-collage", content)
+        self.assertIn("service-hero-collage", content)
+        self.assertIn("Aperçu des inspirations Knotless braids", content)
+        self.assertContains(response, '<figure class="service-hero-polaroid">', count=4)
+        self.assertIn("https://static.example.com/knotless-hero-0.jpg", content)
+        self.assertIn("https://static.example.com/knotless-hero-3.jpg", content)
+
     def test_service_at_home_page_filters_only_mobile_providers(self):
         self.provider_a.location_mode = Provider.LOCATION_MODE_HYBRID
         self.provider_a.save()
