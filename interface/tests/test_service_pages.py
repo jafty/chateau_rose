@@ -118,7 +118,15 @@ class ServicePagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("Knotless braids", content)
-        self.assertIn("/services/tresses/sous-services/knotless-braids/", content)
+        self.assertIn(
+            '<a class="provider-service-card provider-service-card--link" '
+            'href="/services/tresses/sous-services/knotless-braids/"',
+            content,
+        )
+        self.assertIn(
+            '<span class="btn btn-accent provider-service-card__button" aria-hidden="true">Réserver rapidement</span>',
+            content,
+        )
         self.assertNotIn("Une question ? Écris-nous", content)
         self.assertIn('href="mailto:japhet.situmonana@gmail.com"', content)
 

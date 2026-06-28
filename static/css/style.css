@@ -4154,6 +4154,11 @@ footer {
     box-shadow: 0 14px 30px rgba(74, 59, 50, 0.12);
 }
 
+.provider-service-card--link {
+    color: inherit;
+    text-decoration: none;
+}
+
 .provider-service-card:hover {
     transform: translateY(-4px) rotate(0deg) !important;
     z-index: 2;
