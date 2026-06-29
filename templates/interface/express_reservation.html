@@ -43,6 +43,17 @@
                 </div>
             </div>
 
+            <label class="express-contact-option full-width">
+                <input type="checkbox" id="contact_me" name="contact_me" value="1" {% if wants_contact %}checked{% endif %}>
+                <span class="express-contact-option__box" aria-hidden="true">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                </span>
+                <span class="express-contact-option__content">
+                    <span class="express-contact-option__title">Prise de RDV assistée</span>
+                    <span class="express-contact-option__desc">Je préfère que l'équipe me recontacte par e-mail pour finaliser cette réservation pour moi.</span>
+                </span>
+            </label>
+
             <button type="submit" class="btn express-submit full-width">
                 Continuer vers la réservation
             </button>
