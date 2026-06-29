@@ -2,15 +2,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y09F6CEBXD"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-    
-      gtag('config', 'G-Y09F6CEBXD');
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Château Rose | Coiffure Afro à Toulouse{% endblock %}</title>
@@ -37,38 +28,40 @@
     </noscript>
     <link rel="icon" type="image/svg+xml" href="{% static 'assets/cr_logo.svg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <!-- Privacy-friendly analytics by Plausible -->
+    <!-- Privacy-friendly analytics by Plausible. Custom events are added with CSS classes. -->
     <script async src="https://plausible.io/js/pa-Im-d7ohOry4wTl5Bu4QKm.js"></script>
     <script>
       window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-      plausible.init()
+      plausible.init();
     </script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17988281338"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-    
-      gtag('config', 'AW-17988281338');
-    </script>
-    <!-- Meta Pixel Code -->
-    <script>
-        !function(f,b,e,v,n,t,s)
-        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-        n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s)}(window, document,'script',
-        'https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq = window.fbq || function(){(window.fbq.queue = window.fbq.queue || []).push(arguments)};
+      window.crLoadMarketingTrackers = function() {
+        if (window.crMarketingTrackersLoaded) return;
+        window.crMarketingTrackersLoaded = true;
+
+        const gaScript = document.createElement('script');
+        gaScript.async = true;
+        gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-Y09F6CEBXD';
+        document.head.appendChild(gaScript);
+        gtag('js', new Date());
+        gtag('config', 'G-Y09F6CEBXD', { anonymize_ip: true });
+        gtag('config', 'AW-17988281338', { anonymize_ip: true });
+
+        !function(f,b,e,v,n,t,sc){
+          if(f.fbq && f.fbq.callMethod) return;
+          n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=n.queue||[];t=b.createElement(e);t.async=!0;
+          t.src=v;sc=b.getElementsByTagName(e)[0];
+          sc.parentNode.insertBefore(t,sc);
+        }(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
         fbq('init', '27473881275634657');
         fbq('track', 'PageView');
+      };
     </script>
-    <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=27473881275634657&ev=PageView&noscript=1"
-    /></noscript>
-    <!-- End Meta Pixel Code -->
 
     {% block extra_head %}{% endblock %}
 </head>
@@ -91,9 +84,9 @@
                 <a href="{% url 'interface:provider_list' %}">Prestataires</a>
                 <a href="{% url 'interface:home' %}#catalogue">Services</a>
                 <a href="{% url 'providers:signup' %}">Devenir partenaire</a>
-                <a href="{% url 'interface:express_reservation' %}" class="pro-link pro-link-mobile">Réservation express</a>
+                <a href="{% url 'interface:express_reservation' %}" class="pro-link pro-link-mobile plausible-event-name=Express+Reservation+CTA">Réservation express</a>
             </nav>
-            <a href="{% url 'interface:express_reservation' %}" class="pro-link pro-link-desktop">Réservation express</a>
+            <a href="{% url 'interface:express_reservation' %}" class="pro-link pro-link-desktop plausible-event-name=Express+Reservation+CTA">Réservation express</a>
         </div>
     </header>
 
@@ -161,6 +154,17 @@
             </div>
         </div>
     </footer>
+    <div class="cookie-banner" data-cookie-banner hidden role="dialog" aria-live="polite" aria-label="Préférences cookies">
+        <div class="cookie-banner__content">
+            <strong>Mesure d’audience & publicité</strong>
+            <p>Nous utilisons Plausible pour comprendre les parcours sans cookies. Google Analytics/Ads et Meta Pixel ne se chargent qu’avec ton accord pour la mesure marketing.</p>
+        </div>
+        <div class="cookie-banner__actions">
+            <button type="button" class="btn secondary" data-cookie-reject>Refuser</button>
+            <button type="button" class="btn" data-cookie-accept>Accepter</button>
+        </div>
+    </div>
+    <script src="{% static 'js/cookie-consent.js' %}"></script>
     <script src="{% static 'js/navigation.js' %}"></script>
     <script src="{% static 'js/zone-search.js' %}"></script>
     {% block extra_js %}{% endblock %}

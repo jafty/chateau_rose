@@ -129,7 +129,7 @@
                         <form method="post" action="">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="edit">
-                            <button type="submit" class="btn secondary recap-edit-btn">Modifier ma demande</button>
+                            <button type="submit" class="btn secondary recap-edit-btn plausible-event-name=Provider+Recap+Edit">Modifier ma demande</button>
                         </form>
                         {% endif %}
                     </div>
@@ -190,7 +190,7 @@
                                 </div>
                             {% endif %}
 
-                            <button type="submit" class="btn recap-submit-btn">{% if amount_due_now_cents == 0 %}Confirmer ma demande{% else %}Sécuriser ma demande{% endif %}</button>
+                            <button type="submit" class="btn recap-submit-btn plausible-event-name=Provider+Recap+Confirm">{% if amount_due_now_cents == 0 %}Confirmer ma demande{% else %}Sécuriser ma demande{% endif %}</button>
                         </form>
                     {% endif %}
 
