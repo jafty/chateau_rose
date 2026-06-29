@@ -1222,7 +1222,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .service-polaroid {
     display: block;
     background: white;
-    padding: 10px 10px 78px;
+    padding: 10px 10px 88px;
     box-shadow: var(--shadow-soft);
     transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     transform: rotate(0deg);
@@ -1258,7 +1258,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 
 .service-label {
     position: absolute;
-    bottom: 42px;
+    bottom: 52px;
     left: 0;
     width: 100%;
     font-family: 'Cormorant Garamond', serif;
@@ -2920,14 +2920,15 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
     .horizontal-scroll-mobile {
         display: flex !important; flex-wrap: nowrap !important; overflow-x: auto !important;
         scroll-snap-type: x mandatory; gap: 12px !important; padding-bottom: 24px !important;
+        margin-top: 12px !important;
         margin-inline: calc(var(--page-gutter) * -1) !important; padding-inline: var(--page-gutter) !important;
         -webkit-overflow-scrolling: touch; scrollbar-width: none;
     }
     .horizontal-scroll-mobile::-webkit-scrollbar { display: none; }
-    .horizontal-scroll-mobile .service-polaroid { flex: 0 0 calc(56vw - 10px) !important; max-width: 270px; scroll-snap-align: center; transform: none !important; padding: 8px 8px 66px !important; }
+    .horizontal-scroll-mobile .service-polaroid { flex: 0 0 calc(56vw - 10px) !important; max-width: 270px; scroll-snap-align: center; transform: none !important; padding: 8px 8px 76px !important; }
     .horizontal-scroll-mobile .service-polaroid img { height: 180px !important; }
     .horizontal-scroll-mobile .service-polaroid .service-label {
-        bottom: 34px !important;
+        bottom: 46px !important;
         font-size: 1.22rem !important;
         line-height: 1.15;
         padding-inline: 8px;
