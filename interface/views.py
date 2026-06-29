@@ -39,11 +39,13 @@ from chateaurose.domain.services.pricing import (
     floor_price_for_display_cents,
 )
 from chateaurose.domain.use_cases import expire_booking as expire_booking_uc
+from chateaurose.domain.use_cases import prepare_express_reservation
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
 from chateaurose.domain.use_cases import create_booking_request, prepare_booking_recap, request_haircut, update_proposal
 from chateaurose.infrastructure.booking_repository import DjangoBookingRepository
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
 from chateaurose.infrastructure.email_notifier import EmailNotifier
+from chateaurose.infrastructure.express_reservation_catalog import DjangoExpressReservationCatalog
 from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
 from chateaurose.infrastructure.provider_catalog import (
     DjangoProviderCatalog,
@@ -72,6 +74,7 @@ notifier = EmailNotifier()
 payment_gateway = StripePaymentGateway()
 provider_catalog = DjangoProviderCatalog()
 provider_directory = DjangoProviderDirectory()
+express_reservation_catalog = DjangoExpressReservationCatalog()
 
 
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
@@ -512,6 +515,41 @@ def zone_search(request):
     zones = zones[:limit]
     payload = {"results": [{"id": zone.id, "name": zone.name, "slug": zone.slug} for zone in zones]}
     return JsonResponse(payload)
+
+
+def express_reservation(request):
+    error = None
+    choices = prepare_express_reservation.list_grouped_choices(express_reservation_catalog)
+
+    if request.method == "POST":
+        email = request.POST.get("email", "")
+        selected_choice = request.POST.get("service", "")
+        try:
+            target = prepare_express_reservation.execute(
+                email=email,
+                selected_choice=selected_choice,
+                catalog=express_reservation_catalog,
+                notifier=notifier,
+                base_url=build_base_url(request),
+            )
+        except DomainError as exc:
+            error = _friendly_domain_error_message(exc)
+        else:
+            request.session["express_reservation_message"] = (
+                f"Lien envoyé par email. Redirection vers {target.sub_service_name}."
+            )
+            return redirect(target.reservation_url)
+
+    return render(
+        request,
+        "interface/express_reservation.html",
+        {
+            "choices": choices,
+            "error": error,
+            "submitted_email": request.POST.get("email", "") if request.method == "POST" else "",
+            "selected_choice": request.POST.get("service", "") if request.method == "POST" else "",
+        },
+    )
 
 
 def provider_list(request):
@@ -1701,7 +1739,7 @@ def _estimate_generic_sub_service_booking(sub_service: MarketingSubService, payl
     }
 
 
-def _build_service_request_form(request, service_meta: MarketingService | None, zone, sub_service: MarketingSubService | None = None):
+def _build_service_request_form(request, service_meta: MarketingService | None, zone, sub_service: MarketingSubService | None = None, initial: dict | None = None):
     is_request_submission = request.method == "POST" and request.POST.get("request_service") == "1"
     use_legacy_quick_request = is_request_submission and "contact" in request.POST
     request_success = request.session.pop("service_request_success", False)
@@ -1724,7 +1762,7 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
             return "redirect", False
         return legacy_form, request_success
 
-    form = GenericBookingRequestForm(request.POST if is_request_submission else None)
+    form = GenericBookingRequestForm(request.POST if is_request_submission else None, initial=None if is_request_submission else (initial or None))
 
     if is_request_submission and form.is_valid():
         coupon_code = (form.cleaned_data.get("service_fee_coupon_code") or "").strip().upper()
@@ -2171,8 +2209,10 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
     if service_request_redirect:
         return service_request_redirect
 
+    express_message = request.session.pop("express_reservation_message", None)
+    prefill_email = (request.GET.get("prefill_email") or "").strip()
     request_form, request_success = _build_service_request_form(
-        request, service_meta, zone=None, sub_service=sub_service
+        request, service_meta, zone=None, sub_service=sub_service, initial={"client_email": prefill_email}
     )
     if request_form == "redirect":
         redirect_url = request.session.pop("generic_booking_recap_redirect_url", None)
@@ -2205,6 +2245,7 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
             "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
             "request_form": request_form,
             "request_success": request_success,
+            "express_message": express_message,
             "sub_services": list(
                 MarketingSubService.objects.filter(service=service_meta, is_visible=True)
             ),

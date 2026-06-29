@@ -4975,3 +4975,125 @@ footer {
     justify-self: center;
     margin-top: 0.25rem;
 }
+
+/* --- RÉSERVATION EXPRESS --- */
+.express-layout {
+    min-height: calc(100vh - 96px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(2rem, 5vw, 4rem) var(--page-gutter);
+}
+
+.express-card {
+    background: var(--bg-paper);
+    padding: clamp(2rem, 5vw, 3.5rem);
+    box-shadow: var(--shadow-lifted);
+    border-radius: var(--radius-md);
+    width: min(100%, 560px);
+    position: relative;
+    border: 1px solid rgba(163, 124, 91, 0.15);
+}
+
+.express-card::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%) rotate(2deg);
+    width: 100px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    z-index: 1;
+}
+
+.express-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.express-title {
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    margin-bottom: 8px;
+}
+
+.express-title span {
+    color: var(--rose-accent);
+    font-style: italic;
+}
+
+.express-subtitle {
+    color: var(--ink-secondary);
+    font-size: 1.05rem;
+}
+
+.express-form {
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.express-input-wrapper svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-secondary);
+    width: 20px;
+    height: 20px;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.express-input {
+    width: 100%;
+    padding: 14px 14px 14px 44px;
+    border: 2px solid #E5E7EB;
+    background: #FAFAFA;
+    font-family: inherit;
+    font-size: 1rem;
+    border-radius: 10px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    color: var(--ink-primary);
+    appearance: none;
+}
+
+select.express-input {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%235F5148'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.express-input:focus {
+    outline: none;
+    border-color: var(--rose-accent);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(223, 172, 182, 0.15);
+}
+
+.express-submit {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.reassurance {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--ink-secondary);
+    text-align: center;
+}
+
+.reassurance svg {
+    width: 16px;
+    height: 16px;
+    color: var(--rose-accent);
+    flex: 0 0 auto;
+}
