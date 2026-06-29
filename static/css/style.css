@@ -5034,6 +5034,10 @@ footer {
     gap: 20px;
 }
 
+.express-input-wrapper {
+    position: relative;
+}
+
 .express-input-wrapper svg {
     position: absolute;
     left: 14px;

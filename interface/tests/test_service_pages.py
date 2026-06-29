@@ -734,3 +734,11 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'value="client@example.com"')
+
+    def test_express_reservation_styles_position_icons_inside_fields(self):
+        with open("static/css/style.css", encoding="utf-8") as stylesheet:
+            css = stylesheet.read()
+
+        self.assertIn(".express-input-wrapper {", css)
+        self.assertIn("position: relative;", css)
+        self.assertIn(".express-input-wrapper svg", css)
