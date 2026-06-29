@@ -20,7 +20,7 @@
             {% if card_url %}
                 <span class="btn btn-accent provider-service-card__button" aria-hidden="true">{{ card_cta|default:"Réserver rapidement" }}</span>
             {% else %}
-                <button type="button" class="btn btn-accent provider-service-card__button" data-service-card="{{ card.id }}">{{ card_cta|default:"Estimer et réserver" }}</button>
+                <button type="button" class="btn btn-accent provider-service-card__button plausible-event-name=Provider+Service+Selected" data-service-card="{{ card.id }}">{{ card_cta|default:"Estimer et réserver" }}</button>
             {% endif %}
         </div>
 {% if card_url %}

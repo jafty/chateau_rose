@@ -1,5 +1,5 @@
 <div class="provider-form-layout">
-    <form method="post" class="provider-form-grid" id="generic-request-form" data-generic-booking-form>
+    <form method="post" class="provider-form-grid plausible-event-name=Generic+Booking+Submit" id="generic-request-form" data-generic-booking-form>
         {% csrf_token %}
         <input type="hidden" name="request_service" value="1">
         <input type="hidden" name="requested_options" id="general_adjustments_input" value="">
@@ -38,7 +38,7 @@
                 <input type="datetime-local" name="desired_date" id="desired_date" required>
             </div>
             <div class="wizard-actions full-width">
-                <button type="button" class="btn btn-next">Continuer</button>
+                <button type="button" class="btn btn-next plausible-event-name=Generic+Booking+Step+1">Continuer</button>
             </div>
         </fieldset>
 
