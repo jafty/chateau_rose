@@ -524,6 +524,7 @@ def express_reservation(request):
     if request.method == "POST":
         email = request.POST.get("email", "")
         selected_choice = request.POST.get("service", "")
+        wants_contact = request.POST.get("contact_me") == "1"
         try:
             target = prepare_express_reservation.execute(
                 email=email,
@@ -535,6 +536,35 @@ def express_reservation(request):
         except DomainError as exc:
             error = _friendly_domain_error_message(exc)
         else:
+            if wants_contact:
+                normalized_email = (email or "").strip().lower()
+                subject = f"Réservation express assistée · {target.sub_service_name}"
+                body = "\n".join(
+                    [
+                        "Une cliente a demandé à être recontactée après le formulaire Réservation Express.",
+                        "",
+                        f"Email : {normalized_email}",
+                        f"Prestation : {target.service_name} / {target.sub_service_name}",
+                        f"Lien de réservation : {target.reservation_url}",
+                        "",
+                        "Action recommandée : répondre personnellement à la cliente pour finaliser le rendez-vous.",
+                    ]
+                )
+                _create_interaction(
+                    kind=Interaction.KIND_QUICK_REQUEST,
+                    source_label="Réservation express · RDV assistée",
+                    contact_email=normalized_email,
+                    subject=subject,
+                    message=body,
+                    next_action="Recontacter la cliente par e-mail",
+                    metadata={
+                        "wants_contact": True,
+                        "service_name": target.service_name,
+                        "sub_service_name": target.sub_service_name,
+                        "reservation_url": target.reservation_url,
+                    },
+                )
+                notifier.notify(SUPPORT_EMAIL, subject, body, reply_to=normalized_email)
             request.session["express_reservation_message"] = (
                 f"Lien envoyé par email. Redirection vers {target.sub_service_name}."
             )
@@ -548,6 +578,7 @@ def express_reservation(request):
             "error": error,
             "submitted_email": request.POST.get("email", "") if request.method == "POST" else "",
             "selected_choice": request.POST.get("service", "") if request.method == "POST" else "",
+            "wants_contact": request.POST.get("contact_me") == "1" if request.method == "POST" else False,
         },
     )
 
