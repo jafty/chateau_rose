@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <div class="services-carousel-wrapper">
-            <span class="swipe-hint" aria-hidden="true">Prestations populaires · fais défiler →</span>
+            <span class="swipe-hint" aria-hidden="true">Fais défiler les coiffures →</span>
             
             <div class="all-services-grid horizontal-scroll-mobile">
                 {% for service in services %}
@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         {% endif %}
                     {% endif %}
                     <span class="service-label">{{ service.name }}</span>
+                    <span class="service-card-cta" aria-hidden="true">Voir la coiffure</span>
                 </a>
                 {% endfor %}
             </div>
