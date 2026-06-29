@@ -700,3 +700,45 @@ class ServicePagesTests(TestCase):
         self.assertEqual(booking.provider_price_estimate_cents, 12500)
         self.assertEqual(booking.amount_due_now_cents, 0)
         self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_WAIVED)
+
+    @patch("interface.views.notifier.notify")
+    def test_express_reservation_redirects_to_sub_service_with_prefill_and_sends_email(self, notify):
+        response = self.client.post(
+            reverse("interface:express_reservation"),
+            {"service": "tresses/knotless-braids", "email": "CLIENT@Example.COM"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response["Location"],
+            "https://testserver/services/tresses/sous-services/knotless-braids/"
+            "?prefill_email=client%40example.com#service-request",
+        )
+        notify.assert_called_once()
+        self.assertEqual(notify.call_args.args[0], "client@example.com")
+        self.assertIn("prefill_email=client%40example.com", notify.call_args.args[2])
+
+    def test_express_reservation_groups_visible_sub_services(self):
+        response = self.client.get(reverse("interface:express_reservation"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('<optgroup label="Tresses / Braids">', content)
+        self.assertIn('<option value="tresses/knotless-braids"', content)
+
+    def test_express_prefill_email_populates_sub_service_booking_form(self):
+        response = self.client.get(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]),
+            {"prefill_email": "client@example.com"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="client@example.com"')
+
+    def test_express_reservation_styles_position_icons_inside_fields(self):
+        with open("static/css/style.css", encoding="utf-8") as stylesheet:
+            css = stylesheet.read()
+
+        self.assertIn(".express-input-wrapper {", css)
+        self.assertIn("position: relative;", css)
+        self.assertIn(".express-input-wrapper svg", css)

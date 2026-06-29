@@ -12,6 +12,7 @@ urlpatterns = [
     path("cgv/", views.terms_of_sale, name="terms_of_sale"),
     path("cgu/", views.terms_of_use, name="terms_of_use"),
     path("confidentialite/", views.privacy_policy, name="privacy_policy"),
+    path("reservation-express/", views.express_reservation, name="express_reservation"),
     path("prestataires/", views.provider_list, name="provider_list"),
     path(
         "prestataires/coiffure-afro-a-domicile/",
