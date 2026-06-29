@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Réservation express | Château Rose{% endblock %}
+{% block meta_description %}Choisis rapidement une prestation Château Rose et reçois un lien de réservation avec ton email pré-rempli.{% endblock %}
+
+{% block content %}
+<section class="express-layout" aria-labelledby="express-title">
+    <div class="express-card">
+        <div class="express-header">
+            <p class="eyebrow">Parcours rapide</p>
+            <h1 class="express-title" id="express-title">Réservation <span>Express</span></h1>
+            <p class="express-subtitle">Saisis ton besoin, on t'emmène directement au bon endroit pour réserver.</p>
+        </div>
+
+        {% if error %}
+            <div class="alert error" role="alert">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" class="form-grid express-form">
+            {% csrf_token %}
+            <div class="form-field full-width">
+                <label for="service">Prestation souhaitée</label>
+                <div class="input-wrapper express-input-wrapper">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <select id="service" name="service" class="express-input" required>
+                        <option value="" disabled {% if not selected_choice %}selected{% endif %}>Choisis une prestation...</option>
+                        {% for group in choices %}
+                            <optgroup label="{{ group.service_name }}">
+                                {% for choice in group.choices %}
+                                    <option value="{{ choice.value }}" {% if selected_choice == choice.value %}selected{% endif %}>{{ choice.label }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-field full-width">
+                <label for="email">Ton adresse email</label>
+                <div class="input-wrapper express-input-wrapper">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <input type="email" id="email" name="email" class="express-input" placeholder="exemple@email.com" value="{{ submitted_email }}" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn express-submit full-width">
+                Continuer vers la réservation
+            </button>
+        </form>
+
+        <div class="reassurance">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
+            <span>Sans engagement. Choix des options à l'étape suivante.</span>
+        </div>
+    </div>
+</section>
+{% endblock %}

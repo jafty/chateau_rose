@@ -56,6 +56,7 @@
                 <div class="step-indicator active" data-step-indicator="1">1</div>
                 <div class="step-indicator" data-step-indicator="2">2</div>
             </div>
+            {% if express_message %}<div class="alert success">{{ express_message }}</div>{% endif %}
             {% if request_success %}<div class="alert success">Ta demande est bien enregistrée. Château Rose revient vers toi rapidement.</div>{% endif %}
             {% if request_form.non_field_errors %}<div class="alert error">{{ request_form.non_field_errors|join:", " }}</div>{% endif %}
             {% include "interface/partials/generic_booking_form.html" %}
