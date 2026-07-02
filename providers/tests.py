@@ -502,3 +502,46 @@ class ProviderAdminModeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.booking.status, "PENDING_CLIENT_VALIDATION")
         self.assertEqual(self.booking.proposed_price_cents, 7500)
+
+@override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
+class BaseTemplateNavigationAndAnalyticsTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="analytics-provider",
+            password="safepass123",
+            email="analytics-provider@example.com",
+        )
+        Provider.objects.create(
+            name="Prestataire Analytics",
+            description="",
+            contact_email="analytics-provider@example.com",
+            user=self.user,
+        )
+
+    def test_anonymous_user_sees_signup_cta_and_analytics(self):
+        response = self.client.get(reverse("providers:login"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Devenir partenaire")
+        self.assertContains(response, "https://plausible.io/js/")
+        self.assertContains(response, "https://www.googletagmanager.com/gtag/js")
+        self.assertContains(response, "data-cookie-banner")
+        self.assertContains(response, "cookie-consent.js")
+
+    def test_authenticated_user_sees_provider_space_cta_without_analytics(self):
+        self.client.login(username="analytics-provider", password="safepass123")
+
+        response = self.client.get(reverse("providers:providers_index"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Espace prestataire")
+        self.assertNotContains(response, "Devenir partenaire")
+        self.assertNotContains(response, "https://plausible.io/js/")
+        self.assertNotContains(response, "https://www.googletagmanager.com/gtag/js")
+        self.assertNotContains(response, "data-cookie-banner")
+        self.assertNotContains(response, "cookie-consent.js")
