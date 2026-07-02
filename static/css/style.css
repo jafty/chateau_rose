@@ -5098,7 +5098,9 @@ footer {
 .express-title span {
     position: relative;
     z-index: 0;
-    color: var(--rose-accent);
+    display: inline-block;
+    padding-inline: 0.08em;
+    color: var(--ink-dark);
     font-style: italic;
     white-space: nowrap;
 }
@@ -5106,12 +5108,15 @@ footer {
 .express-title span::after {
     content: '';
     position: absolute;
-    left: -5px;
-    bottom: 0.12em;
+    left: -0.12em;
+    bottom: 0.02em;
     z-index: -1;
-    width: 105%;
-    height: 0.2em;
-    background: rgba(223, 172, 182, 0.3);
+    width: calc(100% + 0.24em);
+    height: 0.48em;
+    border: 1px solid rgba(223, 172, 182, 0.55);
+    border-radius: 999px;
+    background: rgba(255, 240, 243, 0.92);
+    box-shadow: 0 5px 12px rgba(74, 59, 50, 0.08);
     transform: rotate(-1deg);
 }
 
@@ -5392,7 +5397,7 @@ select.express-input {
 }
 
 .express-steps-section {
-    background: rgba(255, 240, 243, 0.18);
+    background: var(--bg-paper);
 }
 
 .express-section-title {
@@ -5496,8 +5501,8 @@ select.express-input {
 .express-secondary-path {
     margin-top: 1rem;
     padding: clamp(3rem, 6vw, 4rem) 0;
-    border-top: 1px dashed rgba(223, 172, 182, 0.3);
-    background: rgba(223, 172, 182, 0.05);
+    border-top: 1px solid rgba(74, 59, 50, 0.08);
+    background: var(--bg-paper);
     text-align: center;
 }
 
