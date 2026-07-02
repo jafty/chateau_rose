@@ -5033,22 +5033,140 @@ footer {
 }
 
 /* --- RÉSERVATION EXPRESS --- */
-.express-layout {
-    min-height: calc(100vh - 96px);
+.express-page {
+    overflow: hidden;
+}
+
+.express-hero {
+    padding-top: clamp(3rem, 6vw, 5rem);
+    padding-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.express-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 480px);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+}
+
+.express-copy {
+    min-width: 0;
+    padding-top: clamp(0.5rem, 2vw, 1.25rem);
+}
+
+.express-trust-chips {
     display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 1.75rem;
+}
+
+.express-trust-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid rgba(74, 59, 50, 0.1);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 2px 8px rgba(74, 59, 50, 0.03);
+    color: var(--ink-secondary);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.express-trust-pill span {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(2rem, 5vw, 4rem) var(--page-gutter);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--rose-soft);
+    color: var(--rose-accent);
+    font-size: 0.78rem;
+}
+
+.express-title {
+    max-width: 760px;
+    margin-bottom: 1.15rem;
+    color: var(--ink-dark);
+    font-size: clamp(2.45rem, 5vw, 4rem);
+    letter-spacing: -0.02em;
+}
+
+.express-title span {
+    position: relative;
+    z-index: 0;
+    display: inline-block;
+    padding-inline: 0.08em;
+    color: var(--ink-dark);
+    font-style: italic;
+    white-space: nowrap;
+}
+
+.express-title span::after {
+    content: '';
+    position: absolute;
+    left: -0.12em;
+    bottom: 0.02em;
+    z-index: -1;
+    width: calc(100% + 0.24em);
+    height: 0.48em;
+    border: 1px solid rgba(223, 172, 182, 0.55);
+    border-radius: 999px;
+    background: rgba(255, 240, 243, 0.92);
+    box-shadow: 0 5px 12px rgba(74, 59, 50, 0.08);
+    transform: rotate(-1deg);
+}
+
+.express-subtitle {
+    max-width: 680px;
+    margin-bottom: 2rem;
+    color: var(--ink-secondary);
+    font-size: clamp(1.02rem, 2vw, 1.15rem);
+    font-weight: 500;
+    line-height: 1.65;
+}
+
+.express-trust-list {
+    display: grid;
+    gap: 16px;
+    max-width: 560px;
+}
+
+.express-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink-secondary);
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.express-trust-item svg {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    color: #166534;
+}
+
+.express-layout {
+    display: block;
+    min-height: 0;
+    padding: 0;
 }
 
 .express-card {
-    background: var(--bg-paper);
-    padding: clamp(2rem, 5vw, 3.5rem);
-    box-shadow: var(--shadow-lifted);
-    border-radius: var(--radius-md);
-    width: min(100%, 560px);
+    width: 100%;
     position: relative;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
     border: 1px solid rgba(163, 124, 91, 0.15);
+    border-radius: var(--radius-md);
+    background: var(--bg-paper);
+    background-image: linear-gradient(#fdfbf9 1px, transparent 1px);
+    background-size: 100% 32px;
+    box-shadow: var(--shadow-paper);
 }
 
 .express-card::before {
@@ -5056,33 +5174,31 @@ footer {
     position: absolute;
     top: -12px;
     left: 50%;
-    transform: translateX(-50%) rotate(2deg);
-    width: 100px;
-    height: 24px;
-    background: rgba(255, 255, 255, 0.45);
-    backdrop-filter: blur(4px);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     z-index: 1;
+    width: 120px;
+    height: 26px;
+    border: 1px solid rgba(0,0,0,0.04);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transform: translateX(-50%) rotate(2deg);
 }
 
 .express-header {
-    text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
 }
 
-.express-title {
-    font-size: clamp(2rem, 4vw, 2.8rem);
-    margin-bottom: 8px;
+.express-header h2 {
+    margin-bottom: 0.45rem;
+    color: var(--ink-dark);
+    font-size: clamp(1.65rem, 3vw, 2rem);
 }
 
-.express-title span {
-    color: var(--rose-accent);
-    font-style: italic;
-}
-
-.express-subtitle {
+.express-header p:not(.eyebrow) {
     color: var(--ink-secondary);
-    font-size: 1.05rem;
+    font-size: 0.95rem;
+    line-height: 1.55;
 }
 
 .express-form {
@@ -5110,7 +5226,7 @@ footer {
     width: 100%;
     padding: 14px 14px 14px 44px;
     border: 2px solid #E5E7EB;
-    background: #FAFAFA;
+    background: #fff;
     font-family: inherit;
     font-size: 1rem;
     border-radius: 10px;
@@ -5134,7 +5250,6 @@ select.express-input {
     background: #fff;
     box-shadow: 0 0 0 4px rgba(223, 172, 182, 0.15);
 }
-
 
 .express-contact-option {
     display: flex;
@@ -5220,10 +5335,21 @@ select.express-input {
 .express-submit {
     width: 100%;
     margin-top: 10px;
+    padding-block: 16px;
+    background: var(--rose-accent);
+    border-color: var(--rose-accent);
+    box-shadow: 0 6px 14px rgba(223, 172, 182, 0.28);
+    font-size: 1.03rem;
+}
+
+.express-submit:hover {
+    background: #c98a96;
+    border-color: #c98a96;
+    color: #fff;
 }
 
 .reassurance {
-    margin-top: 24px;
+    margin-top: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -5238,6 +5364,194 @@ select.express-input {
     height: 16px;
     color: var(--rose-accent);
     flex: 0 0 auto;
+}
+
+.express-reassurance-note {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-top: 1.5rem;
+    padding: 1.2rem;
+    border: 1px dashed rgba(223, 172, 182, 0.6);
+    border-radius: var(--radius-md);
+    background: var(--bg-paper);
+    box-shadow: 0 8px 18px -16px rgba(74, 59, 50, 0.22);
+}
+
+.express-reassurance-note > span {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.express-reassurance-note strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--ink-primary);
+}
+
+.express-reassurance-note p {
+    margin: 0;
+    color: var(--ink-secondary);
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.express-steps-section {
+    background: var(--bg-paper);
+}
+
+.express-section-title {
+    margin-bottom: 2rem;
+    text-align: center;
+    color: var(--ink-dark);
+}
+
+.express-steps-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.express-step-item {
+    padding: 32px 24px;
+    border: 1px solid rgba(74, 59, 50, 0.05);
+    border-radius: var(--radius-md);
+    background: #fffefd;
+    box-shadow: var(--shadow-paper);
+    text-align: center;
+}
+
+.express-step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: var(--rose-accent);
+    color: #fff;
+    box-shadow: 3px 3px 0 var(--ink-primary);
+    font-family: 'Permanent Marker', cursive;
+    font-size: 1.8rem;
+    transform: rotate(-6deg);
+}
+
+.express-step-item h3 {
+    margin-bottom: 10px;
+    font-size: 1.25rem;
+}
+
+.express-step-item p {
+    color: var(--ink-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.express-faq-section {
+    max-width: 800px;
+}
+
+.express-faq-item {
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(74, 59, 50, 0.1);
+    border-radius: var(--radius-md);
+    background: var(--bg-paper);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.express-faq-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 24px;
+    color: var(--ink-primary);
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 700;
+    list-style: none;
+    user-select: none;
+}
+
+.express-faq-summary::-webkit-details-marker {
+    display: none;
+}
+
+.express-faq-summary::after {
+    content: '+';
+    color: var(--rose-accent);
+    font-size: 1.5rem;
+    font-weight: 400;
+    transition: transform 0.3s ease;
+}
+
+.express-faq-item[open] .express-faq-summary::after {
+    transform: rotate(45deg);
+}
+
+.express-faq-content {
+    padding: 0 24px 20px;
+    color: var(--ink-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.express-secondary-path {
+    margin-top: 1rem;
+    padding: clamp(3rem, 6vw, 4rem) 0;
+    border-top: 1px solid rgba(74, 59, 50, 0.08);
+    background: var(--bg-paper);
+    text-align: center;
+}
+
+.express-secondary-path h2 {
+    margin-bottom: 1rem;
+}
+
+.express-secondary-path p {
+    margin-bottom: 1.5rem;
+    color: var(--ink-secondary);
+}
+
+@media (max-width: 960px) {
+    .express-grid {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 680px;
+        margin: 0 auto;
+    }
+
+    .express-copy {
+        padding-top: 0;
+    }
+
+    .express-steps-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .express-title span {
+        white-space: normal;
+    }
+
+    .express-trust-item {
+        align-items: flex-start;
+    }
+
+    .express-card {
+        padding: 1.35rem;
+    }
+
+    .express-faq-summary {
+        padding: 16px 18px;
+        font-size: 1rem;
+    }
+
+    .express-faq-content {
+        padding-inline: 18px;
+    }
 }
 
 .cookie-banner {

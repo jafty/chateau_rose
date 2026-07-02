@@ -4,65 +4,163 @@
 {% block meta_description %}Choisis rapidement une prestation Château Rose et reçois un lien de réservation avec ton email pré-rempli.{% endblock %}
 
 {% block content %}
-<section class="express-layout" aria-labelledby="express-title">
-    <div class="express-card">
-        <div class="express-header">
-            <p class="eyebrow">Parcours rapide</p>
-            <h1 class="express-title" id="express-title">Réservation <span>Express</span></h1>
-            <p class="express-subtitle">Saisis ton besoin, on t'emmène directement au bon endroit pour réserver.</p>
-        </div>
+<div class="express-page">
+    <section class="layout-section express-hero" aria-labelledby="express-title">
+        <div class="container express-grid">
+            <div class="express-copy">
+                <div class="express-trust-chips" aria-label="Garanties Réservation express">
+                    <span class="express-trust-pill"><span aria-hidden="true">✓</span> Profils vérifiés</span>
+                    <span class="express-trust-pill"><span aria-hidden="true">💳</span> Aucun paiement ici</span>
+                </div>
 
-        {% if error %}
-            <div class="alert error" role="alert">{{ error }}</div>
-        {% endif %}
+                <p class="eyebrow">Parcours rapide</p>
+                <h1 class="express-title" id="express-title">Pas sûr·e de la prestation ? On te guide <span>en 10 secondes.</span></h1>
+                <p class="express-subtitle">Dis-nous ce que tu as en tête, on t'emmène au bon endroit. Si tu as un doute, notre équipe peut t'aider à trouver la coiffeuse parfaite pour tes cheveux, sans pression.</p>
 
-        <form method="post" class="form-grid express-form plausible-event-name=Express+Reservation+Submit">
-            {% csrf_token %}
-            <div class="form-field full-width">
-                <label for="service">Prestation souhaitée</label>
-                <div class="input-wrapper express-input-wrapper">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <select id="service" name="service" class="express-input" required>
-                        <option value="" disabled {% if not selected_choice %}selected{% endif %}>Choisis une prestation...</option>
-                        {% for group in choices %}
-                            <optgroup label="{{ group.service_name }}">
-                                {% for choice in group.choices %}
-                                    <option value="{{ choice.value }}" {% if selected_choice == choice.value %}selected{% endif %}>{{ choice.label }}</option>
-                                {% endfor %}
-                            </optgroup>
-                        {% endfor %}
-                    </select>
+                <div class="express-trust-list" aria-label="Ce que permet la réservation express">
+                    <div class="express-trust-item">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>Lien personnalisé envoyé directement par e-mail</span>
+                    </div>
+                    <div class="express-trust-item">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span>Sans engagement, tu choisis et confirmes plus tard</span>
+                    </div>
+                    <div class="express-trust-item">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        <span>Expertise afro &amp; cheveux texturés garantie</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-field full-width">
-                <label for="email">Ton adresse email</label>
-                <div class="input-wrapper express-input-wrapper">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                    <input type="email" id="email" name="email" class="express-input" placeholder="exemple@email.com" value="{{ submitted_email }}" required>
+            <div class="express-layout">
+                <div class="express-card">
+                    <div class="express-header">
+                        <p class="eyebrow">Réservation express</p>
+                        <h2>On commence par l'essentiel</h2>
+                        <p>Une idée de prestation et ton e-mail suffisent pour recevoir le bon lien.</p>
+                    </div>
+
+                    {% if error %}
+                        <div class="alert error" role="alert">{{ error }}</div>
+                    {% endif %}
+
+                    <form method="post" class="form-grid express-form plausible-event-name=Express+Reservation+Submit">
+                        {% csrf_token %}
+                        <div class="form-field full-width">
+                            <label for="service">Prestation souhaitée</label>
+                            <div class="input-wrapper express-input-wrapper">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <select id="service" name="service" class="express-input" required>
+                                    <option value="" disabled {% if not selected_choice %}selected{% endif %}>Choisis une prestation...</option>
+                                    {% for group in choices %}
+                                        <optgroup label="{{ group.service_name }}">
+                                            {% for choice in group.choices %}
+                                                <option value="{{ choice.value }}" {% if selected_choice == choice.value %}selected{% endif %}>{{ choice.label }}</option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-field full-width">
+                            <label for="email">Ton adresse email</label>
+                            <div class="input-wrapper express-input-wrapper">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                <input type="email" id="email" name="email" class="express-input" placeholder="exemple@email.com" value="{{ submitted_email }}" required>
+                            </div>
+                        </div>
+
+                        <label class="express-contact-option full-width">
+                            <input type="checkbox" id="contact_me" name="contact_me" value="1" {% if wants_contact %}checked{% endif %}>
+                            <span class="express-contact-option__box" aria-hidden="true">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </span>
+                            <span class="express-contact-option__content">
+                                <span class="express-contact-option__title">Prise de RDV assistée</span>
+                                <span class="express-contact-option__desc">Je préfère que l'équipe me recontacte par e-mail pour finaliser cette réservation pour moi.</span>
+                            </span>
+                        </label>
+
+                        <button type="submit" class="btn express-submit full-width">
+                            Continuer vers la réservation
+                        </button>
+                    </form>
+
+                    <div class="reassurance">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
+                        <span>Tes données sont en sécurité. Aucun paiement requis.</span>
+                    </div>
+                </div>
+
+                <div class="express-reassurance-note">
+                    <span aria-hidden="true">💡</span>
+                    <div>
+                        <strong>Tu pourras ajuster ensuite</strong>
+                        <p>Choisis l'option la plus proche. Une fois sur le catalogue ou avec l'équipe, tu pourras préciser la longueur, l'ajout de mèches et les détails importants.</p>
+                    </div>
                 </div>
             </div>
-
-            <label class="express-contact-option full-width">
-                <input type="checkbox" id="contact_me" name="contact_me" value="1" {% if wants_contact %}checked{% endif %}>
-                <span class="express-contact-option__box" aria-hidden="true">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                </span>
-                <span class="express-contact-option__content">
-                    <span class="express-contact-option__title">Prise de RDV assistée</span>
-                    <span class="express-contact-option__desc">Je préfère que l'équipe me recontacte par e-mail pour finaliser cette réservation pour moi.</span>
-                </span>
-            </label>
-
-            <button type="submit" class="btn express-submit full-width">
-                Continuer vers la réservation
-            </button>
-        </form>
-
-        <div class="reassurance">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z"></path></svg>
-            <span>Sans engagement. Choix des options à l'étape suivante.</span>
         </div>
-    </div>
-</section>
+    </section>
+
+    <section class="layout-section express-steps-section" aria-labelledby="express-steps-title">
+        <div class="container">
+            <h2 class="express-section-title" id="express-steps-title">Comment ça se passe ?</h2>
+            <div class="express-steps-list">
+                <article class="express-step-item">
+                    <div class="express-step-number">1</div>
+                    <h3>Tu nous dis ce que tu veux</h3>
+                    <p>Remplis le mini-formulaire avec l'idée de coiffure que tu as en tête.</p>
+                </article>
+                <article class="express-step-item">
+                    <div class="express-step-number">2</div>
+                    <h3>On te montre le bon chemin</h3>
+                    <p>Tu reçois le lien vers la bonne catégorie, ou notre équipe te contacte si tu demandes de l'aide.</p>
+                </article>
+                <article class="express-step-item">
+                    <div class="express-step-number">3</div>
+                    <h3>Tu confirmes quand ça te convient</h3>
+                    <p>Tu compares les prix, tu choisis ta coiffeuse, puis tu valides. Pas de pression.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="layout-section" aria-labelledby="express-faq-title">
+        <div class="container express-faq-section">
+            <h2 class="express-section-title" id="express-faq-title">Questions fréquentes</h2>
+
+            <details class="express-faq-item">
+                <summary class="express-faq-summary">Est-ce que je dois payer maintenant ?</summary>
+                <div class="express-faq-content">Absolument pas. Cette étape sert uniquement à t'orienter vers les bons profils ou les bonnes prestations. Tu ne renseignes aucune carte bancaire ici.</div>
+            </details>
+            <details class="express-faq-item">
+                <summary class="express-faq-summary">Et si je ne sais pas exactement quelle prestation choisir ?</summary>
+                <div class="express-faq-content">Aucun problème : choisis l'option la plus proche et coche « Prise de RDV assistée ». Notre équipe regardera tes besoins et t'aidera à trouver le soin ou la coiffure idéale.</div>
+            </details>
+            <details class="express-faq-item">
+                <summary class="express-faq-summary">Pourquoi demander mon e-mail ?</summary>
+                <div class="express-faq-content">Ton e-mail sert à t'envoyer ton lien de redirection personnalisé ou à te contacter si tu as demandé l'assistance de notre équipe. On déteste les spams autant que toi.</div>
+            </details>
+            <details class="express-faq-item">
+                <summary class="express-faq-summary">Suis-je obligé·e de réserver après ?</summary>
+                <div class="express-faq-content">Pas du tout. Tu peux utiliser ce formulaire pour regarder les prix pratiqués par nos coiffeuses partenaires ou comparer les portfolios. C'est 100% sans engagement.</div>
+            </details>
+            <details class="express-faq-item">
+                <summary class="express-faq-summary">Puis-je choisir moi-même ma prestataire ?</summary>
+                <div class="express-faq-content">Oui. Une fois redirigé·e vers la bonne catégorie, tu accèdes aux coiffeuses vérifiées, avec leurs tarifs, leurs photos et leurs disponibilités. C'est toi qui choisis.</div>
+            </details>
+        </div>
+    </section>
+
+    <section class="express-secondary-path" aria-labelledby="express-secondary-title">
+        <div class="container">
+            <h2 id="express-secondary-title">Tu préfères explorer par toi-même ?</h2>
+            <p>Pas de souci. Parcours directement notre catalogue de prestataires partenaires sur Toulouse.</p>
+            <a href="{% url 'interface:provider_list' %}" class="btn secondary plausible-event-name=Express+Reservation+Provider+List">Voir les prestataires</a>
+        </div>
+    </section>
+</div>
 {% endblock %}
