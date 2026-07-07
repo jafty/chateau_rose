@@ -17,13 +17,13 @@
             <div class="booking-detail-header-top">
                 <div class="booking-detail-header-copy">
                     <span class="pill">Demande de RDV</span>
-                    <h1>{{ booking.service.name }} pour {{ booking.client_name }}</h1>
+                    <h1>{% if booking.requested_service_label_snapshot %}{{ booking.requested_service_label_snapshot }}{% elif booking.service %}{{ booking.service.name }}{% else %}Prestation à préciser{% endif %} pour {{ booking.client_name }}</h1>
                     <p class="lead">
                         Reçue le {{ booking.created_at|date:"d F Y à H\\hi" }}
                     </p>
                     <p class="meta-line">ID court : <strong>{{ booking.booking_id }}</strong></p>
                     {% if admin_mode %}
-                        <p class="meta-line">Mode admin · action pour le prestataire <strong>{{ booking.provider.name }}</strong>.</p>
+                        <p class="meta-line">Mode admin · action pour le prestataire <strong>{{ booking.provider.name|default:"à attribuer" }}</strong>.</p>
                     {% endif %}
                 </div>
                 <div class="booking-detail-header-actions">
@@ -53,8 +53,13 @@
                     <div>
                         <div class="booking-client-name">{{ booking.client_name }}</div>
                         <div class="booking-client-meta">{{ booking.client_email }}</div>
+                        <div class="booking-client-meta">Téléphone : {{ booking.client_phone|default:"Non renseigné" }}</div>
                     </div>
-                    <a href="mailto:{{ booking.client_email }}" class="btn secondary booking-client-contact">Contacter</a>
+                    {% if booking.client_phone %}
+                        <a href="tel:{{ booking.client_phone }}" class="btn secondary booking-client-contact">Appeler</a>
+                    {% else %}
+                        <a href="mailto:{{ booking.client_email }}" class="btn secondary booking-client-contact">Contacter</a>
+                    {% endif %}
                 </div>
 
                 <div class="booking-spec-grid">
@@ -74,6 +79,23 @@
                         <span class="booking-spec-value">{{ booking.hair_length }}</span>
                         <span class="booking-spec-sub">{% if booking.meche %}Mèches fournies{% else %}Mèches non fournies{% endif %}</span>
                     </div>
+                    <div class="booking-spec-item">
+                        <span class="booking-spec-label">Service demandé</span>
+                        <span class="booking-spec-value">{% if booking.requested_service_label_snapshot %}{{ booking.requested_service_label_snapshot }}{% elif booking.service %}{{ booking.service.name }}{% else %}À préciser{% endif %}</span>
+                        {% if booking.requested_options %}<span class="booking-spec-sub">Options : {{ booking.requested_options|join:", " }}</span>{% endif %}
+                    </div>
+                    {% if booking.client_address %}
+                    <div class="booking-spec-item">
+                        <span class="booking-spec-label">Adresse client</span>
+                        <span class="booking-spec-value">{{ booking.client_address }}</span>
+                    </div>
+                    {% endif %}
+                    {% if booking.general_adjustments %}
+                    <div class="booking-spec-item">
+                        <span class="booking-spec-label">Ajustements</span>
+                        <span class="booking-spec-value">{{ booking.general_adjustments|join:", " }}</span>
+                    </div>
+                    {% endif %}
                     <div class="booking-spec-item">
                         {% if booking.status == "CONFIRMED" %}
                             <span class="booking-spec-label">Tarif</span>

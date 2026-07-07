@@ -258,6 +258,26 @@ class ProviderDashboardTests(TestCase):
         self.assertContains(response, "src=\"/media/bookings/inspiration/1.jpg\"")
         self.assertContains(response, "src=\"/already/root.jpg\"")
 
+
+    def test_booking_detail_displays_requested_service_phone_and_address(self):
+        booking = self._create_booking()
+        booking.requested_service_label_snapshot = "Braids · Vanilles"
+        booking.requested_options = ["extra-long"]
+        booking.general_adjustments = ["perles"]
+        booking.client_phone = "0600000000"
+        booking.save(update_fields=["requested_service_label_snapshot", "requested_options", "general_adjustments", "client_phone"])
+
+        response = self.client.get(reverse("providers:booking_detail", args=[booking.booking_id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Braids · Vanilles")
+        self.assertContains(response, "0600000000")
+        self.assertContains(response, "Options : extra-long")
+        self.assertContains(response, "Adresse client")
+        self.assertContains(response, "5 place du Capitole, 31000 Toulouse")
+        self.assertContains(response, "Ajustements")
+        self.assertContains(response, "perles")
+
     def test_provider_can_confirm_booking_from_detail(self):
         booking = self._create_booking()
         detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
@@ -450,6 +470,74 @@ class ProviderAdminModeTests(TestCase):
         )
         self.client = Client()
         self.client.login(username="admin", password="safepass123")
+
+
+    def test_admin_dashboard_displays_generic_request_service_and_phone(self):
+        generic = Booking.objects.create(
+            booking_id="BK-GENERIC",
+            booking_kind=Booking.KIND_GENERIC,
+            requested_service_label_snapshot="Braids · Vanilles",
+            requested_options=["extra-long"],
+            client_name="Awa",
+            client_email="awa@example.com",
+            client_phone="0600000000",
+            location="Toulouse",
+            location_preference="domicile",
+            desired_date="2026-01-11T10:00:00Z",
+            hair_length="standard",
+            general_adjustments=["extra-long"],
+            meche=False,
+            current_hair_picture="",
+            inspiration_pictures=[],
+            free_text="",
+            estimated_price_cents=0,
+            payment_status=Booking.PAYMENT_STATUS_WAIVED,
+            status=Booking.STATUS_WAITING_PROVIDER_ASSIGNMENT,
+            created_at=timezone.now(),
+        )
+
+        response = self.client.get(reverse("providers:providers_index"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, generic.booking_id)
+        self.assertContains(response, "Braids · Vanilles")
+        self.assertContains(response, "Options : extra-long")
+        self.assertContains(response, "0600000000")
+        self.assertContains(response, "À attribuer")
+
+    def test_admin_detail_displays_generic_request_service_and_phone(self):
+        generic = Booking.objects.create(
+            booking_id="BK-GENDET",
+            booking_kind=Booking.KIND_GENERIC,
+            requested_service_label_snapshot="Braids · Vanilles",
+            requested_options=["extra-long"],
+            client_name="Awa",
+            client_email="awa@example.com",
+            client_phone="0600000000",
+            location="Toulouse",
+            location_preference="domicile",
+            client_address="12 rue Rose",
+            desired_date="2026-01-11T10:00:00Z",
+            hair_length="standard",
+            general_adjustments=["extra-long"],
+            meche=False,
+            current_hair_picture="",
+            inspiration_pictures=[],
+            free_text="",
+            estimated_price_cents=0,
+            payment_status=Booking.PAYMENT_STATUS_WAIVED,
+            status=Booking.STATUS_WAITING_PROVIDER_ASSIGNMENT,
+            created_at=timezone.now(),
+        )
+
+        response = self.client.get(reverse("providers:booking_detail", args=[generic.booking_id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Braids · Vanilles")
+        self.assertContains(response, "0600000000")
+        self.assertContains(response, "Options : extra-long")
+        self.assertContains(response, "12 rue Rose")
+        self.assertContains(response, "à attribuer")
 
     def test_staff_without_provider_can_access_centralized_dashboard(self):
         response = self.client.get(reverse("providers:providers_index"))

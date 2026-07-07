@@ -38,7 +38,8 @@
                             <th>Demande</th>
                             <th>Client</th>
                             {% if admin_mode %}<th>Prestataire</th>{% endif %}
-                            <th>Service</th>
+                            <th>Service demandé</th>
+                            <th>Téléphone</th>
                             <th>Date souhaitée</th>
                             <th>Lieu</th>
                             <th>Statut</th>
@@ -49,8 +50,18 @@
                             <tr>
                                 <td><a href="{% url 'providers:booking_detail' booking.booking_id %}">{{ booking.booking_id }}</a></td>
                                 <td>{{ booking.client_name }}</td>
-                                {% if admin_mode %}<td>{{ booking.provider.name }}</td>{% endif %}
-                                <td>{{ booking.service.name }}</td>
+                                {% if admin_mode %}<td>{{ booking.provider.name|default:"À attribuer" }}</td>{% endif %}
+                                <td>
+                                    {% if booking.requested_service_label_snapshot %}
+                                        {{ booking.requested_service_label_snapshot }}
+                                    {% elif booking.service %}
+                                        {{ booking.service.name }}
+                                    {% else %}
+                                        À préciser
+                                    {% endif %}
+                                    {% if booking.requested_options %}<br><span class="meta-line">Options : {{ booking.requested_options|join:", " }}</span>{% endif %}
+                                </td>
+                                <td>{{ booking.client_phone|default:"Non renseigné" }}</td>
                                 <td>{{ booking.desired_date }}</td>
                                 <td>{{ booking.location }}</td>
                                 <td><span class="status-pill">{{ booking.status }}</span></td>
@@ -64,8 +75,18 @@
                     <article class="booking-card-mobile">
                         <p><strong>Demande :</strong> <a href="{% url 'providers:booking_detail' booking.booking_id %}">{{ booking.booking_id }}</a></p>
                         <p><strong>Client :</strong> {{ booking.client_name }}</p>
-                        {% if admin_mode %}<p><strong>Prestataire :</strong> {{ booking.provider.name }}</p>{% endif %}
-                        <p><strong>Service :</strong> {{ booking.service.name }}</p>
+                        {% if admin_mode %}<p><strong>Prestataire :</strong> {{ booking.provider.name|default:"À attribuer" }}</p>{% endif %}
+                        <p><strong>Service demandé :</strong>
+                            {% if booking.requested_service_label_snapshot %}
+                                {{ booking.requested_service_label_snapshot }}
+                            {% elif booking.service %}
+                                {{ booking.service.name }}
+                            {% else %}
+                                À préciser
+                            {% endif %}
+                        </p>
+                        {% if booking.requested_options %}<p><strong>Options :</strong> {{ booking.requested_options|join:", " }}</p>{% endif %}
+                        <p><strong>Téléphone :</strong> {{ booking.client_phone|default:"Non renseigné" }}</p>
                         <p><strong>Date souhaitée :</strong> {{ booking.desired_date }}</p>
                         <p><strong>Lieu :</strong> {{ booking.location }}</p>
                         <p><strong>Statut :</strong> <span class="status-pill">{{ booking.status }}</span></p>
