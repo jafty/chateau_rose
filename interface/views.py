@@ -5,6 +5,7 @@ from datetime import datetime
 
 from django import forms
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import (
     Http404,
     HttpResponse,
@@ -952,11 +953,6 @@ def provider_booking_recap(request, token):
         action = (request.POST.get("action") or "").strip() or "confirm"
         if action == "edit":
             return redirect(f"{reverse('interface:provider_detail', args=[provider.id])}?recap={draft.token}#booking-wizard")
-        if draft.completed_at:
-            thank_you_url = reverse("interface:thank_you_provider_booking")
-            return redirect(
-                f"{thank_you_url}?provider={provider.name}&provider_id={provider.id}"
-            )
 
         payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
         if require_payment_auth and not payment_auth_id:
@@ -969,56 +965,65 @@ def provider_booking_recap(request, token):
                 booking_detail_path.replace("BOOKING_ID/", "")
             )
             try:
-                booking = request_haircut.execute(
-                    provider_id=str(provider.id),
-                    service_id=str(service.id),
-                    client_contact={
-                        "name": payload.get("client_name") or "",
-                        "email": payload.get("client_email") or "",
-                    },
-                    location=payload.get("location") or "",
-                    location_preference=payload.get("location_preference") or "",
-                    client_address=payload.get("client_address") or "",
-                    desired_date=payload.get("desired_date") or "",
-                    hair_length=payload.get("hair_length") or "",
-                    general_adjustments=payload.get("general_adjustments") or [],
-                    meche=bool(payload.get("meche")),
-                    current_hair_picture="",
-                    inspiration_pictures=[],
-                    free_text="",
-                    service_fee_coupon_code=coupon_code,
-                    waive_service_fee=service_fee_waived,
-                    payment_auth_id=payment_auth_id or None,
-                    provider_booking_url_base=provider_booking_url_base,
-                    provider_salon_zone=provider.salon_zone,
-                    booking_repository=repo,
-                    provider_catalog=provider_catalog,
-                    payment_gateway=payment_gateway,
-                    notifier=notifier,
-                    reminder_gateway=None,
-                    clock=type("Clock", (), {"now": timezone.now}),
-                    operations_email=SUPPORT_EMAIL,
-                )
+                with transaction.atomic():
+                    draft = ProviderBookingDraft.objects.select_for_update().get(pk=draft.pk)
+                    if draft.completed_at:
+                        thank_you_url = reverse("interface:thank_you_provider_booking")
+                        return redirect(
+                            f"{thank_you_url}?provider={provider.name}&provider_id={provider.id}"
+                        )
+
+                    booking = request_haircut.execute(
+                        provider_id=str(provider.id),
+                        service_id=str(service.id),
+                        client_contact={
+                            "name": payload.get("client_name") or "",
+                            "email": payload.get("client_email") or "",
+                        },
+                        location=payload.get("location") or "",
+                        location_preference=payload.get("location_preference") or "",
+                        client_address=payload.get("client_address") or "",
+                        desired_date=payload.get("desired_date") or "",
+                        hair_length=payload.get("hair_length") or "",
+                        general_adjustments=payload.get("general_adjustments") or [],
+                        meche=bool(payload.get("meche")),
+                        current_hair_picture="",
+                        inspiration_pictures=[],
+                        free_text="",
+                        service_fee_coupon_code=coupon_code,
+                        waive_service_fee=service_fee_waived,
+                        payment_auth_id=payment_auth_id or None,
+                        provider_booking_url_base=provider_booking_url_base,
+                        provider_salon_zone=provider.salon_zone,
+                        booking_repository=repo,
+                        provider_catalog=provider_catalog,
+                        payment_gateway=payment_gateway,
+                        notifier=notifier,
+                        reminder_gateway=None,
+                        clock=type("Clock", (), {"now": timezone.now}),
+                        operations_email=SUPPORT_EMAIL,
+                    )
+
+                    _create_interaction(
+                        kind=Interaction.KIND_PROVIDER_APPOINTMENT_REQUEST,
+                        source_label=f"Demande de réservation · {provider.name}",
+                        contact_name=payload.get("client_name") or "",
+                        contact_email=payload.get("client_email") or "",
+                        subject=f"Demande RDV {booking.id}",
+                        message=payload.get("free_text") or "",
+                        next_action="Vérifier et confirmer la demande dans le tableau prestataires",
+                        metadata={
+                            "booking_id": booking.id,
+                            "provider_id": provider.id,
+                            "provider_name": provider.name,
+                            "recap_token": str(draft.token),
+                        },
+                    )
+                    _mark_recap_completed_if_needed(str(draft.token))
             except DomainError as exc:
                 _release_payment_auth_safely(payment_auth_id)
                 error = _friendly_domain_error_message(exc)
             else:
-                _create_interaction(
-                    kind=Interaction.KIND_PROVIDER_APPOINTMENT_REQUEST,
-                    source_label=f"Demande de réservation · {provider.name}",
-                    contact_name=payload.get("client_name") or "",
-                    contact_email=payload.get("client_email") or "",
-                    subject=f"Demande RDV {booking.id}",
-                    message=payload.get("free_text") or "",
-                    next_action="Vérifier et confirmer la demande dans le tableau prestataires",
-                    metadata={
-                        "booking_id": booking.id,
-                        "provider_id": provider.id,
-                        "provider_name": provider.name,
-                        "recap_token": str(draft.token),
-                    },
-                )
-                _mark_recap_completed_if_needed(str(draft.token))
                 request.session["provider_request_message"] = f"Demande envoyée. ID: {booking.id}"
                 thank_you_url = reverse("interface:thank_you_provider_booking")
                 return redirect(
