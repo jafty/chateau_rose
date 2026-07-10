@@ -219,6 +219,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const paymentElementContainer = document.getElementById('payment-element');
     const paymentError = document.getElementById('payment-error');
     const paymentAuthInput = document.getElementById('payment_auth_id');
+    const submitButton = form?.querySelector('button[type="submit"]');
     if (!form || !paymentElementContainer || !paymentAuthInput) return;
 
     const stripe = Stripe('{{ stripe_public_key|escapejs }}');
@@ -264,15 +265,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     const paymentElement = elements.create('payment');
     paymentElement.mount('#payment-element');
 
+    let isSubmitting = false;
     form.addEventListener('submit', async (event) => {
         if (paymentAuthInput.value) return;
+        if (isSubmitting) {
+            event.preventDefault();
+            return;
+        }
         event.preventDefault();
+        isSubmitting = true;
+        if (submitButton) submitButton.disabled = true;
         showError('');
         const { error, paymentIntent } = await stripe.confirmPayment({
             elements,
             redirect: 'if_required',
         });
         if (error) {
+            isSubmitting = false;
+            if (submitButton) submitButton.disabled = false;
             showError(error.message || "Erreur de paiement.");
             return;
         }
