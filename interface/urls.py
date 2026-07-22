@@ -46,6 +46,7 @@ urlpatterns = [
         views.provider_payment_return,
         name="provider_payment_return",
     ),
+    path("avis/<uuid:token>/", views.leave_verified_review, name="leave_verified_review"),
     path("merci-question/", views.thank_you_question, name="thank_you_question"),
     path("merci-demande-rapide/", views.thank_you_quick_request, name="thank_you_quick_request"),
     path("merci-rdv-prestataire/", views.thank_you_provider_booking, name="thank_you_provider_booking"),

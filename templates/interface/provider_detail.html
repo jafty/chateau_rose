@@ -561,6 +561,12 @@
                         Reçoit ou se déplace
                     {% endif %}
                 </span>
+                {% if review_badge %}
+                    <span class="review-summary-badge" aria-label="{{ review_badge.label }} basé sur {{ review_badge.count }} avis vérifiés">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        {{ review_badge.label }} <span>({{ review_badge.count }} avis vérifiés)</span>
+                    </span>
+                {% endif %}
             </div>
             <h1 class="provider-page-title">{{ provider.display_h1 }}</h1>
             <div class="provider-header-ctas">
@@ -726,6 +732,35 @@
                 {% include "interface/partials/provider_services_section.html" %}
             </section>
 
+            {% if published_reviews %}
+            <section class="content-section reviews-section" id="provider-reviews">
+                <div class="reviews-header">
+                    <div>
+                        <h3 class="provider-section-title">Elles ont adoré</h3>
+                        <p class="review-section-subtitle">Avis issus de prestations réalisées via Château Rose.</p>
+                    </div>
+                    {% if review_badge %}<div class="review-summary-badge review-summary-badge--quiet">{{ review_badge.label }} <span>({{ review_badge.count }} avis vérifiés)</span></div>{% endif %}
+                </div>
+                <div class="reviews-grid">
+                    {% for review in published_reviews %}
+                    <article class="review-card">
+                        <div class="review-card-header">
+                            <div class="review-author">
+                                <div class="review-avatar">{{ review.client_name|first|upper }}</div>
+                                <div class="review-author-info">
+                                    <strong>{{ review.client_name }}</strong>
+                                    <span class="review-date">{{ review.performed_at|date:"F Y"|default:review.created_at|date:"F Y" }}</span>
+                                </div>
+                            </div>
+                            <span class="review-qualitative">{{ review.qualitative_label }}</span>
+                        </div>
+                        <p class="review-text">“{{ review.comment }}”</p>
+                        <div class="review-footer">✓ Réservation vérifiée · Prestation : {{ review.service_performed|default:"prestation Château Rose" }}</div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
 
             <section class="content-section">
             {% if message %}<div class="alert success">{{ message }}</div>{% endif %}

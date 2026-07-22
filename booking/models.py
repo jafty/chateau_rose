@@ -1,4 +1,5 @@
 from datetime import date
+import uuid
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -167,6 +168,17 @@ class Provider(models.Model):
     @property
     def location_mode_label(self):
         return dict(self.LOCATION_MODE_CHOICES).get(self.location_mode, "")
+
+    @property
+    def review_badge(self):
+        from chateaurose.domain.services.reviews import provider_review_badge
+        ratings = list(
+            self.verified_reviews.filter(
+                moderation_status=VerifiedReview.STATUS_APPROVED,
+                consent_to_publish=True,
+            ).values_list("rating", flat=True)
+        )
+        return provider_review_badge(ratings)
 
     def save(self, *args, **kwargs):
         if _should_compress_image(self, "profile_image"):
@@ -599,3 +611,78 @@ class ProviderServiceFeeCoupon(models.Model):
 
     def __str__(self):
         return f"{self.provider.name} · {self.code}"
+
+
+class VerifiedReview(models.Model):
+    STATUS_PENDING = "pending"
+    STATUS_APPROVED = "approved"
+    STATUS_REJECTED = "rejected"
+    STATUS_CHOICES = (
+        (STATUS_PENDING, "En attente de validation"),
+        (STATUS_APPROVED, "Publié"),
+        (STATUS_REJECTED, "Masqué / rejeté"),
+    )
+
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name="verified_review")
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="verified_reviews")
+    service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True, related_name="verified_reviews")
+    client_name = models.CharField(max_length=255)
+    client_email = models.EmailField()
+    rating = models.PositiveSmallIntegerField()
+    comment = models.TextField()
+    consent_to_publish = models.BooleanField(default=False)
+    moderation_status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    service_performed = models.CharField(max_length=255, blank=True)
+    performed_at = models.DateTimeField(null=True, blank=True)
+    provider_contested_at = models.DateTimeField(null=True, blank=True)
+    admin_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"Avis vérifié {self.provider.name} · {self.rating}/5"
+
+    @property
+    def is_published(self):
+        return self.consent_to_publish and self.moderation_status == self.STATUS_APPROVED
+
+    @property
+    def qualitative_label(self):
+        from chateaurose.domain.services.reviews import rating_label
+        return rating_label(self.rating)
+
+    def save(self, *args, **kwargs):
+        if self.rating < 1:
+            self.rating = 1
+        if self.rating > 5:
+            self.rating = 5
+        if not self.provider_id and self.booking_id:
+            self.provider = self.booking.provider
+        if not self.service_id and self.booking_id:
+            self.service = self.booking.service
+        if not self.client_name and self.booking_id:
+            self.client_name = self.booking.client_name
+        if not self.client_email and self.booking_id:
+            self.client_email = self.booking.client_email
+        if not self.service_performed and self.service_id:
+            self.service_performed = self.service.name
+        super().save(*args, **kwargs)
+
+
+class ReviewInvitation(models.Model):
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name="review_invitation")
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    sent_count = models.PositiveSmallIntegerField(default=0)
+    last_sent_at = models.DateTimeField(null=True, blank=True)
+    incident_response_recorded_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-updated_at",)
+
+    def __str__(self):
+        return f"Invitation avis {self.booking.booking_id}"

@@ -232,3 +232,24 @@ class ProviderQuestionForm(forms.Form):
     client_name = forms.CharField(label="Ton nom")
     client_email = forms.EmailField(label="Email")
     message = forms.CharField(label="Ta question", widget=forms.Textarea(attrs={"rows": 4}))
+
+class VerifiedReviewForm(forms.Form):
+    rating = forms.ChoiceField(
+        label="Ta note",
+        choices=[(str(i), f"{i}/5") for i in range(1, 6)],
+        widget=forms.RadioSelect,
+    )
+    comment = forms.CharField(
+        label="Ton avis",
+        widget=forms.Textarea(attrs={"rows": 5, "placeholder": "Raconte ton expérience en quelques mots."}),
+    )
+    consent_to_publish = forms.BooleanField(
+        label="J'accepte que mon avis soit relu puis publié sur Château Rose avec mon prénom abrégé.",
+        required=True,
+    )
+
+    def clean_comment(self):
+        comment = (self.cleaned_data.get("comment") or "").strip()
+        if not comment:
+            raise forms.ValidationError("Écris un court avis pour continuer.")
+        return comment
