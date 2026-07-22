@@ -479,7 +479,7 @@ class ProviderMarketingServiceAdmin(ImportExportModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ("booking_id", "booking_kind", "provider", "service", "status", "payment_status", "created_at", "inspiration_pictures_count")
+    list_display = ("booking_id", "booking_kind", "client_email", "provider", "service", "status", "payment_status", "created_at")
     list_filter = ("booking_kind", "status", "payment_status", "provider")
     search_fields = ("booking_id", "client_name", "client_email", "payment_auth_id")
     readonly_fields = ("current_hair_picture_preview", "inspiration_pictures_preview")
