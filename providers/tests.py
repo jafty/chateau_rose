@@ -500,6 +500,7 @@ class ProviderAdminModeTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, generic.booking_id)
+        self.assertContains(response, "awa@example.com")
         self.assertContains(response, "Braids · Vanilles")
         self.assertContains(response, "Options : extra-long")
         self.assertContains(response, "0600000000")
@@ -544,6 +545,7 @@ class ProviderAdminModeTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Gestion centralisée des demandes")
+        self.assertContains(response, self.booking.client_email)
         self.assertContains(response, self.provider.name)
         self.assertContains(response, self.booking.booking_id)
 

@@ -39,6 +39,10 @@ class BookingAdminTests(TestCase):
         )
         self.model_admin = BookingAdmin(Booking, AdminSite())
 
+    def test_booking_list_displays_client_email_and_omits_photos_column(self):
+        self.assertIn("client_email", self.model_admin.list_display)
+        self.assertNotIn("inspiration_pictures_count", self.model_admin.list_display)
+
     def test_inspiration_pictures_count_matches_payload(self):
         self.assertEqual(self.model_admin.inspiration_pictures_count(self.booking), 2)
 
