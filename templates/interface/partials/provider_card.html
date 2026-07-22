@@ -17,6 +17,7 @@
     </div>
     <div class="provider-body">
         <h3 class="provider-name">{{ provider.name }}</h3>
+        {% if provider.review_badge %}<span class="provider-card-review-badge">{{ provider.review_badge.label }} · {{ provider.review_badge.count }} avis vérifiés</span>{% endif %}
         <p class="provider-loc">
             {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
                 Reçoit

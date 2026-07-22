@@ -24,6 +24,8 @@ from .models import (
     ProviderBeforeAppointmentItem,
     ProviderMarketingService,
     ProviderBlockedSlot,
+    ReviewInvitation,
+    VerifiedReview,
     ProviderPhoto,
     ProviderServiceFeeCoupon,
     ProviderZone,
@@ -709,3 +711,17 @@ class ProviderBlockedSlotAdmin(admin.ModelAdmin):
         "is_active",
     )
     readonly_fields = ("is_recurring",)
+
+@admin.register(VerifiedReview)
+class VerifiedReviewAdmin(admin.ModelAdmin):
+    list_display = ("provider", "client_name", "rating", "service_performed", "moderation_status", "consent_to_publish", "created_at")
+    list_filter = ("moderation_status", "consent_to_publish", "provider")
+    search_fields = ("client_name", "client_email", "comment", "service_performed", "booking__booking_id")
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(ReviewInvitation)
+class ReviewInvitationAdmin(admin.ModelAdmin):
+    list_display = ("booking", "sent_count", "last_sent_at", "incident_response_recorded_at")
+    search_fields = ("booking__booking_id", "booking__client_email")
+    readonly_fields = ("token", "created_at", "updated_at")

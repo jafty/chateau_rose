@@ -23,6 +23,8 @@ from django.urls import reverse
 from booking.models import (
     Booking,
     Provider,
+    ReviewInvitation,
+    VerifiedReview,
     ProviderBeforeAppointmentItem,
     ProviderServiceFeeCoupon,
     Service,
@@ -52,7 +54,7 @@ from chateaurose.infrastructure.provider_catalog import (
     DjangoProviderCatalog,
     SALON_LOCATION_LABEL,
 )
-from interface.forms import GenericBookingRequestForm, ProviderBookingRequestForm, ProviderQuestionForm, ServiceRequestForm
+from interface.forms import GenericBookingRequestForm, ProviderBookingRequestForm, ProviderQuestionForm, ServiceRequestForm, VerifiedReviewForm
 from interface.marketing_cities import CITY_PAGE_COPY, MARKETING_CITY_ENTRIES
 from interface.models import (
     ClientReview,
@@ -67,6 +69,7 @@ from interface.models import (
 )
 from interface.services import booking_requests
 from chateaurose.seo import build_base_url
+from chateaurose.domain.services.reviews import can_create_review, provider_review_badge
 
 logger = logging.getLogger(__name__)
 
@@ -769,6 +772,14 @@ def provider_detail(request, provider_id, quick_checkout=None):
         if photo.media_kind == photo.MEDIA_IMAGE and photo.resolved_url
     ][:4]
     gallery_photos = [photo for photo in provider_photos if photo.resolved_url]
+    published_reviews = list(
+        VerifiedReview.objects.filter(
+            provider=provider,
+            moderation_status=VerifiedReview.STATUS_APPROVED,
+            consent_to_publish=True,
+        ).select_related("service").order_by("-created_at")
+    )
+    review_badge = provider_review_badge([review.rating for review in published_reviews])
 
     context = {
         "provider": provider,
@@ -805,6 +816,8 @@ def provider_detail(request, provider_id, quick_checkout=None):
         "can_save_partial_prefill": can_save_partial_prefill,
         "support_phone_display": SUPPORT_PHONE_DISPLAY,
         "support_phone_tel": SUPPORT_PHONE_TEL,
+        "published_reviews": published_reviews,
+        "review_badge": review_badge,
     }
     if request.headers.get("HX-Request") == "true":
         return render(request, "interface/partials/provider_services_section.html", context)
@@ -2534,3 +2547,54 @@ def robots_txt(request):
         ]
     )
     return HttpResponse(content, content_type="text/plain")
+
+def _booking_appointment_at(booking: Booking):
+    raw = booking.proposed_date or booking.desired_date
+    if isinstance(raw, datetime):
+        parsed = raw
+    else:
+        try:
+            parsed = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return None
+    if timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+    return parsed
+
+
+def leave_verified_review(request, token):
+    invitation = get_object_or_404(
+        ReviewInvitation.objects.select_related("booking__provider", "booking__service"),
+        token=token,
+    )
+    booking = invitation.booking
+    if hasattr(booking, "verified_review"):
+        return render(request, "interface/review_already_recorded.html", {"provider": booking.provider})
+    form = VerifiedReviewForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        appointment_at = _booking_appointment_at(booking)
+        allowed, reason = can_create_review(
+            booking_status=booking.status,
+            appointment_at=appointment_at,
+            now=timezone.now(),
+            already_reviewed=False,
+            consent_given=form.cleaned_data["consent_to_publish"],
+        )
+        if not allowed:
+            form.add_error(None, "Ce lien d'avis n'est pas encore éligible.")
+        else:
+            VerifiedReview.objects.create(
+                booking=booking,
+                provider=booking.provider,
+                service=booking.service,
+                client_name=booking.client_name,
+                client_email=booking.client_email,
+                rating=int(form.cleaned_data["rating"]),
+                comment=form.cleaned_data["comment"],
+                consent_to_publish=True,
+                moderation_status=VerifiedReview.STATUS_PENDING,
+                service_performed=booking.service.name if booking.service else booking.requested_service_label_snapshot,
+                performed_at=appointment_at,
+            )
+            return render(request, "interface/review_thank_you.html", {"provider": booking.provider})
+    return render(request, "interface/leave_verified_review.html", {"form": form, "provider": booking.provider, "booking": booking})

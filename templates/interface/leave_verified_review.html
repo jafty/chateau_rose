@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Laisser un avis | Château Rose{% endblock %}
+{% block content %}
+<section class="layout-section"><div class="layout-shell layout-shell--compact">
+  <div class="paper-card review-form-card">
+    <p class="eyebrow">Réservation vérifiée</p>
+    <h1>Ton avis sur {{ provider.name }}</h1>
+    <p class="lead">Ce formulaire est réservé aux clientes ayant eu un rendez-vous confirmé via Château Rose. Ton avis sera relu avant publication.</p>
+    <form method="post" class="review-request-form">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <fieldset class="review-rating-field"><legend>Note de 1 à 5</legend>{{ form.rating }}</fieldset>
+      <label>{{ form.comment.label }}{{ form.comment }}{{ form.comment.errors }}</label>
+      <label class="review-consent">{{ form.consent_to_publish }} <span>{{ form.consent_to_publish.label }}</span></label>
+      {{ form.consent_to_publish.errors }}
+      <button class="btn" type="submit">Envoyer mon avis</button>
+    </form>
+  </div>
+</div></section>
+{% endblock %}
