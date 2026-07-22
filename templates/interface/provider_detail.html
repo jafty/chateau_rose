@@ -49,7 +49,12 @@
     .provider-hero-content {
         --provider-stack-gap: clamp(1rem, 2.4vw, 1.75rem);
     }
-    .provider-hero-badges { display:flex; flex-wrap:wrap; gap:0.75rem; }
+    .provider-hero-badges {
+        display:flex;
+        flex-wrap:wrap;
+        gap:0.75rem;
+        align-items:center;
+    }
     .provider-hero-badges .pill {
         border-radius: 999px;
         padding: 0.55rem 0.95rem;
@@ -62,6 +67,11 @@
         box-shadow: 0 3px 10px rgba(74,59,50,0.06);
     }
     .provider-hero-badges .pill:last-child { background: #f5f2ef; color: var(--ink-secondary); }
+    .provider-hero-badges .review-summary-badge {
+        min-width: 0;
+        max-width: 100%;
+        flex-wrap: wrap;
+    }
     .provider-page-title {
         font-size: clamp(2.35rem, 4.4vw, 3.6rem);
         line-height: 1.08;
@@ -450,6 +460,27 @@
     }
     .choice-pill { border-radius: 14px; }
     .secure-badge { border-radius: 16px; }
+    .provider-main .reviews-section {
+        background: transparent;
+        border: 0;
+        padding: 0;
+        margin-top: 0.25rem;
+    }
+    .provider-main .reviews-section::before {
+        content: "";
+        display: block;
+        width: min(100%, 9rem);
+        height: 2px;
+        margin-bottom: 1.35rem;
+        background: linear-gradient(90deg, rgba(223, 172, 182, 0.75), rgba(223, 172, 182, 0));
+    }
+    .provider-main .reviews-header {
+        background: linear-gradient(135deg, rgba(255, 240, 243, 0.72), rgba(255, 255, 255, 0.72));
+        border: 1px solid rgba(223, 172, 182, 0.25);
+        border-radius: var(--provider-surface-radius);
+        box-shadow: 0 10px 26px rgba(74, 59, 50, 0.06);
+        padding: clamp(1.1rem, 2vw, 1.5rem);
+    }
     @media (max-width: 1200px) {
         .provider-page-header,
         .provider-layout,
@@ -477,6 +508,19 @@
             padding-inline: var(--provider-mobile-surface-inset);
         }
         .provider-page-title { font-size: clamp(2.2rem, 10vw, 3rem); max-width: none; }
+        .provider-hero-badges {
+            gap: 0.55rem;
+        }
+        .provider-hero-badges .pill,
+        .provider-hero-badges .review-summary-badge {
+            width: 100%;
+            justify-content: center;
+            text-align: center;
+            padding-inline: 0.75rem;
+        }
+        .provider-hero-badges .review-summary-badge span {
+            margin-left: 0;
+        }
         .provider-page-header,
         .provider-layout,
         .provider-sidebar,
@@ -509,6 +553,13 @@
         }
         .content-section {
             padding-inline: 0;
+        }
+        .provider-main .reviews-section::before {
+            width: 6rem;
+            margin-bottom: 1rem;
+        }
+        .provider-main .reviews-header {
+            align-items: flex-start;
         }
         .provider-hero-collage,
         .provider-highlights-grid,
