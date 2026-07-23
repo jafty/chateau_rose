@@ -124,7 +124,7 @@ class ServicePagesTests(TestCase):
             content,
         )
         self.assertIn(
-            '<span class="btn btn-accent provider-service-card__button" aria-hidden="true">Réserver rapidement</span>',
+            '<span class="btn btn-accent provider-service-card__button" aria-hidden="true">Réserver</span>',
             content,
         )
         self.assertNotIn("Une question ? Écris-nous", content)
@@ -624,13 +624,11 @@ class ServicePagesTests(TestCase):
         self.assertIn(reverse("interface:at_home_provider_list"), providers.content.decode())
 
 
-    def test_home_hero_renders_express_and_provider_ctas(self):
+    def test_home_hero_uses_service_polaroids_as_primary_ctas(self):
         response = self.client.get(reverse("interface:home"))
 
-        self.assertContains(response, "Réservation express")
-        self.assertContains(response, f'href="{reverse("interface:express_reservation")}"')
-        self.assertContains(response, "Choisir une coiffeuse")
-        self.assertContains(response, f'href="{reverse("interface:provider_list")}"')
+        self.assertContains(response, "Choisir")
+        self.assertContains(response, f'href="{reverse("interface:service_page", args=["tresses"])}"')
 
     def test_service_page_shows_quick_booking_primary_cta_and_provider_choice_secondary_cta(self):
         response = self.client.get(reverse("interface:service_page", args=["tresses"]))
@@ -640,7 +638,7 @@ class ServicePagesTests(TestCase):
         self.assertContains(response, "Réserver rapidement")
         self.assertContains(response, 'href="#service-subservices"')
         self.assertContains(response, 'id="service-subservices"')
-        self.assertContains(response, "Choisir un profil")
+        self.assertContains(response, "Choisir une coiffeuse")
 
     def test_sub_service_page_quick_booking_cta_targets_request_form(self):
         response = self.client.get(reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]))
@@ -710,66 +708,3 @@ class ServicePagesTests(TestCase):
         self.assertEqual(booking.amount_due_now_cents, 0)
         self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_WAIVED)
 
-    @patch("interface.views.notifier.notify")
-    def test_express_reservation_redirects_to_sub_service_with_prefill_and_sends_email(self, notify):
-        response = self.client.post(
-            reverse("interface:express_reservation"),
-            {"service": "tresses/knotless-braids", "email": "CLIENT@Example.COM"},
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(
-            response["Location"],
-            "https://testserver/services/tresses/sous-services/knotless-braids/"
-            "?prefill_email=client%40example.com#service-request",
-        )
-        notify.assert_called_once()
-        self.assertEqual(notify.call_args.args[0], "client@example.com")
-        self.assertIn("prefill_email=client%40example.com", notify.call_args.args[2])
-
-    @patch("interface.views.notifier.notify")
-    def test_express_reservation_contact_checkbox_notifies_support_and_records_interaction(self, notify):
-        response = self.client.post(
-            reverse("interface:express_reservation"),
-            {"service": "tresses/knotless-braids", "email": "CLIENT@Example.COM", "contact_me": "1"},
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(notify.call_count, 2)
-        support_call = notify.call_args_list[1]
-        self.assertEqual(support_call.args[0], "japhet.situmonana@gmail.com")
-        self.assertEqual(support_call.kwargs["reply_to"], "client@example.com")
-        self.assertIn("Réservation express assistée", support_call.args[1])
-        self.assertIn("Knotless braids", support_call.args[2])
-
-        interaction = Interaction.objects.get(subject__startswith="Réservation express assistée")
-        self.assertEqual(interaction.contact_email, "client@example.com")
-        self.assertEqual(interaction.next_action, "Recontacter la cliente par e-mail")
-        self.assertTrue(interaction.metadata["wants_contact"])
-
-    def test_express_reservation_groups_visible_sub_services(self):
-        response = self.client.get(reverse("interface:express_reservation"))
-
-        self.assertEqual(response.status_code, 200)
-        content = response.content.decode()
-        self.assertIn('<optgroup label="Tresses / Braids">', content)
-        self.assertIn('<option value="tresses/knotless-braids"', content)
-
-    def test_express_prefill_email_populates_sub_service_booking_form(self):
-        response = self.client.get(
-            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]),
-            {"prefill_email": "client@example.com"},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'value="client@example.com"')
-
-    def test_express_reservation_styles_position_icons_inside_fields(self):
-        with open("static/css/style.css", encoding="utf-8") as stylesheet:
-            css = stylesheet.read()
-
-        self.assertIn(".express-input-wrapper {", css)
-        self.assertIn("position: relative;", css)
-        self.assertIn(".express-input-wrapper svg", css)
-        self.assertIn(".express-contact-option {", css)
-        self.assertIn(".express-contact-option input:checked + .express-contact-option__box", css)
