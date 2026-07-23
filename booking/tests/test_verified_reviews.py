@@ -62,3 +62,12 @@ class ReviewIntegrationTests(TestCase):
         notify.reset_mock()
         call_command("send_review_requests")
         notify.assert_not_called()
+
+    @patch("chateaurose.infrastructure.email_notifier.EmailNotifier.notify", return_value=False)
+    def test_review_request_command_does_not_mark_failed_delivery_as_sent(self, notify):
+        from django.core.management import call_command
+        call_command("send_review_requests")
+        invitation = ReviewInvitation.objects.get(booking=self.booking)
+        self.assertEqual(invitation.sent_count, 0)
+        self.assertIsNone(invitation.last_sent_at)
+        notify.assert_called_once()
