@@ -87,7 +87,7 @@
     <div class="form-field full-width" data-general-adjustment-field hidden>
         <label>Options (facultatif)</label>
         <div id="general_adjustments" class="supplements-list"></div>
-        <input type="hidden" name="general_adjustments" id="general_adjustments_input" value="[]">
+        <input type="hidden" name="general_adjustments" id="general_adjustments_input" value="[]" data-analytics-ignore>
     </div>
 
     {% if provider.provides_meche %}
@@ -116,8 +116,8 @@
         <label>Lieu de rendez-vous <span class="required-mark">*</span></label>
         {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
             <div class="meta-line">📍 Chez la prestataire : {{ provider.salon_zone|default:"Adresse communiquée après résa" }}</div>
-            <input type="hidden" name="location" value="{{ provider.salon_zone }}">
-            <input type="hidden" name="location_preference" value="salon">
+            <input type="hidden" name="location" value="{{ provider.salon_zone }}" data-analytics-ignore>
+            <input type="hidden" name="location_preference" value="salon" data-analytics-ignore>
         {% else %}
             {% if provider.location_mode == provider.LOCATION_MODE_HYBRID %}
                 <div class="location-choice" data-location-preference>
@@ -131,7 +131,7 @@
                     </label>
                 </div>
             {% else %}
-                <input type="hidden" name="location_preference" value="domicile">
+                <input type="hidden" name="location_preference" value="domicile" data-analytics-ignore>
             {% endif %}
 
             <div data-location-select class="full-width" style="margin-top: 10px;">
@@ -193,7 +193,7 @@
     </div>
 </fieldset>
 
-<input type="hidden" name="provider_id" value="{{ provider.id }}">
-<input type="hidden" name="recap_token" id="recap_token" value="{{ recap_token|default:'' }}">
-<input type="hidden" name="quick_checkout_id" id="quick_checkout_id" value="{{ quick_checkout_id|default:'' }}">
+<input type="hidden" name="provider_id" value="{{ provider.id }}" data-analytics-ignore>
+<input type="hidden" name="recap_token" id="recap_token" value="{{ recap_token|default:'' }}" data-analytics-ignore>
+<input type="hidden" name="quick_checkout_id" id="quick_checkout_id" value="{{ quick_checkout_id|default:'' }}" data-analytics-ignore>
 {% endif %}

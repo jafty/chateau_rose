@@ -98,6 +98,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "chateaurose.context_processors.canonical_url",
                 "chateaurose.context_processors.marketing_cities",
+                "chateaurose.context_processors.analytics_flags",
             ],
         },
     },

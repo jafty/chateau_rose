@@ -65,10 +65,35 @@
         </script>
     {% endif %}
 
+    {% if analytics_enabled %}
+        <script>
+          window.chateauRoseMetaAnalytics = {
+            trackBookingFormStarted: function(payload) {
+              try {
+                if (typeof window.fbq === 'function') {
+                  window.fbq('trackCustom', 'BookingFormStarted', payload || {});
+                }
+              } catch (error) {}
+            }
+          };
+        </script>
+        <script>
+          window.chateauRosePlausibleAnalytics = {
+            trackBookingFormStarted: function(payload) {
+              try {
+                if (typeof window.plausible === 'function') {
+                  window.plausible('BookingFormStarted', { props: payload || {} });
+                }
+              } catch (error) {}
+            }
+          };
+        </script>
+        <script defer src="{% static 'js/booking-form-start-tracker.js' %}"></script>
+    {% endif %}
     {% block extra_head %}{% endblock %}
 </head>
     
-<body>
+<body data-analytics-enabled="{% if analytics_enabled %}true{% else %}false{% endif %}">
     <div class="texture-overlay" aria-hidden="true"></div>
     <header class="site-header">
         <div class="container nav-wrapper">

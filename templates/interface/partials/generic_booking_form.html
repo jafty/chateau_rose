@@ -1,14 +1,14 @@
 <div class="provider-form-layout">
-    <form method="post" class="provider-form-grid plausible-event-name=Generic+Booking+Submit" id="generic-request-form" data-generic-booking-form>
+    <form method="post" class="provider-form-grid plausible-event-name=Generic+Booking+Submit" id="generic-request-form" data-generic-booking-form data-analytics-booking-form data-analytics-enabled="{% if analytics_enabled %}true{% else %}false{% endif %}" data-analytics-service-slug="{{ sub_service.slug|default:service.slug }}" data-analytics-service-category="{{ service.slug }}" data-analytics-stylist-selected="false" data-analytics-booking-flow-version="generic_sub_service_v1">
         {% csrf_token %}
-        <input type="hidden" name="request_service" value="1">
-        <input type="hidden" name="requested_options" id="general_adjustments_input" value="">
+        <input type="hidden" name="request_service" value="1" data-analytics-ignore>
+        <input type="hidden" name="requested_options" id="general_adjustments_input" value="" data-analytics-ignore>
 
         <fieldset class="wizard-step active" data-step="1">
             <h4>1. Ta demande</h4>
             <div class="form-field full-width">
                 <label>Prestation sélectionnée</label>
-                <select id="service_id" disabled>
+                <select id="service_id" disabled data-analytics-ignore>
                     <option value="generic-sub-service" selected>{{ sub_service.name }}</option>
                 </select>
             </div>

@@ -840,6 +840,11 @@
                             data-payment-return-url="{% url 'interface:provider_payment_return' %}"
                             data-stripe-public-key="{{ stripe_public_key }}"
                             data-can-save-partial-prefill="{% if can_save_partial_prefill %}1{% else %}0{% endif %}"
+                            data-analytics-booking-form
+                            data-analytics-enabled="{% if analytics_enabled and not can_save_partial_prefill %}true{% else %}false{% endif %}"
+                            data-analytics-service-category="provider"
+                            data-analytics-stylist-selected="true"
+                            data-analytics-booking-flow-version="provider_standard_v1"
                         >
                             {% csrf_token %}
 

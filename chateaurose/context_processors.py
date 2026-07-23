@@ -47,5 +47,14 @@ def canonical_url(request):
     }
 
 
+def analytics_flags(request):
+    user = getattr(request, "user", None)
+    is_authenticated = bool(getattr(user, "is_authenticated", False))
+    is_staff = bool(getattr(user, "is_staff", False) or getattr(user, "is_superuser", False))
+    session_excluded = bool(getattr(request, "session", {}).get("analytics_excluded", False))
+    analytics_enabled = not settings.DEBUG and not is_authenticated and not is_staff and not session_excluded
+    return {"analytics_enabled": analytics_enabled}
+
+
 def marketing_cities(_request):
     return {"marketing_cities": MARKETING_CITY_ENTRIES}
