@@ -628,6 +628,11 @@
                         <path d="m19 12-7 7-7-7"></path>
                     </svg>
                 </a>
+                {% if published_reviews %}
+                    <a href="#provider-reviews" class="btn secondary provider-reviews-cta plausible-event-name=Provider+Reviews+CTA" aria-label="Voir les avis vérifiés de {{ provider.name }}">
+                        Voir les avis
+                    </a>
+                {% endif %}
             </div>
         </div>
         <div class="provider-avatar-mobile">
