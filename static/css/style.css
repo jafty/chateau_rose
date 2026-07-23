@@ -5645,6 +5645,8 @@ select.express-input {
 .review-request-section { padding-block: clamp(2rem, 5vw, 4.5rem); }
 .review-form-card { padding: clamp(1.5rem, 4vw, 3rem); border-radius: 28px; background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(253,247,248,.92)); border: 1px solid rgba(74,59,50,.09); box-shadow: 0 20px 55px rgba(74,59,50,.11); }
 .review-form-heading { display:grid; gap:.65rem; padding-bottom: clamp(1.25rem, 3vw, 2rem); margin-bottom: clamp(1.25rem, 3vw, 2rem); border-bottom: 1px dashed rgba(74,59,50,.16); }
+.review-form-heading .eyebrow { justify-self:start; display:inline-flex; align-items:center; gap:.45rem; width:fit-content; margin:0; padding:.38rem .8rem; border:1px solid rgba(190,93,111,.22); border-radius:999px; background:rgba(255,240,243,.92); color:#8f3f4f; font-size:.78rem; font-weight:900; letter-spacing:.08em; line-height:1; text-transform:uppercase; box-shadow:0 8px 18px rgba(190,93,111,.1); }
+.review-form-heading .eyebrow::before { content:"✓"; display:inline-flex; align-items:center; justify-content:center; width:1.15rem; height:1.15rem; border-radius:999px; background:#fff; color:#8f3f4f; font-size:.75rem; box-shadow:inset 0 0 0 1px rgba(190,93,111,.18); }
 .review-form-heading h1 { margin:0; font-size: clamp(2rem, 5vw, 3.15rem); line-height:.96; max-width: 760px; }
 .review-form-heading .lead { margin:0; max-width: 680px; color: var(--ink-secondary); }
 .review-request-form { display:grid; gap:clamp(1rem, 2vw, 1.4rem); }
@@ -5654,7 +5656,7 @@ select.express-input {
 .review-textarea-field { display:grid; gap:.55rem; }
 .review-rating-field { border:0; display:grid; gap:.65rem; padding:0; margin:0; }
 .review-rating-field legend { font-family:'Cormorant Garamond', serif; font-size: clamp(1.45rem, 3vw, 2rem); font-weight:700; color:var(--ink-dark); line-height:1.05; }
-.review-field-help { margin: -.25rem 0 .25rem; color: var(--ink-secondary); font-size:.95rem; }
+.review-field-help { margin: .1rem 0 .25rem; color: var(--ink-secondary); font-size:.95rem; }
 .review-rating-field > div { display:grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap:.75rem; }
 .review-rating-field label { display:flex; justify-content:center; align-items:center; min-height:48px; background:#fff; border:1px solid rgba(74,59,50,.14); border-radius:16px; padding:.75rem 1rem; cursor:pointer; font-weight:800; color:var(--ink-primary); box-shadow: 0 8px 20px rgba(74,59,50,.06); transition: transform .18s ease, border-color .18s ease, background .18s ease, color .18s ease; }
 .review-rating-field label:hover { transform: translateY(-2px); border-color: rgba(190,93,111,.4); }
@@ -5663,3 +5665,8 @@ select.express-input {
 .review-consent { display:flex; gap:.75rem; align-items:flex-start; color:var(--ink-secondary); background: rgba(255,255,255,.72); border: 1px solid rgba(74,59,50,.1); border-radius: 18px; padding: 1rem; font-weight:600; }
 .review-consent input { margin-top:.2rem; accent-color: var(--rose-accent); }
 .review-submit-btn { justify-self:start; margin-top:.25rem; }
+
+@media (max-width: 640px) {
+    .review-rating-field > div { grid-template-columns: 1fr; width: 100%; }
+    .review-rating-field label { justify-content:flex-start; width:100%; text-align:left; }
+}
