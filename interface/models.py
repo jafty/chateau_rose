@@ -416,6 +416,8 @@ class ProviderBookingDraft(models.Model):
     provider = models.ForeignKey(
         "booking.Provider",
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
         related_name="booking_drafts",
     )
     source = models.CharField(max_length=16, choices=SOURCE_CHOICES, default=SOURCE_CLIENT)
@@ -437,7 +439,8 @@ class ProviderBookingDraft(models.Model):
         ordering = ("-updated_at",)
 
     def __str__(self):
-        return f"Brouillon {self.provider.name} ({self.client_email or self.token})"
+        provider_name = self.provider.name if self.provider_id else "générique"
+        return f"Brouillon {provider_name} ({self.client_email or self.token})"
 
 
 class QuickCheckoutPage(models.Model):

@@ -1781,19 +1781,33 @@ def _generic_sub_service_pricing_data(sub_service: MarketingSubService | None) -
 
 
 def _store_generic_booking_recap(request, payload: dict) -> str:
-    token = str(uuid.uuid4())
-    recaps = request.session.get("generic_booking_recaps") or {}
-    recaps[token] = payload
-    request.session["generic_booking_recaps"] = recaps
-    request.session.modified = True
-    return token
+    draft = ProviderBookingDraft.objects.create(
+        provider=None,
+        source=ProviderBookingDraft.SOURCE_CLIENT,
+        client_email=payload.get("client_email") or "",
+        client_name=payload.get("client_name") or "",
+        payload=payload,
+    )
+    return str(draft.token)
 
 
 def _get_generic_booking_recap_payload(request, token: str) -> dict:
+    draft = ProviderBookingDraft.objects.filter(
+        token=token,
+        provider__isnull=True,
+        completed_at__isnull=True,
+    ).first()
+    if draft:
+        return draft.payload or {}
     return (request.session.get("generic_booking_recaps") or {}).get(str(token)) or {}
 
 
 def _delete_generic_booking_recap(request, token: str) -> None:
+    ProviderBookingDraft.objects.filter(
+        token=token,
+        provider__isnull=True,
+        completed_at__isnull=True,
+    ).update(completed_at=timezone.now(), updated_at=timezone.now())
     recaps = request.session.get("generic_booking_recaps") or {}
     if str(token) in recaps:
         recaps.pop(str(token), None)

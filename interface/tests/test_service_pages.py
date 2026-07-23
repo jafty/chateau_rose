@@ -14,6 +14,7 @@ from interface.models import (
     MarketingServiceZone,
     MarketingSubService,
     MarketingZone,
+    ProviderBookingDraft,
     ServiceRequest,
 )
 
@@ -698,6 +699,9 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse("interface:generic_booking_recap", args=["00000000-0000-0000-0000-000000000000"]).rsplit("/", 2)[0], response["Location"])
+        draft = ProviderBookingDraft.objects.get(client_email="awa-recap@example.com")
+        self.assertIsNone(draft.provider)
+        self.assertEqual(draft.payload["requested_service_label_snapshot"], "Tresses / Braids · Knotless braids")
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(mail.outbox[0].to, ["awa-recap@example.com"])
         self.assertEqual(mail.outbox[0].subject, "Ton récapitulatif est prêt")
@@ -707,6 +711,8 @@ class ServicePagesTests(TestCase):
         recap_response = self.client.post(response["Location"])
         self.assertRedirects(recap_response, reverse("interface:thank_you_quick_request"))
         self.assertEqual(len(mail.outbox), 4)
+        draft.refresh_from_db()
+        self.assertIsNotNone(draft.completed_at)
 
         from booking.models import Booking
 
@@ -716,4 +722,3 @@ class ServicePagesTests(TestCase):
         self.assertEqual(booking.provider_price_estimate_cents, 12500)
         self.assertEqual(booking.amount_due_now_cents, 0)
         self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_WAIVED)
-
