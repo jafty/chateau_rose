@@ -96,7 +96,7 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertEqual(create_response.status_code, 302)
 
         recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
-        self.assertContains(recap_page, "Vérifie ton récapitulatif")
+        self.assertContains(recap_page, "Merci pour ta réservation")
         self.assertContains(recap_page, "Sécuriser ma demande")
 
         prefill_page = self.client.get(

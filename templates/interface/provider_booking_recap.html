@@ -6,10 +6,11 @@
 <section class="booking-recap-page">
     <div class="container">
         <div class="recap-header">
-            <h1>Vérifie ton récapitulatif{% if payload.client_name %}, {{ payload.client_name }}{% endif %}</h1>
+            <h1>Merci pour ta réservation{% if payload.client_name %}, {{ payload.client_name }}{% endif %}</h1>
             <p>
                 Vérifie les informations et confirme ta demande.
                 <strong>Aucun frais n'est débité tant que le rendez-vous n'est pas confirmé.</strong>
+                Ces frais nous permettent de sécuriser ton créneau, de mieux rémunérer les coiffeuses et d'éviter les annulations de dernière minute.
             </p>
         </div>
 
@@ -43,7 +44,7 @@
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                             </div>
                             <div class="timeline-content">
-                                <h3>2. Validation par {{ provider_name_display }}</h3>
+                                <h3>2. Confirmation par {{ provider_name_display }}</h3>
                                 <p>La prestataire a 48h pour accepter, refuser ou proposer un ajustement.</p>
                             </div>
                         </div>
