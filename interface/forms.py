@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.utils import timezone
 
+from chateaurose.domain.services.reviews import rating_label
+
 from booking.models import Provider
 from chateaurose.infrastructure.provider_catalog import SALON_LOCATION_LABEL
 from interface.models import MarketingService, ServiceRequest
@@ -236,7 +238,7 @@ class ProviderQuestionForm(forms.Form):
 class VerifiedReviewForm(forms.Form):
     rating = forms.ChoiceField(
         label="Ta note",
-        choices=[(str(i), f"{i}/5") for i in range(1, 6)],
+        choices=[(str(i), rating_label(i)) for i in range(1, 6)],
         widget=forms.RadioSelect,
     )
     comment = forms.CharField(
