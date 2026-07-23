@@ -19,8 +19,9 @@ class EmailNotifierTests(TestCase):
             contact_email="owner@example.com",
         )
 
-        self.notifier.notify(str(provider.id), "Rappel", "Contenu")
+        delivered = self.notifier.notify(str(provider.id), "Rappel", "Contenu")
 
+        assert delivered is True
         assert len(mail.outbox) == 1
         message = mail.outbox[0]
         assert message.to == ["owner@example.com"]
@@ -44,8 +45,9 @@ class EmailNotifierTests(TestCase):
         assert message.to == ["ops@example.com"]
 
     def test_notify_sends_to_direct_email(self):
-        self.notifier.notify("client@example.com", "Sujet", "Message")
+        delivered = self.notifier.notify("client@example.com", "Sujet", "Message")
 
+        assert delivered is True
         assert len(mail.outbox) == 1
         message = mail.outbox[0]
         assert message.to == ["client@example.com"]
@@ -65,6 +67,7 @@ class EmailNotifierTests(TestCase):
         assert message.reply_to == ["reply@example.com"]
 
     def test_notify_skips_invalid_recipient(self):
-        self.notifier.notify("not-an-email", "Sujet", "Message")
+        delivered = self.notifier.notify("not-an-email", "Sujet", "Message")
 
+        assert delivered is False
         assert mail.outbox == []
