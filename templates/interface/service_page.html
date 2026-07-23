@@ -51,7 +51,7 @@
         {% if request_form %}
         <div id="service-request" class="provider-form-card inline-form-card" style="margin-bottom:1.25rem;">
             <h2 class="wizard-heading">Réserver rapidement</h2>
-            <p class="meta-line">Indique ton créneau idéal et tes préférences : Château Rose lance tout de suite la recherche d'une prestataire compatible. L'empreinte bancaire n'est débitée que si un RDV est confirmé.</p>
+            <p class="meta-line">Indique ton créneau idéal et tes préférences : Château Rose lance tout de suite la recherche d'une prestataire compatible avec une estimation claire, frais inclus.</p>
             <div class="step-progress" aria-label="Étapes de demande rapide">
                 <div class="step-indicator active" data-step-indicator="1">1</div>
                 <div class="step-indicator" data-step-indicator="2">2</div>
@@ -185,7 +185,7 @@
             <ul class="highlight-list pink-checks">
                 <li>Profils vérifiés par nos soins</li>
                 <li>Photos 100% réelles</li>
-                <li>Empreinte bancaire sans débit immédiat</li>
+                <li>Estimation claire avec frais Château Rose inclus</li>
                 <li>Recherche d'alternative si besoin</li>
             </ul>
             <a class="btn contact-outline service-contact-cta" href="mailto:japhet.situmonana@gmail.com">
@@ -308,25 +308,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const locationPreference = form.querySelector('input[name="location_preference"]:checked')?.value || 'salon';
         const atHomeAdj = locationPreference === 'domicile' ? (pricingData.at_home_bonus || 0) : 0;
         const subtotal = pricingData.base + lengthAdj + adjustmentTotal + atHomeAdj;
-        const fee = serviceFee(subtotal);
         const displayTotalWithFees = displayEstimateWithFees({
             base: pricingData.base,
             adjustments: [lengthAdj, adjustmentTotal, atHomeAdj],
         });
-        const displayFee = ceilPriceForDisplay(fee);
-        const displayProviderDue = Math.max(displayTotalWithFees - displayFee, 0);
-        finalPriceDisplay.textContent = formatPrice(displayFee);
-        stickyPriceValue.textContent = formatPrice(displayFee);
+        finalPriceDisplay.textContent = formatPrice(displayTotalWithFees);
+        stickyPriceValue.textContent = formatPrice(displayTotalWithFees);
         finalDetailsDisplay.replaceChildren();
-        const estimateLine = Object.assign(document.createElement('span'), {
-            className: 'estimate-highlight',
-            textContent: `Estimation totale indicative : ${formatPrice(displayTotalWithFees)}`,
-        });
-        const providerDueLine = Object.assign(document.createElement('span'), {
-            textContent: `Prestation estimée à régler le jour J : ${formatPrice(displayProviderDue)}`,
-        });
         const serviceLine = Object.assign(document.createElement('span'), { textContent: pricingData.name });
-        finalDetailsDisplay.append(estimateLine, providerDueLine, serviceLine);
+        finalDetailsDisplay.append(serviceLine);
         const optionText = selectedAdjustments().join(' · ');
         generalAdjustmentsDisplay.textContent = optionText ? `Options : ${optionText}` : '';
         generalAdjustmentsDisplay.hidden = !optionText;

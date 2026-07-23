@@ -4326,7 +4326,21 @@ footer {
     line-height: 1;
 }
 
+.sticky-price-bar .fee-included-note {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-top: 0.25rem;
+    padding: 0.32rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--rose-accent);
+    font-size: 0.82rem;
+    font-weight: 850;
+    letter-spacing: 0.01em;
+}
+
 .sticky-price-bar #final-details-display {
+    margin-top: 0.8rem;
     display: grid;
     gap: 0.35rem;
 }
