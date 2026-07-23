@@ -48,7 +48,8 @@ class ProviderBookingRecapFlowTests(TestCase):
             "free_text": "Merci de commencer à l'heure 🙏",
         }
 
-    def test_create_recap_sends_email_and_redirects_to_recap_page(self):
+    @override_settings(OPERATIONS_EMAIL="ops@example.com")
+    def test_create_recap_sends_client_and_operations_emails_and_redirects_to_recap_page(self):
         response = self.client.post(
             reverse("interface:provider_detail", args=[self.provider.id]),
             data=self._base_payload(),
@@ -62,8 +63,14 @@ class ProviderBookingRecapFlowTests(TestCase):
         )
         self.assertEqual(draft.client_email, "sarah@example.com")
         self.assertEqual(draft.payload["service_id"], str(self.service.id))
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[0].to, ["sarah@example.com"])
         self.assertIn(str(draft.token), mail.outbox[0].body)
+        self.assertEqual(mail.outbox[1].to, ["ops@example.com"])
+        self.assertEqual(mail.outbox[1].subject, "Nouveau récapitulatif prestataire")
+        self.assertEqual(mail.outbox[1].reply_to, ["sarah@example.com"])
+        self.assertIn(str(draft.token), mail.outbox[1].body)
+        self.assertIn("Sarah (sarah@example.com)", mail.outbox[1].body)
 
 
     def test_create_recap_without_current_hair_picture(self):
