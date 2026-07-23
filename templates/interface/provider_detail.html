@@ -802,7 +802,9 @@
                                     <span class="review-date">{{ review.performed_at|date:"F Y"|default:review.created_at|date:"F Y" }}</span>
                                 </div>
                             </div>
-                            <span class="review-qualitative">{{ review.qualitative_label }}</span>
+                            {% if review.is_verified and review.qualitative_label %}
+                                <span class="review-qualitative">{{ review.qualitative_label }}</span>
+                            {% endif %}
                         </div>
                         <p class="review-text">“{{ review.comment }}”</p>
                         <div class="review-footer">✓ {{ review.public_trust_label }} · Prestation : {{ review.service_performed|default:"prestation Château Rose" }}</div>

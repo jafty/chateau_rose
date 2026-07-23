@@ -818,7 +818,13 @@ def provider_detail(request, provider_id, quick_checkout=None):
             consent_to_publish=True,
         ).select_related("service").order_by("-created_at")
     )
-    review_badge = provider_review_badge([review.rating for review in published_reviews])
+    review_badge = provider_review_badge(
+        [
+            review.rating
+            for review in published_reviews
+            if review.is_verified and review.rating is not None
+        ]
+    )
 
     context = {
         "provider": provider,

@@ -176,6 +176,8 @@ class Provider(models.Model):
             self.verified_reviews.filter(
                 moderation_status=VerifiedReview.STATUS_APPROVED,
                 consent_to_publish=True,
+                is_verified=True,
+                rating__isnull=False,
             ).values_list("rating", flat=True)
         )
         return provider_review_badge(ratings)
@@ -628,7 +630,7 @@ class VerifiedReview(models.Model):
     service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True, related_name="verified_reviews")
     client_name = models.CharField(max_length=255)
     client_email = models.EmailField()
-    rating = models.PositiveSmallIntegerField()
+    rating = models.PositiveSmallIntegerField(null=True, blank=True)
     comment = models.TextField()
     consent_to_publish = models.BooleanField(default=False)
     is_verified = models.BooleanField(
@@ -647,7 +649,8 @@ class VerifiedReview(models.Model):
         ordering = ("-created_at",)
 
     def __str__(self):
-        return f"Avis vérifié {self.provider.name} · {self.rating}/5"
+        rating = f" · {self.rating}/5" if self.rating is not None else ""
+        return f"Avis vérifié {self.provider.name}{rating}"
 
     @property
     def is_published(self):
@@ -661,6 +664,8 @@ class VerifiedReview(models.Model):
 
     @property
     def qualitative_label(self):
+        if self.rating is None:
+            return ""
         from chateaurose.domain.services.reviews import rating_label
         return rating_label(self.rating)
 
@@ -675,9 +680,9 @@ class VerifiedReview(models.Model):
                     previous["consent_to_publish"]
                     and previous["moderation_status"] == self.STATUS_APPROVED
                 )
-        if self.rating < 1:
+        if self.rating is not None and self.rating < 1:
             self.rating = 1
-        if self.rating > 5:
+        if self.rating is not None and self.rating > 5:
             self.rating = 5
         if not self.provider_id and self.booking_id:
             self.provider = self.booking.provider
@@ -704,11 +709,12 @@ class VerifiedReview(models.Model):
         if not recipient:
             return
         subject = f"Avis publié pour {self.provider.name}"
+        rating_label = f"{self.rating}/5" if self.rating is not None else "non renseignée"
         body = (
             "Un avis vient d'être publié sur Château Rose.\n\n"
             f"Prestataire : {self.provider.name}\n"
             f"Cliente : {self.client_name}\n"
-            f"Note : {self.rating}/5\n"
+            f"Note : {rating_label}\n"
             f"Statut public : {self.public_trust_label}\n"
             f"Prestation : {self.service_performed or 'prestation Château Rose'}\n\n"
             f"Avis :\n{self.comment}"

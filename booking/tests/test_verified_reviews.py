@@ -83,6 +83,63 @@ class ReviewIntegrationTests(TestCase):
 
         self.assertEqual(review.public_trust_label, "Avis client autorisé")
 
+    def test_external_authorized_reviews_can_omit_rating_and_do_not_affect_badge(self):
+        for index in range(4):
+            booking = Booking.objects.create(
+                booking_id=f"BR-V-{index}",
+                provider=self.provider,
+                service=self.service,
+                client_name=f"Cliente {index}",
+                client_email=f"client{index}@example.com",
+                location="Toulouse",
+                desired_date=(timezone.now() - timedelta(days=2)).isoformat(),
+                hair_length="court",
+                meche=False,
+                estimated_price_cents=4500,
+                status=Booking.STATUS_CONFIRMED,
+                created_at=timezone.now(),
+            )
+            VerifiedReview.objects.create(
+                booking=booking,
+                provider=self.provider,
+                service=self.service,
+                client_name=f"Cliente {index}",
+                client_email=f"client{index}@example.com",
+                rating=5,
+                comment="Super",
+                consent_to_publish=True,
+                moderation_status=VerifiedReview.STATUS_APPROVED,
+            )
+        external_booking = Booking.objects.create(
+            booking_id="BR-EXT",
+            provider=self.provider,
+            service=self.service,
+            client_name="Externe",
+            client_email="external@example.com",
+            location="Toulouse",
+            desired_date=(timezone.now() - timedelta(days=2)).isoformat(),
+            hair_length="court",
+            meche=False,
+            estimated_price_cents=4500,
+            status=Booking.STATUS_CONFIRMED,
+            created_at=timezone.now(),
+        )
+        external_review = VerifiedReview.objects.create(
+            booking=external_booking,
+            provider=self.provider,
+            service=self.service,
+            client_name="Externe",
+            client_email="external@example.com",
+            rating=None,
+            comment="Très bon accueil",
+            consent_to_publish=True,
+            is_verified=False,
+            moderation_status=VerifiedReview.STATUS_APPROVED,
+        )
+
+        self.assertEqual(external_review.qualitative_label, "")
+        self.assertEqual(self.provider.review_badge, {"label": "Excellent", "count": 4})
+
     @patch("chateaurose.infrastructure.email_notifier.EmailNotifier.notify")
     def test_review_request_command_sends_once_and_uses_secure_link(self, notify):
         from django.core.management import call_command
