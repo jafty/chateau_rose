@@ -203,7 +203,7 @@ class ProviderBookingRequestForm(forms.Form):
                     "L'adresse de la prestataire doit être renseignée pour confirmer un rendez-vous."
                 )
         elif not location:
-            raise forms.ValidationError("Merci de choisir un lieu.")
+            self.add_error("location", "Merci de choisir une zone pour le rendez-vous à domicile.")
 
 
         if self.require_payment_auth and not cleaned_data.get("payment_auth_id"):

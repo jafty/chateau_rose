@@ -72,6 +72,22 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertIn(str(draft.token), mail.outbox[1].body)
         self.assertIn("Sarah (sarah@example.com)", mail.outbox[1].body)
 
+    def test_domicile_recap_requires_zone_and_preserves_entered_fields(self):
+        payload = self._base_payload()
+        payload["location"] = ""
+
+        response = self.client.post(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            data=payload,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Merci de choisir une zone pour le rendez-vous à domicile.")
+        self.assertContains(response, "Sarah")
+        self.assertContains(response, "domicile")
+        self.assertEqual(ProviderBookingDraft.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
 
     def test_create_recap_without_current_hair_picture(self):
         response = self.client.post(
@@ -103,7 +119,7 @@ class ProviderBookingRecapFlowTests(TestCase):
             reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={draft.token}"
         )
         self.assertContains(prefill_page, "Récapitulatif chargé")
-        self.assertContains(prefill_page, "Voir mon récapitulatif")
+        self.assertContains(prefill_page, "Demander mon RDV")
 
         submission = self.client.post(
             reverse("interface:provider_booking_recap", args=[draft.token]),
