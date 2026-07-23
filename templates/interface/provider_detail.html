@@ -805,7 +805,7 @@
                             <span class="review-qualitative">{{ review.qualitative_label }}</span>
                         </div>
                         <p class="review-text">“{{ review.comment }}”</p>
-                        <div class="review-footer">✓ Réservation vérifiée · Prestation : {{ review.service_performed|default:"prestation Château Rose" }}</div>
+                        <div class="review-footer">✓ {{ review.public_trust_label }} · Prestation : {{ review.service_performed|default:"prestation Château Rose" }}</div>
                     </article>
                     {% endfor %}
                 </div>
