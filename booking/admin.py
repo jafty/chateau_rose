@@ -714,8 +714,9 @@ class ProviderBlockedSlotAdmin(admin.ModelAdmin):
 
 @admin.register(VerifiedReview)
 class VerifiedReviewAdmin(admin.ModelAdmin):
-    list_display = ("provider", "client_name", "rating", "service_performed", "moderation_status", "consent_to_publish", "created_at")
-    list_filter = ("moderation_status", "consent_to_publish", "provider")
+    list_display = ("provider", "client_name", "rating", "service_performed", "moderation_status", "consent_to_publish", "is_verified", "created_at")
+    list_filter = ("moderation_status", "consent_to_publish", "is_verified", "provider")
+    list_editable = ("moderation_status", "consent_to_publish", "is_verified")
     search_fields = ("client_name", "client_email", "comment", "service_performed", "booking__booking_id")
     readonly_fields = ("created_at", "updated_at")
 

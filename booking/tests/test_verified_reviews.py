@@ -54,6 +54,35 @@ class ReviewIntegrationTests(TestCase):
         self.assertFalse(review.is_published)
         self.assertEqual(self.client.get("/avis/not-a-token/").status_code, 404)
 
+    @override_settings(REVIEW_PUBLISHED_NOTIFICATION_EMAIL="owner@example.com")
+    @patch("chateaurose.infrastructure.email_notifier.EmailNotifier.notify")
+    def test_email_sent_when_review_is_published(self, notify):
+        review = VerifiedReview.objects.create(
+            booking=self.booking,
+            provider=self.provider,
+            service=self.service,
+            client_name="Aminata T.",
+            client_email="a@example.com",
+            rating=5,
+            comment="Super prestation",
+            consent_to_publish=True,
+            moderation_status=VerifiedReview.STATUS_PENDING,
+        )
+        notify.assert_not_called()
+
+        review.moderation_status = VerifiedReview.STATUS_APPROVED
+        review.save()
+
+        notify.assert_called_once()
+        self.assertEqual(notify.call_args.args[0], "owner@example.com")
+        self.assertIn("Avis publié", notify.call_args.args[1])
+        self.assertIn("Aminata T.", notify.call_args.args[2])
+
+    def test_public_trust_label_can_hide_verified_wording(self):
+        review = VerifiedReview(is_verified=False)
+
+        self.assertEqual(review.public_trust_label, "Avis client autorisé")
+
     @patch("chateaurose.infrastructure.email_notifier.EmailNotifier.notify")
     def test_review_request_command_sends_once_and_uses_secure_link(self, notify):
         from django.core.management import call_command

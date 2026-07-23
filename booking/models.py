@@ -631,6 +631,10 @@ class VerifiedReview(models.Model):
     rating = models.PositiveSmallIntegerField()
     comment = models.TextField()
     consent_to_publish = models.BooleanField(default=False)
+    is_verified = models.BooleanField(
+        default=True,
+        help_text="Décochez pour les avis republiés depuis une source externe autorisée.",
+    )
     moderation_status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING)
     service_performed = models.CharField(max_length=255, blank=True)
     performed_at = models.DateTimeField(null=True, blank=True)
@@ -650,11 +654,27 @@ class VerifiedReview(models.Model):
         return self.consent_to_publish and self.moderation_status == self.STATUS_APPROVED
 
     @property
+    def public_trust_label(self):
+        if self.is_verified:
+            return "Réservation vérifiée"
+        return "Avis client autorisé"
+
+    @property
     def qualitative_label(self):
         from chateaurose.domain.services.reviews import rating_label
         return rating_label(self.rating)
 
     def save(self, *args, **kwargs):
+        was_published = False
+        if self.pk:
+            previous = type(self).objects.filter(pk=self.pk).values(
+                "consent_to_publish", "moderation_status"
+            ).first()
+            if previous:
+                was_published = (
+                    previous["consent_to_publish"]
+                    and previous["moderation_status"] == self.STATUS_APPROVED
+                )
         if self.rating < 1:
             self.rating = 1
         if self.rating > 5:
@@ -670,6 +690,30 @@ class VerifiedReview(models.Model):
         if not self.service_performed and self.service_id:
             self.service_performed = self.service.name
         super().save(*args, **kwargs)
+        if self.is_published and not was_published:
+            self._notify_publication()
+
+    def _notify_publication(self) -> None:
+        from django.conf import settings
+        from chateaurose.infrastructure.email_notifier import EmailNotifier
+
+        recipient = (
+            getattr(settings, "REVIEW_PUBLISHED_NOTIFICATION_EMAIL", "")
+            or getattr(settings, "OPERATIONS_EMAIL", "")
+        )
+        if not recipient:
+            return
+        subject = f"Avis publié pour {self.provider.name}"
+        body = (
+            "Un avis vient d'être publié sur Château Rose.\n\n"
+            f"Prestataire : {self.provider.name}\n"
+            f"Cliente : {self.client_name}\n"
+            f"Note : {self.rating}/5\n"
+            f"Statut public : {self.public_trust_label}\n"
+            f"Prestation : {self.service_performed or 'prestation Château Rose'}\n\n"
+            f"Avis :\n{self.comment}"
+        )
+        EmailNotifier().notify(recipient, subject, body, reply_to=self.client_email)
 
 
 class ReviewInvitation(models.Model):
