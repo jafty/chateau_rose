@@ -1,16 +1,9 @@
 <div class="sticky-price-bar" id="sticky-price-bar">
-    <span class="total-label">Frais Château Rose à sécuriser</span>
+    <span class="total-label">Estimation dynamique</span>
     <span class="total-amount" id="final-price-display">...</span>
+    <span class="fee-included-note">Frais Château Rose inclus</span>
     <p class="meta-line" id="final-details-display">{{ estimate_placeholder|default:"Ajuste les options pour afficher ton estimation." }}</p>
     <p class="meta-line" id="general-adjustments-display" hidden></p>
-    <p class="meta-line">{{ estimate_note|default:"L'estimation totale peut évoluer selon la prestataire assignée. La prestation coiffure se règle à la prestataire le jour J." }}</p>
-    <div class="payment-reassurance" aria-label="Information paiement">
-        <svg class="payment-reassurance__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            <path d="M9 16l2 2 4-4"></path>
-        </svg>
-        <span><strong>Aucun débit maintenant :</strong> simple empreinte bancaire, débitée uniquement après confirmation du rendez-vous.</span>
-    </div>
+    <p class="meta-line">{{ estimate_note|default:"L'estimation totale peut évoluer selon la prestataire assignée." }}</p>
     <span class="sr-only" id="sticky-price-value">-- €</span>
 </div>

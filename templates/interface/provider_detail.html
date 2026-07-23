@@ -1568,14 +1568,15 @@
                 });
             const depositCents = serviceFeeCents;
             const depositStr = formatMarketingPrice(ceilPriceForDisplay(depositCents));
+            const displayedAppointmentEstimateStr = formatMarketingPrice(displayTotalWithFeesCents);
             const selectedOption = serviceSelect?.selectedOptions?.[0];
             const serviceName =
                 pricing.name ||
                 (selectedOption ? selectedOption.textContent.split(' - ')[0].trim() : null) ||
                 'Service';
 
-            stickyPriceValue.textContent = depositStr;
-            finalPriceDisplay.textContent = depositStr;
+            stickyPriceValue.textContent = displayedAppointmentEstimateStr;
+            finalPriceDisplay.textContent = displayedAppointmentEstimateStr;
             const lengthText = selectedLength && selectedLength !== 'standard' ? `Longueur ${selectedLength}` : 'Tarif de base';
             const mecheText = mecheCheckbox
                 ? mecheCheckbox.checked
@@ -1585,23 +1586,13 @@
             const locationText = atHomeAdj > 0
                 ? `à domicile (+${formatAdjustmentWithFees(atHomeAdj, serviceFeePercentage)})`
                 : "chez la prestataire";
-            const displayedAppointmentEstimateStr = formatMarketingPrice(displayTotalWithFeesCents);
-            const remainingStr = formatPrice(Math.max(totalCents, 0));
-            const serviceFeeStr = depositStr;
             finalDetailsDisplay.replaceChildren();
             const serviceLine = Object.assign(document.createElement('span'), {
                 textContent: Number.isFinite(fixedPriceCents)
                     ? `${serviceName} (forfait défini par l'équipe).`
                     : `${serviceName} (${lengthText}, ${mecheText}, ${locationText}).`,
             });
-            const estimateLine = Object.assign(document.createElement('span'), {
-                className: 'estimate-highlight',
-                textContent: `${Number.isFinite(fixedPriceCents) ? 'Estimation totale' : 'Estimation totale indicative'} : ${displayedAppointmentEstimateStr}`,
-            });
-            const providerDueLine = Object.assign(document.createElement('span'), {
-                textContent: `Prestation estimée à régler le jour J : ${remainingStr}`,
-            });
-            finalDetailsDisplay.append(serviceLine, estimateLine, providerDueLine); 
+            finalDetailsDisplay.append(serviceLine);
             if (generalAdjustmentsDisplay) {
                 const adjustmentsText = selectedAdjustments.length
                     ? `Suppléments : ${selectedAdjustments.map((item) => formatAdjustment(item, adjustments[item] || 0, serviceFeePercentage)).filter(Boolean).join(' · ')}`
