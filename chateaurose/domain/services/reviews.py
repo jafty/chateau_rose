@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 
-LABELS = {5: "Excellent", 4: "Très bien", 3: "Bien"}
+LABELS = {5: "Excellent", 4: "Très bien", 3: "Bien", 2: "À améliorer", 1: "Décevant"}
 MIN_BADGE_REVIEWS = 3
 MIN_BADGE_AVERAGE = 4
 MAX_INVITATION_REMINDERS = 2

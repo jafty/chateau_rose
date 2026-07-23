@@ -1,20 +1,33 @@
 {% extends "base.html" %}
 {% block title %}Laisser un avis | Château Rose{% endblock %}
 {% block content %}
-<section class="layout-section"><div class="layout-shell layout-shell--compact">
-  <div class="paper-card review-form-card">
-    <p class="eyebrow">Réservation vérifiée</p>
-    <h1>Ton avis sur {{ provider.name }}</h1>
-    <p class="lead">Ce formulaire est réservé aux clientes ayant eu un rendez-vous confirmé via Château Rose. Ton avis sera relu avant publication.</p>
-    <form method="post" class="review-request-form">
-      {% csrf_token %}
-      {{ form.non_field_errors }}
-      <fieldset class="review-rating-field"><legend>Note de 1 à 5</legend>{{ form.rating }}</fieldset>
-      <label>{{ form.comment.label }}{{ form.comment }}{{ form.comment.errors }}</label>
-      <label class="review-consent">{{ form.consent_to_publish }} <span>{{ form.consent_to_publish.label }}</span></label>
-      {{ form.consent_to_publish.errors }}
-      <button class="btn" type="submit">Envoyer mon avis</button>
-    </form>
+<section class="layout-section review-request-section">
+  <div class="layout-shell layout-shell--compact">
+    <div class="paper-card review-form-card">
+      <div class="review-form-heading">
+        <p class="eyebrow">Réservation vérifiée</p>
+        <h1>Partage ton expérience avec {{ provider.name }}</h1>
+        <p class="lead">Ton retour aide les prochaines clientes à choisir en confiance. Il sera relu par l’équipe Château Rose avant publication.</p>
+      </div>
+      <form method="post" class="review-request-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <fieldset class="review-rating-field">
+          <legend>Quelle impression générale gardes-tu ?</legend>
+          <p class="review-field-help">Choisis le ressenti qui résume le mieux ton rendez-vous.</p>
+          {{ form.rating }}
+          {{ form.rating.errors }}
+        </fieldset>
+        <label class="review-textarea-field">
+          <span>{{ form.comment.label }}</span>
+          {{ form.comment }}
+          {{ form.comment.errors }}
+        </label>
+        <label class="review-consent">{{ form.consent_to_publish }} <span>{{ form.consent_to_publish.label }}</span></label>
+        {{ form.consent_to_publish.errors }}
+        <button class="btn review-submit-btn" type="submit">Envoyer mon avis</button>
+      </form>
+    </div>
   </div>
-</div></section>
+</section>
 {% endblock %}

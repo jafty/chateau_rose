@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from booking.models import Booking, Provider, ReviewInvitation, Service, VerifiedReview
-from chateaurose.domain.services.reviews import BookingReviewState, can_create_review, invitation_due, provider_review_badge
+from chateaurose.domain.services.reviews import BookingReviewState, can_create_review, invitation_due, provider_review_badge, rating_label
 
 
 class ReviewDomainTests(TestCase):
@@ -22,6 +22,9 @@ class ReviewDomainTests(TestCase):
         self.assertIsNone(provider_review_badge([5, 5, 5]))
         self.assertIsNone(provider_review_badge([5, 4, 4, 2]))
         self.assertEqual(provider_review_badge([5, 5, 4, 5]), {"label": "Excellent", "count": 4})
+
+    def test_rating_labels_cover_all_review_form_choices(self):
+        self.assertEqual([rating_label(i) for i in range(1, 6)], ["Décevant", "À améliorer", "Bien", "Très bien", "Excellent"])
 
     def test_invitation_and_reminder_rules(self):
         now = timezone.now()
