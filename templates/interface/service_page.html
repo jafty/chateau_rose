@@ -14,9 +14,9 @@
         <div class="breadcrumbs"><a href="{% url 'interface:home' %}">Accueil</a> &nbsp;/&nbsp; <a href="{% url 'interface:home' %}#catalogue">Services</a> &nbsp;/&nbsp; {{ page_service_name|default:service.name }}</div>
         <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
-        <div class="service-header-actions" style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:0.8rem;">
+        <div class="service-header-actions">
             <a class="btn primary plausible-event-name=Service+Booking+CTA" href="#{% if sub_services and not is_sub_service_page %}service-subservices{% else %}service-request{% endif %}">Réserver rapidement</a>
-            <a class="btn secondary plausible-event-name=Choose+Provider+CTA" href="#provider-comparison">Choisir un profil</a>
+            <a class="btn secondary plausible-event-name=Choose+Provider+CTA" href="#provider-comparison">Choisir une coiffeuse</a>
         </div>
     </div>
     {% if is_sub_service_page and gallery_images %}
@@ -41,7 +41,7 @@
             <div class="provider-service-grid service-subservices-grid">
                 {% for sub_service_item in sub_services %}
                     {% url 'interface:sub_service_page' service.slug sub_service_item.slug as sub_service_url %}
-                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url card_cta="Réserver rapidement" %}
+                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url card_cta="Réserver" %}
                 {% endfor %}
             </div>
         </div>
@@ -56,7 +56,6 @@
                 <div class="step-indicator active" data-step-indicator="1">1</div>
                 <div class="step-indicator" data-step-indicator="2">2</div>
             </div>
-            {% if express_message %}<div class="alert success">{{ express_message }}</div>{% endif %}
             {% if request_success %}<div class="alert success">Ta demande est bien enregistrée. Château Rose revient vers toi rapidement.</div>{% endif %}
             {% if request_form.non_field_errors %}<div class="alert error">{{ request_form.non_field_errors|join:", " }}</div>{% endif %}
             {% include "interface/partials/generic_booking_form.html" %}

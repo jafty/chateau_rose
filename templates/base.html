@@ -86,9 +86,7 @@
                 <a href="{% url 'interface:provider_list' %}">Prestataires</a>
                 <a href="{% url 'interface:home' %}#catalogue">Services</a>
                 <a href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:signup' %}{% endif %}">{% if request.user.is_authenticated %}Espace prestataire{% else %}Devenir partenaire{% endif %}</a>
-                <a href="{% url 'interface:express_reservation' %}" class="pro-link pro-link-mobile plausible-event-name=Express+Reservation+CTA">Réservation express</a>
             </nav>
-            <a href="{% url 'interface:express_reservation' %}" class="pro-link pro-link-desktop plausible-event-name=Express+Reservation+CTA">Réservation express</a>
         </div>
     </header>
 
