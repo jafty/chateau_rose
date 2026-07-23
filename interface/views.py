@@ -216,6 +216,30 @@ def _build_recap_email_body(*, provider: Provider, recap_url: str, payload: dict
     return "\n".join(lines)
 
 
+def _build_operations_recap_email_body(*, provider: Provider, recap_url: str, payload: dict) -> str:
+    location_label = (
+        "Chez la prestataire" if payload.get("location_preference") == "salon" else "À domicile"
+    )
+    lines = [
+        "Un nouveau récapitulatif prestataire vient d’être créé.",
+        "",
+        "Résumé :",
+        (
+            f"- Cliente : {payload.get('client_name', '').strip() or 'Non communiqué'} "
+            f"({payload.get('client_email', '').strip() or 'email non communiqué'})"
+        ),
+        f"- Prestataire : {provider.name}",
+        f"- Prestation : {payload.get('service_name', '')}",
+        f"- Date souhaitée : {payload.get('desired_date', '')}",
+        f"- Lieu : {location_label}",
+        f"- Zone/adresse : {payload.get('location', '') or 'Non communiqué'}",
+        "",
+        "Lien du récapitulatif :",
+        recap_url,
+    ]
+    return "\n".join(lines)
+
+
 def _build_provider_booking_recap_payload(*, provider: Provider, form: ProviderBookingRequestForm) -> dict:
     service = Service.objects.filter(provider=provider, id=form.cleaned_data.get("service_id")).first()
     if service is None:
@@ -266,6 +290,16 @@ def _create_provider_booking_recap(
         "Ton récapitulatif est prêt",
         _build_recap_email_body(provider=provider, recap_url=recap_url, payload=recap_payload),
     )
+    operations_email = (getattr(settings, "OPERATIONS_EMAIL", "") or SUPPORT_EMAIL).strip()
+    if operations_email:
+        notifier.notify(
+            operations_email,
+            "Nouveau récapitulatif prestataire",
+            _build_operations_recap_email_body(
+                provider=provider, recap_url=recap_url, payload=recap_payload
+            ),
+            reply_to=recap_payload["client_email"],
+        )
     return draft
 
 
