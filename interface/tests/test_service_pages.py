@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from django.core import mail
+
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -696,8 +698,15 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse("interface:generic_booking_recap", args=["00000000-0000-0000-0000-000000000000"]).rsplit("/", 2)[0], response["Location"])
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[0].to, ["awa-recap@example.com"])
+        self.assertEqual(mail.outbox[0].subject, "Ton récapitulatif est prêt")
+        self.assertEqual(mail.outbox[1].subject, "Nouveau récapitulatif générique")
+        self.assertIn(response["Location"], mail.outbox[0].body)
+        self.assertIn(response["Location"], mail.outbox[1].body)
         recap_response = self.client.post(response["Location"])
         self.assertRedirects(recap_response, reverse("interface:thank_you_quick_request"))
+        self.assertEqual(len(mail.outbox), 4)
 
         from booking.models import Booking
 

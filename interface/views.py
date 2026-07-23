@@ -240,6 +240,68 @@ def _build_operations_recap_email_body(*, provider: Provider, recap_url: str, pa
     return "\n".join(lines)
 
 
+def _build_generic_recap_email_body(*, recap_url: str, payload: dict) -> str:
+    lines = [
+        f"Salut {payload.get('client_name', '').strip() or 'à toi'} 👋",
+        "",
+        "Ton récapitulatif est prêt.",
+        "Tu peux revenir dessus à tout moment via ce lien :",
+        recap_url,
+        "",
+        "Résumé :",
+        f"- Prestation : {payload.get('requested_service_label_snapshot', '')}",
+        f"- Date souhaitée : {payload.get('desired_date', '')}",
+        f"- Lieu : {'Chez la prestataire' if payload.get('location_preference') == 'salon' else 'À domicile'}",
+        f"- Zone/adresse : {payload.get('location', '') or 'À préciser'}",
+        "",
+        "Tu peux confirmer ta demande depuis ce même lien. Château Rose cherchera ensuite une prestataire compatible.",
+    ]
+    return "\n".join(lines)
+
+
+def _build_operations_generic_recap_email_body(*, recap_url: str, payload: dict) -> str:
+    location_label = (
+        "Chez la prestataire" if payload.get("location_preference") == "salon" else "À domicile"
+    )
+    lines = [
+        "Un nouveau récapitulatif générique vient d’être créé.",
+        "",
+        "Résumé :",
+        (
+            f"- Cliente : {payload.get('client_name', '').strip() or 'Non communiqué'} "
+            f"({payload.get('client_email', '').strip() or 'email non communiqué'})"
+        ),
+        f"- Téléphone : {payload.get('client_phone', '').strip() or 'Non communiqué'}",
+        f"- Prestation : {payload.get('requested_service_label_snapshot', '')}",
+        f"- Date souhaitée : {payload.get('desired_date', '')}",
+        f"- Lieu : {location_label}",
+        f"- Zone/adresse : {payload.get('location', '') or 'À préciser'}",
+        "",
+        "Lien du récapitulatif :",
+        recap_url,
+    ]
+    return "\n".join(lines)
+
+
+def _notify_generic_booking_recap_created(request, *, token: str, payload: dict) -> None:
+    recap_url = request.build_absolute_uri(
+        reverse("interface:generic_booking_recap", args=[token])
+    )
+    notifier.notify(
+        payload["client_email"],
+        "Ton récapitulatif est prêt",
+        _build_generic_recap_email_body(recap_url=recap_url, payload=payload),
+    )
+    operations_email = (getattr(settings, "OPERATIONS_EMAIL", "") or SUPPORT_EMAIL).strip()
+    if operations_email:
+        notifier.notify(
+            operations_email,
+            "Nouveau récapitulatif générique",
+            _build_operations_generic_recap_email_body(recap_url=recap_url, payload=payload),
+            reply_to=payload["client_email"],
+        )
+
+
 def _build_provider_booking_recap_payload(*, provider: Provider, form: ProviderBookingRequestForm) -> dict:
     service = Service.objects.filter(provider=provider, id=form.cleaned_data.get("service_id")).first()
     if service is None:
@@ -687,6 +749,18 @@ def provider_detail(request, provider_id, quick_checkout=None):
                 _release_payment_auth_safely(prefilled_payment_auth_id)
                 prefilled_payment_auth_id = ""
             error = _first_form_error(form)
+            recap_prefill = {
+                "service_id": (request.POST.get("service_id") or "").strip(),
+                "client_name": (request.POST.get("client_name") or "").strip(),
+                "client_email": (request.POST.get("client_email") or "").strip(),
+                "desired_date": (request.POST.get("desired_date") or "").strip(),
+                "location_preference": (request.POST.get("location_preference") or "").strip(),
+                "location": (request.POST.get("location") or "").strip(),
+                "hair_length": (request.POST.get("hair_length") or "").strip(),
+                "general_adjustments": form.cleaned_data.get("general_adjustments") or [],
+                "meche": request.POST.get("meche") in {"1", "true", "on"},
+                "service_fee_coupon_code": (request.POST.get("service_fee_coupon_code") or "").strip(),
+            }
             can_save_partial_prefill = bool(existing_admin_draft)
 
     service_categories = []
@@ -1797,23 +1871,22 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
             except DomainError as exc:
                 form.add_error(None, _friendly_domain_error_message(exc))
                 return form, request_success
-            token = _store_generic_booking_recap(
-                request,
-                {
-                    "client_name": form.cleaned_data["client_name"],
-                    "client_email": form.cleaned_data["client_email"],
-                    "client_phone": form.cleaned_data["client_phone"],
-                    "desired_date": form.cleaned_data["desired_date"],
-                    "location": zone.name if zone else "À préciser",
-                    "location_preference": form.cleaned_data.get("location_preference") or "salon",
-                    "hair_length": estimate["hair_length"],
-                    "requested_options": estimate["requested_options"],
-                    "service_fee_coupon_code": coupon_code,
-                    "requested_marketing_service_id": str(service_meta.id) if service_meta else None,
-                    "requested_marketing_sub_service_id": str(sub_service.id),
-                    "requested_service_label_snapshot": _generic_booking_label(service_meta, sub_service),
-                },
-            )
+            recap_payload = {
+                "client_name": form.cleaned_data["client_name"],
+                "client_email": form.cleaned_data["client_email"],
+                "client_phone": form.cleaned_data["client_phone"],
+                "desired_date": form.cleaned_data["desired_date"],
+                "location": zone.name if zone else "À préciser",
+                "location_preference": form.cleaned_data.get("location_preference") or "salon",
+                "hair_length": estimate["hair_length"],
+                "requested_options": estimate["requested_options"],
+                "service_fee_coupon_code": coupon_code,
+                "requested_marketing_service_id": str(service_meta.id) if service_meta else None,
+                "requested_marketing_sub_service_id": str(sub_service.id),
+                "requested_service_label_snapshot": _generic_booking_label(service_meta, sub_service),
+            }
+            token = _store_generic_booking_recap(request, recap_payload)
+            _notify_generic_booking_recap_created(request, token=token, payload=recap_payload)
             request.session["generic_booking_recap_redirect_url"] = reverse("interface:generic_booking_recap", args=[token])
             return "redirect", False
         else:
