@@ -92,6 +92,7 @@ def test_create_provider_selected_booking_sends_operations_copy():
         "provider-1",
         "ops@example.com",
         "awa@example.com",
+        "awa@example.com",
     ]
     operations_copy = deps["notifier"].messages[1]
     assert operations_copy["subject"] == f"Copie nouvelle demande · {booking.id}"
@@ -99,6 +100,10 @@ def test_create_provider_selected_booking_sends_operations_copy():
     assert f"- ID demande : {booking.id}" in operations_copy["body"]
     assert "- Prestataire : provider-1" in operations_copy["body"]
     assert "https://example.com/pro/bookings/" in operations_copy["body"]
+    details_request = deps["notifier"].messages[3]
+    assert details_request["subject"] == "Quelques infos pour préparer ta coupe"
+    assert details_request["reply_to"] == ["provider-1", "ops@example.com"]
+    assert "photo récente de tes cheveux" in details_request["body"]
 
 
 def test_create_provider_selected_booking_with_waived_fee_skips_payment():

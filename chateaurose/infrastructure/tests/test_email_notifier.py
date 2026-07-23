@@ -64,6 +64,24 @@ class EmailNotifierTests(TestCase):
         message = mail.outbox[0]
         assert message.reply_to == ["reply@example.com"]
 
+    def test_notify_sets_multiple_reply_to_and_resolves_provider_before_operations(self):
+        provider = Provider.objects.create(
+            name="Maison Reply",
+            contact_email="provider@example.com",
+        )
+
+        with override_settings(OPERATIONS_EMAIL="ops@example.com"):
+            self.notifier.notify(
+                "client@example.com",
+                "Sujet",
+                "Message",
+                reply_to=[str(provider.id), "ops@example.com"],
+            )
+
+        assert len(mail.outbox) == 1
+        message = mail.outbox[0]
+        assert message.reply_to == ["provider@example.com", "ops@example.com"]
+
     def test_notify_skips_invalid_recipient(self):
         self.notifier.notify("not-an-email", "Sujet", "Message")
 

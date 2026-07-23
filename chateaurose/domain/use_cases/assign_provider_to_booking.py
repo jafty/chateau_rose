@@ -6,6 +6,26 @@ AWAITING_ALTERNATIVE_PROVIDER = "AWAITING_ALTERNATIVE_PROVIDER"
 SUBMITTED = "SUBMITTED"
 
 
+def _build_client_details_request_lines(client_name: str) -> list[str]:
+    return [
+        f"Bonjour {client_name},",
+        "",
+        "Pour préparer au mieux ta coupe, tu peux répondre directement à cet email avec les éléments utiles pour la prestataire.",
+        "Si c’est pertinent, ajoute une photo récente de tes cheveux, une photo d’inspiration de la coupe souhaitée et toute précision importante (longueur, volume, contraintes, habitudes, questions).",
+        "Ces informations nous aideront à valider que la prestation prévue correspond bien à tes attentes.",
+        "",
+        "À très vite,",
+        "Château Rose",
+    ]
+
+
+def _client_details_reply_to(provider_id: str, operations_email: str | None):
+    recipients = [provider_id]
+    if operations_email:
+        recipients.append(operations_email)
+    return recipients
+
+
 def execute(
     *,
     booking_id: str,
@@ -115,6 +135,12 @@ def execute(
             "Elle va maintenant pouvoir confirmer, refuser ou proposer un ajustement.",
             f"ID demande : {booking.id}",
         ]),
+    )
+    notifier.notify(
+        booking.client_contact["email"],
+        "Quelques infos pour préparer ta coupe",
+        "\n".join(_build_client_details_request_lines(booking.client_contact.get("name") or "")),
+        reply_to=_client_details_reply_to(provider_id, operations_email),
     )
     if operations_email:
         notifier.notify(

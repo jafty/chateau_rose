@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class EmailNotifier:
-    def notify(self, recipient: str, subject: str, body: str, reply_to: str | None = None) -> None:
+    def notify(self, recipient: str, subject: str, body: str, reply_to: str | list[str] | tuple[str, ...] | None = None) -> None:
         resolved = self._resolve_recipient(recipient)
         if not resolved:
             return
@@ -36,7 +36,7 @@ class EmailNotifier:
                     body=body,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[resolved],
-                    reply_to=[resolved_reply_to] if resolved_reply_to else None,
+                    reply_to=resolved_reply_to or None,
                 )
                 message.send(fail_silently=False)
         except Exception:
@@ -57,7 +57,7 @@ class EmailNotifier:
         recipient: str,
         subject: str,
         body: str,
-        reply_to: str | None = None,
+        reply_to: list[str] | None = None,
     ) -> None:
         sender_email = settings.BREVO_SENDER_EMAIL or settings.DEFAULT_FROM_EMAIL
         payload = {
@@ -70,7 +70,9 @@ class EmailNotifier:
             "textContent": body,
         }
         if reply_to:
-            payload["replyTo"] = {"email": reply_to}
+            payload["replyTo"] = {"email": reply_to[0]}
+            if len(reply_to) > 1:
+                payload["cc"] = [{"email": email} for email in reply_to[1:] if email != recipient]
         response = requests.post(
             settings.BREVO_API_URL,
             json=payload,
@@ -115,12 +117,31 @@ class EmailNotifier:
             return False
         return True
 
-    def _resolve_reply_to(self, reply_to: str | None) -> str | None:
+    def _resolve_reply_to(self, reply_to: str | list[str] | tuple[str, ...] | None) -> list[str]:
         if not reply_to:
+            return []
+        values = reply_to if isinstance(reply_to, (list, tuple)) else [reply_to]
+        resolved = []
+        for value in values:
+            email = self._resolve_provider_or_email(value)
+            if email and email not in resolved:
+                resolved.append(email)
+        return resolved
+
+    def _resolve_provider_or_email(self, value: str) -> str | None:
+        if not value:
             return None
-        cleaned = str(reply_to).strip()
+        cleaned = str(value).strip()
         if not cleaned:
             return None
+        if cleaned.isdigit():
+            provider_email = (
+                Provider.objects.filter(id=cleaned)
+                .values_list("contact_email", flat=True)
+                .first()
+            )
+            if provider_email and self._is_valid_email(provider_email.strip()):
+                return provider_email.strip()
         if self._is_valid_email(cleaned):
             return cleaned
         return None
