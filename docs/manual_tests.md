@@ -7,6 +7,21 @@ Ce document couvre les tests manuels pour les fonctionnalités déjà livrées (
 - Base de données avec au moins un service publié et un prestataire actif pour vérifier les listes/cartes.
 - Identifiants prestataire valides pour tester la connexion (email/mot de passe créés dans l'administration).
 
+## Vérifier l'événement Meta `InitiateCheckout`
+
+Le pixel marketing n'est chargé que pour une visite publique en environnement de production, après acceptation des cookies. Un bloqueur de publicité ou la protection renforcée du navigateur peut bloquer la requête Meta.
+
+1. Ouvrir une fenêtre privée, sans bloqueur pour le site, puis ouvrir les outils de développement **avant** de commencer le formulaire.
+2. Accepter les cookies et vérifier dans la console :
+   - `localStorage.getItem('chateau_rose_marketing_consent')` renvoie `accepted` ;
+   - `typeof fbq` renvoie `function` ;
+   - `fbq.loaded` renvoie `true` une fois `fbevents.js` chargé.
+3. Dans l'onglet **Réseau**, activer **Conserver le journal**, filtrer sur `facebook.com/tr`, puis remplir l'étape 1 et cliquer sur **Continuer**.
+4. Une requête vers `facebook.com/tr` doit contenir `ev=InitiateCheckout`. Refaire le test une fois sur le formulaire générique et une fois sur une fiche prestataire. L'événement n'est envoyé qu'une fois par formulaire affiché, même en revenant à l'étape 1.
+5. Pour une lecture plus simple, utiliser l'extension navigateur **Meta Pixel Helper**, qui doit afficher `PageView` puis `InitiateCheckout`. Pour la validation côté Meta, ouvrir **Gestionnaire d'événements > Tester les événements** avant le parcours ; cette vue de test est plus adaptée qu'un rapport d'activité, dont l'affichage peut être retardé.
+
+Si `fbq` existe mais qu'aucune requête `facebook.com/tr` n'apparaît, contrôler que `connect.facebook.net/en_US/fbevents.js` n'est pas marquée comme bloquée dans l'onglet Réseau. Les sessions authentifiées (notamment administrateur/prestataire) et le serveur local en mode debug désactivent volontairement ce suivi.
+
 ## Parcours public
 1. **Navigation principale et footer**
    - Ouvrir la page d'accueil.

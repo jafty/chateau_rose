@@ -1,6 +1,5 @@
 (function () {
     const EVENT_NAME = 'BookingFormStarted';
-    const INITIATE_CHECKOUT_SESSION_KEY = 'chateau_rose_initiate_checkout_tracked';
     const CONSENT_KEY = 'chateau_rose_marketing_consent';
 
     const hasMarketingConsent = () => {
@@ -20,27 +19,12 @@
         return payload;
     };
 
-    const hasTrackedInitiateCheckoutThisSession = () => {
-        try {
-            return window.sessionStorage && window.sessionStorage.getItem(INITIATE_CHECKOUT_SESSION_KEY) === 'true';
-        } catch (error) {
-            return false;
-        }
-    };
-
-    const markInitiateCheckoutTrackedThisSession = () => {
-        try {
-            if (window.sessionStorage) {
-                window.sessionStorage.setItem(INITIATE_CHECKOUT_SESSION_KEY, 'true');
-            }
-        } catch (error) {}
-    };
-
     class BookingFormStartTracker {
         constructor(form, adapters) {
             this.form = form;
             this.adapters = adapters || [];
             this.started = false;
+            this.initiatedCheckout = false;
             this.handleChange = this.handleChange.bind(this);
             this.form.addEventListener('change', this.handleChange, true);
             this.form.addEventListener('input', this.handleChange, true);
@@ -80,7 +64,7 @@
         }
 
         trackInitiateCheckout() {
-            if (!this.isEnabled() || hasTrackedInitiateCheckoutThisSession()) return;
+            if (!this.isEnabled() || this.initiatedCheckout) return;
             const payload = safePayloadFromForm(this.form);
             let tracked = false;
             this.adapters.forEach((adapter) => {
@@ -94,7 +78,7 @@
                 }
             });
             if (tracked) {
-                markInitiateCheckoutTrackedThisSession();
+                this.initiatedCheckout = true;
             }
         }
     }

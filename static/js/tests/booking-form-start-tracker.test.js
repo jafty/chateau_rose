@@ -80,8 +80,7 @@ function enabledDataset() {
   assert.equal(plausible[0][0], 'BookingFormStarted');
 }
 {
-  const ctx = load(); let calls = 0, stored = {};
-  ctx.window.sessionStorage = { getItem: (key) => stored[key] || null, setItem: (key, value) => { stored[key] = value; } };
+  const ctx = load(); let calls = 0;
   const form = new Form(enabledDataset());
   form.__bookingFormStartTracker = new ctx.window.BookingFormStartTracker(form, [{trackInitiateCheckout:()=>calls++}]);
   ctx.window.chateauRoseBookingAnalytics.trackInitiateCheckout(form);
@@ -89,8 +88,17 @@ function enabledDataset() {
   assert.equal(calls, 1);
 }
 {
-  const ctx = load(); let calls = 0, stored = {};
-  ctx.window.sessionStorage = { getItem: (key) => stored[key] || null, setItem: (key, value) => { stored[key] = value; } };
+  const ctx = load(); let calls = 0;
+  const firstForm = new Form(enabledDataset());
+  const secondForm = new Form(enabledDataset());
+  firstForm.__bookingFormStartTracker = new ctx.window.BookingFormStartTracker(firstForm, [{trackInitiateCheckout:()=>calls++}]);
+  secondForm.__bookingFormStartTracker = new ctx.window.BookingFormStartTracker(secondForm, [{trackInitiateCheckout:()=>calls++}]);
+  ctx.window.chateauRoseBookingAnalytics.trackInitiateCheckout(firstForm);
+  ctx.window.chateauRoseBookingAnalytics.trackInitiateCheckout(secondForm);
+  assert.equal(calls, 2);
+}
+{
+  const ctx = load(); let calls = 0;
   ctx.window.localStorage.getItem = () => 'rejected';
   const form = new Form(enabledDataset());
   form.__bookingFormStartTracker = new ctx.window.BookingFormStartTracker(form, [{trackInitiateCheckout:()=>calls++}]);
