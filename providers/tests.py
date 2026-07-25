@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.contrib.staticfiles import finders
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -622,6 +623,17 @@ class BaseTemplateNavigationAndAnalyticsTests(TestCase):
         self.assertContains(response, "https://www.googletagmanager.com/gtag/js")
         self.assertContains(response, "data-cookie-banner")
         self.assertContains(response, "cookie-consent.js")
+
+    def test_cookie_banner_styles_are_in_the_main_stylesheet(self):
+        stylesheet_path = finders.find("css/style.css")
+
+        self.assertIsNotNone(stylesheet_path)
+        with open(stylesheet_path, encoding="utf-8") as stylesheet:
+            css = stylesheet.read()
+
+        self.assertIn(".cookie-banner {", css)
+        self.assertIn(".cookie-banner[hidden]", css)
+        self.assertIn(".cookie-banner__actions", css)
 
     def test_authenticated_user_sees_provider_space_cta_without_analytics(self):
         self.client.login(username="analytics-provider", password="safepass123")
