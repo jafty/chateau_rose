@@ -1,5 +1,6 @@
 (function () {
     const EVENT_NAME = 'BookingFormStarted';
+    const INITIATE_CHECKOUT_SESSION_KEY = 'chateau_rose_initiate_checkout_tracked';
     const CONSENT_KEY = 'chateau_rose_marketing_consent';
 
     const hasMarketingConsent = () => {
@@ -17,6 +18,22 @@
         if (form.dataset.analyticsStylistSelected) payload.stylist_selected = form.dataset.analyticsStylistSelected === 'true';
         if (form.dataset.analyticsBookingFlowVersion) payload.booking_flow_version = form.dataset.analyticsBookingFlowVersion;
         return payload;
+    };
+
+    const hasTrackedInitiateCheckoutThisSession = () => {
+        try {
+            return window.sessionStorage && window.sessionStorage.getItem(INITIATE_CHECKOUT_SESSION_KEY) === 'true';
+        } catch (error) {
+            return false;
+        }
+    };
+
+    const markInitiateCheckoutTrackedThisSession = () => {
+        try {
+            if (window.sessionStorage) {
+                window.sessionStorage.setItem(INITIATE_CHECKOUT_SESSION_KEY, 'true');
+            }
+        } catch (error) {}
     };
 
     class BookingFormStartTracker {
@@ -61,10 +78,40 @@
                 }
             });
         }
+
+        trackInitiateCheckout() {
+            if (!this.isEnabled() || hasTrackedInitiateCheckoutThisSession()) return;
+            const payload = safePayloadFromForm(this.form);
+            let tracked = false;
+            this.adapters.forEach((adapter) => {
+                try {
+                    if (adapter && typeof adapter.trackInitiateCheckout === 'function') {
+                        adapter.trackInitiateCheckout(payload);
+                        tracked = true;
+                    }
+                } catch (error) {
+                    // Analytics must never affect the booking form.
+                }
+            });
+            if (tracked) {
+                markInitiateCheckoutTrackedThisSession();
+            }
+        }
     }
 
     window.BookingFormStartTracker = BookingFormStartTracker;
     window.chateauRoseBookingAnalytics = window.chateauRoseBookingAnalytics || {};
+    window.chateauRoseBookingAnalytics.trackInitiateCheckout = function (form) {
+        if (!form) return;
+        if (!form.__bookingFormStartTracker) {
+            form.__bookingFormStartTracker = new BookingFormStartTracker(form, [
+                window.chateauRoseMetaAnalytics,
+                window.chateauRosePlausibleAnalytics,
+            ]);
+        }
+        form.__bookingFormStartTracker.trackInitiateCheckout();
+    };
+
     window.chateauRoseBookingAnalytics.initBookingFormStartTracking = function () {
         document.querySelectorAll('form[data-analytics-booking-form]').forEach((form) => {
             if (form.__bookingFormStartTracker) return;

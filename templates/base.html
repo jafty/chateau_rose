@@ -74,6 +74,13 @@
                   window.fbq('trackCustom', 'BookingFormStarted', payload || {});
                 }
               } catch (error) {}
+            },
+            trackInitiateCheckout: function(payload) {
+              try {
+                if (typeof window.fbq === 'function') {
+                  window.fbq('track', 'InitiateCheckout', payload || {});
+                }
+              } catch (error) {}
             }
           };
         </script>
@@ -85,7 +92,8 @@
                   window.plausible('BookingFormStarted', { props: payload || {} });
                 }
               } catch (error) {}
-            }
+            },
+            trackInitiateCheckout: function(payload) {}
           };
         </script>
         <script defer src="{% static 'js/booking-form-start-tracker.js' %}"></script>

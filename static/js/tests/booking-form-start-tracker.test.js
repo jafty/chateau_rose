@@ -79,4 +79,30 @@ function enabledDataset() {
   assert.equal(meta[0][0], 'trackCustom'); assert.equal(meta[0][1], 'BookingFormStarted');
   assert.equal(plausible[0][0], 'BookingFormStarted');
 }
+{
+  const ctx = load(); let calls = 0, stored = {};
+  ctx.window.sessionStorage = { getItem: (key) => stored[key] || null, setItem: (key, value) => { stored[key] = value; } };
+  const form = new Form(enabledDataset());
+  form.__bookingFormStartTracker = new ctx.window.BookingFormStartTracker(form, [{trackInitiateCheckout:()=>calls++}]);
+  ctx.window.chateauRoseBookingAnalytics.trackInitiateCheckout(form);
+  ctx.window.chateauRoseBookingAnalytics.trackInitiateCheckout(form);
+  assert.equal(calls, 1);
+}
+{
+  const ctx = load(); let calls = 0, stored = {};
+  ctx.window.sessionStorage = { getItem: (key) => stored[key] || null, setItem: (key, value) => { stored[key] = value; } };
+  ctx.window.localStorage.getItem = () => 'rejected';
+  const form = new Form(enabledDataset());
+  form.__bookingFormStartTracker = new ctx.window.BookingFormStartTracker(form, [{trackInitiateCheckout:()=>calls++}]);
+  ctx.window.chateauRoseBookingAnalytics.trackInitiateCheckout(form);
+  assert.equal(calls, 0);
+}
+{
+  const ctx = load(); let meta = [];
+  ctx.window.fbq = (...args) => meta.push(args);
+  vm.runInContext("window.chateauRoseMetaAnalytics={trackInitiateCheckout:function(payload){try{if(typeof window.fbq==='function'){window.fbq('track','InitiateCheckout',payload||{});}}catch(e){}}};", ctx);
+  ctx.window.chateauRoseMetaAnalytics.trackInitiateCheckout({service_slug:'tresses'});
+  assert.equal(meta[0][0], 'track'); assert.equal(meta[0][1], 'InitiateCheckout');
+}
+
 console.log('booking-form-start-tracker tests passed');
