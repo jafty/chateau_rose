@@ -288,6 +288,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!validateCurrentStep() || currentStep >= steps.length) return;
         currentStep += 1;
         updateWizardUI();
+        if (currentStep === 2 && typeof window.chateauRoseBookingAnalytics?.trackInitiateCheckout === 'function') {
+            window.chateauRoseBookingAnalytics.trackInitiateCheckout(form);
+        }
     }));
     document.querySelectorAll('.btn-prev').forEach((button) => button.addEventListener('click', () => {
         if (currentStep <= 1) return;

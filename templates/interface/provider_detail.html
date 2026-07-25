@@ -1304,12 +1304,11 @@
                     }
                 }
 
-                if (currentStep === 1 && typeof window.chateauRoseBookingAnalytics?.trackInitiateCheckout === 'function') {
-                    window.chateauRoseBookingAnalytics.trackInitiateCheckout(form);
-                }
-
                 currentStep += 1;
                 updateWizardUI();
+                if (currentStep === 2 && typeof window.chateauRoseBookingAnalytics?.trackInitiateCheckout === 'function') {
+                    window.chateauRoseBookingAnalytics.trackInitiateCheckout(form);
+                }
                 const wizardTop = document.getElementById('booking-wizard');
                 if (wizardTop) {
                     window.scrollTo({ top: wizardTop.offsetTop - 100, behavior: 'smooth' });

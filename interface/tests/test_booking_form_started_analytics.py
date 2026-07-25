@@ -45,6 +45,12 @@ class BookingFormStartedAnalyticsRenderTests(TestCase):
         self.assertContains(response, 'data-analytics-service-category="tresses"')
         self.assertContains(response, 'data-analytics-stylist-selected="false"')
         self.assertContains(response, 'data-analytics-booking-flow-version="generic_sub_service_v1"')
+        self.assertContains(response, "window.chateauRoseBookingAnalytics.trackInitiateCheckout(form);")
+
+    def test_provider_booking_form_tracks_checkout_after_entering_step_two(self):
+        response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
+
+        self.assertContains(response, "window.chateauRoseBookingAnalytics.trackInitiateCheckout(form);")
 
     def test_staff_sessions_do_not_expose_enabled_tracker(self):
         user = get_user_model().objects.create_user(
