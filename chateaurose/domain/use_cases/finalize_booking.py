@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import InvalidState
-from chateaurose.domain.use_cases.expire_booking import EXPIRATION_DELAY
+from chateaurose.domain.use_cases.expire_booking import EXPIRATION_DELAY, expiration_reference_time
 
 CONFIRMED = "CONFIRMED"
 CANCELLED = "CANCELLED"
@@ -91,7 +91,7 @@ def execute(
     effective_now = now or booking.created_at
 
     # Expired guard: applies to participant decisions, not to admin force-cancel.
-    if actor in ("provider", "client") and now is not None and now - booking.created_at >= EXPIRATION_DELAY:
+    if actor in ("provider", "client") and now is not None and now - expiration_reference_time(booking) >= EXPIRATION_DELAY:
         raise InvalidState("Booking has expired")
 
     if booking.status in (CONFIRMED, CANCELLED):

@@ -157,6 +157,8 @@ def test_provider_rejects_pending_client_validation_booking_moves_to_alternative
 
 def test_client_accepts_proposal_captures_and_confirms():
     repo = InMemoryBookingRepository(); notifier = InMemoryNotifier(); payments = InMemoryPaymentGateway(); provider_directory = _provider_directory()
+    created_at = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    proposal_sent_at = created_at + timedelta(hours=70)
     booking = BookingRequest(
         id="booking_3", provider_id="provider_1", service_id="service_tresses",
         client_contact={"name": "Sarah", "email": "sarah@example.com"}, location="Saint-Cyprien",
@@ -164,12 +166,12 @@ def test_client_accepts_proposal_captures_and_confirms():
         current_hair_picture="s3://bucket/hair.jpg", inspiration_pictures=[], free_text="",
         estimated_price_cents=10500, provider_price_estimate_cents=9000, chateau_rose_fee_cents=1500,
         amount_due_now_cents=1500, payment_status="AUTHORIZED", client_address="5 place du Capitole, 31000 Toulouse",
-        payment_auth_id="auth_3", status="PENDING_CLIENT_VALIDATION", created_at=datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc),
+        payment_auth_id="auth_3", status="PENDING_CLIENT_VALIDATION", created_at=created_at, updated_at=proposal_sent_at,
         proposed_price_cents=9000, proposed_date="2026-01-11T18:00:00Z",
     )
     repo.add(booking)
     updated = finalize_booking.execute(
-        booking_id="booking_3", actor="client", decision="accept", now=datetime(2026, 1, 11, 10, 0, tzinfo=timezone.utc),
+        booking_id="booking_3", actor="client", decision="accept", now=created_at + timedelta(hours=73),
         booking_repository=repo, payment_gateway=payments, provider_directory=provider_directory, notifier=notifier,
     )
     assert updated.status == finalize_booking.CONFIRMED

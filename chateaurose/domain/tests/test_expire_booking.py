@@ -126,6 +126,46 @@ def test_not_expired_before_72h():
     assert notifier.messages == []
 
 
+def test_pending_client_validation_restarts_expiry_window_from_latest_proposal():
+    repo = InMemoryBookingRepository()
+    notifier = InMemoryNotifier()
+    payments = InMemoryPaymentGateway()
+
+    created_at = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+    proposal_sent_at = created_at + timedelta(hours=70)
+    booking = BookingRequest(
+        id="booking_pending_fresh",
+        provider_id="provider_1",
+        service_id="service_tresses",
+        client_contact={"name": "Sarah", "email": "sarah@example.com"},
+        location="Saint-Cyprien",
+        desired_date="2026-01-15T17:00:00Z",
+        hair_length="long",
+        meche=False,
+        current_hair_picture="s3://bucket/hair.jpg",
+        inspiration_pictures=[],
+        free_text="",
+        estimated_price_cents=8500,
+        payment_auth_id="auth_pending_fresh",
+        status=expire_booking.PENDING_CLIENT_VALIDATION,
+        created_at=created_at,
+        updated_at=proposal_sent_at,
+    )
+    repo.add(booking)
+
+    still_open = expire_booking.execute(
+        booking_id=booking.id,
+        now=created_at + timedelta(hours=73),
+        booking_repository=repo,
+        payment_gateway=payments,
+        notifier=notifier,
+    )
+
+    assert still_open.status == expire_booking.PENDING_CLIENT_VALIDATION
+    assert payments.release_calls == []
+    assert notifier.messages == []
+
+
 def test_awaiting_alternative_uses_alternative_requested_at_for_expiry_window():
     repo = InMemoryBookingRepository()
     notifier = InMemoryNotifier()

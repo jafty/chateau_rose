@@ -9,6 +9,14 @@ CANCELLED = "CANCELLED"
 EXPIRATION_DELAY = timedelta(hours=72)
 
 
+def expiration_reference_time(booking: BookingRequest):
+    if booking.status == PENDING_CLIENT_VALIDATION:
+        return booking.updated_at or booking.created_at
+    if booking.status == AWAITING_ALTERNATIVE_PROVIDER:
+        return booking.alternative_requested_at or booking.updated_at or booking.created_at
+    return booking.created_at
+
+
 def execute(
     *,
     booking_id: str,
@@ -23,7 +31,7 @@ def execute(
     if booking.status in (CANCELLED,):
         return booking
 
-    reference_time = (booking.alternative_requested_at or booking.updated_at or booking.created_at) if booking.status == AWAITING_ALTERNATIVE_PROVIDER else booking.created_at
+    reference_time = expiration_reference_time(booking)
     if booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER, WAITING_PROVIDER_ASSIGNMENT) and now - reference_time >= EXPIRATION_DELAY:
         expired_while_waiting_provider = booking.status == SUBMITTED
         expired_while_finding_alternative = booking.status == AWAITING_ALTERNATIVE_PROVIDER
