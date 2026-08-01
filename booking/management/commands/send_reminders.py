@@ -88,7 +88,7 @@ class Command(BaseCommand):
                 else booking.estimated_price_cents
             )
             formatted_price = self._format_price(effective_price_cents)
-            notifier.notify(
+            delivered = notifier.notify(
                 booking.client_email,
                 "Rappel: rendez-vous confirmé",
                 "\n".join(
@@ -106,5 +106,12 @@ class Command(BaseCommand):
                     ]
                 ),
             )
+            if delivered is False:
+                self.stderr.write(
+                    self.style.WARNING(
+                        f"Client reminder for {booking.booking_id} could not be sent; it will be retried."
+                    )
+                )
+                continue
             booking.client_reminder_sent_at = now
             booking.save(update_fields=["client_reminder_sent_at"])

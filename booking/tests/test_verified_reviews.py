@@ -151,3 +151,26 @@ class ReviewIntegrationTests(TestCase):
         notify.reset_mock()
         call_command("send_review_requests")
         notify.assert_not_called()
+
+    @patch("chateaurose.infrastructure.email_notifier.EmailNotifier.notify", return_value=False)
+    def test_review_request_command_retries_when_delivery_fails(self, notify):
+        from django.core.management import call_command
+
+        call_command("send_review_requests")
+
+        invitation = ReviewInvitation.objects.get(booking=self.booking)
+        self.assertEqual(invitation.sent_count, 0)
+        self.assertIsNone(invitation.last_sent_at)
+        call_command("send_review_requests")
+        self.assertEqual(notify.call_count, 2)
+
+    @patch("django.core.management.call_command")
+    def test_scheduled_tasks_runs_reminders_and_reviews(self, call_command_mock):
+        from booking.management.commands.run_scheduled_tasks import Command
+
+        Command().handle()
+
+        self.assertEqual(
+            [call.args[0] for call in call_command_mock.call_args_list],
+            ["send_reminders", "send_review_requests"],
+        )
