@@ -89,7 +89,7 @@ def test_assign_compatible_provider_to_generic_booking():
     assert booking.estimated_price_cents == 13400
     assert len(notifier.messages) == 3
     details_request = notifier.messages[2]
-    assert details_request["subject"] == "Quelques infos pour préparer ta coupe"
+    assert details_request["subject"] == "Quelques infos avant de valider ton RDV"
     assert details_request["reply_to"] == ["provider-1"]
     assert "photo d’inspiration" in details_request["body"]
 

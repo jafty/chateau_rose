@@ -284,7 +284,7 @@ def execute(
         if provider_id:
             notifier.notify(
                 client_contact["email"],
-                "Quelques infos pour préparer ta coupe",
+                "Quelques infos avant de valider ton RDV",
                 "\n".join(_build_client_details_request_lines(client_contact["name"])),
                 reply_to=_client_details_reply_to(provider_id, operations_email),
             )

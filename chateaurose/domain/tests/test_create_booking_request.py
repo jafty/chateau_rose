@@ -101,7 +101,7 @@ def test_create_provider_selected_booking_sends_operations_copy():
     assert "- Prestataire : provider-1" in operations_copy["body"]
     assert "https://example.com/pro/bookings/" in operations_copy["body"]
     details_request = deps["notifier"].messages[3]
-    assert details_request["subject"] == "Quelques infos pour préparer ta coupe"
+    assert details_request["subject"] == "Quelques infos avant de valider ton RDV"
     assert details_request["reply_to"] == ["provider-1", "ops@example.com"]
     assert "photo récente de tes cheveux" in details_request["body"]
 
