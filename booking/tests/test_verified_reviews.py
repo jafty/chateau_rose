@@ -1,6 +1,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -82,6 +83,37 @@ class ReviewIntegrationTests(TestCase):
         review = VerifiedReview(is_verified=False)
 
         self.assertEqual(review.public_trust_label, "Avis client autorisé")
+
+    def test_external_review_can_omit_booking_and_client_details(self):
+        review = VerifiedReview(
+            provider=self.provider,
+            comment="Très bon accueil",
+            consent_to_publish=True,
+            is_verified=False,
+            moderation_status=VerifiedReview.STATUS_APPROVED,
+        )
+
+        review.full_clean()
+        review.save()
+
+        self.assertIsNone(review.booking)
+        self.assertEqual(review.client_name, "")
+        self.assertEqual(review.client_email, "")
+        self.assertTrue(review.is_published)
+
+    def test_verified_review_requires_booking_and_client_details(self):
+        review = VerifiedReview(
+            provider=self.provider,
+            comment="Super prestation",
+            consent_to_publish=True,
+            is_verified=True,
+        )
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Un avis vérifié doit avoir une réservation, un nom de cliente et une adresse email.",
+        ):
+            review.full_clean()
 
     def test_external_authorized_reviews_can_omit_rating_and_do_not_affect_badge(self):
         for index in range(4):
