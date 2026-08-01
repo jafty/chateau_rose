@@ -3,8 +3,8 @@ from unittest.mock import patch
 from django.contrib.admin.sites import AdminSite
 from django.test import TestCase, override_settings
 
-from booking.admin import BookingAdmin
-from booking.models import Booking, Provider, Service
+from booking.admin import BookingAdmin, VerifiedReviewAdminForm
+from booking.models import Booking, Provider, Service, VerifiedReview
 
 
 class BookingAdminTests(TestCase):
@@ -95,6 +95,48 @@ class BookingAdminTests(TestCase):
         self.assertEqual(execute_mock.call_args.kwargs["booking_id"], "BK-GEN01")
         self.assertEqual(execute_mock.call_args.kwargs["provider_id"], str(self.provider.id))
         self.assertEqual(execute_mock.call_args.kwargs["service_id"], str(self.service.id))
+
+
+class VerifiedReviewAdminFormTests(TestCase):
+    def setUp(self):
+        self.provider = Provider.objects.create(name="Diva")
+
+    def review_data(self, **overrides):
+        data = {
+            "provider": self.provider.pk,
+            "is_verified": "",
+            "booking": "",
+            "client_name": "",
+            "client_email": "",
+            "service": "",
+            "rating": "",
+            "comment": "Avis importé",
+            "service_performed": "",
+            "performed_at": "",
+            "consent_to_publish": "on",
+            "moderation_status": VerifiedReview.STATUS_APPROVED,
+            "provider_contested_at": "",
+            "admin_notes": "",
+        }
+        data.update(overrides)
+        return data
+
+    def test_unverified_review_admin_form_accepts_missing_booking_and_client(self):
+        form = VerifiedReviewAdminForm(data=self.review_data())
+
+        self.assertTrue(form.is_valid(), form.errors.as_text())
+        review = form.save()
+        self.assertFalse(review.is_verified)
+        self.assertIsNone(review.booking_id)
+
+    def test_verified_review_admin_form_still_requires_booking_and_client(self):
+        form = VerifiedReviewAdminForm(data=self.review_data(is_verified="on"))
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "Un avis vérifié doit avoir une réservation, un nom de cliente et une adresse email.",
+            form.non_field_errors(),
+        )
 
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.core import mail

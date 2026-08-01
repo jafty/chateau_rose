@@ -72,6 +72,21 @@ class BookingProviderAssignmentForm(forms.Form):
         return cleaned_data
 
 
+class VerifiedReviewAdminForm(forms.ModelForm):
+    class Meta:
+        model = VerifiedReview
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in ("booking", "client_name", "client_email"):
+            self.fields[field_name].required = False
+
+        optional_help = "Facultatif lorsque « Is verified » est décoché."
+        for field_name in ("booking", "client_name", "client_email"):
+            self.fields[field_name].help_text = optional_help
+
+
 class ProviderAdminForm(forms.ModelForm):
     zones = forms.ModelMultipleChoiceField(
         queryset=Zone.objects.all(),
@@ -714,11 +729,18 @@ class ProviderBlockedSlotAdmin(admin.ModelAdmin):
 
 @admin.register(VerifiedReview)
 class VerifiedReviewAdmin(admin.ModelAdmin):
+    form = VerifiedReviewAdminForm
     list_display = ("provider", "client_name", "rating", "service_performed", "moderation_status", "consent_to_publish", "is_verified", "created_at")
     list_filter = ("moderation_status", "consent_to_publish", "is_verified", "provider")
     list_editable = ("moderation_status", "consent_to_publish", "is_verified")
     search_fields = ("client_name", "client_email", "comment", "service_performed", "booking__booking_id")
     readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        (None, {"fields": ("provider", "is_verified", "booking", "client_name", "client_email")}),
+        ("Avis", {"fields": ("service", "rating", "comment", "service_performed", "performed_at")}),
+        ("Publication", {"fields": ("consent_to_publish", "moderation_status")}),
+        ("Suivi", {"fields": ("provider_contested_at", "admin_notes", "created_at", "updated_at")}),
+    )
 
 
 @admin.register(ReviewInvitation)

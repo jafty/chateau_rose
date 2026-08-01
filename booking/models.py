@@ -625,11 +625,17 @@ class VerifiedReview(models.Model):
         (STATUS_REJECTED, "Masqué / rejeté"),
     )
 
-    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name="verified_review")
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name="verified_review",
+        null=True,
+        blank=True,
+    )
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="verified_reviews")
     service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True, related_name="verified_reviews")
-    client_name = models.CharField(max_length=255)
-    client_email = models.EmailField()
+    client_name = models.CharField(max_length=255, blank=True)
+    client_email = models.EmailField(blank=True)
     rating = models.PositiveSmallIntegerField(null=True, blank=True)
     comment = models.TextField()
     consent_to_publish = models.BooleanField(default=False)
@@ -647,6 +653,19 @@ class VerifiedReview(models.Model):
 
     class Meta:
         ordering = ("-created_at",)
+        constraints = (
+            models.CheckConstraint(
+                condition=(
+                    models.Q(is_verified=False)
+                    | (
+                        models.Q(booking__isnull=False)
+                        & ~models.Q(client_name="")
+                        & ~models.Q(client_email="")
+                    )
+                ),
+                name="verified_review_requires_booking_and_client",
+            ),
+        )
 
     def __str__(self):
         rating = f" · {self.rating}/5" if self.rating is not None else ""
@@ -668,6 +687,17 @@ class VerifiedReview(models.Model):
             return ""
         from chateaurose.domain.services.reviews import rating_label
         return rating_label(self.rating)
+
+    def clean(self):
+        super().clean()
+        if self.is_verified and (
+            not self.booking_id
+            or not (self.client_name or "").strip()
+            or not (self.client_email or "").strip()
+        ):
+            raise ValidationError(
+                "Un avis vérifié doit avoir une réservation, un nom de cliente et une adresse email."
+            )
 
     def save(self, *args, **kwargs):
         was_published = False
