@@ -362,10 +362,24 @@ class ProviderBookingDraftAdmin(admin.ModelAdmin):
             widgets = {"payload": forms.Textarea(attrs={"rows": 8})}
 
     form = Form
-    list_display = ("provider", "source", "client_email", "client_name", "updated_at", "completed_at")
+    list_display = (
+        "provider",
+        "source",
+        "client_email",
+        "client_name",
+        "updated_at",
+        "completed_at",
+        "follow_up_sent_at",
+    )
     list_filter = ("provider", "source", "completed_at")
     search_fields = ("client_email", "client_name", "provider__name")
-    readonly_fields = ("token", "created_by", "created_at", "updated_at")
+    readonly_fields = (
+        "token",
+        "created_by",
+        "created_at",
+        "updated_at",
+        "follow_up_sent_at",
+    )
     fields = (
         "provider",
         "source",
@@ -375,6 +389,7 @@ class ProviderBookingDraftAdmin(admin.ModelAdmin):
         "token",
         "created_by",
         "completed_at",
+        "follow_up_sent_at",
         "created_at",
         "updated_at",
     )
