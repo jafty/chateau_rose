@@ -432,6 +432,7 @@ class ProviderBookingDraft(models.Model):
     client_name = models.CharField(max_length=255, blank=True)
     payload = models.JSONField(default=dict, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
+    follow_up_sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
