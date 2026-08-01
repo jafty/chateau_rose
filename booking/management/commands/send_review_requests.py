@@ -43,7 +43,7 @@ class Command(BaseCommand):
             if not due:
                 continue
             review_url = (getattr(settings, "SITE_URL", "") or "https://www.chateau-rose.fr").rstrip("/") + reverse("interface:leave_verified_review", args=[invitation.token])
-            notifier.notify(
+            delivered = notifier.notify(
                 booking.client_email,
                 "Ton avis sur ta prestation Château Rose",
                 "\n".join([
@@ -57,6 +57,15 @@ class Command(BaseCommand):
                     "L'équipe Château Rose",
                 ]),
             )
+            # Do not consume an invitation attempt when the email provider rejected
+            # the request. The next scheduler run must be able to retry it.
+            if delivered is False:
+                self.stderr.write(
+                    self.style.WARNING(
+                        f"Review request for {booking.booking_id} could not be sent; it will be retried."
+                    )
+                )
+                continue
             invitation.sent_count += 1
             invitation.last_sent_at = now
             invitation.save(update_fields=["sent_count", "last_sent_at", "updated_at"])

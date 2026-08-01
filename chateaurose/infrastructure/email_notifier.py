@@ -15,10 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 class EmailNotifier:
-    def notify(self, recipient: str, subject: str, body: str, reply_to: str | list[str] | tuple[str, ...] | None = None) -> None:
+    def notify(self, recipient: str, subject: str, body: str, reply_to: str | list[str] | tuple[str, ...] | None = None) -> bool:
         resolved = self._resolve_recipient(recipient)
         if not resolved:
-            return
+            logger.warning(
+                "Email notification skipped because the recipient is invalid",
+                extra={"to": recipient, "subject": subject},
+            )
+            return False
 
         resolved_reply_to = self._resolve_reply_to(reply_to)
 
@@ -45,12 +49,13 @@ class EmailNotifier:
                 extra={"to": resolved, "subject": subject},
                 exc_info=True,
             )
-            return
+            return False
 
         logger.info(
             "Email notification sent",
             extra={"to": resolved, "subject": subject},
         )
+        return True
 
     @staticmethod
     def _send_via_brevo(

@@ -44,6 +44,20 @@ Ce guide explique comment conteneuriser le projet Django `chateaurose` et le dé
    - étape `web` : lance `python manage.py migrate && gunicorn chateaurose.wsgi:application --bind 0.0.0.0:${PORT:-8000}` avec WhiteNoise.
 5. Déployez : Railway construira l'image et lancera le service sur le port fourni.
 
+### Tâches planifiées Railway
+
+Créez un service Cron Railway qui partage les mêmes variables (notamment
+`DATABASE_URL` et les variables Brevo) que le service web, puis configurez :
+
+- horaire : `*/30 * * * *` ;
+- commande de démarrage : `python manage.py run_scheduled_tasks`.
+
+Cette commande unique lance les rappels de rendez-vous, les premières demandes
+d'avis et leurs relances. Utiliser seulement `send_reminders` ne déclenche pas les
+demandes d'avis ; utiliser seulement `send_review_requests` ne déclenche pas les
+rappels de rendez-vous. Le processus doit se terminer après chaque exécution pour
+que Railway puisse lancer l'occurrence suivante.
+
 ### Depuis le CLI Railway
 ```bash
 railway login
