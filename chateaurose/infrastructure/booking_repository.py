@@ -49,6 +49,7 @@ class DjangoBookingRepository:
             proposed_date=booking.proposed_date,
             created_at=booking.created_at,
             updated_at=updated_at,
+            state_entered_at=booking.state_entered_at or updated_at,
         )
         return booking
 
@@ -103,6 +104,7 @@ class DjangoBookingRepository:
             proposed_date=booking.proposed_date,
             created_at=booking.created_at,
             updated_at=updated_at,
+            state_entered_at=booking.state_entered_at or updated_at,
         )
         if not count:
             raise NotFound(f"Booking {booking.id} not found")
@@ -140,5 +142,6 @@ class DjangoBookingRepository:
             proposed_price_cents=obj.proposed_price_cents,
             proposed_date=obj.proposed_date,
             updated_at=obj.updated_at,
+            state_entered_at=obj.state_entered_at,
             client_address=obj.client_address or None,
         )

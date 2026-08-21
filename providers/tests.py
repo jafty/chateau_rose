@@ -260,7 +260,7 @@ class ProviderDashboardTests(TestCase):
         self.assertContains(response, "src=\"/already/root.jpg\"")
 
 
-    def test_booking_detail_displays_requested_service_phone_and_address(self):
+    def test_booking_detail_hides_contact_until_confirmation(self):
         booking = self._create_booking()
         booking.requested_service_label_snapshot = "Braids · Vanilles"
         booking.requested_options = ["extra-long"]
@@ -272,12 +272,19 @@ class ProviderDashboardTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Braids · Vanilles")
-        self.assertContains(response, "0600000000")
+        self.assertNotContains(response, "0600000000")
         self.assertContains(response, "Options : extra-long")
-        self.assertContains(response, "Adresse client")
-        self.assertContains(response, "5 place du Capitole, 31000 Toulouse")
+        self.assertNotContains(response, "Adresse client")
+        self.assertNotContains(response, "5 place du Capitole, 31000 Toulouse")
+        self.assertContains(response, "Coordonnées disponibles après confirmation")
         self.assertContains(response, "Ajustements")
         self.assertContains(response, "perles")
+
+        booking.status = Booking.STATUS_CONFIRMED
+        booking.save(update_fields=["status"])
+        confirmed_response = self.client.get(reverse("providers:booking_detail", args=[booking.booking_id]))
+        self.assertContains(confirmed_response, "0600000000")
+        self.assertContains(confirmed_response, "5 place du Capitole, 31000 Toulouse")
 
     def test_provider_can_confirm_booking_from_detail(self):
         booking = self._create_booking()

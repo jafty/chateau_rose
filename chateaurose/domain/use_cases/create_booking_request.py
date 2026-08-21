@@ -24,26 +24,6 @@ def _format_euros(amount_cents: int) -> str:
     return f"{amount_cents / 100:.2f}".replace(".", ",") + " €"
 
 
-def _build_client_details_request_lines(client_name: str) -> list[str]:
-    return [
-        f"Bonjour {client_name},",
-        "",
-        "Pour préparer au mieux ta coupe, tu peux répondre directement à cet email avec les éléments utiles pour la prestataire.",
-        "Si c’est pertinent, ajoute une photo récente de tes cheveux, une photo d’inspiration de la coupe souhaitée et toute précision importante (longueur, volume, contraintes, habitudes, questions).",
-        "Ces informations nous aideront à valider que la prestation prévue correspond bien à tes attentes.",
-        "",
-        "À très vite,",
-        "Château Rose",
-    ]
-
-
-def _client_details_reply_to(provider_id: str, operations_email: str | None):
-    recipients = [provider_id]
-    if operations_email:
-        recipients.append(operations_email)
-    return recipients
-
-
 def _normalize_list(values) -> list[str]:
     if values is None:
         return []
@@ -196,6 +176,7 @@ def execute(
         status=SUBMITTED if provider_id else WAITING_PROVIDER_ASSIGNMENT,
         created_at=created_at,
         updated_at=created_at,
+        state_entered_at=created_at,
         client_address=client_address,
     )
     booking_repository.add(booking)
@@ -207,7 +188,7 @@ def execute(
                 provider_booking_url = f"{provider_booking_url_base.rstrip('/')}/{booking_id}/"
             provider_lines = [
                 "Bonne nouvelle ! Tu as une nouvelle demande de coiffure.",
-                f"Client·e : {client_contact['name']} ({client_contact['email']})",
+                f"Client·e : {client_contact['name']}",
                 f"Prestation : {service_name}",
                 f"Date souhaitée : {desired_date}",
                 f"Lieu : {normalized_location}",
@@ -280,13 +261,5 @@ def execute(
                 "Château Rose pourra te demander l'adresse exacte, des photos ou des détails complémentaires si nécessaire.",
             ])
         notifier.notify(client_contact["email"], "Demande enregistrée", "\n".join(client_lines))
-
-        if provider_id:
-            notifier.notify(
-                client_contact["email"],
-                "Quelques infos avant de valider ton RDV",
-                "\n".join(_build_client_details_request_lines(client_contact["name"])),
-                reply_to=_client_details_reply_to(provider_id, operations_email),
-            )
 
     return booking

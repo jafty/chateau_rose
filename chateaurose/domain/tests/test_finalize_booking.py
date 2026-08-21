@@ -20,6 +20,8 @@ def _provider_directory():
                 "phone": "+33601020304",
                 "salon_zone": "Paris 10e",
                 "salon_address": "12 rue des Fleurs, 75010 Paris",
+                "preferred_contact_method": "EMAIL",
+                "post_confirmation_contact_instructions": "Réponds avec ton numéro de réservation.",
             }
         }
     )
@@ -32,7 +34,7 @@ def test_provider_confirms_original_captures_and_notifies():
     provider_directory = _provider_directory()
     booking = BookingRequest(
         id="booking_1", provider_id="provider_1", service_id="service_tresses",
-        client_contact={"name": "Sarah", "email": "sarah@example.com"}, location="Paris 10e",
+        client_contact={"name": "Sarah", "email": "sarah@example.com", "phone": "+33699999999"}, location="Paris 10e",
         location_preference="salon", desired_date="2026-01-10T17:00:00Z", hair_length="long",
         meche=False, current_hair_picture="s3://bucket/hair.jpg", inspiration_pictures=[], free_text="",
         estimated_price_cents=8500, provider_price_estimate_cents=7000, chateau_rose_fee_cents=1500,
@@ -52,6 +54,10 @@ def test_provider_confirms_original_captures_and_notifies():
     assert len(notifier.messages) == 3
     assert all("acompte prestataire" not in message["body"] for message in notifier.messages)
     assert any("Frais Château Rose débités" in message["body"] for message in notifier.messages)
+    assert "sarah@example.com" in notifier.messages[0]["body"]
+    assert "+33699999999" in notifier.messages[0]["body"]
+    assert "amandine@example.com" in notifier.messages[1]["body"]
+    assert notifier.messages[1]["reply_to"] == "amandine@example.com"
 
 
 def test_provider_rejects_submitted_booking_moves_to_alternative_search_and_notifies_operations():
@@ -179,7 +185,7 @@ def test_client_accepts_proposal_captures_and_confirms():
     assert any("Frais Château Rose débités" in message["body"] for message in notifier.messages)
 
 
-def test_client_refuses_proposal_releases_and_cancels():
+def test_client_refuses_proposal_moves_to_alternative_search():
     repo = InMemoryBookingRepository(); notifier = InMemoryNotifier(); payments = InMemoryPaymentGateway(); provider_directory = _provider_directory()
     booking = BookingRequest(
         id="booking_4", provider_id="provider_1", service_id="service_tresses",
@@ -196,9 +202,9 @@ def test_client_refuses_proposal_releases_and_cancels():
         booking_id="booking_4", actor="client", decision="refuse", now=datetime(2026, 1, 11, 10, 0, tzinfo=timezone.utc),
         booking_repository=repo, payment_gateway=payments, provider_directory=provider_directory, notifier=notifier,
     )
-    assert updated.status == finalize_booking.CANCELLED
-    assert updated.payment_status == "RELEASED"
-    assert payments.release_calls == [{"auth_id": "auth_4"}]
+    assert updated.status == finalize_booking.AWAITING_ALTERNATIVE_PROVIDER
+    assert updated.payment_status == "AUTHORIZED"
+    assert payments.release_calls == []
     assert all("acompte prestataire" not in message["body"] for message in notifier.messages)
 
 
@@ -470,10 +476,10 @@ def test_client_refusal_notifies_operations_when_email_is_configured():
         operations_email="ops@example.com",
     )
 
-    assert updated.status == finalize_booking.CANCELLED
-    assert payments.release_calls == [{"auth_id": "auth_client_refusal_ops"}]
+    assert updated.status == finalize_booking.AWAITING_ALTERNATIVE_PROVIDER
+    assert payments.release_calls == []
     assert notifier.messages[-1]["recipient"] == "ops@example.com"
-    assert notifier.messages[-1]["subject"] == "Demande annulée par la cliente · booking_client_refusal_ops"
+    assert notifier.messages[-1]["subject"] == "Alternative à trouver après refus client · booking_client_refusal_ops"
 
 
 def test_admin_can_cancel_waiting_provider_assignment_booking():

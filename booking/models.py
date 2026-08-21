@@ -41,6 +41,18 @@ class ProviderManager(models.Manager):
 
 
 class Provider(models.Model):
+    CONTACT_METHOD_CHATEAU_ROSE = "CHATEAU_ROSE"
+    CONTACT_METHOD_EMAIL = "EMAIL"
+    CONTACT_METHOD_PHONE = "PHONE"
+    CONTACT_METHOD_WHATSAPP = "WHATSAPP"
+    CONTACT_METHOD_CUSTOM = "CUSTOM"
+    CONTACT_METHOD_CHOICES = (
+        (CONTACT_METHOD_CHATEAU_ROSE, "Via Château Rose"),
+        (CONTACT_METHOD_EMAIL, "Email"),
+        (CONTACT_METHOD_PHONE, "Téléphone"),
+        (CONTACT_METHOD_WHATSAPP, "WhatsApp"),
+        (CONTACT_METHOD_CUSTOM, "Instructions personnalisées"),
+    )
     LOCATION_MODE_SALON_ONLY = "salon_only"
     LOCATION_MODE_CLIENT_HOME_ONLY = "client_home_only"
     LOCATION_MODE_HYBRID = "hybrid"
@@ -67,6 +79,16 @@ class Provider(models.Model):
     )
     contact_phone = models.CharField(max_length=64, blank=True)
     contact_email = models.EmailField(blank=True)
+    preferred_contact_method = models.CharField(
+        max_length=16,
+        choices=CONTACT_METHOD_CHOICES,
+        default=CONTACT_METHOD_CHATEAU_ROSE,
+        help_text="Moyen de contact communiqué à la clientèle uniquement après confirmation.",
+    )
+    post_confirmation_contact_instructions = models.TextField(
+        blank=True,
+        help_text="Instructions complémentaires communiquées uniquement après confirmation.",
+    )
     deposit_cents = models.IntegerField(
         default=2000,
         help_text="Montant fixe de l'acompte en centimes.",
@@ -560,6 +582,11 @@ class Booking(models.Model):
     proposed_date = models.CharField(max_length=128, null=True, blank=True)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField(null=True, blank=True)
+    state_entered_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Date d'entrée dans le statut courant, utilisée pour calculer son expiration.",
+    )
     client_reminder_sent_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):

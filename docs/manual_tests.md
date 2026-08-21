@@ -58,6 +58,24 @@ Si `fbq` existe mais qu'aucune requête `facebook.com/tr` n'apparaît, contrôle
    - Sur `/espace_pro/`, vérifier l'affichage du tableau des demandes (client, service, date, lieu, statut).
    - Cliquer sur "Se déconnecter" et confirmer le retour à la page d'accueil.
 
+## Confidentialité des demandes de rendez-vous
+
+Réaliser cette matrice avec deux comptes distincts (client et prestataire), puis avec un compte staff.
+
+| Statut | Espace prestataire | Suivi client | Email |
+| --- | --- | --- | --- |
+| `WAITING_PROVIDER_ASSIGNMENT` | Aucune coordonnée ni adresse exacte du client | Aucune coordonnée prestataire | Seul Château Rose reçoit les données nécessaires à l'attribution |
+| `SUBMITTED` | Prénom, demande et photos, sans email, téléphone ni adresse exacte | Coordonnées prestataire masquées | Notification prestataire sans coordonnées client; aucun email « Quelques infos avant de valider » |
+| `PENDING_CLIENT_VALIDATION` | Coordonnées client toujours masquées | Proposition sans coordonnées prestataire | Aucun `Reply-To` prestataire; uniquement date, prix, message et lien de décision |
+| `AWAITING_ALTERNATIVE_PROVIDER` | Aucune coordonnée client pour l'ancienne ou la nouvelle prestataire avant attribution/confirmation | Aucune coordonnée prestataire | Communications coordonnées par Château Rose |
+| `CONFIRMED` | Email, téléphone disponible et adresse client uniquement pour une prestation à domicile | Moyen de contact préféré et adresse salon uniquement pour un rendez-vous au salon | Coordonnées réciproques; `Reply-To` prestataire seulement lorsque le mode choisi est `EMAIL` |
+
+1. Configurer successivement dans l'admin les modes `CHATEAU_ROSE`, `EMAIL`, `PHONE`, `WHATSAPP` et `CUSTOM`; vérifier le contenu du suivi et de l'email après confirmation.
+2. Tester une confirmation directe et l'acceptation d'une contre-proposition : les informations post-confirmation doivent être identiques.
+3. Refuser une contre-proposition côté client : la demande doit passer en recherche d'alternative sans libérer immédiatement l'autorisation de paiement.
+4. Attribuer une demande ancienne à une nouvelle prestataire : son délai de réponse doit repartir à la date de cette attribution.
+5. En mode staff, vérifier que les coordonnées restent visibles avant confirmation pour permettre le support et l'attribution.
+
 ## Points de non-couverture (vérifier l'absence plutôt que le fonctionnement)
 - Pas de rappel automatique ni de paiement en ligne : aucune étape ne doit réclamer un règlement ou déclencher une notification de rappel.
 - Les cartes non liées à des images (formulaires, blocs texte) ne doivent plus avoir d'effet de tilt ou d'arrondis résiduels.

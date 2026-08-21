@@ -43,6 +43,17 @@
                 Informations complémentaires
                 {{ info_form.additional_info }}
             </label>
+            <label>
+                Moyen de contact après confirmation
+                {{ info_form.preferred_contact_method }}
+                {{ info_form.preferred_contact_method.errors }}
+            </label>
+            <label>
+                Instructions de contact après confirmation
+                {{ info_form.post_confirmation_contact_instructions }}
+                {{ info_form.post_confirmation_contact_instructions.errors }}
+                <small class="field-hint">Ces informations ne sont communiquées qu'une fois le rendez-vous confirmé.</small>
+            </label>
             <button class="btn" type="submit">Enregistrer</button>
         </form>
     </div>

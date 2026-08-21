@@ -63,7 +63,9 @@ def test_provider_proposes_update_moves_to_pending_client_validation_and_notifie
     message = notifier.messages[0]
     assert message["recipient"] == client["email"]
     assert message["subject"] == "Proposition de rendez-vous"
-    assert message["reply_to"] == "amandine@example.com"
+    assert "reply_to" not in message
+    assert "amandine@example.com" not in message["body"]
+    assert "+33601020304" not in message["body"]
     assert "- Tarif proposé : 90,00 €" in message["body"]
     assert "Frais Château Rose déjà traités" in message["body"]
     assert "Prestation coiffure à régler directement" in message["body"]

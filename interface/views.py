@@ -84,6 +84,28 @@ SUPPORT_PHONE_DISPLAY = "+33 6 49 49 14 49"
 SUPPORT_PHONE_TEL = "+33649491449"
 
 
+def _confirmed_provider_contact(provider, *, is_confirmed: bool) -> dict:
+    if not is_confirmed or provider is None:
+        return {"provider_contact_label": None, "provider_contact_value": None, "provider_contact_instructions": ""}
+    method = provider.preferred_contact_method
+    instructions = (provider.post_confirmation_contact_instructions or "").strip()
+    if method == Provider.CONTACT_METHOD_EMAIL and provider.contact_email:
+        label, value = "Email", provider.contact_email
+    elif method == Provider.CONTACT_METHOD_PHONE and provider.contact_phone:
+        label, value = "Téléphone", provider.contact_phone
+    elif method == Provider.CONTACT_METHOD_WHATSAPP and provider.contact_phone:
+        label, value = "WhatsApp", provider.contact_phone
+    elif method == Provider.CONTACT_METHOD_CUSTOM and instructions:
+        label, value, instructions = "Instructions", instructions, ""
+    else:
+        label, value = "Contact", "Les échanges restent coordonnés par Château Rose."
+    return {
+        "provider_contact_label": label,
+        "provider_contact_value": value,
+        "provider_contact_instructions": instructions,
+    }
+
+
 def _provider_coupon_is_valid(provider: Provider, code: str | None) -> bool:
     normalized_code = (code or "").strip().upper()
     if not normalized_code:
@@ -1191,6 +1213,7 @@ def quick_checkout_confirmation(request, booking_id):
     )
     is_salon = booking.location_preference == "salon"
 
+    is_confirmed = booking.status == Booking.STATUS_CONFIRMED
     return render(
         request,
         "interface/quick_checkout_confirmation.html",
@@ -1199,10 +1222,10 @@ def quick_checkout_confirmation(request, booking_id):
             "effective_date": effective_date,
             "effective_price": effective_price,
             "is_salon": is_salon,
-            "provider_email": booking.provider.contact_email or "Non communiqué",
-            "provider_phone": booking.provider.contact_phone or "Non communiqué",
-            "provider_salon_address": booking.provider.salon_address or "Adresse à confirmer",
+            "is_confirmed": is_confirmed,
+            "provider_salon_address": (booking.provider.salon_address or "Adresse à confirmer") if booking.status == Booking.STATUS_CONFIRMED else None,
             "payment_summary": _payment_summary(booking),
+            **_confirmed_provider_contact(booking.provider, is_confirmed=is_confirmed),
         },
     )
 
@@ -1646,10 +1669,9 @@ def client_confirmation(request, booking_id):
             "is_waiting_provider_assignment": is_waiting_provider_assignment,
             "show_expired_notice": show_expired_notice,
             "client_moves": client_moves,
-            "provider_email": (booking.provider.contact_email if booking.provider else "Non communiqué"),
-            "provider_phone": (booking.provider.contact_phone if booking.provider else "Non communiqué"),
-            "provider_salon_address": (booking.provider.salon_address if booking.provider else "Adresse à confirmer"),
+            "provider_salon_address": (booking.provider.salon_address if is_confirmed and booking.provider else None),
             "payment_summary": _payment_summary(booking),
+            **_confirmed_provider_contact(booking.provider, is_confirmed=is_confirmed),
         },
     )
 
@@ -1672,8 +1694,6 @@ def client_proposal(request, booking_id):
             "booking": booking,
             "proposed_date": proposed_date,
             "proposed_price": proposed_price,
-            "provider_email": booking.provider.contact_email or "Non communiqué",
-            "provider_phone": booking.provider.contact_phone or "Non communiqué",
             "payment_summary": _payment_summary(booking),
         },
     )

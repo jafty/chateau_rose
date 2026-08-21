@@ -115,11 +115,30 @@ class ProviderPasswordResetForm(PasswordResetForm):
 class ProviderInfoForm(forms.ModelForm):
     class Meta:
         model = Provider
-        fields = ("availabilities", "additional_info")
+        fields = (
+            "availabilities",
+            "additional_info",
+            "preferred_contact_method",
+            "post_confirmation_contact_instructions",
+        )
         widgets = {
             "availabilities": forms.Textarea(attrs={"rows": 4}),
             "additional_info": forms.Textarea(attrs={"rows": 4}),
+            "post_confirmation_contact_instructions": forms.Textarea(attrs={"rows": 3}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        method = cleaned_data.get("preferred_contact_method")
+        instructions = (cleaned_data.get("post_confirmation_contact_instructions") or "").strip()
+        if method == Provider.CONTACT_METHOD_EMAIL and not self.instance.contact_email:
+            self.add_error("preferred_contact_method", "Ajoute d'abord un email de contact.")
+        elif method in (Provider.CONTACT_METHOD_PHONE, Provider.CONTACT_METHOD_WHATSAPP) and not self.instance.contact_phone:
+            self.add_error("preferred_contact_method", "Ajoute d'abord un numéro de téléphone.")
+        elif method == Provider.CONTACT_METHOD_CUSTOM and not instructions:
+            self.add_error("post_confirmation_contact_instructions", "Ajoute les instructions à communiquer.")
+        cleaned_data["post_confirmation_contact_instructions"] = instructions
+        return cleaned_data
 
 
 class ProviderServiceForm(forms.ModelForm):

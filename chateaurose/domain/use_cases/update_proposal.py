@@ -41,13 +41,12 @@ def execute(
     if normalized_date:
         booking.proposed_date = normalized_date
     booking.updated_at = now or booking.created_at
+    booking.state_entered_at = booking.updated_at
 
     booking_repository.update(booking)
 
     provider_contact = provider_directory.get_provider_contact(provider_id)
     provider_name = provider_contact.get("name") or "La prestataire ou le prestataire"
-    provider_phone = provider_contact.get("phone") or "Non renseigné"
-    provider_email = provider_contact.get("email") or "Non renseigné"
     proposed_date = booking.proposed_date or booking.desired_date or "À confirmer"
     if new_price_cents is None:
         effective_price_cents = booking.estimated_price_cents
@@ -90,10 +89,6 @@ def execute(
         "Tu peux accepter ou refuser la proposition depuis ton espace de suivi :",
         client_control_url,
         "",
-        "Besoin d'échanger avant de décider ?",
-        f"- Téléphone : {provider_phone}",
-        f"- Email : {provider_email}",
-        "",
         "Merci et à très vite,",
         "L'équipe Château Rose",
     ])
@@ -102,6 +97,5 @@ def execute(
         booking.client_contact["email"],
         "Proposition de rendez-vous",
         "\n".join(message_lines),
-        reply_to=reply_to_email or provider_contact.get("email"),
     )
     return booking

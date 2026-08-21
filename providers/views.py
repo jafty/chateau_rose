@@ -265,6 +265,7 @@ def booking_detail(request, booking_id):
             "reserved_amount": _format_price_from_cents(_locked_reservation_fee_cents(booking)),
             "reserved_provider_deposit_amount": _format_price_from_cents(_locked_provider_deposit_cents(booking)),
             "admin_mode": admin_mode,
+            "can_view_client_contact": admin_mode or booking.status == Booking.STATUS_CONFIRMED,
         },
     )
 
