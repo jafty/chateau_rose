@@ -87,11 +87,10 @@ def test_assign_compatible_provider_to_generic_booking():
     assert booking.booking_kind == "GENERIC"
     assert booking.provider_price_estimate_cents == 12500
     assert booking.estimated_price_cents == 13400
-    assert len(notifier.messages) == 3
-    details_request = notifier.messages[2]
-    assert details_request["subject"] == "Quelques infos avant de valider ton RDV"
-    assert details_request["reply_to"] == ["provider-1"]
-    assert "photo d’inspiration" in details_request["body"]
+    assert booking.state_entered_at == clock.now()
+    assert len(notifier.messages) == 2
+    assert "awa@example.com" not in notifier.messages[0]["body"]
+    assert all(message["subject"] != "Quelques infos avant de valider ton RDV" for message in notifier.messages)
 
 
 def test_assign_provider_rejects_service_that_does_not_match_intent():

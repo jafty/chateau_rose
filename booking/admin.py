@@ -118,6 +118,8 @@ class ProviderAdminForm(forms.ModelForm):
             "additional_info",
             "contact_phone",
             "contact_email",
+            "preferred_contact_method",
+            "post_confirmation_contact_instructions",
             "deposit_cents",
             "deposit_percentage",
             "service_fee_percentage",
@@ -143,6 +145,21 @@ class ProviderAdminForm(forms.ModelForm):
             self.fields["marketing_sub_services"].initial = (
                 self.instance.marketing_sub_services.select_related("service").all()
             )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        method = cleaned_data.get("preferred_contact_method")
+        email = (cleaned_data.get("contact_email") or "").strip()
+        phone = (cleaned_data.get("contact_phone") or "").strip()
+        instructions = (cleaned_data.get("post_confirmation_contact_instructions") or "").strip()
+        if method == Provider.CONTACT_METHOD_EMAIL and not email:
+            self.add_error("preferred_contact_method", "Un email de contact est requis pour ce choix.")
+        elif method in (Provider.CONTACT_METHOD_PHONE, Provider.CONTACT_METHOD_WHATSAPP) and not phone:
+            self.add_error("preferred_contact_method", "Un téléphone est requis pour ce choix.")
+        elif method == Provider.CONTACT_METHOD_CUSTOM and not instructions:
+            self.add_error("post_confirmation_contact_instructions", "Ajoute les instructions à communiquer.")
+        cleaned_data["post_confirmation_contact_instructions"] = instructions
+        return cleaned_data
 
     def save(self, commit=True):
         provider = super().save(commit=commit)
@@ -191,6 +208,7 @@ class ProviderAdmin(ImportExportModelAdmin):
         "name",
         "contact_phone",
         "contact_email",
+        "preferred_contact_method",
         "deposit_cents",
         "deposit_percentage",
         "service_fee_percentage",
@@ -511,7 +529,7 @@ class BookingAdmin(admin.ModelAdmin):
             "provider_price_estimate_cents", "chateau_rose_fee_cents",
             "amount_due_now_cents", "payment_status", "proposed_price_cents",
             "proposed_date", "payment_auth_id", "locked_reservation_fee_cents",
-            "created_at", "updated_at", "client_reminder_sent_at",
+            "created_at", "updated_at", "state_entered_at", "client_reminder_sent_at",
         )}),
         ("Legacy photos", {
             "classes": ("collapse",),

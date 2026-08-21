@@ -10,6 +10,8 @@ EXPIRATION_DELAY = timedelta(hours=72)
 
 
 def expiration_reference_time(booking: BookingRequest):
+    if booking.state_entered_at:
+        return booking.state_entered_at
     if booking.status == PENDING_CLIENT_VALIDATION:
         return booking.updated_at or booking.created_at
     if booking.status == AWAITING_ALTERNATIVE_PROVIDER:
@@ -38,6 +40,7 @@ def execute(
         previous_status = booking.status
         booking.status = AWAITING_ALTERNATIVE_PROVIDER if expired_while_waiting_provider else CANCELLED
         booking.updated_at = now
+        booking.state_entered_at = now
         if expired_while_waiting_provider:
             booking.alternative_requested_at = now
         elif booking.payment_auth_id:

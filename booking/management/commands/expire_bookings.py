@@ -14,12 +14,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         now = timezone.now()
-        threshold = now - expire_booking.EXPIRATION_DELAY
-
         booking_ids = list(
             Booking.objects.filter(
                 status__in=(expire_booking.SUBMITTED, expire_booking.PENDING_CLIENT_VALIDATION, expire_booking.AWAITING_ALTERNATIVE_PROVIDER, expire_booking.WAITING_PROVIDER_ASSIGNMENT),
-                created_at__lte=threshold,
             )
             .order_by("created_at")
             .values_list("booking_id", flat=True)

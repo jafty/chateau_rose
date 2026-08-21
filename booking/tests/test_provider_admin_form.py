@@ -29,6 +29,8 @@ class ProviderAdminFormMarketingSubServiceTests(TestCase):
             "additional_info": provider.additional_info,
             "contact_phone": provider.contact_phone,
             "contact_email": provider.contact_email,
+            "preferred_contact_method": provider.preferred_contact_method,
+            "post_confirmation_contact_instructions": provider.post_confirmation_contact_instructions,
             "deposit_cents": provider.deposit_cents,
             "deposit_percentage": provider.deposit_percentage,
             "service_fee_percentage": provider.service_fee_percentage,

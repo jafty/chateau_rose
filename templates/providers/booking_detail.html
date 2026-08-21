@@ -52,13 +52,19 @@
                     <div class="booking-avatar">{{ booking.client_name|slice:":1" }}</div>
                     <div>
                         <div class="booking-client-name">{{ booking.client_name }}</div>
-                        <div class="booking-client-meta">{{ booking.client_email }}</div>
-                        <div class="booking-client-meta">Téléphone : {{ booking.client_phone|default:"Non renseigné" }}</div>
+                        {% if can_view_client_contact %}
+                            <div class="booking-client-meta">{{ booking.client_email }}</div>
+                            <div class="booking-client-meta">Téléphone : {{ booking.client_phone|default:"Non renseigné" }}</div>
+                        {% else %}
+                            <div class="booking-client-meta">Coordonnées disponibles après confirmation.</div>
+                        {% endif %}
                     </div>
-                    {% if booking.client_phone %}
-                        <a href="tel:{{ booking.client_phone }}" class="btn secondary booking-client-contact">Appeler</a>
-                    {% else %}
-                        <a href="mailto:{{ booking.client_email }}" class="btn secondary booking-client-contact">Contacter</a>
+                    {% if can_view_client_contact %}
+                        {% if booking.client_phone %}
+                            <a href="tel:{{ booking.client_phone }}" class="btn secondary booking-client-contact">Appeler</a>
+                        {% else %}
+                            <a href="mailto:{{ booking.client_email }}" class="btn secondary booking-client-contact">Contacter</a>
+                        {% endif %}
                     {% endif %}
                 </div>
 
@@ -84,7 +90,7 @@
                         <span class="booking-spec-value">{% if booking.requested_service_label_snapshot %}{{ booking.requested_service_label_snapshot }}{% elif booking.service %}{{ booking.service.name }}{% else %}À préciser{% endif %}</span>
                         {% if booking.requested_options %}<span class="booking-spec-sub">Options : {{ booking.requested_options|join:", " }}</span>{% endif %}
                     </div>
-                    {% if booking.client_address %}
+                    {% if can_view_client_contact and booking.client_address %}
                     <div class="booking-spec-item">
                         <span class="booking-spec-label">Adresse client</span>
                         <span class="booking-spec-value">{{ booking.client_address }}</span>

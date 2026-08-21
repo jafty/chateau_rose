@@ -12,6 +12,8 @@ class DjangoProviderDirectory:
             "name": provider.name,
             "email": provider.contact_email or "",
             "phone": provider.contact_phone or "",
+            "preferred_contact_method": provider.preferred_contact_method,
+            "post_confirmation_contact_instructions": provider.post_confirmation_contact_instructions or "",
             "salon_zone": provider.salon_zone or "",
             "salon_address": provider.salon_address or "",
             "deposit_percentage": provider.deposit_percentage,

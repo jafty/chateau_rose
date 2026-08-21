@@ -73,6 +73,39 @@ def _compute_client_reminder_send_at(effective_date, *, reference_time):
     return reminder_at if reminder_at > reference_time else reference_time
 
 
+def _provider_contact_lines(provider_contact: dict) -> list[str]:
+    method = provider_contact.get("preferred_contact_method") or "CHATEAU_ROSE"
+    instructions = (provider_contact.get("post_confirmation_contact_instructions") or "").strip()
+    lines = ["Contact de la prestataire :"]
+    if method == "EMAIL" and provider_contact.get("email"):
+        lines.append(f"- Email : {provider_contact['email']}")
+    elif method == "PHONE" and provider_contact.get("phone"):
+        lines.append(f"- Téléphone : {provider_contact['phone']}")
+    elif method == "WHATSAPP" and provider_contact.get("phone"):
+        lines.append(f"- WhatsApp : {provider_contact['phone']}")
+    elif method == "CUSTOM" and instructions:
+        lines.append(f"- {instructions}")
+        instructions = ""
+    else:
+        lines.append("- Les échanges restent coordonnés par Château Rose.")
+    if instructions:
+        lines.append(f"- Instructions : {instructions}")
+    return lines
+
+
+def _provider_reply_to(provider_contact: dict):
+    if provider_contact.get("preferred_contact_method") == "EMAIL":
+        return provider_contact.get("email") or None
+    return None
+
+
+def _client_contact_lines(booking: BookingRequest) -> list[str]:
+    lines = ["Contact de la personne cliente :", f"- Email : {booking.client_contact['email']}"]
+    if booking.client_contact.get("phone"):
+        lines.append(f"- Téléphone : {booking.client_contact['phone']}")
+    return lines
+
+
 def execute(
     *,
     booking_id: str,
@@ -119,6 +152,7 @@ def execute(
     if actor == "provider":
         if decision == "confirm" and booking.status == SUBMITTED:
             booking.status = CONFIRMED
+            booking.state_entered_at = effective_now
             _capture_if_needed(payment_gateway, booking)
             provider_location_lines = (
                 ["La personne cliente se déplace chez toi."]
@@ -147,6 +181,8 @@ def execute(
                         "",
                         *provider_location_lines,
                         "",
+                        *_client_contact_lines(booking),
+                        "",
                         "Belle journée,",
                         "L'équipe Château Rose",
                     ]
@@ -169,10 +205,13 @@ def execute(
                         "",
                         *client_location_lines,
                         "",
+                        *_provider_contact_lines(provider_contact),
+                        "",
                         "À très vite,",
                         "L'équipe Château Rose",
                     ]
                 ),
+                reply_to=_provider_reply_to(provider_contact),
             )
             if reminder_gateway:
                 send_at = _compute_client_reminder_send_at(effective_date, reference_time=effective_now)
@@ -222,6 +261,7 @@ def execute(
         elif decision == "reject" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION):
             booking.status = AWAITING_ALTERNATIVE_PROVIDER
             booking.alternative_requested_at = effective_now
+            booking.state_entered_at = effective_now
             notifier.notify(
                 booking.provider_id,
                 "Demande transférée à Château Rose",
@@ -291,6 +331,7 @@ def execute(
     elif actor == "client":
         if decision == "accept" and booking.status == PENDING_CLIENT_VALIDATION:
             booking.status = CONFIRMED
+            booking.state_entered_at = effective_now
             _capture_if_needed(payment_gateway, booking)
             provider_location_lines = (
                 ["La personne cliente se déplace chez toi."]
@@ -319,6 +360,8 @@ def execute(
                         "",
                         *provider_location_lines,
                         "",
+                        *_client_contact_lines(booking),
+                        "",
                         "Belle journée,",
                         "L'équipe Château Rose",
                     ]
@@ -341,10 +384,13 @@ def execute(
                         "",
                         *client_location_lines,
                         "",
+                        *_provider_contact_lines(provider_contact),
+                        "",
                         "À très vite,",
                         "L'équipe Château Rose",
                     ]
                 ),
+                reply_to=_provider_reply_to(provider_contact),
             )
             if reminder_gateway:
                 send_at = _compute_client_reminder_send_at(effective_date, reference_time=effective_now)
@@ -392,22 +438,23 @@ def execute(
                     reply_to=booking.client_contact["email"],
                 )
         elif decision == "refuse" and booking.status == PENDING_CLIENT_VALIDATION:
-            booking.status = CANCELLED
-            _release_if_needed(payment_gateway, booking)
+            booking.status = AWAITING_ALTERNATIVE_PROVIDER
+            booking.alternative_requested_at = effective_now
+            booking.state_entered_at = effective_now
             notifier.notify(
                 booking.provider_id,
-                "Demande annulée",
+                "Proposition refusée",
                 "\n".join(
                     [
                         f"Bonjour {provider_name},",
                         "",
-                        "La personne cliente a refusé la proposition.",
+                        "La personne cliente a refusé la proposition. Château Rose prend le relais pour chercher une alternative.",
                         "Récapitulatif :",
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(booking, captured=False),
+                        "Aucun montant n'est débité pendant la recherche d'une alternative.",
                         "",
                         "À bientôt,",
                         "L'équipe Château Rose",
@@ -416,20 +463,20 @@ def execute(
             )
             notifier.notify(
                 booking.client_contact["email"],
-                "Demande annulée",
+                "Château Rose cherche une autre coiffeuse",
                 "\n".join(
                     [
                         f"Bonjour {booking.client_contact['name']},",
                         "",
-                        "Tu as refusé la proposition : la demande est annulée.",
+                        "Tu as refusé la proposition. Ta demande reste ouverte et Château Rose cherche une autre coiffeuse compatible.",
                         "Récapitulatif :",
                         f"- Date : {effective_date}",
                         f"- Lieu : {location_label}",
                         f"- Tarif : {formatted_price}",
                         "",
-                        *_payment_lines(booking, captured=False),
+                        "Tes frais Château Rose restent en attente et aucun montant n'est débité avant confirmation.",
                         "",
-                        "Si tu veux, tu peux déposer une nouvelle demande.",
+                        "Nous te tiendrons au courant dès qu'une alternative est disponible.",
                         "À bientôt,",
                         "L'équipe Château Rose",
                     ]
@@ -438,10 +485,10 @@ def execute(
             if operations_email:
                 notifier.notify(
                     operations_email,
-                    f"Demande annulée par la cliente · {booking.id}",
+                    f"Alternative à trouver après refus client · {booking.id}",
                     "\n".join(
                         [
-                            "Une cliente a refusé une proposition. La demande est annulée et le paiement Château Rose a été annulé.",
+                            "Une cliente a refusé une proposition. La demande reste ouverte et nécessite une alternative.",
                             f"- ID demande : {booking.id}",
                             f"- Prestataire : {provider_name}",
                             f"- Cliente : {booking.client_contact['name']} ({booking.client_contact['email']})",
@@ -457,6 +504,7 @@ def execute(
     elif actor == "admin":
         if decision == "cancel" and booking.status in (SUBMITTED, PENDING_CLIENT_VALIDATION, AWAITING_ALTERNATIVE_PROVIDER, WAITING_PROVIDER_ASSIGNMENT):
             booking.status = CANCELLED
+            booking.state_entered_at = effective_now
             _release_if_needed(payment_gateway, booking)
             notifier.notify(
                 booking.provider_id,

@@ -50,9 +50,11 @@
 
     <div class="paper-card" style="margin-top: 24px;">
         <h2 class="section-title">Contacter le profil partenaire</h2>
-        {% if booking.provider %}
-            <p class="meta-line" style="margin: 0;">Téléphone : {{ provider_phone }}</p>
-            <p class="meta-line" style="margin: 6px 0 0;">Email : {{ provider_email }}</p>
+        {% if is_confirmed and booking.provider %}
+            <p class="meta-line" style="margin: 0;">{{ provider_contact_label }} : {{ provider_contact_value }}</p>
+            {% if provider_contact_instructions %}<p class="meta-line" style="margin: 6px 0 0;">{{ provider_contact_instructions }}</p>{% endif %}
+        {% elif booking.provider %}
+            <p class="meta-line" style="margin: 0;">Les coordonnées seront communiquées après confirmation du rendez-vous.</p>
         {% else %}
             <p class="meta-line" style="margin: 0;">Une prestataire sera communiquée après attribution.</p>
         {% endif %}
