@@ -60,7 +60,6 @@ def open_for_booking(booking_id: str, *, reason: str, now=None, base_url=""):
     with transaction.atomic():
         booking = (
             Booking.objects.select_for_update()
-            .select_related("service", "requested_marketing_sub_service")
             .get(booking_id=booking_id)
         )
         sub_service = _sub_service_for(booking)

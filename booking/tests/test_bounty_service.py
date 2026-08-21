@@ -2,6 +2,9 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.test import TestCase
 from django.utils import timezone
 
@@ -75,6 +78,44 @@ class BountyServiceTests(TestCase):
         self.assertEqual(list(eligible_services(opportunity)), [self.candidate_service])
         self.assertEqual(opportunity.booking.status, Booking.STATUS_BOUNTY_OPEN)
         self.assertEqual(notify.call_count, 1)
+
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_booking_lock_does_not_join_nullable_relations(self, notify):
+        booking = self.booking(booking_id="BK-LOCK-WITHOUT-JOIN")
+
+        with CaptureQueriesContext(connection) as queries:
+            open_for_booking(
+                booking.booking_id, reason=BookingOpportunity.REASON_GENERIC
+            )
+
+        lock_query = next(
+            query["sql"]
+            for query in queries.captured_queries
+            if 'FROM "booking_booking"' in query["sql"]
+            and '"booking_booking"."booking_id"' in query["sql"]
+        )
+        self.assertNotIn(" JOIN ", lock_query.upper())
+
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_scheduled_command_opens_generic_opportunity(self, notify):
+        booking = self.booking(booking_id="BK-SCHEDULED-GENERIC")
+
+        call_command("process_bounties")
+
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, Booking.STATUS_BOUNTY_OPEN)
+        self.assertTrue(
+            BookingOpportunity.objects.filter(
+                booking=booking,
+                reason=BookingOpportunity.REASON_GENERIC,
+                status=BookingOpportunity.STATUS_OPEN,
+            ).exists()
+        )
+        notify.assert_called_once()
 
     @patch("chateaurose.infrastructure.bounty_service.payments.release_auth")
     @patch(
