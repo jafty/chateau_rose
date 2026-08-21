@@ -1,10 +1,70 @@
 {% extends "base.html" %}
+{% load price_filters %}
+
 {% block title %}Proposition de rendez-vous{% endblock %}
-{% block content %}<section class="container paper-card">
-{% if error %}<div class="alert danger">{{ error }}</div>{% endif %}{% if message %}<div class="alert success">{{ message }}</div>{% endif %}
-{% if offer and not message %}<h1>{{ offer.provider.name }} souhaite prendre en charge ta demande</h1>
-<p><a href="{% url 'interface:provider_detail' offer.provider.id %}">Voir son profil</a></p>
-<p>Date : {{ offer.proposed_date }}</p><p>Prix à régler le jour J : {{ offer.proposed_price_cents }} centimes</p>
-<p>Les frais Château Rose déjà traités ne changent pas.</p>{% if offer.message %}<p>{{ offer.message }}</p>{% endif %}
-<form method="post">{% csrf_token %}<button class="btn" name="decision" value="accept">Accepter</button><button class="btn secondary" name="decision" value="reject">Refuser</button></form>{% endif %}
-</section>{% endblock %}
+
+{% block content %}
+<main class="layout-section opportunity-page client-offer-page">
+    <div class="layout-shell layout-shell--compact layout-stack">
+        {% if error %}<div class="alert danger" role="alert">{{ error }}</div>{% endif %}
+
+        {% if message %}
+            <section class="opportunity-state-card opportunity-state-card--success" aria-labelledby="offer-result-title">
+                <span class="opportunity-state-icon" aria-hidden="true">✓</span>
+                <p class="opportunity-eyebrow">Réponse enregistrée</p>
+                <h1 id="offer-result-title">{{ message }}</h1>
+                <p>Tu peux fermer cette page. Un e-mail récapitulatif te sera envoyé avec la suite.</p>
+                <a class="btn secondary" href="{% url 'interface:home' %}">Retour à l'accueil</a>
+            </section>
+        {% elif offer %}
+            <header class="opportunity-heading">
+                <p class="opportunity-eyebrow">Une prestataire est disponible</p>
+                <h1>{{ offer.provider.name }} te propose un rendez-vous</h1>
+                <p class="lead">Bonne nouvelle ! Consulte les détails de cette proposition avant de donner ta réponse.</p>
+            </header>
+
+            <article class="paper-card client-offer-card">
+                <div class="client-offer-provider">
+                    <div class="booking-avatar" aria-hidden="true">{{ offer.provider.name|slice:":1" }}</div>
+                    <div>
+                        <p class="opportunity-kicker">Ta prestataire</p>
+                        <h2>{{ offer.provider.name }}</h2>
+                        <a class="client-offer-profile-link" href="{% url 'interface:provider_detail' offer.provider.id %}">Découvrir son profil →</a>
+                    </div>
+                </div>
+
+                <dl class="client-offer-details">
+                    <div>
+                        <dt>Prestation</dt>
+                        <dd>{{ offer.service.name }}</dd>
+                    </div>
+                    <div>
+                        <dt>Date proposée</dt>
+                        <dd>{{ offer.proposed_date|format_french_datetime }}</dd>
+                    </div>
+                    <div class="client-offer-price">
+                        <dt>À régler le jour J</dt>
+                        <dd>{{ offer.proposed_price_cents|cents_to_euros }}</dd>
+                    </div>
+                </dl>
+
+                <p class="client-offer-fee-note">✓ Les frais Château Rose déjà traités restent inchangés.</p>
+
+                {% if offer.message %}
+                    <blockquote class="client-offer-message">
+                        <span>Message de {{ offer.provider.name }}</span>
+                        <p>« {{ offer.message }} »</p>
+                    </blockquote>
+                {% endif %}
+
+                <form method="post" class="client-offer-actions">
+                    {% csrf_token %}
+                    <button class="btn" name="decision" value="accept">Accepter ce rendez-vous</button>
+                    <button class="btn secondary" name="decision" value="reject">Refuser la proposition</button>
+                </form>
+                <p class="client-offer-deadline">Merci de répondre avant le {{ offer.client_deadline_at|date:"d/m/Y à H\\hi" }}.</p>
+            </article>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

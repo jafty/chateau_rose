@@ -725,6 +725,9 @@ class BookingOpportunity(models.Model):
             )
         ]
 
+    def __str__(self):
+        return f"{self.requested_sub_service} · demande {self.booking.booking_id} ({self.get_status_display()})"
+
 
 class BookingOffer(models.Model):
     STATUS_PENDING_CLIENT = "PENDING_CLIENT"
@@ -759,6 +762,9 @@ class BookingOffer(models.Model):
     submitted_at = models.DateTimeField()
     client_deadline_at = models.DateTimeField()
     decided_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Proposition de {self.provider} · demande {self.opportunity.booking.booking_id}"
 
 
 class ProviderServiceFeeCoupon(models.Model):
