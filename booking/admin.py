@@ -44,8 +44,45 @@ from chateaurose.infrastructure.provider_catalog import DjangoProviderCatalog
 from interface.services.booking_requests import resolve_stored_media_url
 from interface.services.image_processing import compress_image_field
 
-admin.site.register(BookingOpportunity)
-admin.site.register(BookingOffer)
+@admin.register(BookingOpportunity)
+class BookingOpportunityAdmin(admin.ModelAdmin):
+    list_display = ("booking_reference", "requested_sub_service", "status", "reason", "opened_at", "response_deadline_at", "excluded_provider")
+    list_filter = ("status", "reason", "opened_at", "response_deadline_at")
+    search_fields = ("booking__booking_id", "booking__client_name", "booking__client_email", "requested_sub_service__name", "excluded_provider__name")
+    list_select_related = ("booking", "requested_sub_service", "excluded_provider")
+    date_hierarchy = "opened_at"
+    ordering = ("-opened_at",)
+    readonly_fields = ("opened_at", "closed_at")
+    fieldsets = (
+        ("Demande", {"fields": ("booking", "requested_sub_service", "reason", "excluded_provider")}),
+        ("Suivi", {"fields": ("status", "opened_at", "response_deadline_at", "closed_at")}),
+    )
+
+    @admin.display(description="Demande", ordering="booking__booking_id")
+    def booking_reference(self, obj):
+        url = reverse("admin:booking_booking_change", args=(obj.booking_id,))
+        return format_html('<a href="{}">{} · {}</a>', url, obj.booking.booking_id, obj.booking.client_name)
+
+
+@admin.register(BookingOffer)
+class BookingOfferAdmin(admin.ModelAdmin):
+    list_display = ("booking_reference", "provider", "service", "proposed_date", "formatted_price", "status", "submitted_at", "client_deadline_at")
+    list_filter = ("status", "provider", "submitted_at", "client_deadline_at")
+    search_fields = ("opportunity__booking__booking_id", "opportunity__booking__client_name", "provider__name", "service__name")
+    list_select_related = ("opportunity__booking", "provider", "service")
+    date_hierarchy = "submitted_at"
+    ordering = ("-submitted_at",)
+    readonly_fields = ("submitted_at", "decided_at")
+
+    @admin.display(description="Demande", ordering="opportunity__booking__booking_id")
+    def booking_reference(self, obj):
+        booking = obj.opportunity.booking
+        url = reverse("admin:booking_booking_change", args=(booking.pk,))
+        return format_html('<a href="{}">{} · {}</a>', url, booking.booking_id, booking.client_name)
+
+    @admin.display(description="Tarif", ordering="proposed_price_cents")
+    def formatted_price(self, obj):
+        return f"{obj.proposed_price_cents / 100:.2f} €".replace(".", ",")
 
 
 class MarketingSubServiceMultipleChoiceField(forms.ModelMultipleChoiceField):

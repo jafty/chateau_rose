@@ -1,14 +1,117 @@
 {% extends "base.html" %}
+{% load price_filters %}
+
 {% block title %}Opportunité de rendez-vous{% endblock %}
-{% block content %}<section class="container paper-card">
-{% if submitted %}<h1>Proposition envoyée</h1><p>La cliente va maintenant pouvoir accepter ou refuser ta proposition.</p>
-{% elif opportunity.status != "OPEN" %}<h1>Opportunité clôturée</h1><p>Cette opportunité a déjà reçu une proposition ou a expiré.</p>
-{% else %}<h1>{{ opportunity.requested_sub_service.name }}</h1>
-<p>Date souhaitée : {{ opportunity.booking.desired_date }} · Zone : {{ opportunity.booking.location }}</p>
-{% if error %}<div class="alert danger">{{ error }}</div>{% endif %}
-<form method="post">{% csrf_token %}
-<label>Ton service<select name="service" required>{% for service in services %}<option value="{{ service.id }}">{{ service.name }}</option>{% endfor %}</select></label>
-<label>Date proposée<input type="datetime-local" name="proposed_date" value="{{ opportunity.booking.desired_date|slice:':16' }}" required></label>
-<label>Tarif à régler le jour J (€)<input type="number" min="0" step="0.01" name="proposed_price_euros" required></label>
-<label>Message facultatif<textarea name="message"></textarea></label>
-<button class="btn" type="submit">Envoyer ma proposition</button></form>{% endif %}</section>{% endblock %}
+
+{% block content %}
+<main class="layout-section opportunity-page">
+    <div class="layout-shell layout-shell--compact layout-stack">
+        {% if submitted %}
+            <section class="opportunity-state-card opportunity-state-card--success" aria-labelledby="opportunity-title">
+                <span class="opportunity-state-icon" aria-hidden="true">✓</span>
+                <p class="opportunity-eyebrow">Proposition transmise</p>
+                <h1 id="opportunity-title">C'est envoyé !</h1>
+                <p>La cliente peut maintenant consulter puis accepter ou refuser ta proposition. Tu seras informée de sa décision.</p>
+                <a class="btn secondary" href="{% url 'providers:providers_index' %}">← Retour à mes demandes</a>
+            </section>
+        {% elif opportunity.status != "OPEN" %}
+            <section class="opportunity-state-card" aria-labelledby="opportunity-title">
+                <span class="opportunity-state-icon" aria-hidden="true">⌛</span>
+                <p class="opportunity-eyebrow">Opportunité indisponible</p>
+                <h1 id="opportunity-title">Cette demande est clôturée</h1>
+                <p>Une proposition a déjà été envoyée ou le délai de réponse est dépassé.</p>
+                <a class="btn secondary" href="{% url 'providers:providers_index' %}">← Retour à mes demandes</a>
+            </section>
+        {% else %}
+            <header class="opportunity-heading">
+                <p class="opportunity-eyebrow">Nouvelle demande · Réponse avant le {{ opportunity.response_deadline_at|date:"d/m/Y à H\\hi" }}</p>
+                <h1 id="opportunity-title">Propose ton rendez-vous</h1>
+                <p class="lead">Vérifie les souhaits de la cliente, puis indique le créneau et le tarif que tu peux lui proposer.</p>
+            </header>
+
+            {% if error %}<div class="alert danger" role="alert">{{ error }}</div>{% endif %}
+
+            <div class="opportunity-layout">
+                <section class="paper-card opportunity-summary" aria-labelledby="request-summary-title">
+                    <div class="opportunity-card-heading">
+                        <span class="opportunity-step">1</span>
+                        <div>
+                            <p class="opportunity-kicker">La demande</p>
+                            <h2 id="request-summary-title">{{ opportunity.requested_sub_service.name }}</h2>
+                        </div>
+                    </div>
+                    <dl class="opportunity-details">
+                        <div>
+                            <dt>Date souhaitée</dt>
+                            <dd>{{ opportunity.booking.desired_date|format_french_datetime }}</dd>
+                        </div>
+                        <div>
+                            <dt>Zone</dt>
+                            <dd>{{ opportunity.booking.location|default:"Non précisée" }}</dd>
+                        </div>
+                        {% if opportunity.booking.location_preference %}
+                        <div>
+                            <dt>Lieu du rendez-vous</dt>
+                            <dd>{{ opportunity.booking.location_preference }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if opportunity.booking.hair_length %}
+                        <div>
+                            <dt>Longueur de cheveux</dt>
+                            <dd>{{ opportunity.booking.hair_length }}</dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+                    {% if opportunity.booking.free_text %}
+                        <div class="opportunity-client-note">
+                            <strong>Précisions de la cliente</strong>
+                            <p>{{ opportunity.booking.free_text }}</p>
+                        </div>
+                    {% endif %}
+                </section>
+
+                <section class="paper-card opportunity-form-card" aria-labelledby="offer-form-title">
+                    <div class="opportunity-card-heading">
+                        <span class="opportunity-step">2</span>
+                        <div>
+                            <p class="opportunity-kicker">Ta proposition</p>
+                            <h2 id="offer-form-title">Détaille ton offre</h2>
+                        </div>
+                    </div>
+                    <form method="post" class="opportunity-form">
+                        {% csrf_token %}
+                        <div class="form-field">
+                            <label for="opportunity-service">Prestation correspondante</label>
+                            <select id="opportunity-service" name="service" required>
+                                {% for service in services %}<option value="{{ service.id }}">{{ service.name }}</option>{% endfor %}
+                            </select>
+                            <small class="field-hint">Choisis la prestation de ton catalogue qui sera réservée.</small>
+                        </div>
+                        <div class="opportunity-form-row">
+                            <div class="form-field">
+                                <label for="opportunity-date">Date et heure proposées</label>
+                                <input id="opportunity-date" type="datetime-local" name="proposed_date" value="{{ opportunity.booking.desired_date|slice:':16' }}" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="opportunity-price">Tarif le jour J</label>
+                                <div class="opportunity-price-input">
+                                    <input id="opportunity-price" type="number" min="0" step="0.01" inputmode="decimal" name="proposed_price_euros" placeholder="Ex. 80" required>
+                                    <span aria-hidden="true">€</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="opportunity-message">Un mot pour la cliente <span class="optional-label">facultatif</span></label>
+                            <textarea id="opportunity-message" name="message" rows="4" placeholder="Précise par exemple ce qu'elle doit prévoir avant le rendez-vous."></textarea>
+                        </div>
+                        <div class="opportunity-submit-zone">
+                            <p>La cliente recevra ces informations avant de prendre sa décision.</p>
+                            <button class="btn full-width" type="submit">Envoyer ma proposition →</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}
