@@ -323,6 +323,14 @@ def bounty_offer(request, opportunity_id):
         pk=opportunity_id,
     )
     services = eligible_services(opportunity, provider)
+    estimated_price_cents = opportunity.booking.provider_price_estimate_cents
+    if estimated_price_cents is None:
+        estimated_price_cents = max(
+            0,
+            opportunity.booking.estimated_price_cents
+            - opportunity.booking.chateau_rose_fee_cents,
+        )
+    suggested_price_euros = f"{estimated_price_cents / 100:.2f}"
     error = None
     if request.method == "POST":
         try:
@@ -344,7 +352,15 @@ def bounty_offer(request, opportunity_id):
     return render(
         request,
         "providers/bounty_offer.html",
-        {"opportunity": opportunity, "services": services, "error": error},
+        {
+            "opportunity": opportunity,
+            "services": services,
+            "error": error,
+            "suggested_price_euros": suggested_price_euros,
+            "offer_price_euros": (
+                request.POST.get("proposed_price_euros", suggested_price_euros)
+            ),
+        },
     )
 
 

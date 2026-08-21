@@ -58,10 +58,7 @@ def open_for_booking(booking_id: str, *, reason: str, now=None, base_url=""):
         base_url or getattr(settings, "SITE_URL", "") or "https://www.chateau-rose.fr"
     ).rstrip("/")
     with transaction.atomic():
-        booking = (
-            Booking.objects.select_for_update()
-            .get(booking_id=booking_id)
-        )
+        booking = Booking.objects.select_for_update().get(booking_id=booking_id)
         sub_service = _sub_service_for(booking)
         if not sub_service:
             booking.status = Booking.STATUS_CANCELLED
@@ -74,12 +71,22 @@ def open_for_booking(booking_id: str, *, reason: str, now=None, base_url=""):
             notifier.notify(
                 getattr(settings, "OPERATIONS_EMAIL", ""),
                 f"Bounty impossible · {booking.booking_id}",
-                "Le service n'est lié exactement à aucun sous-service marketing. La demande a été annulée.",
+                "Bonjour,\n\n"
+                "La recherche de prestataire n'a pas pu être lancée : le service "
+                "n'est lié exactement à aucun sous-service marketing.\n\n"
+                f"Demande : {booking.booking_id}\n"
+                "Statut : annulée\n\n"
+                "Merci de vérifier le paramétrage du catalogue.\n\n"
+                "L'équipe Château Rose",
             )
             notifier.notify(
                 booking.client_email,
                 "Demande annulée",
-                "Aucune autre prestataire compatible n'a pu être recherchée. Ton autorisation de paiement a été libérée.",
+                f"Bonjour {booking.client_name},\n\n"
+                "Nous sommes désolés, aucune autre prestataire compatible n'a pu être recherchée. "
+                "Ta demande a donc été annulée.\n\n"
+                "Ton autorisation de paiement a bien été libérée.\n\n"
+                "À bientôt,\nL'équipe Château Rose",
             )
             return None
         if not booking.process_expires_at:
@@ -125,7 +132,11 @@ def open_for_booking(booking_id: str, *, reason: str, now=None, base_url=""):
             notifier.notify(
                 booking.client_email,
                 "Demande annulée",
-                "Nous n'avons trouvé aucune autre prestataire proposant cette prestation. Ton autorisation de paiement a été libérée.",
+                f"Bonjour {booking.client_name},\n\n"
+                "Nous sommes désolés, nous n'avons trouvé aucune autre prestataire proposant cette prestation. "
+                "Ta demande a donc été annulée.\n\n"
+                "Ton autorisation de paiement a bien été libérée.\n\n"
+                "À bientôt,\nL'équipe Château Rose",
             )
             return opportunity
     providers = {service.provider_id: service.provider for service in services}
@@ -134,7 +145,15 @@ def open_for_booking(booking_id: str, *, reason: str, now=None, base_url=""):
         notifier.notify(
             provider.contact_email,
             f"Une demande de {sub_service.name} est disponible",
-            f"{booking.client_name} cherche une prestataire pour {sub_service.name}, le {booking.desired_date}. Si tu souhaites proposer de la prendre en charge : {url}\nUne autre prestataire pourra répondre avant toi.",
+            f"Bonjour {provider.name},\n\n"
+            "Une nouvelle opportunité de rendez-vous est disponible.\n\n"
+            f"Prestation : {sub_service.name}\n"
+            f"Date souhaitée : {booking.desired_date}\n"
+            f"Zone : {booking.location or 'Non précisée'}\n\n"
+            "Consulter la demande et faire une proposition :\n"
+            f"{url}\n\n"
+            "La première proposition éligible sera transmise à la cliente.\n\n"
+            "À bientôt,\nL'équipe Château Rose",
         )
     return opportunity
 
@@ -198,7 +217,15 @@ def submit_offer(
     notifier.notify(
         booking.client_email,
         f"{provider.name} propose de prendre ton rendez-vous",
-        f"{provider.name} propose le {proposed_date}, pour {cents / 100:.2f} € à régler le jour J. Profil : {profile_url}\nAccepter ou refuser : {url}\nLes frais Château Rose déjà traités ne changent pas.",
+        f"Bonjour {booking.client_name},\n\n"
+        f"Bonne nouvelle : {provider.name} propose de prendre ton rendez-vous.\n\n"
+        f"Date proposée : {proposed_date}\n"
+        f"Tarif à régler le jour J : {cents / 100:.2f} €\n"
+        f"Profil de la prestataire : {profile_url}\n\n"
+        "Pour accepter ou refuser la proposition :\n"
+        f"{url}\n\n"
+        "Les frais Château Rose déjà traités restent inchangés.\n\n"
+        "À bientôt,\nL'équipe Château Rose",
     )
     return offer
 
@@ -232,6 +259,14 @@ def decide(*, token, decision, now=None):
     notifier.notify(
         offer.provider.contact_email,
         "Proposition acceptée" if decision == "accept" else "Proposition refusée",
-        f"La proposition pour la demande {booking.booking_id} a été {'acceptée' if decision == 'accept' else 'refusée'}.",
+        f"Bonjour {offer.provider.name},\n\n"
+        f"Ta proposition pour la demande {booking.booking_id} a été "
+        f"{'acceptée' if decision == 'accept' else 'refusée'}.\n\n"
+        + (
+            "Tu peux retrouver les informations du rendez-vous dans ton espace prestataire."
+            if decision == "accept"
+            else "Merci d'avoir pris le temps de répondre à cette demande."
+        )
+        + "\n\nÀ bientôt,\nL'équipe Château Rose",
     )
     return booking, offer

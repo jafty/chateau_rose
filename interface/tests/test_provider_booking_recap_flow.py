@@ -6,14 +6,23 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from booking.models import Booking, Provider, ProviderServiceFeeCoupon, ProviderZone, Service, Zone
+from booking.models import (
+    Booking,
+    Provider,
+    ProviderServiceFeeCoupon,
+    ProviderZone,
+    Service,
+    Zone,
+)
 from interface.models import ProviderBookingDraft
 
 
 @override_settings(
     STORAGES={
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
     }
 )
 class ProviderBookingRecapFlowTests(TestCase):
@@ -41,7 +50,9 @@ class ProviderBookingRecapFlowTests(TestCase):
             "service_id": self.service.id,
             "client_name": "Sarah",
             "client_email": "sarah@example.com",
-            "desired_date": (timezone.now() + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M"),
+            "desired_date": (timezone.now() + timedelta(days=7)).strftime(
+                "%Y-%m-%dT%H:%M"
+            ),
             "location_preference": "domicile",
             "location": self.zone.name,
             "client_address": "10 rue de test, Toulouse",
@@ -52,7 +63,9 @@ class ProviderBookingRecapFlowTests(TestCase):
         }
 
     @override_settings(OPERATIONS_EMAIL="ops@example.com")
-    def test_create_recap_sends_client_and_operations_emails_and_redirects_to_recap_page(self):
+    def test_create_recap_sends_client_and_operations_emails_and_redirects_to_recap_page(
+        self,
+    ):
         response = self.client.post(
             reverse("interface:provider_detail", args=[self.provider.id]),
             data=self._base_payload(),
@@ -85,12 +98,32 @@ class ProviderBookingRecapFlowTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Merci de choisir une zone pour le rendez-vous à domicile.")
+        self.assertContains(
+            response, "Merci de choisir une zone pour le rendez-vous à domicile."
+        )
         self.assertContains(response, "Sarah")
         self.assertContains(response, "domicile")
         self.assertEqual(ProviderBookingDraft.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_booking_form_rejects_a_date_with_less_than_24_hours_notice(self):
+        payload = self._base_payload()
+        payload["desired_date"] = (timezone.now() + timedelta(hours=23)).strftime(
+            "%Y-%m-%dT%H:%M"
+        )
+
+        response = self.client.post(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            data=payload,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Le rendez-vous doit être demandé au moins 24 heures à l&#x27;avance.",
+        )
+        self.assertFalse(ProviderBookingDraft.objects.exists())
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_create_recap_without_current_hair_picture(self):
         response = self.client.post(
@@ -114,12 +147,15 @@ class ProviderBookingRecapFlowTests(TestCase):
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
         self.assertEqual(create_response.status_code, 302)
 
-        recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
+        recap_page = self.client.get(
+            reverse("interface:provider_booking_recap", args=[draft.token])
+        )
         self.assertContains(recap_page, "Merci pour ta réservation")
         self.assertContains(recap_page, "Sécuriser ma demande")
 
         prefill_page = self.client.get(
-            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={draft.token}"
+            reverse("interface:provider_detail", args=[self.provider.id])
+            + f"?recap={draft.token}"
         )
         self.assertContains(prefill_page, "Récapitulatif chargé")
         self.assertContains(prefill_page, "Demander mon RDV")
@@ -163,7 +199,8 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
             response.url,
-            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={draft.token}#booking-wizard",
+            reverse("interface:provider_detail", args=[self.provider.id])
+            + f"?recap={draft.token}#booking-wizard",
         )
 
     def test_recap_includes_service_fee_in_totals_without_coupon(self):
@@ -173,7 +210,9 @@ class ProviderBookingRecapFlowTests(TestCase):
         )
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
 
-        recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
+        recap_page = self.client.get(
+            reverse("interface:provider_booking_recap", args=[draft.token])
+        )
         self.assertContains(recap_page, "143.75 €")
         self.assertContains(recap_page, "18.75 €")
         self.assertContains(recap_page, "Frais Château Rose à régler")
@@ -192,14 +231,19 @@ class ProviderBookingRecapFlowTests(TestCase):
         )
         draft = ProviderBookingDraft.objects.get(provider=self.provider)
 
-        recap_page = self.client.get(reverse("interface:provider_booking_recap", args=[draft.token]))
+        recap_page = self.client.get(
+            reverse("interface:provider_booking_recap", args=[draft.token])
+        )
         self.assertContains(recap_page, "125 €")
         self.assertContains(recap_page, "0 €")
         self.assertContains(recap_page, "Aucun paiement en ligne requis")
         self.assertContains(recap_page, "Confirmer ma demande")
         self.assertContains(recap_page, "125 €")
 
-    def test_admin_seeded_draft_is_updated_in_place_when_client_completes_prefilled_form(self):
+    def test_admin_seeded_draft_is_updated_in_place_when_client_completes_prefilled_form(
+        self,
+    ):
+        seeded_date = timezone.now() + timedelta(days=7)
         admin_user = get_user_model().objects.create_user(
             username="admin_draft_user",
             email="admin@example.com",
@@ -217,7 +261,7 @@ class ProviderBookingRecapFlowTests(TestCase):
                 "service_name": self.service.name,
                 "client_name": "",
                 "client_email": "",
-                "desired_date": "2026-04-02T10:00:00+00:00",
+                "desired_date": seeded_date.isoformat(),
                 "location_preference": "domicile",
                 "location": self.zone.name,
                 "client_address": "10 rue de test, Toulouse",
@@ -230,13 +274,15 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.client.force_login(admin_user)
 
         prefill_page = self.client.get(
-            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={seeded.token}"
+            reverse("interface:provider_detail", args=[self.provider.id])
+            + f"?recap={seeded.token}"
         )
         self.assertContains(prefill_page, 'data-can-save-partial-prefill="1"')
         self.assertContains(prefill_page, "Enregistrer le brouillon prérempli")
 
         prefill_page = self.client.get(
-            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={seeded.token}"
+            reverse("interface:provider_detail", args=[self.provider.id])
+            + f"?recap={seeded.token}"
         )
         self.assertContains(prefill_page, 'data-can-save-partial-prefill="1"')
         self.assertContains(prefill_page, "Enregistrer le brouillon prérempli")
@@ -247,7 +293,7 @@ class ProviderBookingRecapFlowTests(TestCase):
                 "service_id": self.service.id,
                 "client_name": "Nouveau client",
                 "client_email": "nouveau@example.com",
-                "desired_date": "2026-04-03T11:30",
+                "desired_date": seeded_date.strftime("%Y-%m-%dT%H:%M"),
                 "location_preference": "domicile",
                 "location": self.zone.name,
                 "client_address": "42 avenue des tests, Toulouse",
@@ -299,9 +345,12 @@ class ProviderBookingRecapFlowTests(TestCase):
             },
         )
         anonymous_prefill_page = self.client.get(
-            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={seeded.token}"
+            reverse("interface:provider_detail", args=[self.provider.id])
+            + f"?recap={seeded.token}"
         )
-        self.assertNotContains(anonymous_prefill_page, "Enregistrer le brouillon prérempli")
+        self.assertNotContains(
+            anonymous_prefill_page, "Enregistrer le brouillon prérempli"
+        )
         self.client.force_login(admin_user)
 
         response = self.client.post(
@@ -325,7 +374,8 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
             response["Location"],
-            reverse("interface:provider_detail", args=[self.provider.id]) + f"?recap={seeded.token}#booking-wizard",
+            reverse("interface:provider_detail", args=[self.provider.id])
+            + f"?recap={seeded.token}#booking-wizard",
         )
         seeded.refresh_from_db()
         self.assertEqual(seeded.client_name, "")
