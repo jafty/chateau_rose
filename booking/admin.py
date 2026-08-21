@@ -20,6 +20,8 @@ from booking.resources import (
 
 from .models import (
     Booking,
+    BookingOffer,
+    BookingOpportunity,
     Provider,
     ProviderBeforeAppointmentItem,
     ProviderMarketingService,
@@ -41,6 +43,9 @@ from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_catalog import DjangoProviderCatalog
 from interface.services.booking_requests import resolve_stored_media_url
 from interface.services.image_processing import compress_image_field
+
+admin.site.register(BookingOpportunity)
+admin.site.register(BookingOffer)
 
 
 class MarketingSubServiceMultipleChoiceField(forms.ModelMultipleChoiceField):

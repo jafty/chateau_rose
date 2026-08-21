@@ -6,6 +6,8 @@ class Command(BaseCommand):
     help = "Run every recurring email task used by the Railway scheduler."
 
     def handle(self, *args, **options):
+        self.stdout.write("Processing booking bounties...")
+        call_command("process_bounties", stdout=self.stdout, stderr=self.stderr)
         self.stdout.write("Running recap follow-ups...")
         call_command("send_recap_follow_ups", stdout=self.stdout, stderr=self.stderr)
         self.stdout.write("Running booking reminders...")

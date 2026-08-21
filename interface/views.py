@@ -2673,3 +2673,25 @@ def leave_verified_review(request, token):
             )
             return render(request, "interface/review_thank_you.html", {"provider": booking.provider})
     return render(request, "interface/leave_verified_review.html", {"form": form, "provider": booking.provider, "booking": booking})
+
+
+def bounty_client_offer(request, token):
+    from django.core import signing
+    from chateaurose.infrastructure.bounty_service import decide
+    from booking.models import BookingOffer
+
+    try:
+        payload = signing.loads(token, salt="bounty-client", max_age=6 * 24 * 3600)
+        offer = get_object_or_404(
+            BookingOffer.objects.select_related("provider", "service", "opportunity__booking"), pk=payload["offer"]
+        )
+    except signing.BadSignature:
+        return render(request, "interface/bounty_client_offer.html", {"error": "Ce lien est invalide ou expiré."}, status=400)
+    message = error = None
+    if request.method == "POST":
+        try:
+            booking, offer = decide(token=token, decision=request.POST.get("decision", ""))
+            message = "Le rendez-vous est confirmé." if booking.status == Booking.STATUS_CONFIRMED else "La proposition a été refusée et la demande annulée."
+        except DomainError as exc:
+            error = str(exc)
+    return render(request, "interface/bounty_client_offer.html", {"offer": offer, "booking": offer.opportunity.booking, "message": message, "error": error})

@@ -18,7 +18,9 @@ urlpatterns = [
         views.at_home_provider_list,
         name="at_home_provider_list",
     ),
-    path("prestataires/<int:provider_id>/", views.provider_detail, name="provider_detail"),
+    path(
+        "prestataires/<int:provider_id>/", views.provider_detail, name="provider_detail"
+    ),
     path(
         "recapitulatif/<uuid:token>/",
         views.provider_booking_recap,
@@ -29,7 +31,11 @@ urlpatterns = [
         views.generic_booking_recap,
         name="generic_booking_recap",
     ),
-    path("checkout-rapide/<int:checkout_id>/", views.quick_checkout_page, name="quick_checkout_page"),
+    path(
+        "checkout-rapide/<int:checkout_id>/",
+        views.quick_checkout_page,
+        name="quick_checkout_page",
+    ),
     path(
         "checkout-rapide/confirmation/<str:booking_id>/",
         views.quick_checkout_confirmation,
@@ -45,17 +51,52 @@ urlpatterns = [
         views.provider_payment_return,
         name="provider_payment_return",
     ),
-    path("avis/<uuid:token>/", views.leave_verified_review, name="leave_verified_review"),
+    path(
+        "avis/<uuid:token>/", views.leave_verified_review, name="leave_verified_review"
+    ),
     path("merci-question/", views.thank_you_question, name="thank_you_question"),
-    path("merci-demande-rapide/", views.thank_you_quick_request, name="thank_you_quick_request"),
-    path("merci-rdv-prestataire/", views.thank_you_provider_booking, name="thank_you_provider_booking"),
-    path("bookings/<str:booking_id>/cancel-admin/", views.cancel_booking_admin, name="cancel_booking_admin"),
+    path(
+        "merci-demande-rapide/",
+        views.thank_you_quick_request,
+        name="thank_you_quick_request",
+    ),
+    path(
+        "merci-rdv-prestataire/",
+        views.thank_you_provider_booking,
+        name="thank_you_provider_booking",
+    ),
+    path(
+        "bookings/<str:booking_id>/cancel-admin/",
+        views.cancel_booking_admin,
+        name="cancel_booking_admin",
+    ),
     path("mentions-legales-rgpd/", views.legal, name="legal"),
     path("zones/recherche/", views.zone_search, name="zone_search"),
-    path("bookings/<str:booking_id>/provider-action/", views.provider_action, name="provider_action"),
-    path("bookings/<str:booking_id>/client-action/", views.client_action, name="client_action"),
-    path("bookings/<str:booking_id>/confirmation/", views.client_confirmation, name="client_confirmation"),
-    path("bookings/<str:booking_id>/proposition/", views.client_proposal, name="client_proposal"),
+    path(
+        "bookings/<str:booking_id>/provider-action/",
+        views.provider_action,
+        name="provider_action",
+    ),
+    path(
+        "bookings/<str:booking_id>/client-action/",
+        views.client_action,
+        name="client_action",
+    ),
+    path(
+        "bookings/<str:booking_id>/confirmation/",
+        views.client_confirmation,
+        name="client_confirmation",
+    ),
+    path(
+        "bookings/<str:booking_id>/proposition/",
+        views.client_proposal,
+        name="client_proposal",
+    ),
+    path(
+        "proposition-bounty/<path:token>/",
+        views.bounty_client_offer,
+        name="bounty_client_offer",
+    ),
     path("services/<slug:service_slug>/", views.service_page, name="service_page"),
     path(
         "services/<slug:service_slug>/a-domicile/",
@@ -72,7 +113,11 @@ urlpatterns = [
         views.sub_service_at_home_page,
         name="sub_service_at_home_page",
     ),
-    path("services/<slug:service_slug>/<slug:city_slug>/", views.service_city_page, name="service_city_page"),
+    path(
+        "services/<slug:service_slug>/<slug:city_slug>/",
+        views.service_city_page,
+        name="service_city_page",
+    ),
     path(
         "services/<slug:service_slug>/<slug:city_slug>/<slug:district_slug>/",
         views.service_city_district_page,

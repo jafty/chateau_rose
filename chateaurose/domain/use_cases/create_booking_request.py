@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from chateaurose.domain.entities.booking import BookingRequest
 from chateaurose.domain.exceptions import NotFound, ValidationError
@@ -6,6 +7,7 @@ from chateaurose.domain.services.pricing import (
     compute_service_fee_only_amounts_cents,
     estimate_service_price_cents,
 )
+from chateaurose.domain.services.booking_deadlines import PROCESS_LIFETIME, initial_provider_deadline, require_minimum_notice
 
 SUBMITTED = "SUBMITTED"
 WAITING_PROVIDER_ASSIGNMENT = "WAITING_PROVIDER_ASSIGNMENT"
@@ -134,6 +136,19 @@ def execute(
     if amount_due_now_cents is None:
         raise ValidationError("Missing required field: chateau_rose_fee_cents")
 
+    created_at = clock.now()
+    try:
+        desired_at = datetime.fromisoformat(str(desired_date).replace("Z", "+00:00"))
+        if desired_at.tzinfo is None:
+            desired_at = desired_at.replace(tzinfo=created_at.tzinfo)
+    except (TypeError, ValueError):
+        desired_at = None
+    if desired_at is not None:
+        require_minimum_notice(desired_at=desired_at, now=created_at)
+    elif provider_id:
+        raise ValidationError("La date de rendez-vous est invalide.")
+    process_expires_at = created_at + PROCESS_LIFETIME
+
     booking_id = _generate_id()
     if amount_due_now_cents > 0:
         if not payment_auth_id:
@@ -147,7 +162,6 @@ def execute(
         payment_auth_id = payment_auth_id or ""
         payment_status = PAYMENT_STATUS_WAIVED
 
-    created_at = clock.now()
     booking = BookingRequest(
         id=booking_id,
         booking_kind=BOOKING_KIND_PROVIDER_SELECTED if provider_id else BOOKING_KIND_GENERIC,
@@ -178,6 +192,10 @@ def execute(
         updated_at=created_at,
         state_entered_at=created_at,
         client_address=client_address,
+        process_expires_at=process_expires_at,
+        initial_provider_deadline_at=(
+            initial_provider_deadline(now=created_at, desired_at=desired_at) if provider_id and desired_at else None
+        ),
     )
     booking_repository.add(booking)
 

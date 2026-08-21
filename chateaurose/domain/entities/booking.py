@@ -36,3 +36,5 @@ class BookingRequest:
     chateau_rose_fee_cents: int = 0
     amount_due_now_cents: int = 0
     payment_status: str = "REQUIRES_PAYMENT"
+    initial_provider_deadline_at: datetime | None = None
+    process_expires_at: datetime | None = None

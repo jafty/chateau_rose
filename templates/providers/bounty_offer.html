@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Opportunité de rendez-vous{% endblock %}
+{% block content %}<section class="container paper-card">
+{% if submitted %}<h1>Proposition envoyée</h1><p>La cliente va maintenant pouvoir accepter ou refuser ta proposition.</p>
+{% elif opportunity.status != "OPEN" %}<h1>Opportunité clôturée</h1><p>Cette opportunité a déjà reçu une proposition ou a expiré.</p>
+{% else %}<h1>{{ opportunity.requested_sub_service.name }}</h1>
+<p>Date souhaitée : {{ opportunity.booking.desired_date }} · Zone : {{ opportunity.booking.location }}</p>
+{% if error %}<div class="alert danger">{{ error }}</div>{% endif %}
+<form method="post">{% csrf_token %}
+<label>Ton service<select name="service" required>{% for service in services %}<option value="{{ service.id }}">{{ service.name }}</option>{% endfor %}</select></label>
+<label>Date proposée<input type="datetime-local" name="proposed_date" value="{{ opportunity.booking.desired_date|slice:':16' }}" required></label>
+<label>Tarif à régler le jour J (€)<input type="number" min="0" step="0.01" name="proposed_price_euros" required></label>
+<label>Message facultatif<textarea name="message"></textarea></label>
+<button class="btn" type="submit">Envoyer ma proposition</button></form>{% endif %}</section>{% endblock %}

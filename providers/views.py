@@ -5,7 +5,11 @@ import logging
 from django import forms
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect
+from django.http import (
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    HttpResponseRedirect,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.conf import settings
@@ -26,6 +30,8 @@ from chateaurose.domain.services.pricing import (
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
+from chateaurose.infrastructure.bounty_service import eligible_services, submit_offer
+from booking.models import BookingOpportunity
 from providers.forms import (
     ProviderBlockedSlotForm,
     ProviderInfoForm,
@@ -40,7 +46,9 @@ notifier = EmailNotifier()
 payment_gateway = StripePaymentGateway()
 provider_directory = DjangoProviderDirectory()
 logger = logging.getLogger(__name__)
-SUPPORT_EMAIL = (getattr(settings, "OPERATIONS_EMAIL", "") or "japhet.situmonana@gmail.com").strip()
+SUPPORT_EMAIL = (
+    getattr(settings, "OPERATIONS_EMAIL", "") or "japhet.situmonana@gmail.com"
+).strip()
 
 
 def _expire_visible_open_bookings(*, bookings, now):
@@ -70,11 +78,17 @@ def _payment_summary(booking) -> dict:
     provider_price_cents = booking.provider_price_estimate_cents
 
     if provider_price_cents is None:
-        should_infer_legacy_fee = service_fee_cents == 0 and bool(getattr(booking, "payment_auth_id", "")) and getattr(booking, "provider", None)
+        should_infer_legacy_fee = (
+            service_fee_cents == 0
+            and bool(getattr(booking, "payment_auth_id", ""))
+            and getattr(booking, "provider", None)
+        )
         if should_infer_legacy_fee:
             service_fee_percentage = booking.provider.service_fee_percentage
             if service_fee_percentage is None:
-                service_fee_percentage = Provider._meta.get_field("service_fee_percentage").default
+                service_fee_percentage = Provider._meta.get_field(
+                    "service_fee_percentage"
+                ).default
             checkout_amounts = compute_checkout_amounts_from_total_cents(
                 total_cents=effective_total_cents,
                 deposit_percentage=booking.provider.deposit_percentage or 30,
@@ -85,7 +99,9 @@ def _payment_summary(booking) -> dict:
         else:
             provider_price_cents = max(effective_total_cents - service_fee_cents, 0)
 
-    amount_due_now_cents = getattr(booking, "amount_due_now_cents", 0) or service_fee_cents
+    amount_due_now_cents = (
+        getattr(booking, "amount_due_now_cents", 0) or service_fee_cents
+    )
     return {
         "total": _format_price_from_cents(provider_price_cents + service_fee_cents),
         "reservation_fee": _format_price_from_cents(amount_due_now_cents),
@@ -96,7 +112,11 @@ def _payment_summary(booking) -> dict:
 
 
 def _locked_reservation_fee_cents(booking) -> int:
-    return getattr(booking, "amount_due_now_cents", 0) or getattr(booking, "chateau_rose_fee_cents", 0) or 0
+    return (
+        getattr(booking, "amount_due_now_cents", 0)
+        or getattr(booking, "chateau_rose_fee_cents", 0)
+        or 0
+    )
 
 
 def _locked_provider_deposit_cents(booking) -> int:
@@ -142,18 +162,28 @@ def index(request):
 
     if admin_mode:
         open_bookings = Booking.objects.filter(
-            status__in=(expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION, expire_booking_uc.AWAITING_ALTERNATIVE_PROVIDER)
+            status__in=(
+                expire_booking_uc.SUBMITTED,
+                expire_booking_uc.PENDING_CLIENT_VALIDATION,
+                expire_booking_uc.AWAITING_ALTERNATIVE_PROVIDER,
+            )
         )
     else:
         open_bookings = Booking.objects.filter(
             provider=provider,
-            status__in=(expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION, expire_booking_uc.AWAITING_ALTERNATIVE_PROVIDER),
+            status__in=(
+                expire_booking_uc.SUBMITTED,
+                expire_booking_uc.PENDING_CLIENT_VALIDATION,
+                expire_booking_uc.AWAITING_ALTERNATIVE_PROVIDER,
+            ),
         )
 
     _expire_visible_open_bookings(bookings=open_bookings.iterator(), now=timezone.now())
 
     if admin_mode:
-        bookings = Booking.objects.order_by("-created_at").select_related("service", "provider")
+        bookings = Booking.objects.order_by("-created_at").select_related(
+            "service", "provider"
+        )
     else:
         bookings = (
             Booking.objects.filter(provider=provider)
@@ -191,7 +221,11 @@ def booking_detail(request, booking_id):
 
     acting_provider = booking.provider if admin_mode else provider
 
-    if booking.status in (expire_booking_uc.SUBMITTED, expire_booking_uc.PENDING_CLIENT_VALIDATION, expire_booking_uc.AWAITING_ALTERNATIVE_PROVIDER):
+    if booking.status in (
+        expire_booking_uc.SUBMITTED,
+        expire_booking_uc.PENDING_CLIENT_VALIDATION,
+        expire_booking_uc.AWAITING_ALTERNATIVE_PROVIDER,
+    ):
         expire_booking_uc.execute(
             booking_id=booking.booking_id,
             now=timezone.now(),
@@ -215,7 +249,9 @@ def booking_detail(request, booking_id):
                 price_cents = remaining_price_cents
                 raw_date = request.POST.get("proposed_date", "")
                 proposed_date = raw_date.strip() or None
-                counter_proposal_message = request.POST.get("counter_proposal_message", "").strip() or None
+                counter_proposal_message = (
+                    request.POST.get("counter_proposal_message", "").strip() or None
+                )
                 client_control_url = request.build_absolute_uri(
                     reverse("interface:client_proposal", args=[booking.booking_id])
                 )
@@ -262,11 +298,53 @@ def booking_detail(request, booking_id):
             "message": message,
             "error": error,
             "payment_summary": _payment_summary(booking),
-            "reserved_amount": _format_price_from_cents(_locked_reservation_fee_cents(booking)),
-            "reserved_provider_deposit_amount": _format_price_from_cents(_locked_provider_deposit_cents(booking)),
+            "reserved_amount": _format_price_from_cents(
+                _locked_reservation_fee_cents(booking)
+            ),
+            "reserved_provider_deposit_amount": _format_price_from_cents(
+                _locked_provider_deposit_cents(booking)
+            ),
             "admin_mode": admin_mode,
-            "can_view_client_contact": admin_mode or booking.status == Booking.STATUS_CONFIRMED,
+            "can_view_client_contact": admin_mode
+            or booking.status == Booking.STATUS_CONFIRMED,
         },
+    )
+
+
+@login_required(login_url="providers:login")
+def bounty_offer(request, opportunity_id):
+    provider = Provider.objects.filter(
+        user=request.user, is_visible_on_website=True
+    ).first()
+    if not provider:
+        return HttpResponseForbidden("Accès réservé aux prestataires visibles.")
+    opportunity = get_object_or_404(
+        BookingOpportunity.objects.select_related("booking", "requested_sub_service"),
+        pk=opportunity_id,
+    )
+    services = eligible_services(opportunity, provider)
+    error = None
+    if request.method == "POST":
+        try:
+            submit_offer(
+                opportunity_id=opportunity.id,
+                provider=provider,
+                service_id=request.POST.get("service"),
+                proposed_date=request.POST.get("proposed_date", ""),
+                proposed_price_euros=request.POST.get("proposed_price_euros", ""),
+                message=request.POST.get("message", "").strip(),
+            )
+            return render(
+                request,
+                "providers/bounty_offer.html",
+                {"submitted": True, "opportunity": opportunity},
+            )
+        except (DomainError, ValueError) as exc:
+            error = str(exc)
+    return render(
+        request,
+        "providers/bounty_offer.html",
+        {"opportunity": opportunity, "services": services, "error": error},
     )
 
 
@@ -351,24 +429,40 @@ def account(request):
                 else:
                     error = "Merci de corriger les champs informations."
             elif action == "save_service":
-                service = get_object_or_404(Service, id=request.POST.get("service_id"), provider=provider)
-                service_form = ProviderServiceForm(request.POST, request.FILES, instance=service)
+                service = get_object_or_404(
+                    Service, id=request.POST.get("service_id"), provider=provider
+                )
+                service_form = ProviderServiceForm(
+                    request.POST, request.FILES, instance=service
+                )
                 if service_form.is_valid():
                     service = service_form.save(commit=False)
-                    service.hair_length_adjustments = _adjustments_from_post(request, "hair")
-                    service.general_adjustments = _adjustments_from_post(request, "general")
+                    service.hair_length_adjustments = _adjustments_from_post(
+                        request, "hair"
+                    )
+                    service.general_adjustments = _adjustments_from_post(
+                        request, "general"
+                    )
                     service.save()
                     message = f"Service « {service.name} » mis à jour."
                 else:
-                    first_error = next(iter(service_form.errors.values()))[0] if service_form.errors else "Merci de corriger les champs du service."
+                    first_error = (
+                        next(iter(service_form.errors.values()))[0]
+                        if service_form.errors
+                        else "Merci de corriger les champs du service."
+                    )
                     error = f"Service « {service.name} » : {first_error}"
             elif action == "add_service":
                 new_service_form = ProviderServiceForm(request.POST, request.FILES)
                 if new_service_form.is_valid():
                     service = new_service_form.save(commit=False)
                     service.provider = provider
-                    service.hair_length_adjustments = _adjustments_from_post(request, "new_hair")
-                    service.general_adjustments = _adjustments_from_post(request, "new_general")
+                    service.hair_length_adjustments = _adjustments_from_post(
+                        request, "new_hair"
+                    )
+                    service.general_adjustments = _adjustments_from_post(
+                        request, "new_general"
+                    )
                     service.save()
                     new_service_form = ProviderServiceForm()
                     message = f"Service « {service.name} » ajouté."
@@ -385,7 +479,10 @@ def account(request):
                 else:
                     error = "Merci de corriger les dates du créneau indisponible."
             elif action == "delete_blocked_slot":
-                slot = get_object_or_404(provider.blocked_slots.filter(is_recurring=False), id=request.POST.get("slot_id"))
+                slot = get_object_or_404(
+                    provider.blocked_slots.filter(is_recurring=False),
+                    id=request.POST.get("slot_id"),
+                )
                 slot.delete()
                 message = "Créneau ponctuel supprimé."
             elif action == "add_photo":
@@ -399,7 +496,9 @@ def account(request):
                 else:
                     error = "Merci de corriger le média à ajouter."
             elif action == "delete_photo":
-                photo = get_object_or_404(provider.photos, id=request.POST.get("photo_id"))
+                photo = get_object_or_404(
+                    provider.photos, id=request.POST.get("photo_id")
+                )
                 photo.delete()
                 message = "Média supprimé."
         except (DomainError, InvalidOperation) as exc:
@@ -407,15 +506,23 @@ def account(request):
 
     services = provider.services.order_by("name")
     service_forms = []
-    invalid_service_id = request.POST.get("service_id") if request.method == "POST" else None
+    invalid_service_id = (
+        request.POST.get("service_id") if request.method == "POST" else None
+    )
     for service in services:
-        if request.method == "POST" and request.POST.get("action") == "save_service" and str(service.id) == str(invalid_service_id):
+        if (
+            request.method == "POST"
+            and request.POST.get("action") == "save_service"
+            and str(service.id) == str(invalid_service_id)
+        ):
             form = ProviderServiceForm(request.POST, request.FILES, instance=service)
         else:
             form = ProviderServiceForm(instance=service)
         service_forms.append((service, form))
 
-    blocked_slots = provider.blocked_slots.filter(is_recurring=False, is_active=True).order_by("starts_at")
+    blocked_slots = provider.blocked_slots.filter(
+        is_recurring=False, is_active=True
+    ).order_by("starts_at")
     photos = provider.photos.order_by("order", "id")
 
     return render(
