@@ -1,7 +1,10 @@
+from datetime import timedelta
+
 from django.core import mail
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from booking.models import Booking, Provider, ProviderServiceFeeCoupon, ProviderZone, Service, Zone
 from interface.models import ProviderBookingDraft
@@ -38,7 +41,7 @@ class ProviderBookingRecapFlowTests(TestCase):
             "service_id": self.service.id,
             "client_name": "Sarah",
             "client_email": "sarah@example.com",
-            "desired_date": "2026-04-01T10:30",
+            "desired_date": (timezone.now() + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M"),
             "location_preference": "domicile",
             "location": self.zone.name,
             "client_address": "10 rue de test, Toulouse",

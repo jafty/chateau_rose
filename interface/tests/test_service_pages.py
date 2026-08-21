@@ -1,9 +1,11 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.core import mail
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from booking.models import Provider, ProviderMarketingService, ProviderZone, Zone
 from interface.models import (
@@ -657,7 +659,7 @@ class ServicePagesTests(TestCase):
                 "client_name": "Awa Diallo",
                 "client_email": "awa@example.com",
                 "client_phone": "0600000000",
-                "desired_date": "2026-02-01T10:00",
+                "desired_date": (timezone.now() + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M"),
                 "location_preference": "salon",
                 "hair_length": "standard",
                 "requested_options": "extra-long",
@@ -690,7 +692,7 @@ class ServicePagesTests(TestCase):
                 "client_name": "Awa Diallo",
                 "client_email": "awa-recap@example.com",
                 "client_phone": "0600000000",
-                "desired_date": "2026-02-01T10:00",
+                "desired_date": (timezone.now() + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M"),
                 "location_preference": "salon",
                 "hair_length": "standard",
                 "requested_options": "extra-long",

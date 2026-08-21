@@ -115,7 +115,9 @@ class Provider(models.Model):
         default=True,
         help_text="Active si la prestataire fournit les mèches.",
     )
-    profile_image = models.ImageField(upload_to="providers/profile/", blank=True, null=True)
+    profile_image = models.ImageField(
+        upload_to="providers/profile/", blank=True, null=True
+    )
     profile_image_url = models.CharField(
         max_length=500,
         blank=True,
@@ -194,6 +196,7 @@ class Provider(models.Model):
     @property
     def review_badge(self):
         from chateaurose.domain.services.reviews import provider_review_badge
+
         ratings = list(
             self.verified_reviews.filter(
                 moderation_status=VerifiedReview.STATUS_APPROVED,
@@ -219,7 +222,9 @@ class Zone(models.Model):
 
 
 class Service(models.Model):
-    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="services")
+    provider = models.ForeignKey(
+        Provider, on_delete=models.CASCADE, related_name="services"
+    )
     category = models.ForeignKey(
         "ServiceCategory",
         on_delete=models.SET_NULL,
@@ -269,7 +274,9 @@ class Service(models.Model):
             return self.image.url
         if self.image_url:
             return self.image_url
-        return self.provider.resolved_cover_image or self.provider.resolved_profile_image
+        return (
+            self.provider.resolved_cover_image or self.provider.resolved_profile_image
+        )
 
     def clean(self):
         super().clean()
@@ -323,7 +330,9 @@ class ProviderPhoto(models.Model):
         (MEDIA_VIDEO, "Vidéo"),
     )
 
-    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="photos")
+    provider = models.ForeignKey(
+        Provider, on_delete=models.CASCADE, related_name="photos"
+    )
     image = models.ImageField(upload_to="providers/gallery/", blank=True)
     image_url = models.CharField(
         max_length=500,
@@ -380,16 +389,18 @@ class ProviderPhoto(models.Model):
 
 
 class ProviderZone(models.Model):
-    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="provider_zones")
-    zone = models.ForeignKey(Zone, on_delete=models.CASCADE, related_name="zone_providers")
+    provider = models.ForeignKey(
+        Provider, on_delete=models.CASCADE, related_name="provider_zones"
+    )
+    zone = models.ForeignKey(
+        Zone, on_delete=models.CASCADE, related_name="zone_providers"
+    )
 
     class Meta:
         unique_together = ("provider", "zone")
 
     def __str__(self):
         return f"{self.provider} - {self.zone}"
-
-
 
 
 class ProviderBlockedSlot(models.Model):
@@ -400,7 +411,9 @@ class ProviderBlockedSlot(models.Model):
         (SOURCE_EXTERNAL_BOOKED, "Créneau déjà pris (agenda externe)"),
     )
 
-    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="blocked_slots")
+    provider = models.ForeignKey(
+        Provider, on_delete=models.CASCADE, related_name="blocked_slots"
+    )
     starts_at = models.DateTimeField(null=True, blank=True)
     ends_at = models.DateTimeField(null=True, blank=True)
     is_recurring = models.BooleanField(
@@ -417,7 +430,9 @@ class ProviderBlockedSlot(models.Model):
     recurrence_starts_on = models.DateField(null=True, blank=True)
     recurrence_ends_on = models.DateField(null=True, blank=True)
     reason = models.CharField(max_length=255, blank=True)
-    source = models.CharField(max_length=32, choices=SOURCE_CHOICES, default=SOURCE_MANUAL)
+    source = models.CharField(
+        max_length=32, choices=SOURCE_CHOICES, default=SOURCE_MANUAL
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -425,25 +440,39 @@ class ProviderBlockedSlot(models.Model):
         ordering = ("starts_at",)
 
     def __str__(self):
-        return f"{self.provider.name} indisponible du {self.starts_at} au {self.ends_at}"
+        return (
+            f"{self.provider.name} indisponible du {self.starts_at} au {self.ends_at}"
+        )
 
     def clean(self):
         super().clean()
         if self.is_recurring:
             if not self.weekdays:
-                raise ValidationError("Les jours sont requis pour un blocage récurrent.")
+                raise ValidationError(
+                    "Les jours sont requis pour un blocage récurrent."
+                )
             if not self.starts_time or not self.ends_time:
-                raise ValidationError("L'heure de début et de fin sont requises pour un blocage récurrent.")
+                raise ValidationError(
+                    "L'heure de début et de fin sont requises pour un blocage récurrent."
+                )
             if self.starts_time == self.ends_time:
-                raise ValidationError("L'heure de fin doit être différente de l'heure de début.")
+                raise ValidationError(
+                    "L'heure de fin doit être différente de l'heure de début."
+                )
             if self.recurrence_starts_on and self.recurrence_ends_on:
                 if self.recurrence_ends_on < self.recurrence_starts_on:
-                    raise ValidationError("La fin de récurrence doit être après le début.")
+                    raise ValidationError(
+                        "La fin de récurrence doit être après le début."
+                    )
         else:
             if not self.starts_at or not self.ends_at:
-                raise ValidationError("Le début et la fin sont requis pour un blocage ponctuel.")
+                raise ValidationError(
+                    "Le début et la fin sont requis pour un blocage ponctuel."
+                )
             if self.ends_at <= self.starts_at:
-                raise ValidationError("La fin du créneau bloqué doit être après le début.")
+                raise ValidationError(
+                    "La fin du créneau bloqué doit être après le début."
+                )
 
     @property
     def parsed_weekdays(self) -> set[int]:
@@ -479,6 +508,7 @@ class ProviderBlockedSlot(models.Model):
         # Overnight recurring block (e.g. 22:00 -> 02:00)
         return appointment_time >= self.starts_time or appointment_time < self.ends_time
 
+
 class ProviderMarketingService(models.Model):
     provider = models.ForeignKey(
         Provider, on_delete=models.CASCADE, related_name="provider_marketing_services"
@@ -503,6 +533,8 @@ class Booking(models.Model):
     STATUS_WAITING_PROVIDER_ASSIGNMENT = "WAITING_PROVIDER_ASSIGNMENT"
     STATUS_CONFIRMED = "CONFIRMED"
     STATUS_CANCELLED = "CANCELLED"
+    STATUS_BOUNTY_OPEN = "BOUNTY_OPEN"
+    STATUS_BOUNTY_CLIENT_VALIDATION = "BOUNTY_CLIENT_VALIDATION"
     STATUS_CHOICES = [
         (STATUS_SUBMITTED, STATUS_SUBMITTED),
         (STATUS_PENDING_CLIENT_VALIDATION, STATUS_PENDING_CLIENT_VALIDATION),
@@ -510,6 +542,8 @@ class Booking(models.Model):
         (STATUS_WAITING_PROVIDER_ASSIGNMENT, STATUS_WAITING_PROVIDER_ASSIGNMENT),
         (STATUS_CONFIRMED, STATUS_CONFIRMED),
         (STATUS_CANCELLED, STATUS_CANCELLED),
+        (STATUS_BOUNTY_OPEN, STATUS_BOUNTY_OPEN),
+        (STATUS_BOUNTY_CLIENT_VALIDATION, STATUS_BOUNTY_CLIENT_VALIDATION),
     ]
 
     KIND_PROVIDER_SELECTED = "PROVIDER_SELECTED"
@@ -533,9 +567,23 @@ class Booking(models.Model):
     )
 
     booking_id = models.CharField(max_length=64, unique=True)
-    booking_kind = models.CharField(max_length=32, choices=KIND_CHOICES, default=KIND_PROVIDER_SELECTED)
-    provider = models.ForeignKey(Provider, on_delete=models.SET_NULL, related_name="bookings", null=True, blank=True)
-    service = models.ForeignKey(Service, on_delete=models.SET_NULL, related_name="bookings", null=True, blank=True)
+    booking_kind = models.CharField(
+        max_length=32, choices=KIND_CHOICES, default=KIND_PROVIDER_SELECTED
+    )
+    provider = models.ForeignKey(
+        Provider,
+        on_delete=models.SET_NULL,
+        related_name="bookings",
+        null=True,
+        blank=True,
+    )
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.SET_NULL,
+        related_name="bookings",
+        null=True,
+        blank=True,
+    )
     requested_marketing_service = models.ForeignKey(
         "interface.MarketingService",
         on_delete=models.SET_NULL,
@@ -569,7 +617,11 @@ class Booking(models.Model):
     provider_price_estimate_cents = models.IntegerField(null=True, blank=True)
     chateau_rose_fee_cents = models.IntegerField(default=0)
     amount_due_now_cents = models.IntegerField(default=0)
-    payment_status = models.CharField(max_length=32, choices=PAYMENT_STATUS_CHOICES, default=PAYMENT_STATUS_REQUIRES_PAYMENT)
+    payment_status = models.CharField(
+        max_length=32,
+        choices=PAYMENT_STATUS_CHOICES,
+        default=PAYMENT_STATUS_REQUIRES_PAYMENT,
+    )
     payment_auth_id = models.CharField(max_length=64, blank=True)
     status = models.CharField(max_length=64, choices=STATUS_CHOICES)
     alternative_requested_at = models.DateTimeField(null=True, blank=True)
@@ -588,6 +640,8 @@ class Booking(models.Model):
         help_text="Date d'entrée dans le statut courant, utilisée pour calculer son expiration.",
     )
     client_reminder_sent_at = models.DateTimeField(null=True, blank=True)
+    initial_provider_deadline_at = models.DateTimeField(null=True, blank=True)
+    process_expires_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.booking_id} - {self.status}"
@@ -619,6 +673,92 @@ class Booking(models.Model):
             if url:
                 resolved.append(url)
         return resolved
+
+
+class BookingOpportunity(models.Model):
+    REASON_GENERIC = "GENERIC"
+    REASON_PROVIDER_TIMEOUT = "PROVIDER_TIMEOUT"
+    REASON_PROVIDER_REJECTED = "PROVIDER_REJECTED"
+    REASON_CHOICES = (
+        (REASON_GENERIC, "Demande générique"),
+        (REASON_PROVIDER_TIMEOUT, "Délai prestataire expiré"),
+        (REASON_PROVIDER_REJECTED, "Refus prestataire"),
+    )
+    STATUS_OPEN = "OPEN"
+    STATUS_OFFERED = "OFFERED"
+    STATUS_EXPIRED = "EXPIRED"
+    STATUS_CANCELLED = "CANCELLED"
+    STATUS_CHOICES = tuple(
+        (value, value)
+        for value in (STATUS_OPEN, STATUS_OFFERED, STATUS_EXPIRED, STATUS_CANCELLED)
+    )
+
+    booking = models.ForeignKey(
+        Booking, on_delete=models.CASCADE, related_name="opportunities"
+    )
+    reason = models.CharField(max_length=32, choices=REASON_CHOICES)
+    requested_sub_service = models.ForeignKey(
+        "interface.MarketingSubService",
+        on_delete=models.PROTECT,
+        related_name="booking_opportunities",
+    )
+    excluded_provider = models.ForeignKey(
+        Provider,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="excluded_booking_opportunities",
+    )
+    status = models.CharField(
+        max_length=16, choices=STATUS_CHOICES, default=STATUS_OPEN
+    )
+    opened_at = models.DateTimeField()
+    response_deadline_at = models.DateTimeField()
+    closed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("booking",),
+                condition=models.Q(status="OPEN"),
+                name="one_open_opportunity_per_booking",
+            )
+        ]
+
+
+class BookingOffer(models.Model):
+    STATUS_PENDING_CLIENT = "PENDING_CLIENT"
+    STATUS_ACCEPTED = "ACCEPTED"
+    STATUS_REJECTED = "REJECTED"
+    STATUS_EXPIRED = "EXPIRED"
+    STATUS_CHOICES = tuple(
+        (value, value)
+        for value in (
+            STATUS_PENDING_CLIENT,
+            STATUS_ACCEPTED,
+            STATUS_REJECTED,
+            STATUS_EXPIRED,
+        )
+    )
+
+    opportunity = models.OneToOneField(
+        BookingOpportunity, on_delete=models.CASCADE, related_name="offer"
+    )
+    provider = models.ForeignKey(
+        Provider, on_delete=models.PROTECT, related_name="booking_offers"
+    )
+    service = models.ForeignKey(
+        Service, on_delete=models.PROTECT, related_name="booking_offers"
+    )
+    proposed_date = models.CharField(max_length=128)
+    proposed_price_cents = models.PositiveIntegerField()
+    message = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=24, choices=STATUS_CHOICES, default=STATUS_PENDING_CLIENT
+    )
+    submitted_at = models.DateTimeField()
+    client_deadline_at = models.DateTimeField()
+    decided_at = models.DateTimeField(null=True, blank=True)
 
 
 class ProviderServiceFeeCoupon(models.Model):
@@ -659,8 +799,16 @@ class VerifiedReview(models.Model):
         null=True,
         blank=True,
     )
-    provider = models.ForeignKey(Provider, on_delete=models.CASCADE, related_name="verified_reviews")
-    service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True, related_name="verified_reviews")
+    provider = models.ForeignKey(
+        Provider, on_delete=models.CASCADE, related_name="verified_reviews"
+    )
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="verified_reviews",
+    )
     client_name = models.CharField(max_length=255, blank=True)
     client_email = models.EmailField(blank=True)
     rating = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -670,7 +818,9 @@ class VerifiedReview(models.Model):
         default=True,
         help_text="Décochez pour les avis republiés depuis une source externe autorisée.",
     )
-    moderation_status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    moderation_status = models.CharField(
+        max_length=16, choices=STATUS_CHOICES, default=STATUS_PENDING
+    )
     service_performed = models.CharField(max_length=255, blank=True)
     performed_at = models.DateTimeField(null=True, blank=True)
     provider_contested_at = models.DateTimeField(null=True, blank=True)
@@ -700,7 +850,9 @@ class VerifiedReview(models.Model):
 
     @property
     def is_published(self):
-        return self.consent_to_publish and self.moderation_status == self.STATUS_APPROVED
+        return (
+            self.consent_to_publish and self.moderation_status == self.STATUS_APPROVED
+        )
 
     @property
     def public_trust_label(self):
@@ -713,6 +865,7 @@ class VerifiedReview(models.Model):
         if self.rating is None:
             return ""
         from chateaurose.domain.services.reviews import rating_label
+
         return rating_label(self.rating)
 
     def clean(self):
@@ -729,9 +882,12 @@ class VerifiedReview(models.Model):
     def save(self, *args, **kwargs):
         was_published = False
         if self.pk:
-            previous = type(self).objects.filter(pk=self.pk).values(
-                "consent_to_publish", "moderation_status"
-            ).first()
+            previous = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values("consent_to_publish", "moderation_status")
+                .first()
+            )
             if previous:
                 was_published = (
                     previous["consent_to_publish"]
@@ -759,14 +915,15 @@ class VerifiedReview(models.Model):
         from django.conf import settings
         from chateaurose.infrastructure.email_notifier import EmailNotifier
 
-        recipient = (
-            getattr(settings, "REVIEW_PUBLISHED_NOTIFICATION_EMAIL", "")
-            or getattr(settings, "OPERATIONS_EMAIL", "")
-        )
+        recipient = getattr(
+            settings, "REVIEW_PUBLISHED_NOTIFICATION_EMAIL", ""
+        ) or getattr(settings, "OPERATIONS_EMAIL", "")
         if not recipient:
             return
         subject = f"Avis publié pour {self.provider.name}"
-        rating_label = f"{self.rating}/5" if self.rating is not None else "non renseignée"
+        rating_label = (
+            f"{self.rating}/5" if self.rating is not None else "non renseignée"
+        )
         body = (
             "Un avis vient d'être publié sur Château Rose.\n\n"
             f"Prestataire : {self.provider.name}\n"
@@ -780,7 +937,9 @@ class VerifiedReview(models.Model):
 
 
 class ReviewInvitation(models.Model):
-    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name="review_invitation")
+    booking = models.OneToOneField(
+        Booking, on_delete=models.CASCADE, related_name="review_invitation"
+    )
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     sent_count = models.PositiveSmallIntegerField(default=0)
     last_sent_at = models.DateTimeField(null=True, blank=True)

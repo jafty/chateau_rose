@@ -95,13 +95,13 @@ class BookingActionTests(TestCase):
         )
 
         booking.refresh_from_db()
-        self.assertEqual(booking.status, "CANCELLED")
-        self.assertEqual(payment_stub.released, ["pi_auth_expired"])
+        self.assertEqual(booking.status, Booking.STATUS_AWAITING_ALTERNATIVE_PROVIDER)
+        self.assertEqual(payment_stub.released, [])
         self.assertEqual(len(notifier_stub.messages), 3)
         self.assertEqual(notifier_stub.messages[-1]["subject"], f"Demande expirée · {booking.booking_id}")
 
         confirmation = self.client.get(reverse("interface:client_confirmation", args=[booking.booking_id]), data={"status": "expired"})
-        self.assertContains(confirmation, "Cette demande a expiré après 72h sans confirmation")
+        self.assertContains(confirmation, "La priorité de la prestataire initiale a expiré")
 
     def test_admin_cancel_can_cancel_expired_uncaptured_booking(self):
         from interface import views

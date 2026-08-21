@@ -7,3 +7,4 @@ from . import import_marketing_content  # noqa: F401
 from . import prepare_booking_recap  # noqa: F401
 from . import create_booking_request  # noqa: F401
 from . import assign_provider_to_booking  # noqa: F401
+from . import bounty  # noqa: F401

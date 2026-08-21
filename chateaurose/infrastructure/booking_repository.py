@@ -5,7 +5,11 @@ from chateaurose.domain.exceptions import NotFound
 
 class DjangoBookingRepository:
     def add(self, booking: BookingRequest):
-        provider_obj = Provider.objects.get(id=booking.provider_id) if booking.provider_id else None
+        provider_obj = (
+            Provider.objects.get(id=booking.provider_id)
+            if booking.provider_id
+            else None
+        )
         service_obj = None
         if booking.service_id:
             service_queryset = Service.objects.filter(id=booking.service_id)
@@ -22,7 +26,8 @@ class DjangoBookingRepository:
             service=service_obj,
             requested_marketing_service_id=booking.requested_marketing_service_id,
             requested_marketing_sub_service_id=booking.requested_marketing_sub_service_id,
-            requested_service_label_snapshot=booking.requested_service_label_snapshot or "",
+            requested_service_label_snapshot=booking.requested_service_label_snapshot
+            or "",
             requested_options=booking.requested_options or [],
             client_name=booking.client_contact.get("name", ""),
             client_email=booking.client_contact.get("email", ""),
@@ -50,6 +55,8 @@ class DjangoBookingRepository:
             created_at=booking.created_at,
             updated_at=updated_at,
             state_entered_at=booking.state_entered_at or updated_at,
+            initial_provider_deadline_at=booking.initial_provider_deadline_at,
+            process_expires_at=booking.process_expires_at,
         )
         return booking
 
@@ -61,7 +68,11 @@ class DjangoBookingRepository:
         return self._to_domain(obj)
 
     def update(self, booking: BookingRequest):
-        provider_obj = Provider.objects.get(id=booking.provider_id) if booking.provider_id else None
+        provider_obj = (
+            Provider.objects.get(id=booking.provider_id)
+            if booking.provider_id
+            else None
+        )
         service_obj = None
         if booking.service_id:
             service_queryset = Service.objects.filter(id=booking.service_id)
@@ -77,7 +88,8 @@ class DjangoBookingRepository:
             service=service_obj,
             requested_marketing_service_id=booking.requested_marketing_service_id,
             requested_marketing_sub_service_id=booking.requested_marketing_sub_service_id,
-            requested_service_label_snapshot=booking.requested_service_label_snapshot or "",
+            requested_service_label_snapshot=booking.requested_service_label_snapshot
+            or "",
             requested_options=booking.requested_options or [],
             client_name=booking.client_contact.get("name", ""),
             client_email=booking.client_contact.get("email", ""),
@@ -105,6 +117,8 @@ class DjangoBookingRepository:
             created_at=booking.created_at,
             updated_at=updated_at,
             state_entered_at=booking.state_entered_at or updated_at,
+            initial_provider_deadline_at=booking.initial_provider_deadline_at,
+            process_expires_at=booking.process_expires_at,
         )
         if not count:
             raise NotFound(f"Booking {booking.id} not found")
@@ -116,11 +130,23 @@ class DjangoBookingRepository:
             booking_kind=obj.booking_kind,
             provider_id=str(obj.provider_id) if obj.provider_id else None,
             service_id=str(obj.service_id) if obj.service_id else None,
-            requested_marketing_service_id=str(obj.requested_marketing_service_id) if obj.requested_marketing_service_id else None,
-            requested_marketing_sub_service_id=str(obj.requested_marketing_sub_service_id) if obj.requested_marketing_sub_service_id else None,
+            requested_marketing_service_id=(
+                str(obj.requested_marketing_service_id)
+                if obj.requested_marketing_service_id
+                else None
+            ),
+            requested_marketing_sub_service_id=(
+                str(obj.requested_marketing_sub_service_id)
+                if obj.requested_marketing_sub_service_id
+                else None
+            ),
             requested_service_label_snapshot=obj.requested_service_label_snapshot or "",
             requested_options=obj.requested_options or [],
-            client_contact={"name": obj.client_name, "email": obj.client_email, "phone": obj.client_phone},
+            client_contact={
+                "name": obj.client_name,
+                "email": obj.client_email,
+                "phone": obj.client_phone,
+            },
             location=obj.location,
             location_preference=obj.location_preference or None,
             desired_date=obj.desired_date,
@@ -144,4 +170,6 @@ class DjangoBookingRepository:
             updated_at=obj.updated_at,
             state_entered_at=obj.state_entered_at,
             client_address=obj.client_address or None,
+            initial_provider_deadline_at=obj.initial_provider_deadline_at,
+            process_expires_at=obj.process_expires_at,
         )

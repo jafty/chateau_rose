@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Proposition de rendez-vous{% endblock %}
+{% block content %}<section class="container paper-card">
+{% if error %}<div class="alert danger">{{ error }}</div>{% endif %}{% if message %}<div class="alert success">{{ message }}</div>{% endif %}
+{% if offer and not message %}<h1>{{ offer.provider.name }} souhaite prendre en charge ta demande</h1>
+<p><a href="{% url 'interface:provider_detail' offer.provider.id %}">Voir son profil</a></p>
+<p>Date : {{ offer.proposed_date }}</p><p>Prix à régler le jour J : {{ offer.proposed_price_cents }} centimes</p>
+<p>Les frais Château Rose déjà traités ne changent pas.</p>{% if offer.message %}<p>{{ offer.message }}</p>{% endif %}
+<form method="post">{% csrf_token %}<button class="btn" name="decision" value="accept">Accepter</button><button class="btn secondary" name="decision" value="reject">Refuser</button></form>{% endif %}
+</section>{% endblock %}
