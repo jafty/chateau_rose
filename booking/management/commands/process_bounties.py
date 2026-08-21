@@ -59,7 +59,11 @@ class Command(BaseCommand):
                 notifier.notify(
                     booking.client_email,
                     "Demande annulée",
-                    "Aucune prestataire n'a proposé de prendre en charge ta demande dans le délai prévu. Ton autorisation de paiement a été libérée.",
+                    f"Bonjour {booking.client_name},\n\n"
+                    "Nous sommes désolés, aucune prestataire n'a proposé de prendre en charge "
+                    "ta demande dans le délai prévu. Ta demande a donc été annulée.\n\n"
+                    "Ton autorisation de paiement a bien été libérée.\n\n"
+                    "À bientôt,\nL'équipe Château Rose",
                 )
 
         for offer in BookingOffer.objects.filter(
@@ -81,6 +85,10 @@ class Command(BaseCommand):
                 notifier.notify(
                     booking.client_email,
                     "Proposition expirée",
-                    "La proposition n'a pas été acceptée dans le délai prévu. La demande est annulée et ton autorisation de paiement a été libérée.",
+                    f"Bonjour {booking.client_name},\n\n"
+                    "La proposition n'a pas été acceptée dans le délai prévu. "
+                    "Ta demande a donc été annulée.\n\n"
+                    "Ton autorisation de paiement a bien été libérée.\n\n"
+                    "À bientôt,\nL'équipe Château Rose",
                 )
         self.stdout.write(self.style.SUCCESS("Bounties processed."))

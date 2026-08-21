@@ -6,6 +6,8 @@ from django.core.validators import validate_email
 from django.utils import timezone
 
 from chateaurose.domain.services.reviews import rating_label
+from chateaurose.domain.exceptions import ValidationError as DomainValidationError
+from chateaurose.domain.services.booking_deadlines import require_minimum_notice
 
 from booking.models import Provider
 from chateaurose.infrastructure.provider_catalog import SALON_LOCATION_LABEL
@@ -55,12 +57,16 @@ class ServiceRequestForm(forms.ModelForm):
             try:
                 validate_email(raw_contact)
             except ValidationError:
-                raise forms.ValidationError("Entre un email valide ou un numéro WhatsApp valide.")
+                raise forms.ValidationError(
+                    "Entre un email valide ou un numéro WhatsApp valide."
+                )
             return {"kind": "email", "value": raw_contact.lower()}
 
         phone = "".join(char for char in raw_contact if char.isdigit() or char == "+")
         if len(phone.replace("+", "")) < 8:
-            raise forms.ValidationError("Entre un numéro WhatsApp valide ou un email valide.")
+            raise forms.ValidationError(
+                "Entre un numéro WhatsApp valide ou un email valide."
+            )
         return {"kind": "phone", "value": phone}
 
     def save(self, commit=True):
@@ -95,7 +101,9 @@ class GenericBookingRequestForm(forms.Form):
     def clean_desired_date(self):
         raw_value = (self.cleaned_data.get("desired_date") or "").strip()
         if not raw_value:
-            raise forms.ValidationError("Indique une date, un horaire ou tes disponibilités.")
+            raise forms.ValidationError(
+                "Indique une date, un horaire ou tes disponibilités."
+            )
         for date_format in ("%Y-%m-%dT%H:%M", "%d/%m/%Y %H:%M", "%Y-%m-%d"):
             try:
                 parsed = datetime.strptime(raw_value, date_format)
@@ -145,17 +153,28 @@ class ProviderBookingRequestForm(forms.Form):
         if self.partial_prefill_mode and not raw_value:
             return ""
         if not raw_value:
-            raise forms.ValidationError("Merci d'utiliser une date au format JJ/MM/AAAA HH:MM.")
+            raise forms.ValidationError(
+                "Merci d'utiliser une date au format JJ/MM/AAAA HH:MM."
+            )
 
         for date_format in ("%Y-%m-%dT%H:%M", "%d/%m/%Y %H:%M", "%Y-%m-%d"):
             try:
                 parsed = datetime.strptime(raw_value, date_format)
                 aware_date = timezone.make_aware(parsed)
+                try:
+                    require_minimum_notice(
+                        desired_at=aware_date,
+                        now=timezone.now(),
+                    )
+                except DomainValidationError as exc:
+                    raise forms.ValidationError(str(exc)) from exc
                 return aware_date.isoformat()
             except (ValueError, TypeError):
                 continue
 
-        raise forms.ValidationError("Merci d'utiliser une date au format JJ/MM/AAAA HH:MM.")
+        raise forms.ValidationError(
+            "Merci d'utiliser une date au format JJ/MM/AAAA HH:MM."
+        )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -170,7 +189,11 @@ class ProviderBookingRequestForm(forms.Form):
             if selected_adjustments in (None, ""):
                 cleaned_data["general_adjustments"] = []
             elif isinstance(selected_adjustments, list):
-                cleaned_data["general_adjustments"] = [str(item).strip() for item in selected_adjustments if str(item).strip()]
+                cleaned_data["general_adjustments"] = [
+                    str(item).strip()
+                    for item in selected_adjustments
+                    if str(item).strip()
+                ]
             else:
                 raise forms.ValidationError("Format de suppléments invalide.")
 
@@ -203,8 +226,9 @@ class ProviderBookingRequestForm(forms.Form):
                     "L'adresse de la prestataire doit être renseignée pour confirmer un rendez-vous."
                 )
         elif not location:
-            self.add_error("location", "Merci de choisir une zone pour le rendez-vous à domicile.")
-
+            self.add_error(
+                "location", "Merci de choisir une zone pour le rendez-vous à domicile."
+            )
 
         if self.require_payment_auth and not cleaned_data.get("payment_auth_id"):
             raise forms.ValidationError(
@@ -214,12 +238,13 @@ class ProviderBookingRequestForm(forms.Form):
         if self.provider and not self.provider.provides_meche:
             cleaned_data["meche"] = False
 
-
         selected_adjustments = cleaned_data.get("general_adjustments")
         if selected_adjustments in (None, ""):
             cleaned_data["general_adjustments"] = []
         elif isinstance(selected_adjustments, list):
-            cleaned_data["general_adjustments"] = [str(item).strip() for item in selected_adjustments if str(item).strip()]
+            cleaned_data["general_adjustments"] = [
+                str(item).strip() for item in selected_adjustments if str(item).strip()
+            ]
         else:
             raise forms.ValidationError("Format de suppléments invalide.")
 
@@ -229,11 +254,13 @@ class ProviderBookingRequestForm(forms.Form):
         return cleaned_data
 
 
-
 class ProviderQuestionForm(forms.Form):
     client_name = forms.CharField(label="Ton nom")
     client_email = forms.EmailField(label="Email")
-    message = forms.CharField(label="Ta question", widget=forms.Textarea(attrs={"rows": 4}))
+    message = forms.CharField(
+        label="Ta question", widget=forms.Textarea(attrs={"rows": 4})
+    )
+
 
 class VerifiedReviewForm(forms.Form):
     rating = forms.ChoiceField(
@@ -243,7 +270,9 @@ class VerifiedReviewForm(forms.Form):
     )
     comment = forms.CharField(
         label="Ton avis",
-        widget=forms.Textarea(attrs={"rows": 5, "placeholder": "Raconte ton expérience en quelques mots."}),
+        widget=forms.Textarea(
+            attrs={"rows": 5, "placeholder": "Raconte ton expérience en quelques mots."}
+        ),
     )
     consent_to_publish = forms.BooleanField(
         label="J'accepte que mon avis soit relu puis publié sur Château Rose avec mon prénom abrégé.",

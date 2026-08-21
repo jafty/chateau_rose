@@ -5,7 +5,8 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from booking.models import Booking, BookingOpportunity, Provider, Service
@@ -16,6 +17,14 @@ from chateaurose.infrastructure.bounty_service import (
 from interface.models import MarketingService, MarketingSubService
 
 
+@override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+        },
+    }
+)
 class BountyServiceTests(TestCase):
     def setUp(self):
         self.marketing_service = MarketingService.objects.create(
@@ -78,6 +87,10 @@ class BountyServiceTests(TestCase):
         self.assertEqual(list(eligible_services(opportunity)), [self.candidate_service])
         self.assertEqual(opportunity.booking.status, Booking.STATUS_BOUNTY_OPEN)
         self.assertEqual(notify.call_count, 1)
+        provider_email = notify.call_args.args[2]
+        self.assertTrue(provider_email.startswith("Bonjour Candidate,"))
+        self.assertIn("Prestation : Knotless S", provider_email)
+        self.assertIn("L'équipe Château Rose", provider_email)
 
     @patch(
         "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
@@ -116,6 +129,25 @@ class BountyServiceTests(TestCase):
             ).exists()
         )
         notify.assert_called_once()
+
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_provider_offer_prefills_the_generic_estimated_price(self, notify):
+        opportunity = open_for_booking(
+            self.booking().booking_id, reason=BookingOpportunity.REASON_GENERIC
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("providers:bounty_offer", args=[opportunity.id])
+        )
+
+        self.assertContains(response, 'value="100.00"')
+        self.assertContains(
+            response,
+            "Estimation calculée lors de la demande : 100.00 €",
+        )
 
     @patch("chateaurose.infrastructure.bounty_service.payments.release_auth")
     @patch(
