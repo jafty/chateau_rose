@@ -726,3 +726,37 @@ class ServicePagesTests(TestCase):
         self.assertEqual(booking.provider_price_estimate_cents, 14500)
         self.assertEqual(booking.amount_due_now_cents, 0)
         self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_WAIVED)
+
+    def test_global_coupon_waives_fee_for_enabled_generic_booking(self):
+        from booking.models import Booking, GlobalServiceFeeCoupon
+
+        GlobalServiceFeeCoupon.objects.create(code="universal")
+        self.sub_service.generic_booking_enabled = True
+        self.sub_service.generic_base_price_cents = 10000
+        self.sub_service.generic_hair_length_adjustments = {"standard": 0}
+        self.sub_service.generic_service_fee_percentage = 15
+        self.sub_service.save()
+
+        response = self.client.post(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]),
+            {
+                "request_service": "1",
+                "client_name": "Awa Coupon",
+                "client_email": "awa-coupon@example.com",
+                "client_phone": "0600000000",
+                "desired_date": (timezone.now() + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M"),
+                "location_preference": "salon",
+                "hair_length": "standard",
+                "type_adjustment": "standard",
+                "service_fee_coupon_code": "UNIVERSAL",
+            },
+        )
+
+        recap_response = self.client.get(response["Location"])
+        self.assertContains(recap_response, "Aucun paiement en ligne requis")
+        confirmation = self.client.post(response["Location"])
+        self.assertRedirects(confirmation, reverse("interface:thank_you_quick_request"))
+        booking = Booking.objects.get(client_email="awa-coupon@example.com")
+        self.assertEqual(booking.chateau_rose_fee_cents, 0)
+        self.assertEqual(booking.amount_due_now_cents, 0)
+        self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_WAIVED)

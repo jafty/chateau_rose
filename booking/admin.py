@@ -22,6 +22,7 @@ from .models import (
     Booking,
     BookingOffer,
     BookingOpportunity,
+    GlobalServiceFeeCoupon,
     Provider,
     ProviderBeforeAppointmentItem,
     ProviderMarketingService,
@@ -358,6 +359,14 @@ class ProviderServiceFeeCouponAdmin(admin.ModelAdmin):
     list_display = ("provider", "code", "is_active", "created_at")
     list_filter = ("provider", "is_active")
     search_fields = ("code", "provider__name")
+
+
+@admin.register(GlobalServiceFeeCoupon)
+class GlobalServiceFeeCouponAdmin(admin.ModelAdmin):
+    list_display = ("code", "is_active", "created_at")
+    list_filter = ("is_active",)
+    search_fields = ("code",)
+    readonly_fields = ("created_at",)
 
 
 @admin.register(ProviderPhoto)

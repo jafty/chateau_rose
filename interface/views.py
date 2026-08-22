@@ -22,6 +22,7 @@ from django.urls import reverse
 
 from booking.models import (
     Booking,
+    GlobalServiceFeeCoupon,
     Provider,
     ReviewInvitation,
     VerifiedReview,
@@ -106,15 +107,20 @@ def _confirmed_provider_contact(provider, *, is_confirmed: bool) -> dict:
     }
 
 
-def _provider_coupon_is_valid(provider: Provider, code: str | None) -> bool:
+def _service_fee_coupon_is_valid(code: str | None, *, provider: Provider | None = None) -> bool:
     normalized_code = (code or "").strip().upper()
     if not normalized_code:
         return False
-    return ProviderServiceFeeCoupon.objects.filter(
-        provider=provider,
-        is_active=True,
-        code=normalized_code,
-    ).exists()
+    if GlobalServiceFeeCoupon.objects.filter(is_active=True, code=normalized_code).exists():
+        return True
+    return bool(
+        provider
+        and ProviderServiceFeeCoupon.objects.filter(
+            provider=provider,
+            is_active=True,
+            code=normalized_code,
+        ).exists()
+    )
 
 
 def _create_interaction(
@@ -1022,7 +1028,7 @@ def provider_booking_recap(request, token):
         raise Http404(str(exc))
 
     coupon_code = (payload.get("service_fee_coupon_code") or "").strip().upper()
-    service_fee_waived = _provider_coupon_is_valid(provider, coupon_code)
+    service_fee_waived = _service_fee_coupon_is_valid(coupon_code, provider=provider)
     checkout_amounts = compute_service_fee_only_amounts_cents(
         subtotal_cents=total_cents,
         service_fee_percentage=provider.service_fee_percentage if provider.service_fee_percentage is not None else 15,
@@ -1250,7 +1256,7 @@ def generic_booking_recap(request, token):
         generic_booking_enabled=True,
     )
     coupon_code = (payload.get("service_fee_coupon_code") or "").strip().upper()
-    service_fee_waived = coupon_code in {"VIPZERO", "ROSEZERO", "GRATUIT"}
+    service_fee_waived = _service_fee_coupon_is_valid(coupon_code)
     try:
         amounts = _estimate_generic_sub_service_booking(
             sub_service,
@@ -1401,7 +1407,7 @@ def provider_payment_intent(request):
                     "requested_options": general_adjustments,
                     "location_preference": location_preference or "salon",
                 },
-                waive_service_fee=service_fee_coupon_code in {"VIPZERO", "ROSEZERO", "GRATUIT"},
+                waive_service_fee=_service_fee_coupon_is_valid(service_fee_coupon_code),
             )
         except ValidationError as exc:
             message = str(exc)
@@ -1445,7 +1451,7 @@ def provider_payment_intent(request):
 
         provider_for_coupon = Provider.objects.filter(id=provider_id).first()
         service_fee_waived = bool(
-            provider_for_coupon and _provider_coupon_is_valid(provider_for_coupon, service_fee_coupon_code)
+            _service_fee_coupon_is_valid(service_fee_coupon_code, provider=provider_for_coupon)
         )
 
         try:
@@ -1910,7 +1916,7 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
 
     if is_request_submission and form.is_valid():
         coupon_code = (form.cleaned_data.get("service_fee_coupon_code") or "").strip().upper()
-        waive_service_fee = coupon_code in {"VIPZERO", "ROSEZERO", "GRATUIT"}
+        waive_service_fee = _service_fee_coupon_is_valid(coupon_code)
         provider_estimate_cents = 0
         generic_fee_cents = int(getattr(settings, "GENERIC_BOOKING_PLATFORM_FEE_CENTS", 0) or 0)
         if sub_service and sub_service.generic_booking_enabled:
