@@ -1,7 +1,28 @@
+from datetime import timedelta
+
 from django.test import TestCase
+from django.utils import timezone
 
 from booking.models import Provider, Zone
-from interface.forms import ProviderBookingRequestForm
+from interface.forms import GenericBookingRequestForm, ProviderBookingRequestForm
+
+
+class GenericBookingRequestFormTests(TestCase):
+    def test_desired_date_requires_at_least_24_hours_notice(self):
+        form = GenericBookingRequestForm(
+            data={
+                "client_name": "Alice",
+                "client_email": "test@example.com",
+                "client_phone": "0600000000",
+                "desired_date": (timezone.now() + timedelta(hours=23)).strftime("%Y-%m-%dT%H:%M"),
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "Le rendez-vous doit être demandé au moins 24 heures à l'avance.",
+            form.errors.get("desired_date", []),
+        )
 
 
 class ProviderBookingRequestFormTests(TestCase):

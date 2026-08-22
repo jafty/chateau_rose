@@ -321,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const atHomeAdj = locationPreference === 'domicile' ? (pricingData.at_home_bonus || 0) : 0;
         const nocturnalAdj = isNocturnal() ? (pricingData.nocturnal_supplement || 0) : 0;
         if (nocturnalWarning) nocturnalWarning.hidden = !isNocturnal();
+        window.chateauRoseBookingDatetime?.sync(desiredDateInput);
         const displayTotalWithFees = displayEstimateWithFees({
             base: pricingData.base,
             adjustments: [lengthAdj, typeAdj, adjustmentTotal, atHomeAdj, nocturnalAdj],
