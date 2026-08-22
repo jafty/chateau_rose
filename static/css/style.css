@@ -4979,6 +4979,11 @@ footer {
     line-height: 1.35;
 }
 
+.booking-recap-page .receipt-amount {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 .booking-recap-page .receipt-line--estimated {
     color: var(--ink-secondary);
     font-size: 0.9rem;

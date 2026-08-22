@@ -35,7 +35,7 @@
                         <div class="timeline-icon" aria-hidden="true">2</div>
                         <div class="timeline-content">
                             <h3>2. Nous recherchons une coiffeuse compatible</h3>
-                            <p>Château Rose transmet ta demande à une coiffeuse adaptée. Elle dispose de 12 h maximum pour accepter, refuser ou proposer un ajustement. Si elle propose une modification de la prestation ou du tarif, tu restes libre de l'accepter ou de la refuser.</p>
+                            <p>Château Rose transmet ta demande à une coiffeuse adaptée. Tu restes libre d'accepter ou de refuser tout ajustement proposé.</p>
                         </div>
                     </div>
                     <div class="timeline-step">
@@ -56,18 +56,18 @@
                     </div>
                     <div class="receipt-line receipt-line--strong">
                         <span>Si le rendez-vous est confirmé<br><small>Frais Château Rose</small></span>
-                        <span>{{ service_fee_price }}</span>
+                        <span class="receipt-amount">{{ service_fee_price }}</span>
                     </div>
                     <p class="receipt-help">Ces frais servent à traiter ta demande, rechercher une coiffeuse compatible et confirmer ton rendez-vous.</p>
                     <div class="receipt-line receipt-line--strong">
                         <span>Le jour du rendez-vous<br><small>Prix estimé de la prestation, à régler directement à la coiffeuse</small></span>
-                        <span>{{ subtotal_price }}</span>
+                        <span class="receipt-amount">{{ subtotal_price }}</span>
                     </div>
                     <p class="receipt-help">La coiffeuse peut proposer un autre tarif selon ta demande. Aucun changement n'est appliqué sans ton accord : tu peux l'accepter ou le refuser avant la confirmation.</p>
                     <div class="receipt-divider receipt-divider--spaced"></div>
                     <div class="receipt-line receipt-line--estimated">
                         <span>Budget total estimé</span>
-                        <span>{{ total_price }}</span>
+                        <span class="receipt-amount">{{ total_price }}</span>
                     </div>
                     <form method="post" id="generic-recap-confirm-form">
                         {% csrf_token %}

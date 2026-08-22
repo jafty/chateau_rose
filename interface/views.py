@@ -1342,7 +1342,7 @@ def generic_booking_recap(request, token):
         "interface/provider_booking_recap.html",
         {
             "provider": None,
-            "provider_name_display": "la prestataire assignée",
+            "provider_name_display": "À confirmer",
             "draft": None,
             "payload": recap_payload,
             "payload_options_json": json.dumps(recap_payload["general_adjustments"]),
