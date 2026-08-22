@@ -21,14 +21,12 @@ def canonical_url(request):
         "addressCountry": settings.BUSINESS_COUNTRY,
     }
     business_schema_id = f"{base_url}#business"
-    business_phone_tel = settings.BUSINESS_PHONE.replace(" ", "")
     business_schema = {
         "@context": "https://schema.org",
         "@type": "LocalBusiness",
         "@id": business_schema_id,
         "name": settings.BUSINESS_NAME,
         "url": base_url,
-        "telephone": business_phone_tel,
         "address": business_address,
     }
 
@@ -36,8 +34,6 @@ def canonical_url(request):
         "canonical_url": canonical,
         "og_image_url": og_image_url,
         "business_name": settings.BUSINESS_NAME,
-        "business_phone": settings.BUSINESS_PHONE,
-        "business_phone_tel": business_phone_tel,
         "business_street_address": settings.BUSINESS_STREET_ADDRESS,
         "business_postal_code": settings.BUSINESS_POSTAL_CODE,
         "business_city": settings.BUSINESS_CITY,

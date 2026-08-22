@@ -84,8 +84,6 @@ provider_directory = DjangoProviderDirectory()
 
 FEATURED_SERVICE_SLUGS = ["tresses", "locks", "tissage", "vanilles"]
 SUPPORT_EMAIL = (getattr(settings, "OPERATIONS_EMAIL", "") or "japhet.situmonana@gmail.com").strip()
-SUPPORT_PHONE_DISPLAY = "+33 6 49 49 14 49"
-SUPPORT_PHONE_TEL = "+33649491449"
 
 
 def _confirmed_provider_contact(provider, *, is_confirmed: bool) -> dict:
@@ -896,8 +894,6 @@ def provider_detail(request, provider_id, quick_checkout=None):
         "recap_token": recap_token,
         "recap_message": recap_message,
         "can_save_partial_prefill": can_save_partial_prefill,
-        "support_phone_display": SUPPORT_PHONE_DISPLAY,
-        "support_phone_tel": SUPPORT_PHONE_TEL,
         "published_reviews": published_reviews,
         "review_badge": review_badge,
     }
@@ -2198,8 +2194,6 @@ def service_page(request, service_slug: str):
             "seo_section_heading": f"{service_meta.name} : ce qu'il faut savoir",
             "seo_intro": intro,
             "seo_long_description": long_description,
-            "support_phone_display": SUPPORT_PHONE_DISPLAY,
-            "support_phone_tel": SUPPORT_PHONE_TEL,
             "generic_pricing_data": json.dumps({}, ensure_ascii=False),
         },
     )
@@ -2281,8 +2275,6 @@ def service_city_page(request, service_slug: str, city_slug: str):
             "seo_section_heading": f"{service_meta.name} : ce qu'il faut savoir",
             "seo_intro": intro,
             "seo_long_description": long_description,
-            "support_phone_display": SUPPORT_PHONE_DISPLAY,
-            "support_phone_tel": SUPPORT_PHONE_TEL,
             "generic_pricing_data": json.dumps({}, ensure_ascii=False),
         },
     )
@@ -2359,8 +2351,6 @@ def service_city_district_page(request, service_slug: str, city_slug: str, distr
             "seo_section_heading": f"{service_meta.name} : ce qu'il faut savoir",
             "seo_intro": intro,
             "seo_long_description": long_description,
-            "support_phone_display": SUPPORT_PHONE_DISPLAY,
-            "support_phone_tel": SUPPORT_PHONE_TEL,
             "generic_pricing_data": json.dumps({}, ensure_ascii=False),
         },
     )
@@ -2427,8 +2417,6 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
             "seo_section_heading": f"{sub_service.name} : l'essentiel",
             "seo_intro": sub_service.intro or marketing_content.intro,
             "seo_long_description": "",
-            "support_phone_display": SUPPORT_PHONE_DISPLAY,
-            "support_phone_tel": SUPPORT_PHONE_TEL,
             "generic_pricing_data": json.dumps(_generic_sub_service_pricing_data(sub_service), ensure_ascii=False),
         },
     )
@@ -2479,8 +2467,6 @@ def service_at_home_page(request, service_slug: str):
             "seo_section_heading": f"{page_service_name} : comment ça marche",
             "seo_intro": AT_HOME_MARKETING_COPY,
             "seo_long_description": "",
-            "support_phone_display": SUPPORT_PHONE_DISPLAY,
-            "support_phone_tel": SUPPORT_PHONE_TEL,
         },
     )
 
@@ -2538,8 +2524,6 @@ def sub_service_at_home_page(request, service_slug: str, sub_service_slug: str):
             "seo_section_heading": f"{page_service_name} : comment ça marche",
             "seo_intro": AT_HOME_MARKETING_COPY,
             "seo_long_description": "",
-            "support_phone_display": SUPPORT_PHONE_DISPLAY,
-            "support_phone_tel": SUPPORT_PHONE_TEL,
         },
     )
 

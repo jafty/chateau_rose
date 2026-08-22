@@ -95,7 +95,7 @@ class GenericBookingRequestForm(forms.Form):
         required=False,
     )
     hair_length = forms.CharField(label="Longueur de cheveux", required=False)
-    type_adjustment = forms.CharField(label="Type", required=False)
+    type_adjustment = forms.CharField(label="Format souhaité", required=False)
     requested_options = forms.CharField(label="Options souhaitées", required=False)
     free_text = forms.CharField(
         label="Informations complémentaires (facultatif)", required=False,
@@ -138,7 +138,7 @@ class ProviderBookingRequestForm(forms.Form):
     )
     desired_date = forms.CharField(label="Date souhaitée")
     hair_length = forms.CharField(label="Longueur de cheveux", required=False)
-    type_adjustment = forms.CharField(label="Type", required=False)
+    type_adjustment = forms.CharField(label="Format souhaité", required=False)
     general_adjustments = forms.JSONField(label="Suppléments", required=False)
     meche = forms.BooleanField(label="Besoin de mèches fournies", required=False)
     service_fee_coupon_code = forms.CharField(label="Code partenaire", required=False)
