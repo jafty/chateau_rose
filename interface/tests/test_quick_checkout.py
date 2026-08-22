@@ -379,7 +379,7 @@ class QuickCheckoutModelValidationTests(TestCase):
                 "general_adjustments": [],
                 "meche": False,
                 "location_preference": "salon",
-                "desired_date": "2026-03-15T10:00",
+                "desired_date": (timezone.now() + timedelta(days=5)).strftime("%Y-%m-%dT%H:%M"),
             },
             content_type="application/json",
         )
@@ -482,7 +482,7 @@ class QuickCheckoutModelValidationTests(TestCase):
                 "general_adjustments": [],
                 "meche": False,
                 "location_preference": "salon",
-                "desired_date": "2026-03-15T10:00",
+                "desired_date": (timezone.now() + timedelta(days=5)).strftime("%Y-%m-%dT%H:%M"),
             },
             content_type="application/json",
         )
@@ -513,7 +513,7 @@ class QuickCheckoutModelValidationTests(TestCase):
                 "general_adjustments": [],
                 "meche": False,
                 "location_preference": "salon",
-                "desired_date": "2026-03-15T10:00",
+                "desired_date": (timezone.now() + timedelta(days=5)).strftime("%Y-%m-%dT%H:%M"),
             },
             content_type="application/json",
         )
@@ -524,6 +524,29 @@ class QuickCheckoutModelValidationTests(TestCase):
             {"error": "Créneau non disponible : Maëlle n'est pas disponible en semaine"},
         )
         self.assertEqual(payment_stub.calls, [])
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_payment_intent_validate_only_rejects_less_than_24_hours_notice(self):
+        response = self.client.post(
+            reverse("interface:provider_payment_intent"),
+            data={
+                "provider_id": self.provider.id,
+                "service_id": self.service.id,
+                "hair_length": "long",
+                "general_adjustments": [],
+                "meche": False,
+                "location_preference": "salon",
+                "desired_date": (timezone.now() + timedelta(hours=23)).strftime("%Y-%m-%dT%H:%M"),
+                "validate_only": True,
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(
+            response.content,
+            {"error": "Le rendez-vous doit être demandé au moins 24 heures à l'avance."},
+        )
 
     @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
     def test_payment_intent_validate_only_does_not_create_payment_intent(self):
