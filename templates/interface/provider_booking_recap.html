@@ -45,7 +45,7 @@
                             </div>
                             <div class="timeline-content">
                                 <h3>2. Une coiffeuse confirme ton rendez-vous</h3>
-                                <p>Nous cherchons à confirmer ta demande au plus vite. La coiffeuse dispose de 12 h maximum pour accepter, refuser ou proposer un ajustement. Si elle propose une modification de la prestation ou du tarif, tu restes libre de l'accepter ou de la refuser. Si nécessaire, Château Rose peut rechercher une autre coiffeuse compatible.</p>
+                                <p>Nous cherchons à confirmer ta demande au plus vite. Tu restes libre d'accepter ou de refuser tout ajustement proposé.</p>
                             </div>
                         </div>
                         <div class="timeline-step">
@@ -161,7 +161,7 @@
 
                     <div class="receipt-line receipt-line--strong">
                         <span>Si le rendez-vous est confirmé<br><small>Frais Château Rose</small></span>
-                        <span>{{ deposit_price }}</span>
+                        <span class="receipt-amount">{{ deposit_price }}</span>
                     </div>
                     {% if service_fee_waived %}
                         <p class="receipt-help">Frais de service offerts grâce au code partenaire.</p>
@@ -171,7 +171,7 @@
 
                     <div class="receipt-line receipt-line--strong">
                         <span>Le jour du rendez-vous<br><small>Prix estimé de la prestation, à régler directement à la coiffeuse</small></span>
-                        <span>{{ remaining_price }}</span>
+                        <span class="receipt-amount">{{ remaining_price }}</span>
                     </div>
                     <p class="receipt-help">La coiffeuse peut proposer un autre tarif si nécessaire. Aucun changement n'est appliqué sans ton accord : tu peux l'accepter ou le refuser avant la confirmation.</p>
 
@@ -179,7 +179,7 @@
 
                     <div class="receipt-line receipt-line--estimated">
                         <span>Budget total estimé</span>
-                        <span>{{ total_price }}</span>
+                        <span class="receipt-amount">{{ total_price }}</span>
                     </div>
 
                     {% if not is_completed %}

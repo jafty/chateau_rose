@@ -69,7 +69,9 @@ class ProviderBookingRecapFlowTests(TestCase):
 
         self.assertIn("Aucun débit aujourd'hui", content)
         self.assertIn("Nous recherchons une coiffeuse compatible", content)
-        self.assertIn("12 h maximum", content)
+        self.assertNotIn("12 h maximum", content)
+        self.assertIn("libre d'accepter ou de refuser tout ajustement", content)
+        self.assertIn('class="receipt-amount">100 €', content)
         self.assertIn("Aucun changement n'est appliqué sans ton accord", content)
         self.assertIn("Valider ma demande — 0 € aujourd'hui", content)
         self.assertNotIn("empreinte bancaire", content)
@@ -181,7 +183,8 @@ class ProviderBookingRecapFlowTests(TestCase):
         )
         self.assertContains(recap_page, "Ta demande est prête")
         self.assertContains(recap_page, "Valider ma demande — 0 € aujourd'hui")
-        self.assertContains(recap_page, "12 h maximum")
+        self.assertNotContains(recap_page, "12 h maximum")
+        self.assertContains(recap_page, "libre d'accepter ou de refuser tout ajustement")
         self.assertNotContains(recap_page, "empreinte bancaire")
 
         prefill_page = self.client.get(
