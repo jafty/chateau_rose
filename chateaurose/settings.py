@@ -198,7 +198,6 @@ BUSINESS_STREET_ADDRESS = os.environ.get(
 BUSINESS_POSTAL_CODE = os.environ.get("BUSINESS_POSTAL_CODE", "31100")
 BUSINESS_CITY = os.environ.get("BUSINESS_CITY", "Toulouse")
 BUSINESS_COUNTRY = os.environ.get("BUSINESS_COUNTRY", "FR")
-BUSINESS_PHONE = os.environ.get("BUSINESS_PHONE", "+33 6 49 49 14 49")
 DEFAULT_OG_IMAGE_PATH = os.environ.get(
     "DEFAULT_OG_IMAGE_PATH", "/static/assets/cr_logo.svg"
 )
