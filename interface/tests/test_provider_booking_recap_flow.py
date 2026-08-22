@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from booking.models import (
     Booking,
+    GlobalServiceFeeCoupon,
     Provider,
     ProviderServiceFeeCoupon,
     ProviderZone,
@@ -239,6 +240,43 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertContains(recap_page, "Aucun paiement en ligne requis")
         self.assertContains(recap_page, "Confirmer ma demande")
         self.assertContains(recap_page, "125 €")
+
+    def test_recap_waives_service_fee_with_active_global_coupon(self):
+        GlobalServiceFeeCoupon.objects.create(code=" summer2026 ")
+        payload = self._base_payload()
+        payload["service_fee_coupon_code"] = "summer2026"
+        self.client.post(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            data=payload,
+        )
+        draft = ProviderBookingDraft.objects.get(provider=self.provider)
+
+        recap_page = self.client.get(
+            reverse("interface:provider_booking_recap", args=[draft.token])
+        )
+
+        self.assertContains(recap_page, "Aucun paiement en ligne requis")
+        self.assertContains(recap_page, "Confirmer ma demande")
+        self.assertEqual(
+            GlobalServiceFeeCoupon.objects.get().code,
+            "SUMMER2026",
+        )
+
+    def test_recap_does_not_waive_service_fee_with_inactive_global_coupon(self):
+        GlobalServiceFeeCoupon.objects.create(code="EXPIRED", is_active=False)
+        payload = self._base_payload()
+        payload["service_fee_coupon_code"] = "expired"
+        self.client.post(
+            reverse("interface:provider_detail", args=[self.provider.id]),
+            data=payload,
+        )
+        draft = ProviderBookingDraft.objects.get(provider=self.provider)
+
+        recap_page = self.client.get(
+            reverse("interface:provider_booking_recap", args=[draft.token])
+        )
+
+        self.assertContains(recap_page, "Frais Château Rose à régler")
 
     def test_admin_seeded_draft_is_updated_in_place_when_client_completes_prefilled_form(
         self,

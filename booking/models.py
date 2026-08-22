@@ -790,6 +790,25 @@ class ProviderServiceFeeCoupon(models.Model):
         return f"{self.provider.name} · {self.code}"
 
 
+class GlobalServiceFeeCoupon(models.Model):
+    """Coupon that waives Château Rose fees for every booking flow."""
+
+    code = models.CharField(max_length=64, unique=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "code promo global"
+        verbose_name_plural = "codes promo globaux"
+
+    def save(self, *args, **kwargs):
+        self.code = (self.code or "").strip().upper()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.code
+
+
 class VerifiedReview(models.Model):
     STATUS_PENDING = "pending"
     STATUS_APPROVED = "approved"
