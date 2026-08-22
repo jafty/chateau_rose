@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.core import mail
 from django.contrib.auth import get_user_model
+from django.template.loader import render_to_string
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -45,6 +46,33 @@ class ProviderBookingRecapFlowTests(TestCase):
             general_adjustments={"wash": 500},
             meche_bonus_cents=1500,
         )
+
+    def test_generic_recap_template_uses_reassuring_payment_chronology(self):
+        content = render_to_string(
+            "interface/generic_booking_recap.html",
+            {
+                "payload": {
+                    "client_name": "Awa",
+                    "client_email": "awa@example.com",
+                    "location_preference": "salon",
+                },
+                "service_label": "Knotless braids",
+                "desired_date_display": "29/08/2026 à 14:00",
+                "total_price": "115 €",
+                "service_fee_price": "15 €",
+                "subtotal_price": "100 €",
+                "amount_due_now_cents": 1500,
+                "require_payment_auth": True,
+                "payload_options_json": "[]",
+            },
+        )
+
+        self.assertIn("Aucun débit aujourd'hui", content)
+        self.assertIn("Nous recherchons une coiffeuse compatible", content)
+        self.assertIn("12 h maximum", content)
+        self.assertIn("Aucun changement n'est appliqué sans ton accord", content)
+        self.assertIn("Valider ma demande — 0 € aujourd'hui", content)
+        self.assertNotIn("empreinte bancaire", content)
 
     def _base_payload(self):
         return {
