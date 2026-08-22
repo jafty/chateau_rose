@@ -72,6 +72,7 @@ class ServiceResource(resources.ModelResource):
         attribute="hair_length_adjustments",
         widget=JSONWidget(),
     )
+    type_adjustments = fields.Field(column_name="type_adjustments", attribute="type_adjustments", widget=JSONWidget())
     general_adjustments = fields.Field(
         column_name="general_adjustments",
         attribute="general_adjustments",
@@ -89,6 +90,7 @@ class ServiceResource(resources.ModelResource):
             "image_url",
             "base_price_cents",
             "hair_length_adjustments",
+            "type_adjustments",
             "general_adjustments",
             "meche_bonus_cents",
             "at_home_bonus_cents",

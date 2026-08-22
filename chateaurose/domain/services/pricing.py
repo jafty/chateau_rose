@@ -12,6 +12,7 @@ def estimate_service_price_cents(
     general_adjustments: list[str] | None,
     meche: bool,
     location_preference: str | None,
+    type_adjustment: str | None = None,
 ) -> tuple[int, str, list[str]]:
     base_price = service["base_price_cents"]
 
@@ -25,6 +26,12 @@ def estimate_service_price_cents(
     if normalized_hair_length not in length_adjustments:
         raise ValidationError("Hair length is not supported for this service")
     length_adj = length_adjustments[normalized_hair_length]
+
+    type_adjustments = service.get("type_adjustments") or {STANDARD_ADJUSTMENT_KEY: 0}
+    normalized_type = str(type_adjustment or STANDARD_ADJUSTMENT_KEY).strip()
+    if normalized_type not in type_adjustments:
+        raise ValidationError("Type is not supported for this service")
+    type_adj = type_adjustments[normalized_type]
 
     selectable_general_adjustments = service.get("general_adjustments") or {}
     if general_adjustments is None:
@@ -55,7 +62,7 @@ def estimate_service_price_cents(
         else 0
     )
 
-    estimated_price = base_price + length_adj + general_adj_value + meche_bonus + domicile_bonus
+    estimated_price = base_price + length_adj + type_adj + general_adj_value + meche_bonus + domicile_bonus
     return estimated_price, normalized_hair_length, normalized_general_adjustments
 
 

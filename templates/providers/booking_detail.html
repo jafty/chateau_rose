@@ -83,6 +83,7 @@
                     <div class="booking-spec-item">
                         <span class="booking-spec-label">Cheveux</span>
                         <span class="booking-spec-value">{{ booking.hair_length }}</span>
+                        <span class="booking-spec-sub">Type : {{ booking.type_adjustment|default:"standard" }}</span>
                         <span class="booking-spec-sub">{% if booking.meche %}Mèches fournies{% else %}Mèches non fournies{% endif %}</span>
                     </div>
                     <div class="booking-spec-item">

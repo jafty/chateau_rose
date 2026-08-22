@@ -133,3 +133,76 @@ def test_floor_price_for_display_cents_rounds_down_to_full_euro():
 def test_floor_price_for_display_cents_handles_non_positive_values():
     assert floor_price_for_display_cents(0) == 0
     assert floor_price_for_display_cents(-50) == 0
+
+
+def test_estimate_service_price_applies_one_required_type_adjustment():
+    price, length, options = estimate_service_price_cents(
+        service={
+            "base_price_cents": 5000,
+            "hair_length_adjustments": {"standard": 0},
+            "type_adjustments": {"standard": 0, "premium": 1200},
+            "general_adjustments": {},
+        },
+        hair_length="standard",
+        type_adjustment="premium",
+        general_adjustments=[],
+        meche=False,
+        location_preference="salon",
+    )
+
+    assert price == 6200
+    assert length == "standard"
+    assert options == []
+
+
+def test_estimate_service_price_forces_standard_type_when_type_list_is_empty():
+    price, _, _ = estimate_service_price_cents(
+        service={
+            "base_price_cents": 5000,
+            "hair_length_adjustments": {},
+            "type_adjustments": {},
+        },
+        hair_length=None,
+        type_adjustment=None,
+        general_adjustments=None,
+        meche=False,
+        location_preference="salon",
+    )
+
+    assert price == 5000
+
+
+def test_estimate_service_price_rejects_an_unsupported_type():
+    with pytest.raises(ValidationError, match="Type is not supported"):
+        estimate_service_price_cents(
+            service={
+                "base_price_cents": 5000,
+                "hair_length_adjustments": {"standard": 0},
+                "type_adjustments": {"classique": 0, "premium": 1200},
+            },
+            hair_length="standard",
+            type_adjustment="standard",
+            general_adjustments=[],
+            meche=False,
+            location_preference="salon",
+        )
+
+
+def test_estimate_service_price_combines_type_with_all_other_adjustments():
+    price, _, _ = estimate_service_price_cents(
+        service={
+            "base_price_cents": 5000,
+            "hair_length_adjustments": {"long": 1000},
+            "type_adjustments": {"premium": 1200},
+            "general_adjustments": {"perles": 300},
+            "meche_bonus_cents": 700,
+            "at_home_bonus_cents": 800,
+        },
+        hair_length="long",
+        type_adjustment="premium",
+        general_adjustments=["perles"],
+        meche=True,
+        location_preference="domicile",
+    )
+
+    assert price == 9000

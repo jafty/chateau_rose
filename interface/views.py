@@ -329,7 +329,7 @@ def _build_provider_booking_recap_payload(*, provider: Provider, form: ProviderB
     if service is None:
         raise ValidationError("Service non disponible.")
 
-    return prepare_booking_recap.execute(
+    payload = prepare_booking_recap.execute(
         provider_id=provider.id,
         service_id=form.cleaned_data.get("service_id"),
         service_name=service.name,
@@ -342,11 +342,16 @@ def _build_provider_booking_recap_payload(*, provider: Provider, form: ProviderB
         hair_length=form.cleaned_data.get("hair_length"),
         general_adjustments=form.cleaned_data.get("general_adjustments", []),
         meche=form.cleaned_data.get("meche", False),
-        free_text="",
+        free_text=form.cleaned_data.get("free_text", ""),
         service_fee_coupon_code=form.cleaned_data.get("service_fee_coupon_code", ""),
         current_hair_picture="",
         inspiration_pictures=[],
     )
+    selected_type = (form.cleaned_data.get("type_adjustment") or "standard").strip()
+    if selected_type not in (service.type_adjustments or {"standard": 0}):
+        raise ValidationError("Type non disponible pour cette prestation.")
+    payload["type_adjustment"] = selected_type
+    return payload
 
 
 def _create_provider_booking_recap(
@@ -414,9 +419,10 @@ def _save_partial_provider_booking_recap_prefill(*, provider: Provider, form: Pr
             "location": (form.cleaned_data.get("location") or payload.get("location") or "").strip(),
             "client_address": "",
             "hair_length": (form.cleaned_data.get("hair_length") or payload.get("hair_length") or "").strip(),
+            "type_adjustment": (form.cleaned_data.get("type_adjustment") or payload.get("type_adjustment") or "standard").strip(),
             "general_adjustments": form.cleaned_data.get("general_adjustments") or [],
             "meche": bool(form.cleaned_data.get("meche")),
-            "free_text": "",
+            "free_text": (form.cleaned_data.get("free_text") or payload.get("free_text") or "").strip(),
             "service_fee_coupon_code": (
                 form.cleaned_data.get("service_fee_coupon_code")
                 or payload.get("service_fee_coupon_code")
@@ -1001,11 +1007,13 @@ def provider_booking_recap(request, token):
             service={
                 "base_price_cents": service.base_price_cents,
                 "hair_length_adjustments": service.hair_length_adjustments,
+                "type_adjustments": service.type_adjustments,
                 "general_adjustments": service.general_adjustments,
                 "meche_bonus_cents": service.meche_bonus_cents,
                 "at_home_bonus_cents": service.at_home_bonus_cents,
             },
             hair_length=payload.get("hair_length") or "",
+            type_adjustment=payload.get("type_adjustment") or "standard",
             general_adjustments=payload.get("general_adjustments") or [],
             meche=bool(payload.get("meche")),
             location_preference=payload.get("location_preference") or "salon",
@@ -1065,11 +1073,12 @@ def provider_booking_recap(request, token):
                         client_address=payload.get("client_address") or "",
                         desired_date=payload.get("desired_date") or "",
                         hair_length=payload.get("hair_length") or "",
+                        type_adjustment=payload.get("type_adjustment") or "standard",
                         general_adjustments=payload.get("general_adjustments") or [],
                         meche=bool(payload.get("meche")),
                         current_hair_picture="",
                         inspiration_pictures=[],
-                        free_text="",
+                        free_text=payload.get("free_text") or "",
                         service_fee_coupon_code=coupon_code,
                         waive_service_fee=service_fee_waived,
                         payment_auth_id=payment_auth_id or None,
@@ -1286,9 +1295,10 @@ def generic_booking_recap(request, token):
                     location_preference=payload.get("location_preference") or "salon",
                     desired_date=payload.get("desired_date") or "",
                     hair_length=amounts["hair_length"],
+                    type_adjustment=payload.get("type_adjustment") or "standard",
                     current_hair_picture="",
                     inspiration_pictures=[],
-                    free_text="",
+                    free_text=payload.get("free_text") or "",
                     payment_auth_id=payment_auth_id or None,
                     operations_email=SUPPORT_EMAIL,
                     booking_repository=repo,
@@ -1799,6 +1809,7 @@ def _generic_sub_service_pricing_data(sub_service: MarketingSubService | None) -
         "name": sub_service.name,
         "base": sub_service.generic_base_price_cents,
         "lengths": sub_service.generic_hair_length_adjustments or {"standard": 0},
+        "types": sub_service.generic_type_adjustments or {"standard": 0},
         "general_adjustments": sub_service.generic_general_adjustments or {},
         "meche_bonus": sub_service.generic_meche_bonus_cents,
         "at_home_bonus": sub_service.generic_at_home_bonus_cents,
@@ -1846,11 +1857,13 @@ def _estimate_generic_sub_service_booking(sub_service: MarketingSubService, payl
         service={
             "base_price_cents": sub_service.generic_base_price_cents,
             "hair_length_adjustments": sub_service.generic_hair_length_adjustments,
+            "type_adjustments": sub_service.generic_type_adjustments,
             "general_adjustments": sub_service.generic_general_adjustments,
             "meche_bonus_cents": sub_service.generic_meche_bonus_cents,
             "at_home_bonus_cents": sub_service.generic_at_home_bonus_cents,
         },
         hair_length=payload.get("hair_length") or "",
+        type_adjustment=payload.get("type_adjustment") or "standard",
         general_adjustments=payload.get("requested_options") or [],
         meche=False,
         location_preference=payload.get("location_preference") or "salon",
@@ -1903,6 +1916,7 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
                     sub_service,
                     {
                         "hair_length": form.cleaned_data.get("hair_length") or "",
+                        "type_adjustment": form.cleaned_data.get("type_adjustment") or "standard",
                         "requested_options": form.cleaned_data.get("requested_options") or [],
                         "location_preference": form.cleaned_data.get("location_preference") or "salon",
                     },
@@ -1919,6 +1933,8 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
                 "location": zone.name if zone else "À préciser",
                 "location_preference": form.cleaned_data.get("location_preference") or "salon",
                 "hair_length": estimate["hair_length"],
+                "type_adjustment": form.cleaned_data.get("type_adjustment") or "standard",
+                "free_text": form.cleaned_data.get("free_text") or "",
                 "requested_options": estimate["requested_options"],
                 "service_fee_coupon_code": coupon_code,
                 "requested_marketing_service_id": str(service_meta.id) if service_meta else None,
@@ -1951,7 +1967,7 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
                 hair_length=form.cleaned_data.get("hair_length") or "",
                 current_hair_picture="",
                 inspiration_pictures=[],
-                free_text="",
+                free_text=form.cleaned_data.get("free_text") or "",
                 operations_email=SUPPORT_EMAIL,
                 booking_repository=repo,
                 provider_catalog=provider_catalog,

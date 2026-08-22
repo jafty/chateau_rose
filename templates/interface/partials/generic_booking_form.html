@@ -16,6 +16,10 @@
                 <label for="hair_length">Longueur ou épaisseur souhaitée <span class="required-mark">*</span></label>
                 <select name="hair_length" id="hair_length"></select>
             </div>
+            <div class="form-field full-width" data-type-adjustment-field hidden>
+                <label for="type_adjustment">Type <span class="required-mark">*</span></label>
+                <select name="type_adjustment" id="type_adjustment" required></select>
+            </div>
             <div class="form-field full-width" data-general-adjustment-field hidden>
                 <label>Options (facultatif)</label>
                 <div id="general_adjustments" class="supplements-list"></div>
@@ -59,6 +63,10 @@
             <div class="form-field">
                 <label for="id_service_fee_coupon_code">Code promo (optionnel)</label>
                 {{ request_form.service_fee_coupon_code }}
+            </div>
+            <div class="form-field full-width">
+                <label for="id_free_text">Informations complémentaires (facultatif)</label>
+                {{ request_form.free_text }}
             </div>
             <div class="wizard-actions full-width">
                 <button type="button" class="btn btn-prev btn-secondary">Retour</button>

@@ -31,6 +31,7 @@ class DjangoProviderCatalog:
             "hair_length_adjustments": self._normalize_hair_length_adjustments(
                 service.hair_length_adjustments
             ),
+            "type_adjustments": service.type_adjustments or {"standard": 0},
             "general_adjustments": service.general_adjustments or {},
             "meche_bonus_cents": service.meche_bonus_cents,
             "at_home_bonus_cents": service.at_home_bonus_cents,

@@ -42,6 +42,7 @@ def execute(
     location: str = "",
     client_address: str | None = None,
     hair_length: str = "",
+    type_adjustment: str = "standard",
     requested_options: list[str] | None = None,
     general_adjustments: list[str] | None = None,
     meche: bool = False,
@@ -89,6 +90,7 @@ def execute(
 
     normalized_options = _normalize_list(requested_options if requested_options is not None else general_adjustments)
     normalized_adjustments = _normalize_list(general_adjustments if general_adjustments is not None else requested_options)
+    normalized_type_adjustment = str(type_adjustment or "standard").strip()
     normalized_location_preference = location_preference
     normalized_location = location or ""
     if normalized_location_preference == "salon":
@@ -124,6 +126,7 @@ def execute(
             general_adjustments=normalized_adjustments,
             meche=meche,
             location_preference=normalized_location_preference,
+            type_adjustment=normalized_type_adjustment,
         )
         service_name = service.get("name") or service_name
         amounts = compute_service_fee_only_amounts_cents(
@@ -176,6 +179,7 @@ def execute(
         location_preference=normalized_location_preference,
         desired_date=desired_date,
         hair_length=hair_length,
+        type_adjustment=normalized_type_adjustment,
         general_adjustments=normalized_adjustments,
         meche=meche,
         current_hair_picture=current_hair_picture,

@@ -55,6 +55,9 @@ class MarketingSubServiceResource(resources.ModelResource):
         attribute="generic_hair_length_adjustments",
         widget=JSONWidget(),
     )
+    generic_type_adjustments = fields.Field(
+        column_name="generic_type_adjustments", attribute="generic_type_adjustments", widget=JSONWidget()
+    )
     generic_general_adjustments = fields.Field(
         column_name="generic_general_adjustments",
         attribute="generic_general_adjustments",
@@ -75,6 +78,7 @@ class MarketingSubServiceResource(resources.ModelResource):
             "generic_booking_enabled",
             "generic_base_price_cents",
             "generic_hair_length_adjustments",
+            "generic_type_adjustments",
             "generic_general_adjustments",
             "generic_meche_bonus_cents",
             "generic_at_home_bonus_cents",

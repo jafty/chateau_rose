@@ -238,6 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const serviceSelect = document.getElementById('service_id');
     const hairLengthSelect = document.getElementById('hair_length');
     const hairLengthField = document.querySelector('[data-hair-length-field]');
+    const typeSelect = document.getElementById('type_adjustment');
+    const typeField = document.querySelector('[data-type-adjustment-field]');
     const adjustmentsContainer = document.getElementById('general_adjustments');
     const adjustmentsField = document.querySelector('[data-general-adjustment-field]');
     const adjustmentsInput = document.getElementById('general_adjustments_input');
@@ -306,14 +308,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const lengths = pricingData.lengths || {};
         const selectedLength = hairLengthSelect.value;
         const lengthAdj = selectedLength ? (lengths[selectedLength] || 0) : 0;
+        const typeAdj = (pricingData.types || {})[typeSelect.value] || 0;
         const adjustments = pricingData.general_adjustments || {};
         const adjustmentTotal = selectedAdjustments().reduce((total, key) => total + (adjustments[key] || 0), 0);
         const locationPreference = form.querySelector('input[name="location_preference"]:checked')?.value || 'salon';
         const atHomeAdj = locationPreference === 'domicile' ? (pricingData.at_home_bonus || 0) : 0;
-        const subtotal = pricingData.base + lengthAdj + adjustmentTotal + atHomeAdj;
+        const subtotal = pricingData.base + lengthAdj + typeAdj + adjustmentTotal + atHomeAdj;
         const displayTotalWithFees = displayEstimateWithFees({
             base: pricingData.base,
-            adjustments: [lengthAdj, adjustmentTotal, atHomeAdj],
+            adjustments: [lengthAdj, typeAdj, adjustmentTotal, atHomeAdj],
         });
         finalPriceDisplay.textContent = formatPrice(displayTotalWithFees);
         stickyPriceValue.textContent = formatPrice(displayTotalWithFees);
@@ -323,6 +326,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const optionText = selectedAdjustments().join(' · ');
         generalAdjustmentsDisplay.textContent = optionText ? `Options : ${optionText}` : '';
         generalAdjustmentsDisplay.hidden = !optionText;
+    };
+    const buildTypes = () => {
+        const types = pricingData.types || {standard: 0};
+        const keys = Object.keys(types);
+        typeSelect.innerHTML = '';
+        if (keys.length <= 1) {
+            const key = keys[0] || 'standard';
+            typeSelect.append(new Option(key, key, true, true));
+            typeSelect.disabled = true;
+            typeField.hidden = true;
+            return;
+        }
+        typeSelect.append(new Option('Sélectionne un type', '', true, true));
+        keys.sort().forEach((key) => typeSelect.append(new Option(key, key)));
+        typeSelect.disabled = false;
+        typeField.hidden = false;
     };
 
     const buildHairLengths = () => {
@@ -369,7 +388,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateEstimate();
     }));
     hairLengthSelect.addEventListener('change', updateEstimate);
+    typeSelect.addEventListener('change', updateEstimate);
     buildHairLengths();
+    buildTypes();
     buildAdjustments();
     syncAdjustments();
     updateEstimate();

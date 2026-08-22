@@ -26,10 +26,12 @@ def build_pricing_data(services):
     for service in services:
         service_fee_percentage = service.provider.service_fee_percentage or 15
         adjustments = service.hair_length_adjustments or {"standard": 0}
+        type_adjustments = service.type_adjustments or {"standard": 0}
         general_adjustments = service.general_adjustments or {"standard": 0}
         min_adj = min(adjustments.values()) if adjustments else 0
+        min_type_adj = min(type_adjustments.values()) if type_adjustments else 0
         general_adj_total = 0
-        starting_subtotal = service.base_price_cents + min_adj + general_adj_total
+        starting_subtotal = service.base_price_cents + min_adj + min_type_adj + general_adj_total
         starting_price = compute_checkout_amounts_cents(
             subtotal_cents=starting_subtotal,
             deposit_percentage=service.provider.deposit_percentage or 30,
@@ -41,6 +43,7 @@ def build_pricing_data(services):
             "name": service.name,
             "base": service.base_price_cents,
             "lengths": adjustments,
+            "types": type_adjustments,
             "general_adjustments": general_adjustments,
             "meche_bonus": service.meche_bonus_cents,
             "at_home_bonus": service.at_home_bonus_cents,
