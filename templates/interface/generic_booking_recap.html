@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             generic_sub_service_id: '{{ generic_sub_service_id }}',
             desired_date: '{{ payload.desired_date|escapejs }}',
             hair_length: '{{ payload.hair_length|default:""|escapejs }}',
+            type_adjustment: '{{ payload.type_adjustment|default:"standard"|escapejs }}',
             location_preference: '{{ payload.location_preference|default:"salon"|escapejs }}',
             general_adjustments: {{ payload_options_json|safe }},
             service_fee_coupon_code: '{{ payload.service_fee_coupon_code|default:""|escapejs }}'

@@ -333,13 +333,19 @@ document.addEventListener('DOMContentLoaded', () => {
         typeSelect.innerHTML = '';
         if (keys.length <= 1) {
             const key = keys[0] || 'standard';
-            typeSelect.append(new Option(key, key, true, true));
+            const delta = types[key] || 0;
+            const suffix = delta > 0 ? ` (+${formatPrice(adjustmentWithFees(delta))})` : delta < 0 ? ` (${formatPrice(adjustmentWithFees(delta))})` : '';
+            typeSelect.append(new Option(`${key}${suffix}`, key, true, true));
             typeSelect.disabled = true;
             typeField.hidden = true;
             return;
         }
         typeSelect.append(new Option('Sélectionne un type', '', true, true));
-        keys.sort().forEach((key) => typeSelect.append(new Option(key, key)));
+        keys.sort().forEach((key) => {
+            const delta = types[key] || 0;
+            const suffix = delta > 0 ? ` (+${formatPrice(adjustmentWithFees(delta))})` : delta < 0 ? ` (${formatPrice(adjustmentWithFees(delta))})` : '';
+            typeSelect.append(new Option(`${key}${suffix}`, key));
+        });
         typeSelect.disabled = false;
         typeField.hidden = false;
     };

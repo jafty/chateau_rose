@@ -546,3 +546,33 @@ class QuickCheckoutModelValidationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertJSONEqual(response.content, {"ok": True, "amount_cents": 3000})
         self.assertEqual(payment_stub.calls, [])
+
+    @override_settings(STRIPE_SECRET_KEY="sk_test", STRIPE_PUBLIC_KEY="pk_test")
+    def test_provider_payment_intent_applies_selected_type_adjustment(self):
+        from interface import views
+
+        self.service.hair_length_adjustments = {"long": 2000}
+        self.service.type_adjustments = {"standard": 0, "premium": 2000}
+        self.service.save(update_fields=["hair_length_adjustments", "type_adjustments"])
+        payment_stub = _PaymentStub()
+        original_gateway = views.payment_gateway
+        views.payment_gateway = payment_stub
+        self.addCleanup(setattr, views, "payment_gateway", original_gateway)
+
+        response = self.client.post(
+            reverse("interface:provider_payment_intent"),
+            data={
+                "provider_id": self.provider.id,
+                "service_id": self.service.id,
+                "hair_length": "long",
+                "type_adjustment": "premium",
+                "general_adjustments": [],
+                "meche": False,
+                "location_preference": "salon",
+                "desired_date": (timezone.now() + timedelta(days=5)).strftime("%Y-%m-%dT%H:%M"),
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payment_stub.calls[0]["amount_cents"], 1350)
