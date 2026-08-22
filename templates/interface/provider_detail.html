@@ -1062,6 +1062,9 @@
             if (hairLengthSelect && recapPrefill.hair_length) {
                 hairLengthSelect.value = recapPrefill.hair_length;
             }
+            if (typeSelect && recapPrefill.type_adjustment) {
+                typeSelect.value = recapPrefill.type_adjustment;
+            }
             if (Array.isArray(recapPrefill.general_adjustments) && generalAdjustmentsInput) {
                 generalAdjustmentsInput.value = JSON.stringify(recapPrefill.general_adjustments);
                 recapPrefill.general_adjustments.forEach((adjustmentValue) => {
@@ -1189,6 +1192,7 @@
                 provider_id: form?.querySelector('input[name="provider_id"]')?.value,
                 service_id: serviceSelect?.value || hiddenServiceInput?.value || null,
                 hair_length: hairLengthSelect?.value || hiddenHairLengthInput?.value || null,
+                type_adjustment: typeSelect?.value || 'standard',
                 general_adjustments: (() => {
                     const fallback = hiddenAdjustmentsInput?.value || '[]';
                     try {
@@ -1504,17 +1508,28 @@
         const updateTypes = (serviceId) => {
             if (!typeSelect || !typeField) return;
             const types = pricingData[serviceId]?.types || {standard: 0};
+            const serviceFeePercentage = pricingData[serviceId]?.service_fee_percentage ?? 15;
             const keys = Object.keys(types);
             typeSelect.innerHTML = '';
             if (keys.length <= 1) {
                 const key = keys[0] || 'standard';
-                typeSelect.append(new Option(key, key, true, true));
+                const delta = types[key] || 0;
+                const suffix = delta === 0 ? '' : delta > 0
+                    ? ` (+${formatAdjustmentWithFees(delta, serviceFeePercentage)})`
+                    : ` (${formatAdjustmentWithFees(delta, serviceFeePercentage)})`;
+                typeSelect.append(new Option(`${key}${suffix}`, key, true, true));
                 typeSelect.disabled = true;
                 typeField.hidden = true;
                 return;
             }
             typeSelect.append(new Option('Sélectionne un type', '', true, true));
-            keys.sort().forEach((key) => typeSelect.append(new Option(key, key)));
+            keys.sort().forEach((key) => {
+                const delta = types[key] || 0;
+                const suffix = delta === 0 ? '' : delta > 0
+                    ? ` (+${formatAdjustmentWithFees(delta, serviceFeePercentage)})`
+                    : ` (${formatAdjustmentWithFees(delta, serviceFeePercentage)})`;
+                typeSelect.append(new Option(`${key}${suffix}`, key));
+            });
             typeSelect.disabled = false;
             typeField.hidden = false;
         };
@@ -1599,7 +1614,7 @@
                 ? ceilPriceForDisplay(totalCents + serviceFeeCents)
                 : displayEstimateWithFeesCents({
                     base,
-                    adjustments: [lengthAdj, generalAdj, mecheAdj, atHomeAdj],
+                    adjustments: [lengthAdj, typeAdj, generalAdj, mecheAdj, atHomeAdj],
                     serviceFeePercentage,
                 });
             const depositCents = serviceFeeCents;

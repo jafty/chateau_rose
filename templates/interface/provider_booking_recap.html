@@ -247,6 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         {% endif %}
         desired_date: '{{ payload.desired_date|escapejs }}',
         hair_length: '{{ payload.hair_length|default:""|escapejs }}',
+        type_adjustment: '{{ payload.type_adjustment|default:"standard"|escapejs }}',
         location_preference: '{{ payload.location_preference|default:"salon"|escapejs }}',
         meche: {{ payload.meche|yesno:"true,false" }},
         general_adjustments: {{ payload_options_json|default:"[]"|safe }},

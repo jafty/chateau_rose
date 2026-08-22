@@ -681,6 +681,7 @@ class ServicePagesTests(TestCase):
         self.sub_service.generic_booking_enabled = True
         self.sub_service.generic_base_price_cents = 10000
         self.sub_service.generic_hair_length_adjustments = {"standard": 0}
+        self.sub_service.generic_type_adjustments = {"standard": 0, "premium": 2000}
         self.sub_service.generic_general_adjustments = {"extra-long": 2500}
         self.sub_service.generic_service_fee_percentage = 0
         self.sub_service.save()
@@ -695,6 +696,7 @@ class ServicePagesTests(TestCase):
                 "desired_date": (timezone.now() + timedelta(days=7)).strftime("%Y-%m-%dT%H:%M"),
                 "location_preference": "salon",
                 "hair_length": "standard",
+                "type_adjustment": "premium",
                 "requested_options": "extra-long",
             },
         )
@@ -721,6 +723,6 @@ class ServicePagesTests(TestCase):
         booking = Booking.objects.get(client_email="awa-recap@example.com")
         self.assertIsNone(booking.provider)
         self.assertEqual(booking.status, Booking.STATUS_WAITING_PROVIDER_ASSIGNMENT)
-        self.assertEqual(booking.provider_price_estimate_cents, 12500)
+        self.assertEqual(booking.provider_price_estimate_cents, 14500)
         self.assertEqual(booking.amount_due_now_cents, 0)
         self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_WAIVED)

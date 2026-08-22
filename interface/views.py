@@ -1377,6 +1377,7 @@ def provider_payment_intent(request):
     provider_id = payload.get("provider_id")
     service_id = payload.get("service_id")
     hair_length = payload.get("hair_length")
+    type_adjustment = payload.get("type_adjustment")
     general_adjustments = payload.get("general_adjustments") or []
     meche = payload.get("meche")
     location_preference = payload.get("location_preference")
@@ -1396,6 +1397,7 @@ def provider_payment_intent(request):
                 sub_service,
                 {
                     "hair_length": hair_length or "",
+                    "type_adjustment": type_adjustment or "standard",
                     "requested_options": general_adjustments,
                     "location_preference": location_preference or "salon",
                 },
@@ -1450,6 +1452,7 @@ def provider_payment_intent(request):
             estimated_price_cents, _, _ = estimate_service_price_cents(
                 service=service,
                 hair_length=hair_length,
+                type_adjustment=type_adjustment,
                 general_adjustments=general_adjustments,
                 meche=meche,
                 location_preference=location_preference,
