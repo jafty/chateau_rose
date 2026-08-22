@@ -34,6 +34,7 @@ from booking.models import (
 )
 from chateaurose.domain.exceptions import DomainError, NotFound, ValidationError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
+from chateaurose.domain.services.booking_deadlines import require_minimum_notice
 from chateaurose.domain.services.pricing import (
     ceil_price_for_display_cents,
     compute_checkout_amounts_cents,
@@ -1430,6 +1431,18 @@ def provider_payment_intent(request):
     else:
         if not all([provider_id, service_id, desired_date]) or meche is None:
             return JsonResponse({"error": "Informations manquantes."}, status=400)
+
+        try:
+            parsed_desired_date = datetime.fromisoformat(str(desired_date))
+            if timezone.is_naive(parsed_desired_date):
+                parsed_desired_date = timezone.make_aware(parsed_desired_date)
+            require_minimum_notice(
+                desired_at=parsed_desired_date,
+                now=timezone.now(),
+            )
+        except (TypeError, ValueError, ValidationError) as exc:
+            message = str(exc) if isinstance(exc, ValidationError) else "Date souhaitée invalide."
+            return JsonResponse({"error": message}, status=400)
 
         blocked_slot_details_getter = getattr(provider_catalog, "get_blocked_slot_details", None)
         if callable(blocked_slot_details_getter):

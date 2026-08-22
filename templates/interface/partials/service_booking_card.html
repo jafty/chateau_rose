@@ -2,7 +2,7 @@
 {% if card_url %}
     <a class="provider-service-card provider-service-card--link" href="{{ card_url }}" aria-label="{{ card_cta|default:"Réserver rapidement" }} : {{ card.name }}">
 {% else %}
-    <article class="provider-service-card">
+    <article class="provider-service-card" data-service-card="{{ card.id }}">
 {% endif %}
         <span class="tape" aria-hidden="true"></span>
         <div class="provider-service-card__media">
@@ -20,7 +20,7 @@
             {% if card_url %}
                 <span class="btn btn-accent provider-service-card__button" aria-hidden="true">{{ card_cta|default:"Réserver rapidement" }}</span>
             {% else %}
-                <button type="button" class="btn btn-accent provider-service-card__button plausible-event-name=Provider+Service+Selected" data-service-card="{{ card.id }}">{{ card_cta|default:"Estimer et réserver" }}</button>
+                <button type="button" class="btn btn-accent provider-service-card__button plausible-event-name=Provider+Service+Selected">{{ card_cta|default:"Estimer et réserver" }}</button>
             {% endif %}
         </div>
 {% if card_url %}
