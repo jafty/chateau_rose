@@ -83,6 +83,12 @@
             <option value="" selected disabled>Choisis d'abord un service</option>
         </select>
     </div>
+    <div class="form-field full-width" data-type-adjustment-field hidden>
+        <label for="type_adjustment">Type <span class="required-mark">*</span></label>
+        <select name="type_adjustment" id="type_adjustment" required disabled>
+            <option value="standard">Standard</option>
+        </select>
+    </div>
 
     <div class="form-field full-width" data-general-adjustment-field hidden>
         <label>Options (facultatif)</label>
@@ -182,6 +188,10 @@
         <label for="service_fee_coupon_code">Code partenaire (optionnel)</label>
         <input type="text" name="service_fee_coupon_code" id="service_fee_coupon_code" placeholder="Ex : VIPSANSFRAIS">
         <p class="meta-line">Si {{ provider.name }} t'a donné un code, les frais de service Château Rose peuvent être offerts.</p>
+    </div>
+    <div class="form-field full-width">
+        <label for="free_text">Informations complémentaires (facultatif)</label>
+        <textarea name="free_text" id="free_text" rows="3" placeholder="Disponibilités, préférences, précisions sur la coupe souhaitée…"></textarea>
     </div>
 
     <div class="wizard-actions full-width">

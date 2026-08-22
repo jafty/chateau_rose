@@ -94,6 +94,7 @@ class MarketingSubService(models.Model):
     generic_booking_enabled = models.BooleanField(default=False)
     generic_base_price_cents = models.IntegerField(default=0)
     generic_hair_length_adjustments = models.JSONField(default=dict, blank=True)
+    generic_type_adjustments = models.JSONField(default=dict, blank=True)
     generic_general_adjustments = models.JSONField(default=dict, blank=True)
     generic_meche_bonus_cents = models.IntegerField(default=0)
     generic_at_home_bonus_cents = models.IntegerField(default=0)

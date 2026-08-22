@@ -95,7 +95,12 @@ class GenericBookingRequestForm(forms.Form):
         required=False,
     )
     hair_length = forms.CharField(label="Longueur de cheveux", required=False)
+    type_adjustment = forms.CharField(label="Type", required=False)
     requested_options = forms.CharField(label="Options souhaitées", required=False)
+    free_text = forms.CharField(
+        label="Informations complémentaires (facultatif)", required=False,
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Disponibilités, préférences, précisions sur la coupe souhaitée…"}),
+    )
     service_fee_coupon_code = forms.CharField(label="Code promo", required=False)
 
     def clean_desired_date(self):
@@ -133,10 +138,12 @@ class ProviderBookingRequestForm(forms.Form):
     )
     desired_date = forms.CharField(label="Date souhaitée")
     hair_length = forms.CharField(label="Longueur de cheveux", required=False)
+    type_adjustment = forms.CharField(label="Type", required=False)
     general_adjustments = forms.JSONField(label="Suppléments", required=False)
     meche = forms.BooleanField(label="Besoin de mèches fournies", required=False)
     service_fee_coupon_code = forms.CharField(label="Code partenaire", required=False)
     payment_auth_id = forms.CharField(required=False)
+    free_text = forms.CharField(label="Informations complémentaires", required=False)
 
     def __init__(self, *args, **kwargs):
         self.provider = kwargs.pop("provider", None)

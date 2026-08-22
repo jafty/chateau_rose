@@ -961,6 +961,8 @@
 
         const serviceSelect = document.getElementById('service_id');
         const hairLengthSelect = document.getElementById('hair_length');
+        const typeSelect = document.getElementById('type_adjustment');
+        const typeField = document.querySelector('[data-type-adjustment-field]');
         const generalAdjustmentsContainer = document.getElementById('general_adjustments');
         const generalAdjustmentsInput = document.getElementById('general_adjustments_input');
         const hairLengthField = document.querySelector('[data-hair-length-field]');
@@ -1499,6 +1501,24 @@
             syncGeneralAdjustmentsInput();
         };
 
+        const updateTypes = (serviceId) => {
+            if (!typeSelect || !typeField) return;
+            const types = pricingData[serviceId]?.types || {standard: 0};
+            const keys = Object.keys(types);
+            typeSelect.innerHTML = '';
+            if (keys.length <= 1) {
+                const key = keys[0] || 'standard';
+                typeSelect.append(new Option(key, key, true, true));
+                typeSelect.disabled = true;
+                typeField.hidden = true;
+                return;
+            }
+            typeSelect.append(new Option('Sélectionne un type', '', true, true));
+            keys.sort().forEach((key) => typeSelect.append(new Option(key, key)));
+            typeSelect.disabled = false;
+            typeField.hidden = false;
+        };
+
         const updateMecheField = (serviceId) => {
             const servicePricing = serviceId ? pricingData[serviceId] : null;
             const mecheAvailableForService = Boolean(servicePricing && (servicePricing.meche_bonus || 0) > 0);
@@ -1559,6 +1579,7 @@
             const adjustments = pricing.general_adjustments || {};
             const selectedLength = hairLengthSelect?.value;
             const lengthAdj = selectedLength && lengths[selectedLength] !== undefined ? lengths[selectedLength] : minAdjustment(lengths);
+            const typeAdj = (pricing.types || {})[typeSelect?.value] || 0;
             const selectedAdjustments = (() => {
                 try {
                     return JSON.parse(generalAdjustmentsInput?.value || '[]');
@@ -1570,7 +1591,7 @@
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
             const selectedLocationPreference = document.querySelector('input[name="location_preference"]:checked')?.value || locationPreferenceInput?.value;
             const atHomeAdj = selectedLocationPreference === "domicile" ? pricing.at_home_bonus || 0 : 0;
-            const computedTotalCents = base + lengthAdj + generalAdj + mecheAdj + atHomeAdj;
+            const computedTotalCents = base + lengthAdj + typeAdj + generalAdj + mecheAdj + atHomeAdj;
             const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : computedTotalCents;
             const serviceFeePercentage = pricing.service_fee_percentage ?? 15;
             const serviceFeeCents = Math.round(totalCents * serviceFeePercentage / 100);
@@ -1634,6 +1655,7 @@
             serviceSelect.addEventListener('change', () => {
                 const serviceId = serviceSelect.value;
                 updateHairLengths(serviceId);
+                updateTypes(serviceId);
                 updateGeneralAdjustments(serviceId);
                 updateMecheField(serviceId);
                 refreshEstimate();
@@ -1642,6 +1664,7 @@
         if (hairLengthSelect) {
             hairLengthSelect.addEventListener('change', refreshEstimate);
         }
+        typeSelect?.addEventListener('change', refreshEstimate);
         if (mecheCheckbox) {
             mecheCheckbox.addEventListener('change', refreshEstimate);
         }
@@ -1657,6 +1680,7 @@
             }
         } else if (serviceSelect) {
             updateHairLengths(serviceSelect.value);
+            updateTypes(serviceSelect.value);
             updateGeneralAdjustments(serviceSelect.value);
             updateMecheField(serviceSelect.value);
         }

@@ -389,6 +389,10 @@ class ServiceAdminForm(forms.ModelForm):
         required=False,
         help_text="JSON longueur -> supplément en centimes (ex: {\"court\":0, \"mi-long\":1000, \"long\":2000}).",
     )
+    type_adjustments = forms.JSONField(
+        required=False,
+        help_text='JSON type -> supplément en centimes (ex: {"standard":0, "premium":1500}).',
+    )
     general_adjustments = forms.JSONField(
         required=False,
         help_text="JSON motif -> supplément en centimes (ajouté au total, ex: {\"motif\":500}).",
@@ -413,6 +417,7 @@ class ServiceAdminForm(forms.ModelForm):
             "image_url",
             "base_price_cents",
             "hair_length_adjustments",
+            "type_adjustments",
             "general_adjustments",
             "meche_bonus_cents",
             "at_home_bonus_cents",

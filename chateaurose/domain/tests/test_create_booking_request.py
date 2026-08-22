@@ -219,3 +219,32 @@ def test_generic_booking_can_store_subservice_price_estimate():
     assert booking.chateau_rose_fee_cents == 1800
     assert booking.amount_due_now_cents == 1800
     assert booking.payment_status == "AUTHORIZED"
+
+
+def test_create_provider_booking_prices_and_persists_selected_type():
+    deps = _deps(
+        _service(type_adjustments={"classique": 0, "premium": 2000})
+    )
+
+    booking = create_booking_request.execute(
+        provider_id="provider-1",
+        service_id="svc-1",
+        client_contact={"name": "Awa", "email": "awa@example.com"},
+        location="Toulouse",
+        location_preference="domicile",
+        desired_date="2026-02-01T10:00:00+00:00",
+        hair_length="standard",
+        type_adjustment=" premium ",
+        general_adjustments=[],
+        meche=False,
+        current_hair_picture="",
+        inspiration_pictures=[],
+        free_text="Disponible après 18 h",
+        **deps,
+    )
+
+    assert booking.type_adjustment == "premium"
+    assert booking.provider_price_estimate_cents == 12000
+    assert booking.amount_due_now_cents == 1800
+    assert booking.free_text == "Disponible après 18 h"
+    assert deps["booking_repository"].get(booking.id).type_adjustment == "premium"
