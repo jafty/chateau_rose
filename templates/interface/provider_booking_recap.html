@@ -6,11 +6,11 @@
 <section class="booking-recap-page">
     <div class="container">
         <div class="recap-header">
-            <h1>Merci pour ta réservation{% if payload.client_name %}, {{ payload.client_name }}{% endif %}</h1>
+            <h1>Ta demande est prête{% if payload.client_name %}, {{ payload.client_name }}{% endif %} ✨</h1>
             <p>
-                Vérifie les informations et confirme ta demande.
-                <strong>Aucun frais n'est débité tant que le rendez-vous n'est pas confirmé.</strong>
-                Ces frais nous permettent de sécuriser ton créneau, de mieux rémunérer les coiffeuses et d'éviter les annulations de dernière minute.
+                Vérifie les informations ci-dessous puis valide ta demande.
+                <strong>Aucun débit aujourd'hui.</strong>
+                Les frais Château Rose seront prélevés uniquement si ton rendez-vous est confirmé.
             </p>
         </div>
 
@@ -35,8 +35,8 @@
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
                             </div>
                             <div class="timeline-content">
-                                <h3>1. Empreinte bancaire</h3>
-                                <p>Tu valides les frais Château Rose, débités seulement si le RDV est confirmé.</p>
+                                <h3>1. Tu valides ta demande</h3>
+                                <p>Tu ajoutes ta carte, mais aucun montant n'est débité aujourd'hui.</p>
                             </div>
                         </div>
                         <div class="timeline-step">
@@ -44,8 +44,8 @@
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                             </div>
                             <div class="timeline-content">
-                                <h3>2. Confirmation par {{ provider_name_display }}</h3>
-                                <p>La prestataire a 48h pour accepter, refuser ou proposer un ajustement.</p>
+                                <h3>2. Une coiffeuse confirme ton rendez-vous</h3>
+                                <p>Nous cherchons à confirmer ta demande au plus vite. La coiffeuse dispose de 12 h maximum pour accepter, refuser ou proposer un ajustement. Si elle propose une modification de la prestation ou du tarif, tu restes libre de l'accepter ou de la refuser. Si nécessaire, Château Rose peut rechercher une autre coiffeuse compatible.</p>
                             </div>
                         </div>
                         <div class="timeline-step">
@@ -53,8 +53,8 @@
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                             </div>
                             <div class="timeline-content">
-                                <h3>3. Le jour de la coiffure</h3>
-                                <p>Tu règles la prestation coiffure directement auprès de {{ provider_name_display }}.</p>
+                                <h3>3. Tu vas à ton rendez-vous</h3>
+                                <p>Les frais Château Rose sont prélevés après confirmation. Tu règles la prestation coiffure directement à la coiffeuse le jour J.</p>
                             </div>
                         </div>
                     </div>
@@ -153,38 +153,34 @@
                         Détail du règlement
                     </h2>
 
-                    <div class="receipt-line">
-                        <span>Prestation</span>
-                        <span>{{ subtotal_price }}</span>
-                    </div>
-                    <div class="receipt-line">
-                        <span>Frais de service Château Rose</span>
-                        <span>{{ service_fee_price }}</span>
-                    </div>
-                    {% if service_fee_waived %}
-                        <p class="receipt-help">Frais de service offerts grâce au code partenaire.</p>
-                    {% endif %}
-
-                    <div class="receipt-divider"></div>
-
-                    <div class="receipt-line">
-                        <strong>Estimation totale du RDV</strong>
-                        <strong>{{ total_price }}</strong>
-                    </div>
-
                     <div class="price-highlight">
-                        <span>{% if amount_due_now_cents == 0 %}Aucun paiement en ligne requis{% else %}Frais Château Rose à régler{% endif %}</span>
-                        <div class="amount">{{ deposit_price }}</div>
-                        <p>Ces frais couvrent le suivi, l'assurance et la recherche d'alternative si besoin.</p>
-                        <p>La prestation coiffure est réglée directement à {{ provider_name_display }} le jour du rendez-vous.</p>
+                        <span>Aujourd'hui</span>
+                        <div class="amount">0 €</div>
+                        <p><strong>Aucun débit aujourd'hui.</strong> Ta carte sert uniquement à valider la demande.</p>
                     </div>
 
                     <div class="receipt-line receipt-line--strong">
-                        <span>Reste à payer sur place</span>
+                        <span>Si le rendez-vous est confirmé<br><small>Frais Château Rose</small></span>
+                        <span>{{ deposit_price }}</span>
+                    </div>
+                    {% if service_fee_waived %}
+                        <p class="receipt-help">Frais de service offerts grâce au code partenaire.</p>
+                    {% else %}
+                        <p class="receipt-help">Les frais Château Rose servent à traiter ta demande, confirmer ton rendez-vous et rechercher une autre coiffeuse si nécessaire.</p>
+                    {% endif %}
+
+                    <div class="receipt-line receipt-line--strong">
+                        <span>Le jour du rendez-vous<br><small>Prix estimé de la prestation, à régler directement à la coiffeuse</small></span>
                         <span>{{ remaining_price }}</span>
                     </div>
+                    <p class="receipt-help">La coiffeuse peut proposer un autre tarif si nécessaire. Aucun changement n'est appliqué sans ton accord : tu peux l'accepter ou le refuser avant la confirmation.</p>
 
                     <div class="receipt-divider receipt-divider--spaced"></div>
+
+                    <div class="receipt-line receipt-line--estimated">
+                        <span>Budget total estimé</span>
+                        <span>{{ total_price }}</span>
+                    </div>
 
                     {% if not is_completed %}
                         <form method="post" id="recap-confirm-form">
@@ -192,22 +188,22 @@
                             <input type="hidden" name="action" value="confirm">
                             <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
                             {% if require_payment_auth %}
-                                <label class="stripe-label">Saisis ta carte pour valider l'empreinte bancaire</label>
+                                <label class="stripe-label">Ajoute ta carte pour valider la demande</label>
                                 <div class="stripe-zone">
-                                    <p class="meta-line" id="payment-hint">Aucun débit avant confirmation ; la prestation reste à régler le jour J.</p>
+                                    <p class="meta-line" id="payment-hint"><strong>0 € débité aujourd'hui.</strong> Les frais Château Rose seront prélevés uniquement si ton rendez-vous est confirmé.</p>
                                     <div id="payment-element" class="payment-element payment-element--tall"></div>
                                     <div class="alert error" id="payment-error" hidden></div>
                                 </div>
                             {% endif %}
 
-                            <button type="submit" class="btn recap-submit-btn plausible-event-name=Provider+Recap+Confirm">{% if amount_due_now_cents == 0 %}Confirmer ma demande{% else %}Sécuriser ma demande{% endif %}</button>
+                            <button type="submit" class="btn recap-submit-btn plausible-event-name=Provider+Recap+Confirm">Valider ma demande — 0 € aujourd'hui</button>
                         </form>
                     {% endif %}
 
                     <div class="trust-badges">
                         <div class="trust-badge">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                            <span>Paiement crypté et 100% sécurisé via Stripe.</span>
+                            <span>Paiement sécurisé par Stripe</span>
                         </div>
                         <div class="trust-badge">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-10.05l5.67-5.67"></path></svg>

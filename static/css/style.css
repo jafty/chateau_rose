@@ -4970,6 +4970,20 @@ footer {
     color: var(--ink-primary);
 }
 
+.booking-recap-page .receipt-line small {
+    display: inline-block;
+    margin-top: 0.2rem;
+    color: var(--ink-secondary);
+    font-size: 0.78rem;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+.booking-recap-page .receipt-line--estimated {
+    color: var(--ink-secondary);
+    font-size: 0.9rem;
+}
+
 .booking-recap-page .receipt-help {
     margin: 2px 0 8px;
     color: var(--ink-secondary);
