@@ -151,8 +151,10 @@ class ProviderBookingRecapFlowTests(TestCase):
         recap_page = self.client.get(
             reverse("interface:provider_booking_recap", args=[draft.token])
         )
-        self.assertContains(recap_page, "Merci pour ta réservation")
-        self.assertContains(recap_page, "Sécuriser ma demande")
+        self.assertContains(recap_page, "Ta demande est prête")
+        self.assertContains(recap_page, "Valider ma demande — 0 € aujourd'hui")
+        self.assertContains(recap_page, "12 h maximum")
+        self.assertNotContains(recap_page, "empreinte bancaire")
 
         prefill_page = self.client.get(
             reverse("interface:provider_detail", args=[self.provider.id])
@@ -216,8 +218,9 @@ class ProviderBookingRecapFlowTests(TestCase):
         )
         self.assertContains(recap_page, "143.75 €")
         self.assertContains(recap_page, "18.75 €")
-        self.assertContains(recap_page, "Frais Château Rose à régler")
-        self.assertContains(recap_page, "La prestation coiffure est réglée directement")
+        self.assertContains(recap_page, "Aucun débit aujourd'hui")
+        self.assertContains(recap_page, "Prix estimé de la prestation")
+        self.assertContains(recap_page, "Aucun changement n'est appliqué sans ton accord")
         self.assertContains(recap_page, "125 €")
 
     def test_recap_waives_service_fee_with_valid_coupon(self):
@@ -237,8 +240,8 @@ class ProviderBookingRecapFlowTests(TestCase):
         )
         self.assertContains(recap_page, "125 €")
         self.assertContains(recap_page, "0 €")
-        self.assertContains(recap_page, "Aucun paiement en ligne requis")
-        self.assertContains(recap_page, "Confirmer ma demande")
+        self.assertContains(recap_page, "Aujourd'hui")
+        self.assertContains(recap_page, "Valider ma demande — 0 € aujourd'hui")
         self.assertContains(recap_page, "125 €")
 
     def test_recap_waives_service_fee_with_active_global_coupon(self):
@@ -255,8 +258,8 @@ class ProviderBookingRecapFlowTests(TestCase):
             reverse("interface:provider_booking_recap", args=[draft.token])
         )
 
-        self.assertContains(recap_page, "Aucun paiement en ligne requis")
-        self.assertContains(recap_page, "Confirmer ma demande")
+        self.assertContains(recap_page, "Aujourd'hui")
+        self.assertContains(recap_page, "Valider ma demande — 0 € aujourd'hui")
         self.assertEqual(
             GlobalServiceFeeCoupon.objects.get().code,
             "SUMMER2026",
@@ -276,7 +279,7 @@ class ProviderBookingRecapFlowTests(TestCase):
             reverse("interface:provider_booking_recap", args=[draft.token])
         )
 
-        self.assertContains(recap_page, "Frais Château Rose à régler")
+        self.assertContains(recap_page, "Si le rendez-vous est confirmé")
 
     def test_admin_seeded_draft_is_updated_in_place_when_client_completes_prefilled_form(
         self,
