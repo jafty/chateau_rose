@@ -2,11 +2,38 @@ import pytest
 
 from chateaurose.domain.exceptions import ValidationError
 from chateaurose.domain.services.pricing import (
+    NOCTURNAL_SUPPLEMENT_CENTS,
     ceil_price_for_display_cents,
     compute_checkout_amounts_cents,
     floor_price_for_display_cents,
     estimate_service_price_cents,
+    is_nocturnal_appointment,
 )
+
+
+@pytest.mark.parametrize(
+    ("desired_at", "expected"),
+    [(None, False), ("2026-08-22T19:59", False), ("2026-08-22T20:00", False),
+     ("2026-08-22T20:01", True), ("not-a-date", False)],
+)
+def test_is_nocturnal_appointment_covers_boundary_and_invalid_values(desired_at, expected):
+    assert is_nocturnal_appointment(desired_at) is expected
+
+
+def test_estimate_service_price_adds_global_nocturnal_supplement_after_20h():
+    price, _, _ = estimate_service_price_cents(
+        service={"base_price_cents": 5000}, hair_length=None, general_adjustments=None,
+        meche=False, location_preference="salon", desired_at="2026-08-22T20:30",
+    )
+    assert price == 5000 + NOCTURNAL_SUPPLEMENT_CENTS
+
+
+def test_estimate_service_price_does_not_add_supplement_at_20h_exactly():
+    price, _, _ = estimate_service_price_cents(
+        service={"base_price_cents": 5000}, hair_length=None, general_adjustments=None,
+        meche=False, location_preference="salon", desired_at="2026-08-22T20:00",
+    )
+    assert price == 5000
 
 
 def test_estimate_service_price_includes_multiple_general_adjustments_and_domicile_bonus():

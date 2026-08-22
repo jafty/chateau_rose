@@ -36,12 +36,14 @@ from chateaurose.domain.exceptions import DomainError, NotFound, ValidationError
 from chateaurose.domain.services.marketing_content import GalleryImage, ServiceContent, build_marketing_content
 from chateaurose.domain.services.booking_deadlines import require_minimum_notice
 from chateaurose.domain.services.pricing import (
+    NOCTURNAL_SUPPLEMENT_CENTS,
     ceil_price_for_display_cents,
     compute_checkout_amounts_cents,
     compute_service_fee_only_amounts_cents,
     compute_checkout_amounts_from_total_cents,
     estimate_service_price_cents,
     floor_price_for_display_cents,
+    is_nocturnal_appointment,
 )
 from chateaurose.domain.use_cases import expire_booking as expire_booking_uc
 from chateaurose.domain.use_cases import finalize_booking as finalize_booking_uc
@@ -1024,6 +1026,7 @@ def provider_booking_recap(request, token):
             general_adjustments=payload.get("general_adjustments") or [],
             meche=bool(payload.get("meche")),
             location_preference=payload.get("location_preference") or "salon",
+            desired_at=payload.get("desired_date"),
         )
     except ValidationError as exc:
         raise Http404(str(exc))
@@ -1153,6 +1156,7 @@ def provider_booking_recap(request, token):
             "service_fee_waived": service_fee_waived,
             "reservation_label_details": "frais de service Château Rose uniquement",
             "desired_date_display": desired_date_display,
+            "is_nocturnal_appointment": is_nocturnal_appointment(payload.get("desired_date")),
             "stripe_public_key": stripe_public_key,
             "require_payment_auth": require_payment_auth,
             "payment_intent_url": reverse("interface:provider_payment_intent"),
@@ -1360,6 +1364,7 @@ def generic_booking_recap(request, token):
             "service_fee_waived": service_fee_waived,
             "reservation_label_details": "frais de service Château Rose uniquement",
             "desired_date_display": desired_date_display,
+            "is_nocturnal_appointment": is_nocturnal_appointment(payload.get("desired_date")),
             "stripe_public_key": stripe_public_key,
             "require_payment_auth": require_payment_auth,
             "payment_intent_url": reverse("interface:provider_payment_intent"),
@@ -1407,6 +1412,7 @@ def provider_payment_intent(request):
                     "type_adjustment": type_adjustment or "standard",
                     "requested_options": general_adjustments,
                     "location_preference": location_preference or "salon",
+                    "desired_date": desired_date,
                 },
                 waive_service_fee=_service_fee_coupon_is_valid(service_fee_coupon_code),
             )
@@ -1475,6 +1481,7 @@ def provider_payment_intent(request):
                 general_adjustments=general_adjustments,
                 meche=meche,
                 location_preference=location_preference,
+                desired_at=desired_date,
             )
         except ValidationError as exc:
             message = str(exc)
@@ -1836,6 +1843,7 @@ def _generic_sub_service_pricing_data(sub_service: MarketingSubService | None) -
         "meche_bonus": sub_service.generic_meche_bonus_cents,
         "at_home_bonus": sub_service.generic_at_home_bonus_cents,
         "service_fee_percentage": sub_service.generic_service_fee_percentage,
+        "nocturnal_supplement": NOCTURNAL_SUPPLEMENT_CENTS,
     }
 
 
@@ -1889,6 +1897,7 @@ def _estimate_generic_sub_service_booking(sub_service: MarketingSubService, payl
         general_adjustments=payload.get("requested_options") or [],
         meche=False,
         location_preference=payload.get("location_preference") or "salon",
+        desired_at=payload.get("desired_date"),
     )
     amounts = compute_service_fee_only_amounts_cents(
         subtotal_cents=provider_estimate_cents,
@@ -1941,6 +1950,7 @@ def _build_service_request_form(request, service_meta: MarketingService | None, 
                         "type_adjustment": form.cleaned_data.get("type_adjustment") or "standard",
                         "requested_options": form.cleaned_data.get("requested_options") or [],
                         "location_preference": form.cleaned_data.get("location_preference") or "salon",
+                        "desired_date": form.cleaned_data.get("desired_date"),
                     },
                     waive_service_fee=waive_service_fee,
                 )
