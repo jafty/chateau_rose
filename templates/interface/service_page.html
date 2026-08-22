@@ -247,6 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalDetailsDisplay = document.getElementById('final-details-display');
     const stickyPriceValue = document.getElementById('sticky-price-value');
     const generalAdjustmentsDisplay = document.getElementById('general-adjustments-display');
+    const desiredDateInput = form.querySelector('input[name="desired_date"]');
+    const nocturnalWarning = form.querySelector('[data-nocturnal-warning]');
     const locationChoices = [...document.querySelectorAll('[data-location-choice]')];
     let currentStep = 1;
 
@@ -301,6 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
 
     const selectedAdjustments = () => [...adjustmentsContainer.querySelectorAll('input:checked')].map((input) => input.value);
+    const isNocturnal = () => {
+        const timePart = (desiredDateInput?.value || '').split('T')[1] || '';
+        return timePart > '20:00';
+    };
     const syncAdjustments = () => {
         adjustmentsInput.value = selectedAdjustments().join(', ');
     };
@@ -313,10 +319,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const adjustmentTotal = selectedAdjustments().reduce((total, key) => total + (adjustments[key] || 0), 0);
         const locationPreference = form.querySelector('input[name="location_preference"]:checked')?.value || 'salon';
         const atHomeAdj = locationPreference === 'domicile' ? (pricingData.at_home_bonus || 0) : 0;
-        const subtotal = pricingData.base + lengthAdj + typeAdj + adjustmentTotal + atHomeAdj;
+        const nocturnalAdj = isNocturnal() ? (pricingData.nocturnal_supplement || 0) : 0;
+        if (nocturnalWarning) nocturnalWarning.hidden = !isNocturnal();
         const displayTotalWithFees = displayEstimateWithFees({
             base: pricingData.base,
-            adjustments: [lengthAdj, typeAdj, adjustmentTotal, atHomeAdj],
+            adjustments: [lengthAdj, typeAdj, adjustmentTotal, atHomeAdj, nocturnalAdj],
         });
         finalPriceDisplay.textContent = formatPrice(displayTotalWithFees);
         stickyPriceValue.textContent = formatPrice(displayTotalWithFees);
@@ -395,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }));
     hairLengthSelect.addEventListener('change', updateEstimate);
     typeSelect.addEventListener('change', updateEstimate);
+    desiredDateInput?.addEventListener('input', updateEstimate);
     buildHairLengths();
     buildTypes();
     buildAdjustments();

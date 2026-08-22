@@ -970,6 +970,7 @@
         const mecheCheckbox = document.getElementById('meche');
         const mecheField = document.querySelector('[data-meche-field]');
         const mecheWarning = document.querySelector('[data-meche-warning]');
+        const nocturnalWarning = form?.querySelector('[data-nocturnal-warning]');
 
         const stickyPriceValue = document.getElementById('sticky-price-value');
         const finalPriceDisplay = document.getElementById('final-price-display');
@@ -1606,7 +1607,10 @@
             const mecheAdj = mecheCheckbox?.checked ? pricing.meche_bonus || 0 : 0;
             const selectedLocationPreference = document.querySelector('input[name="location_preference"]:checked')?.value || locationPreferenceInput?.value;
             const atHomeAdj = selectedLocationPreference === "domicile" ? pricing.at_home_bonus || 0 : 0;
-            const computedTotalCents = base + lengthAdj + typeAdj + generalAdj + mecheAdj + atHomeAdj;
+            const desiredTime = (desiredDateInput?.value || '').split('T')[1] || '';
+            const nocturnalAdj = desiredTime > '20:00' ? (pricing.nocturnal_supplement || 0) : 0;
+            if (nocturnalWarning) nocturnalWarning.hidden = nocturnalAdj === 0;
+            const computedTotalCents = base + lengthAdj + typeAdj + generalAdj + mecheAdj + atHomeAdj + nocturnalAdj;
             const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : computedTotalCents;
             const serviceFeePercentage = pricing.service_fee_percentage ?? 15;
             const serviceFeeCents = Math.round(totalCents * serviceFeePercentage / 100);
@@ -1614,7 +1618,7 @@
                 ? ceilPriceForDisplay(totalCents + serviceFeeCents)
                 : displayEstimateWithFeesCents({
                     base,
-                    adjustments: [lengthAdj, typeAdj, generalAdj, mecheAdj, atHomeAdj],
+                    adjustments: [lengthAdj, typeAdj, generalAdj, mecheAdj, atHomeAdj, nocturnalAdj],
                     serviceFeePercentage,
                 });
             const depositCents = serviceFeeCents;
@@ -1683,6 +1687,7 @@
         if (mecheCheckbox) {
             mecheCheckbox.addEventListener('change', refreshEstimate);
         }
+        desiredDateInput?.addEventListener('input', refreshEstimate);
 
         if (checkoutOnly) {
             const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : 0;

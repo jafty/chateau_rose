@@ -3,6 +3,7 @@ from urllib.parse import unquote, urlparse
 from django.conf import settings
 from django.core.files.storage import default_storage
 from chateaurose.domain.services.pricing import (
+    NOCTURNAL_SUPPLEMENT_CENTS,
     ceil_price_for_display_cents,
     compute_checkout_amounts_cents,
 )
@@ -50,6 +51,7 @@ def build_pricing_data(services):
             "starting_from": starting_price,
             "deposit_percentage": service.provider.deposit_percentage,
             "service_fee_percentage": service_fee_percentage,
+            "nocturnal_supplement": NOCTURNAL_SUPPLEMENT_CENTS,
         }
     return pricing_data, starting_prices
 

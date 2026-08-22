@@ -1,8 +1,24 @@
+from datetime import datetime, time
+
 from chateaurose.domain.exceptions import ValidationError
 
 
 STANDARD_ADJUSTMENT_KEY = "standard"
 SALON_LOCATION_PREFERENCE = "salon"
+NOCTURNAL_SUPPLEMENT_CENTS = 2000
+NOCTURNAL_START_TIME = time(20, 0)
+
+
+def is_nocturnal_appointment(desired_at: datetime | str | None) -> bool:
+    """Return whether an appointment starts strictly after 20:00."""
+    if not desired_at:
+        return False
+    if isinstance(desired_at, str):
+        try:
+            desired_at = datetime.fromisoformat(desired_at)
+        except ValueError:
+            return False
+    return desired_at.time() > NOCTURNAL_START_TIME
 
 
 def estimate_service_price_cents(
@@ -13,6 +29,7 @@ def estimate_service_price_cents(
     meche: bool,
     location_preference: str | None,
     type_adjustment: str | None = None,
+    desired_at: datetime | str | None = None,
 ) -> tuple[int, str, list[str]]:
     base_price = service["base_price_cents"]
 
@@ -61,8 +78,9 @@ def estimate_service_price_cents(
         if location_preference != SALON_LOCATION_PREFERENCE
         else 0
     )
+    nocturnal_bonus = NOCTURNAL_SUPPLEMENT_CENTS if is_nocturnal_appointment(desired_at) else 0
 
-    estimated_price = base_price + length_adj + type_adj + general_adj_value + meche_bonus + domicile_bonus
+    estimated_price = base_price + length_adj + type_adj + general_adj_value + meche_bonus + domicile_bonus + nocturnal_bonus
     return estimated_price, normalized_hair_length, normalized_general_adjustments
 
 

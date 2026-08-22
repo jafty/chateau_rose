@@ -18,6 +18,7 @@ Contexte rapide du dépôt
   - Chercher variables d'environnement, URL ou références d'API : `rg -n "http[s]?://|ENV|DATABASE_URL|API_KEY" || true`
 
 Conventions et comportements attendus
+- Suivre la stratégie pseudo-TDD : couvrir dans les tests du cœur logique chaque cas d'usage, ses limites et ses variations ; ne pas tester une logique inexistante, ne pas ajouter de logique non testée et ne jamais se limiter au happy path.
 - Ne pas appliquer de changements larges sans créer une branche dédiée nommée `ai/` (ex. `ai/update-copilot-instructions`).
 - Commits : message court + référence (ex. "docs: ajouter .github/copilot-instructions.md — diagnostic initial").
 - Ouvrir une PR pour toute modification non triviale et demander une revue humaine avant merge.

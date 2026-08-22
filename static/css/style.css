@@ -2738,6 +2738,7 @@ p.lead { font-size: 1.05rem; color: var(--ink-secondary); }
 .provider-form-grid textarea { min-height: 140px; }
 .provider-form-grid .estimation-box { grid-column: 1 / -1; background: #fff5fb; border: 1px solid #f3c1da; border-radius: 12px; padding: 12px; }
 .provider-form-grid .estimation-box .estimate-value { font-weight: 800; font-size: 1.1rem; margin: 0; }
+.nocturnal-warning { margin-top: 10px; padding: 10px 12px; border: 1px solid #e0a62b; border-radius: 8px; background: #fff4cf; color: #704800; font-weight: 650; }
 .provider-form-grid .checkbox-field { grid-column: 1 / -1; }
 .checkbox-field label { display: inline-flex; gap: 8px; align-items: flex-start; font-weight: 700; white-space: normal; width: 100%; }
 @media (max-width: 640px) {
