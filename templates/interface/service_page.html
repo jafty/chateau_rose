@@ -282,6 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const validateCurrentStep = () => {
         const current = document.querySelector(`.wizard-step[data-step="${currentStep}"]`);
+        const desiredDate = current.querySelector('[data-booking-datetime]');
+        if (desiredDate) window.chateauRoseBookingDatetime?.sync(desiredDate);
         return [...current.querySelectorAll('input, select, textarea')].every((field) => {
             if (field.disabled || field.checkValidity()) return true;
             field.reportValidity();
@@ -320,8 +322,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const locationPreference = form.querySelector('input[name="location_preference"]:checked')?.value || 'salon';
         const atHomeAdj = locationPreference === 'domicile' ? (pricingData.at_home_bonus || 0) : 0;
         const nocturnalAdj = isNocturnal() ? (pricingData.nocturnal_supplement || 0) : 0;
-        if (nocturnalWarning) nocturnalWarning.hidden = !isNocturnal();
-        window.chateauRoseBookingDatetime?.sync(desiredDateInput);
+        if (window.chateauRoseBookingDatetime) {
+            window.chateauRoseBookingDatetime.sync(desiredDateInput);
+        } else if (nocturnalWarning) {
+            nocturnalWarning.hidden = !isNocturnal();
+        }
         const displayTotalWithFees = displayEstimateWithFees({
             base: pricingData.base,
             adjustments: [lengthAdj, typeAdj, adjustmentTotal, atHomeAdj, nocturnalAdj],
