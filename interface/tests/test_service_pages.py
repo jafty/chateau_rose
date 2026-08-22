@@ -677,6 +677,33 @@ class ServicePagesTests(TestCase):
         self.assertEqual(booking.requested_marketing_sub_service, self.sub_service)
         self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_WAIVED)
 
+    def test_generic_booking_form_displays_minimum_notice_error_next_to_date(self):
+        response = self.client.post(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]),
+            {
+                "request_service": "1",
+                "client_name": "Awa Diallo",
+                "client_email": "awa@example.com",
+                "client_phone": "0600000000",
+                "desired_date": (timezone.now() + timedelta(hours=23)).strftime("%Y-%m-%dT%H:%M"),
+                "location_preference": "salon",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Le rendez-vous doit être demandé au moins 24 heures à l&#x27;avance.",
+        )
+        self.assertContains(response, "data-booking-datetime-error")
+
+    def test_generic_booking_nocturnal_warning_includes_service_fee(self):
+        response = self.client.get(
+            reverse("interface:sub_service_page", args=["tresses", "knotless-braids"])
+        )
+
+        self.assertContains(response, "Un supplément nocturne de 23 €")
+
     def test_enabled_generic_booking_redirects_to_recap_then_creates_booking(self):
         self.sub_service.generic_booking_enabled = True
         self.sub_service.generic_base_price_cents = 10000

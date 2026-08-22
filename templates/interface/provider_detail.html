@@ -1245,6 +1245,13 @@
                 return true;
             }
 
+            if (
+                window.chateauRoseBookingDatetime
+                && !window.chateauRoseBookingDatetime.sync(desiredDateInput)
+            ) {
+                return false;
+            }
+
             const requestId = ++desiredDateValidationRequestId;
 
             try {
@@ -1610,6 +1617,7 @@
             const desiredTime = (desiredDateInput?.value || '').split('T')[1] || '';
             const nocturnalAdj = desiredTime > '20:00' ? (pricing.nocturnal_supplement || 0) : 0;
             if (nocturnalWarning) nocturnalWarning.hidden = nocturnalAdj === 0;
+            window.chateauRoseBookingDatetime?.sync(desiredDateInput);
             const computedTotalCents = base + lengthAdj + typeAdj + generalAdj + mecheAdj + atHomeAdj + nocturnalAdj;
             const totalCents = Number.isFinite(fixedPriceCents) ? fixedPriceCents : computedTotalCents;
             const serviceFeePercentage = pricing.service_fee_percentage ?? 15;

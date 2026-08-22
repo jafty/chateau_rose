@@ -112,7 +112,15 @@ class GenericBookingRequestForm(forms.Form):
         for date_format in ("%Y-%m-%dT%H:%M", "%d/%m/%Y %H:%M", "%Y-%m-%d"):
             try:
                 parsed = datetime.strptime(raw_value, date_format)
-                return timezone.make_aware(parsed).isoformat()
+                aware_date = timezone.make_aware(parsed)
+                try:
+                    require_minimum_notice(
+                        desired_at=aware_date,
+                        now=timezone.now(),
+                    )
+                except DomainValidationError as exc:
+                    raise forms.ValidationError(str(exc)) from exc
+                return aware_date.isoformat()
             except (ValueError, TypeError):
                 continue
         return raw_value
