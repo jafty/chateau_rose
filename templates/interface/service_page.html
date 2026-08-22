@@ -15,7 +15,7 @@
         <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
         <div class="service-header-actions">
-            <a class="btn primary plausible-event-name=Service+Booking+CTA" href="#{% if sub_services and not is_sub_service_page %}service-subservices{% else %}service-request{% endif %}">Réserver rapidement</a>
+            <a class="btn primary plausible-event-name=Service+Booking+CTA" href="#{% if sub_services and not is_sub_service_page %}service-subservices{% else %}service-request{% endif %}">{% if sub_services and not is_sub_service_page %}Voir les prestations{% else %}Réserver maintenant{% endif %}</a>
             <a class="btn secondary plausible-event-name=Choose+Provider+CTA" href="#provider-comparison">Choisir une coiffeuse</a>
         </div>
     </div>

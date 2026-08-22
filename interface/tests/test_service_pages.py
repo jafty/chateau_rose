@@ -635,12 +635,12 @@ class ServicePagesTests(TestCase):
         self.assertContains(response, "Choisir")
         self.assertContains(response, f'href="{reverse("interface:service_page", args=["tresses"])}"')
 
-    def test_service_page_shows_quick_booking_primary_cta_and_provider_choice_secondary_cta(self):
+    def test_service_page_primary_cta_invites_user_to_view_sub_services(self):
         response = self.client.get(reverse("interface:service_page", args=["tresses"]))
 
         self.assertContains(response, "Dès")
         self.assertContains(response, "65€")
-        self.assertContains(response, "Réserver rapidement")
+        self.assertContains(response, "Voir les prestations")
         self.assertContains(response, 'href="#service-subservices"')
         self.assertContains(response, 'id="service-subservices"')
         self.assertContains(response, "Choisir une coiffeuse")
@@ -648,6 +648,7 @@ class ServicePagesTests(TestCase):
     def test_sub_service_page_quick_booking_cta_targets_request_form(self):
         response = self.client.get(reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]))
 
+        self.assertContains(response, "Réserver maintenant")
         self.assertContains(response, 'href="#service-request"')
 
     @override_settings(GENERIC_BOOKING_PLATFORM_FEE_CENTS=0)
