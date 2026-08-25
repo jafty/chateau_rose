@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load price_filters %}
 
 {% block title %}Espace prestataire{% endblock %}
 
@@ -64,7 +65,7 @@
                                     {% if booking.requested_options %}<br><span class="meta-line">Options : {{ booking.requested_options|join:", " }}</span>{% endif %}
                                 </td>
                                 <td>{{ booking.client_phone|default:"Non renseigné" }}</td>
-                                <td>{{ booking.desired_date }}</td>
+                                <td>{{ booking.desired_date|format_french_datetime }}</td>
                                 <td>{{ booking.location }}</td>
                                 <td><span class="status-pill">{{ booking.status }}</span></td>
                             </tr>
@@ -90,7 +91,7 @@
                         </p>
                         {% if booking.requested_options %}<p><strong>Options :</strong> {{ booking.requested_options|join:", " }}</p>{% endif %}
                         <p><strong>Téléphone :</strong> {{ booking.client_phone|default:"Non renseigné" }}</p>
-                        <p><strong>Date souhaitée :</strong> {{ booking.desired_date }}</p>
+                        <p><strong>Date souhaitée :</strong> {{ booking.desired_date|format_french_datetime }}</p>
                         <p><strong>Lieu :</strong> {{ booking.location }}</p>
                         <p><strong>Statut :</strong> <span class="status-pill">{{ booking.status }}</span></p>
                     </article>
