@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone as datetime_timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from django.conf import settings
@@ -8,8 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from booking.models import Booking, BookingOffer, BookingOpportunity, Provider, Service
-from chateaurose.domain.exceptions import DomainError, InvalidState, ValidationError
-from chateaurose.domain.services.booking_deadlines import bounded_deadline
+from chateaurose.domain.exceptions import InvalidState, ValidationError
 from chateaurose.domain.use_cases import bounty as bounty_uc
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
@@ -230,6 +229,88 @@ def submit_offer(
     return offer
 
 
+def _capture_confirmation_payment(booking):
+    """Capture the locked platform fee, changing state only after Stripe succeeds."""
+    if booking.payment_auth_id and booking.amount_due_now_cents > 0:
+        payments.capture_auth(booking.payment_auth_id)
+        booking.payment_status = Booking.PAYMENT_STATUS_CAPTURED
+
+
+def accept_unchanged(*, opportunity_id, provider: Provider, service_id, now=None):
+    now = now or timezone.now()
+    with transaction.atomic():
+        opportunity = (
+            BookingOpportunity.objects.select_for_update()
+            .select_related("requested_sub_service")
+            .get(pk=opportunity_id)
+        )
+        booking = Booking.objects.select_for_update().get(pk=opportunity.booking_id)
+        service = eligible_services(opportunity, provider).filter(pk=service_id).first()
+        desired_at = _parse_date(booking.desired_date).astimezone(datetime_timezone.utc)
+        payout_cents = booking.provider_price_estimate_cents
+        if payout_cents is None:
+            payout_cents = max(
+                0, booking.estimated_price_cents - booking.chateau_rose_fee_cents
+            )
+        # Canonicalize the legacy fallback once; the total and fee remain unchanged.
+        booking.provider_price_estimate_cents = payout_cents
+        booking.estimated_price_cents = payout_cents + booking.chateau_rose_fee_cents
+        bounty_uc.accept_unchanged_request(
+            booking=booking,
+            opportunity=opportunity,
+            provider_id=provider.id,
+            service_id=service_id,
+            now=now,
+            provider_is_eligible=service is not None,
+            service_matches_request=bool(
+                service
+                and service.marketing_sub_services.filter(
+                    pk=opportunity.requested_sub_service_id
+                ).exists()
+            ),
+            desired_at=desired_at,
+        )
+        _capture_confirmation_payment(booking)
+        offer = BookingOffer.objects.create(
+            opportunity=opportunity,
+            provider=provider,
+            service=service,
+            proposed_date=booking.desired_date,
+            proposed_price_cents=payout_cents,
+            status=BookingOffer.STATUS_DIRECTLY_ACCEPTED,
+            submitted_at=now,
+            client_deadline_at=now,
+            decided_at=now,
+        )
+        opportunity.save(update_fields=("status", "closed_at"))
+        booking.save()
+
+    base_url = (
+        getattr(settings, "SITE_URL", "") or "https://www.chateau-rose.fr"
+    ).rstrip("/")
+    manage_url = base_url + reverse(
+        "interface:client_confirmation", args=[booking.booking_id]
+    )
+    details = (
+        f"Prestation : {service.name}\nDate : {booking.desired_date}\n"
+        f"Lieu : {booking.location or 'Non précisé'}\n"
+        f"Tarif prestataire : {payout_cents / 100:.2f} €"
+    )
+    notifier.notify(
+        booking.client_email,
+        "Ta demande est confirmée",
+        f"Bonjour {booking.client_name},\n\nTa demande est confirmée avec {provider.name}.\n\n"
+        f"{details}\n\nGérer ma réservation :\n{manage_url}\n\nÀ bientôt,\nL'équipe Château Rose",
+    )
+    notifier.notify(
+        provider.contact_email,
+        "Rendez-vous confirmé",
+        f"Bonjour {provider.name},\n\nTu as confirmé la demande {booking.booking_id}.\n\n"
+        f"{details}\n\nRetrouve-la dans ton espace prestataire.\n\nÀ bientôt,\nL'équipe Château Rose",
+    )
+    return booking, offer
+
+
 def decide(*, token, decision, now=None):
     now = now or timezone.now()
     try:
@@ -247,9 +328,7 @@ def decide(*, token, decision, now=None):
         )
         bounty_uc.decide_offer(booking=booking, offer=offer, decision=decision, now=now)
         if decision == "accept":
-            if booking.payment_auth_id and booking.amount_due_now_cents > 0:
-                payments.capture_auth(booking.payment_auth_id)
-                booking.payment_status = Booking.PAYMENT_STATUS_CAPTURED
+            _capture_confirmation_payment(booking)
         else:
             if booking.payment_auth_id:
                 payments.release_auth(booking.payment_auth_id)

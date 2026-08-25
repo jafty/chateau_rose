@@ -30,7 +30,11 @@ from chateaurose.domain.services.pricing import (
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.provider_directory import DjangoProviderDirectory
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
-from chateaurose.infrastructure.bounty_service import eligible_services, submit_offer
+from chateaurose.infrastructure.bounty_service import (
+    accept_unchanged,
+    eligible_services,
+    submit_offer,
+)
 from booking.models import BookingOpportunity
 from providers.forms import (
     ProviderBlockedSlotForm,
@@ -334,18 +338,32 @@ def bounty_offer(request, opportunity_id):
     error = None
     if request.method == "POST":
         try:
-            submit_offer(
-                opportunity_id=opportunity.id,
-                provider=provider,
-                service_id=request.POST.get("service"),
-                proposed_date=request.POST.get("proposed_date", ""),
-                proposed_price_euros=request.POST.get("proposed_price_euros", ""),
-                message=request.POST.get("message", "").strip(),
-            )
+            action = request.POST.get("action")
+            if action == "accept_unchanged":
+                accept_unchanged(
+                    opportunity_id=opportunity.id,
+                    provider=provider,
+                    service_id=request.POST.get("service"),
+                )
+            elif action == "submit_offer":
+                submit_offer(
+                    opportunity_id=opportunity.id,
+                    provider=provider,
+                    service_id=request.POST.get("service"),
+                    proposed_date=request.POST.get("proposed_date", ""),
+                    proposed_price_euros=request.POST.get("proposed_price_euros", ""),
+                    message=request.POST.get("message", "").strip(),
+                )
+            else:
+                raise DomainError("Action inconnue.")
             return render(
                 request,
                 "providers/bounty_offer.html",
-                {"submitted": True, "opportunity": opportunity},
+                {
+                    "submitted": True,
+                    "directly_accepted": action == "accept_unchanged",
+                    "opportunity": opportunity,
+                },
             )
         except (DomainError, ValueError) as exc:
             error = str(exc)
@@ -357,6 +375,7 @@ def bounty_offer(request, opportunity_id):
             "services": services,
             "error": error,
             "suggested_price_euros": suggested_price_euros,
+            "accepted_price_euros": suggested_price_euros,
             "offer_price_euros": (
                 request.POST.get("proposed_price_euros", suggested_price_euros)
             ),
