@@ -187,7 +187,7 @@ class BookingActionTests(TestCase):
         self.assertContains(response, "Frais Château Rose")
         self.assertContains(response, "6.75 €")
         self.assertNotContains(response, "Acompte prestataire")
-        self.assertContains(response, "Montant à régler le jour J :")
+        self.assertContains(response, "À régler le jour J")
 
     def test_client_confirmation_applies_ceil_deposit_and_floor_remaining(self):
         booking = Booking.objects.create(
@@ -214,9 +214,53 @@ class BookingActionTests(TestCase):
 
         response = self.client.get(reverse("interface:client_confirmation", args=[booking.booking_id]))
 
-        self.assertContains(response, "Total estimé :")
+        self.assertContains(response, "Total estimé")
         self.assertContains(response, "86.25 €")
         self.assertContains(response, "11.25 €")
         self.assertNotContains(response, "Acompte prestataire")
-        self.assertContains(response, "Montant à régler le jour J")
+        self.assertContains(response, "À régler le jour J")
         self.assertContains(response, "75 €")
+
+    def test_confirmed_page_preserves_contact_instruction_line_breaks(self):
+        self.provider.preferred_contact_method = Provider.CONTACT_METHOD_PHONE
+        self.provider.contact_phone = "06 12 34 56 78"
+        self.provider.post_confirmation_contact_instructions = (
+            "Écris-moi sur WhatsApp.\nPrécise ton numéro de réservation."
+        )
+        self.provider.save(
+            update_fields=(
+                "preferred_contact_method",
+                "contact_phone",
+                "post_confirmation_contact_instructions",
+            )
+        )
+        booking = Booking.objects.create(
+            booking_id="BK-CONTACT-LINES-1",
+            provider=self.provider,
+            service=self.service,
+            client_name="Nina",
+            client_email="nina@example.com",
+            location="Paris",
+            location_preference="salon",
+            desired_date=(timezone.now() + timedelta(days=2)).isoformat(),
+            hair_length="long",
+            general_adjustments=[],
+            meche=False,
+            current_hair_picture="current.jpg",
+            inspiration_pictures=[],
+            free_text="",
+            estimated_price_cents=8625,
+            status=Booking.STATUS_CONFIRMED,
+            created_at=timezone.now(),
+        )
+
+        response = self.client.get(
+            reverse("interface:client_confirmation", args=[booking.booking_id])
+        )
+
+        self.assertContains(response, "Instructions personnalisées")
+        self.assertContains(
+            response,
+            "Écris-moi sur WhatsApp.<br>Précise ton numéro de réservation.",
+            html=True,
+        )
