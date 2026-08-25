@@ -189,6 +189,44 @@ class BookingActionTests(TestCase):
         self.assertNotContains(response, "Acompte prestataire")
         self.assertContains(response, "À régler le jour J")
 
+    def test_client_confirmation_formats_local_date_and_preserves_instruction_lines(self):
+        self.provider.preferred_contact_method = Provider.CONTACT_METHOD_CUSTOM
+        self.provider.post_confirmation_contact_instructions = "Premier message\nDeuxième message"
+        self.provider.save(
+            update_fields=[
+                "preferred_contact_method",
+                "post_confirmation_contact_instructions",
+            ]
+        )
+        booking = Booking.objects.create(
+            booking_id="BK-FRENCH-DATE-1",
+            provider=self.provider,
+            service=self.service,
+            client_name="Léa",
+            client_email="lea@example.com",
+            location="Paris",
+            location_preference="salon",
+            client_address="",
+            desired_date="2026-08-26T18:00:00+02:00",
+            hair_length="long",
+            general_adjustments=[],
+            meche=False,
+            current_hair_picture="",
+            inspiration_pictures=[],
+            free_text="",
+            estimated_price_cents=9000,
+            status=Booking.STATUS_CONFIRMED,
+            created_at=timezone.now(),
+        )
+
+        response = self.client.get(
+            reverse("interface:client_confirmation", args=[booking.booking_id])
+        )
+
+        self.assertContains(response, "26 août 2026 à 18h00")
+        self.assertNotContains(response, "2026-08-26T18:00:00+02:00")
+        self.assertContains(response, "Premier message<br>Deuxième message", html=True)
+
     def test_client_confirmation_applies_ceil_deposit_and_floor_remaining(self):
         booking = Booking.objects.create(
             booking_id="BK-ROUNDING-1",

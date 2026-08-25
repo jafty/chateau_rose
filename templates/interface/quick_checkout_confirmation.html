@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load price_filters %}
 
 {% block title %}Rendez-vous confirmé | Château Rose{% endblock %}
 
@@ -13,7 +14,7 @@
     <div class="paper-card" style="margin-top: 24px;">
         <h2 class="section-title">Récapitulatif</h2>
         <ul class="meta-line" style="margin: 0; padding-left: 18px;">
-            <li>Date : {{ effective_date }}</li>
+            <li>Date : {{ effective_date|format_french_datetime }}</li>
             <li>Tarif : {{ effective_price }}</li>
             <li>Prestation : {{ booking.service.name }}</li>
             <li>Lieu : {{ booking.location }}</li>
@@ -38,8 +39,8 @@
     <div class="paper-card" style="margin-top: 24px;">
         <h2 class="section-title">Contacter le profil partenaire</h2>
         {% if is_confirmed %}
-            <p class="meta-line" style="margin: 0;">{{ provider_contact_label }} : {{ provider_contact_value }}</p>
-            {% if provider_contact_instructions %}<p class="meta-line" style="margin: 6px 0 0;">{{ provider_contact_instructions }}</p>{% endif %}
+            <p class="meta-line" style="margin: 0;">{{ provider_contact_label }} : {{ provider_contact_value|linebreaksbr }}</p>
+            {% if provider_contact_instructions %}<p class="meta-line" style="margin: 6px 0 0;">{{ provider_contact_instructions|linebreaksbr }}</p>{% endif %}
         {% else %}
             <p class="meta-line" style="margin: 0;">Les coordonnées seront communiquées après confirmation du rendez-vous.</p>
         {% endif %}

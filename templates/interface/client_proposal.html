@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load price_filters %}
 
 {% block title %}Ta proposition | Château Rose{% endblock %}
 
@@ -13,7 +14,7 @@
     <div class="paper-card" style="margin-top: 24px;">
         <h2 class="section-title">Nouveaux détails</h2>
         <ul class="meta-line" style="margin: 0; padding-left: 18px;">
-            <li>Date proposée : {{ proposed_date }}</li>
+            <li>Date proposée : {{ proposed_date|format_french_datetime }}</li>
             <li>Tarif proposé : {{ proposed_price }}</li>
             <li>Prestation : {{ booking.service.name }}</li>
             <li>Lieu : {{ booking.location }}</li>
