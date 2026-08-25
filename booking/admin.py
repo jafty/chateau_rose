@@ -47,15 +47,42 @@ from interface.services.image_processing import compress_image_field
 
 @admin.register(BookingOpportunity)
 class BookingOpportunityAdmin(admin.ModelAdmin):
-    list_display = ("booking_reference", "requested_sub_service", "status", "reason", "opened_at", "response_deadline_at", "excluded_provider")
+    list_display = (
+        "booking_reference",
+        "requested_sub_service",
+        "booking_type_variation",
+        "booking_estimated_price",
+        "status",
+        "reason",
+        "opened_at",
+        "response_deadline_at",
+        "excluded_provider",
+    )
     list_filter = ("status", "reason", "opened_at", "response_deadline_at")
     search_fields = ("booking__booking_id", "booking__client_name", "booking__client_email", "requested_sub_service__name", "excluded_provider__name")
     list_select_related = ("booking", "requested_sub_service", "excluded_provider")
     date_hierarchy = "opened_at"
     ordering = ("-opened_at",)
-    readonly_fields = ("opened_at", "closed_at")
+    readonly_fields = (
+        "booking_type_variation",
+        "booking_estimated_price",
+        "opened_at",
+        "closed_at",
+    )
     fieldsets = (
-        ("Demande", {"fields": ("booking", "requested_sub_service", "reason", "excluded_provider")}),
+        (
+            "Demande",
+            {
+                "fields": (
+                    "booking",
+                    "requested_sub_service",
+                    "booking_type_variation",
+                    "booking_estimated_price",
+                    "reason",
+                    "excluded_provider",
+                )
+            },
+        ),
         ("Suivi", {"fields": ("status", "opened_at", "response_deadline_at", "closed_at")}),
     )
 
@@ -63,6 +90,18 @@ class BookingOpportunityAdmin(admin.ModelAdmin):
     def booking_reference(self, obj):
         url = reverse("admin:booking_booking_change", args=(obj.booking_id,))
         return format_html('<a href="{}">{} · {}</a>', url, obj.booking.booking_id, obj.booking.client_name)
+
+    @admin.display(description="Variation de type", ordering="booking__type_adjustment")
+    def booking_type_variation(self, obj):
+        return obj.booking.type_adjustment or "standard"
+
+    @admin.display(description="Prix estimé", ordering="booking__estimated_price_cents")
+    def booking_estimated_price(self, obj):
+        return self._format_price(obj.booking.estimated_price_cents)
+
+    @staticmethod
+    def _format_price(price_cents):
+        return f"{price_cents / 100:.2f} €".replace(".", ",")
 
 
 @admin.register(BookingOffer)
@@ -570,7 +609,18 @@ class ProviderMarketingServiceAdmin(ImportExportModelAdmin):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ("booking_id", "booking_kind", "client_email", "provider", "service", "status", "payment_status", "created_at")
+    list_display = (
+        "booking_id",
+        "booking_kind",
+        "client_email",
+        "provider",
+        "service",
+        "type_adjustment",
+        "formatted_estimated_price",
+        "status",
+        "payment_status",
+        "created_at",
+    )
     list_filter = ("booking_kind", "status", "payment_status", "provider")
     search_fields = ("booking_id", "client_name", "client_email", "payment_auth_id")
     readonly_fields = ("current_hair_picture_preview", "inspiration_pictures_preview")
@@ -581,7 +631,7 @@ class BookingAdmin(admin.ModelAdmin):
             "requested_service_label_snapshot", "requested_options", "status",
             "client_name", "client_email", "client_phone", "location",
             "location_preference", "client_address", "desired_date", "hair_length",
-            "general_adjustments", "meche", "free_text", "estimated_price_cents",
+            "type_adjustment", "general_adjustments", "meche", "free_text", "estimated_price_cents",
             "provider_price_estimate_cents", "chateau_rose_fee_cents",
             "amount_due_now_cents", "payment_status", "proposed_price_cents",
             "proposed_date", "payment_auth_id", "locked_reservation_fee_cents",
@@ -595,6 +645,10 @@ class BookingAdmin(admin.ModelAdmin):
             ),
         }),
     )
+
+    @admin.display(description="Prix estimé", ordering="estimated_price_cents")
+    def formatted_estimated_price(self, obj):
+        return f"{obj.estimated_price_cents / 100:.2f} €".replace(".", ",")
 
 
     def get_urls(self):

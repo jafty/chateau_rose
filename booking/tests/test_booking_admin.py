@@ -3,8 +3,14 @@ from unittest.mock import patch
 from django.contrib.admin.sites import AdminSite
 from django.test import TestCase, override_settings
 
-from booking.admin import BookingAdmin, VerifiedReviewAdminForm
-from booking.models import Booking, Provider, Service, VerifiedReview
+from booking.admin import BookingAdmin, BookingOpportunityAdmin, VerifiedReviewAdminForm
+from booking.models import (
+    Booking,
+    BookingOpportunity,
+    Provider,
+    Service,
+    VerifiedReview,
+)
 
 
 class BookingAdminTests(TestCase):
@@ -42,6 +48,27 @@ class BookingAdminTests(TestCase):
     def test_booking_list_displays_client_email_and_omits_photos_column(self):
         self.assertIn("client_email", self.model_admin.list_display)
         self.assertNotIn("inspiration_pictures_count", self.model_admin.list_display)
+
+    def test_booking_admin_displays_type_variation_and_estimated_price(self):
+        self.booking.type_adjustment = "premium"
+        self.booking.estimated_price_cents = 12345
+
+        self.assertIn("type_adjustment", self.model_admin.list_display)
+        self.assertIn("type_adjustment", self.model_admin.fieldsets[0][1]["fields"])
+        self.assertEqual(
+            self.model_admin.formatted_estimated_price(self.booking), "123,45 €"
+        )
+
+    def test_booking_opportunity_displays_booking_variation_and_price(self):
+        self.booking.type_adjustment = "premium"
+        self.booking.estimated_price_cents = 12345
+        opportunity = BookingOpportunity(booking=self.booking)
+        opportunity_admin = BookingOpportunityAdmin(BookingOpportunity, AdminSite())
+
+        self.assertIn("booking_type_variation", opportunity_admin.list_display)
+        self.assertIn("booking_estimated_price", opportunity_admin.list_display)
+        self.assertEqual(opportunity_admin.booking_type_variation(opportunity), "premium")
+        self.assertEqual(opportunity_admin.booking_estimated_price(opportunity), "123,45 €")
 
     def test_inspiration_pictures_count_matches_payload(self):
         self.assertEqual(self.model_admin.inspiration_pictures_count(self.booking), 2)
