@@ -46,7 +46,7 @@ def submit_first_offer(
     terms: OfferTerms,
     now,
     provider_is_eligible: bool,
-    desired_at
+    desired_at,
 ):
     if booking.status != "BOUNTY_OPEN" or opportunity.status != "OPEN":
         raise InvalidState("Cette opportunité a déjà reçu une proposition.")
@@ -68,6 +68,35 @@ def submit_first_offer(
     return bounded_deadline(
         start=now, response_hours=24, process_expires_at=booking.process_expires_at
     )
+
+
+def accept_unchanged_request(
+    *,
+    booking,
+    opportunity,
+    provider_id,
+    service_id,
+    now,
+    provider_is_eligible: bool,
+    service_matches_request: bool,
+    desired_at,
+):
+    """Confirm an open bounty without allowing any of its terms to be replaced."""
+    if booking.status != "BOUNTY_OPEN" or opportunity.status != "OPEN":
+        raise InvalidState("Cette opportunité n'est plus disponible.")
+    if now >= opportunity.response_deadline_at:
+        raise InvalidState("Cette opportunité a expiré.")
+    if not provider_is_eligible or not service_matches_request:
+        raise PermissionError(
+            "Cette prestation n'est pas éligible à cette opportunité."
+        )
+    require_minimum_notice(desired_at=desired_at, now=now)
+
+    opportunity.status, opportunity.closed_at = "OFFERED", now
+    booking.provider_id, booking.service_id = provider_id, service_id
+    booking.status = "CONFIRMED"
+    booking.updated_at = booking.state_entered_at = now
+    return booking
 
 
 def decide_offer(*, booking, offer, decision: str, now):

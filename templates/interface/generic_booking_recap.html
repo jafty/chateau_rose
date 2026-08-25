@@ -16,6 +16,7 @@
                 <h3>{{ service_label }}</h3>
                 <p><strong>Date souhaitée :</strong> {{ desired_date_display }}</p>
                 <p><strong>Lieu :</strong> {% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la prestataire{% endif %}</p>
+                <p class="meta-line">Une prestataire éligible pourra confirmer immédiatement en conservant tous ces éléments. Si elle change la date ou le tarif, tu devras accepter sa proposition.</p>
                 {% if payload.hair_length %}<p><strong>Longueur :</strong> {{ payload.hair_length }}</p>{% endif %}
                 <p><strong>Format :</strong> {{ payload.type_adjustment|default:"standard" }}</p>
                 {% if payload.requested_options %}<p><strong>Options :</strong> {{ payload.requested_options|join:", " }}</p>{% endif %}

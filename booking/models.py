@@ -736,6 +736,7 @@ class BookingOffer(models.Model):
     STATUS_ACCEPTED = "ACCEPTED"
     STATUS_REJECTED = "REJECTED"
     STATUS_EXPIRED = "EXPIRED"
+    STATUS_DIRECTLY_ACCEPTED = "DIRECTLY_ACCEPTED"
     STATUS_CHOICES = tuple(
         (value, value)
         for value in (
@@ -743,6 +744,7 @@ class BookingOffer(models.Model):
             STATUS_ACCEPTED,
             STATUS_REJECTED,
             STATUS_EXPIRED,
+            STATUS_DIRECTLY_ACCEPTED,
         )
     )
 

@@ -151,3 +151,101 @@ def test_expired_client_offer_cannot_be_accepted():
             decision="accept",
             now=NOW,
         )
+
+
+def test_provider_directly_accepts_unchanged_request():
+    item, campaign = booking("BOUNTY_OPEN"), opportunity()
+    bounty.accept_unchanged_request(
+        booking=item,
+        opportunity=campaign,
+        provider_id="2",
+        service_id="8",
+        now=NOW,
+        provider_is_eligible=True,
+        service_matches_request=True,
+        desired_at=NOW + timedelta(days=4),
+    )
+    assert item.status == "CONFIRMED"
+    assert item.provider_id == "2"
+    assert item.service_id == "8"
+    assert item.provider_price_estimate_cents == 10000
+    assert item.estimated_price_cents == 11500
+    assert item.proposed_date is None
+    assert campaign.status == "OFFERED"
+
+
+@pytest.mark.parametrize(
+    "item,campaign,eligible,matches,desired_at,error",
+    [
+        (
+            booking("BOUNTY_OPEN"),
+            opportunity(),
+            True,
+            True,
+            NOW + timedelta(hours=23),
+            ValidationError,
+        ),
+        (
+            booking("CONFIRMED"),
+            opportunity(),
+            True,
+            True,
+            NOW + timedelta(days=4),
+            InvalidState,
+        ),
+        (
+            booking("BOUNTY_OPEN"),
+            opportunity("OFFERED"),
+            True,
+            True,
+            NOW + timedelta(days=4),
+            InvalidState,
+        ),
+        (
+            booking("BOUNTY_OPEN"),
+            opportunity(),
+            False,
+            True,
+            NOW + timedelta(days=4),
+            PermissionError,
+        ),
+        (
+            booking("BOUNTY_OPEN"),
+            opportunity(),
+            True,
+            False,
+            NOW + timedelta(days=4),
+            PermissionError,
+        ),
+    ],
+)
+def test_direct_acceptance_rejects_invalid_request(
+    item, campaign, eligible, matches, desired_at, error
+):
+    with pytest.raises(error):
+        bounty.accept_unchanged_request(
+            booking=item,
+            opportunity=campaign,
+            provider_id="2",
+            service_id="8",
+            now=NOW,
+            provider_is_eligible=eligible,
+            service_matches_request=matches,
+            desired_at=desired_at,
+        )
+
+
+def test_direct_acceptance_rejects_expired_opportunity():
+    campaign = opportunity()
+    campaign.response_deadline_at = NOW
+    with pytest.raises(InvalidState):
+        bounty.accept_unchanged_request(
+            booking=booking("BOUNTY_OPEN"),
+            opportunity=campaign,
+            provider_id="2",
+            service_id="8",
+            now=NOW,
+            provider_is_eligible=True,
+            service_matches_request=True,
+            desired_at=NOW + timedelta(days=4),
+        )

@@ -9,9 +9,9 @@
         {% if submitted %}
             <section class="opportunity-state-card opportunity-state-card--success" aria-labelledby="opportunity-title">
                 <span class="opportunity-state-icon" aria-hidden="true">✓</span>
-                <p class="opportunity-eyebrow">Proposition transmise</p>
-                <h1 id="opportunity-title">C'est envoyé !</h1>
-                <p>La cliente peut maintenant consulter puis accepter ou refuser ta proposition. Tu seras informée de sa décision.</p>
+                <p class="opportunity-eyebrow">{% if directly_accepted %}Demande confirmée{% else %}Proposition transmise{% endif %}</p>
+                <h1 id="opportunity-title">{% if directly_accepted %}Le rendez-vous est confirmé !{% else %}C'est envoyé !{% endif %}</h1>
+                <p>{% if directly_accepted %}La cliente a reçu sa confirmation immédiatement.{% else %}La cliente peut maintenant consulter puis accepter ou refuser ta proposition. Tu seras informée de sa décision.{% endif %}</p>
                 <a class="btn secondary" href="{% url 'providers:providers_index' %}">← Retour à mes demandes</a>
             </section>
         {% elif opportunity.status != "OPEN" %}
@@ -25,8 +25,8 @@
         {% else %}
             <header class="opportunity-heading">
                 <p class="opportunity-eyebrow">Nouvelle demande · Réponse avant le {{ opportunity.response_deadline_at|date:"d/m/Y à H\\hi" }}</p>
-                <h1 id="opportunity-title">Propose ton rendez-vous</h1>
-                <p class="lead">Vérifie les souhaits de la cliente, puis indique le créneau et le tarif que tu peux lui proposer.</p>
+                <h1 id="opportunity-title">Confirme la demande</h1>
+                <p class="lead">Accepte immédiatement si tu peux respecter exactement la prestation, la date, le lieu et le tarif demandés.</p>
             </header>
 
             {% if error %}<div class="alert danger" role="alert">{{ error }}</div>{% endif %}
@@ -74,8 +74,8 @@
                     <div class="opportunity-card-heading">
                         <span class="opportunity-step">2</span>
                         <div>
-                            <p class="opportunity-kicker">Ta proposition</p>
-                            <h2 id="offer-form-title">Détaille ton offre</h2>
+                            <p class="opportunity-kicker">Confirmation immédiate</p>
+                            <h2 id="offer-form-title">Accepter telle quelle</h2>
                         </div>
                     </div>
                     <form method="post" class="opportunity-form">
@@ -86,6 +86,27 @@
                                 {% for service in services %}<option value="{{ service.id }}">{{ service.name }}</option>{% endfor %}
                             </select>
                             <small class="field-hint">Choisis la prestation de ton catalogue qui sera réservée.</small>
+                        </div>
+                        <dl class="opportunity-details">
+                            <div><dt>Date</dt><dd>{{ opportunity.booking.desired_date|format_french_datetime }}</dd></div>
+                            <div><dt>Lieu</dt><dd>{{ opportunity.booking.location|default:"Non précisé" }}</dd></div>
+                            <div><dt>Ton tarif</dt><dd>{{ accepted_price_euros }} €</dd></div>
+                        </dl>
+                        <div class="opportunity-submit-zone">
+                            <p>Ces informations sont verrouillées et seront confirmées à la cliente.</p>
+                            <button class="btn full-width" type="submit" name="action" value="accept_unchanged">Accepter la demande telle quelle →</button>
+                        </div>
+                    </form>
+
+                    <details>
+                      <summary>Proposer une autre date ou un autre tarif</summary>
+                    <form method="post" class="opportunity-form">
+                        {% csrf_token %}
+                        <div class="form-field">
+                            <label for="changed-service">Prestation correspondante</label>
+                            <select id="changed-service" name="service" required>
+                                {% for service in services %}<option value="{{ service.id }}">{{ service.name }}</option>{% endfor %}
+                            </select>
                         </div>
                         <div class="opportunity-form-row">
                             <div class="form-field">
@@ -107,9 +128,10 @@
                         </div>
                         <div class="opportunity-submit-zone">
                             <p>La cliente recevra ces informations avant de prendre sa décision.</p>
-                            <button class="btn full-width" type="submit">Envoyer ma proposition →</button>
+                            <button class="btn secondary full-width" type="submit" name="action" value="submit_offer">Envoyer ma proposition →</button>
                         </div>
                     </form>
+                    </details>
                 </section>
             </div>
         {% endif %}

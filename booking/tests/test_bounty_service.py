@@ -9,8 +9,10 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from booking.models import Booking, BookingOpportunity, Provider, Service
+from booking.models import Booking, BookingOffer, BookingOpportunity, Provider, Service
+from chateaurose.domain.exceptions import InvalidState
 from chateaurose.infrastructure.bounty_service import (
+    accept_unchanged,
     eligible_services,
     open_for_booking,
 )
@@ -180,3 +182,96 @@ class BountyServiceTests(TestCase):
         self.assertEqual(booking.status, Booking.STATUS_CANCELLED)
         release.assert_called_once_with("pi_test")
         self.assertEqual(notify.call_count, 2)
+
+    @patch("chateaurose.infrastructure.bounty_service.payments.capture_auth")
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_direct_acceptance_captures_and_preserves_canonical_terms(
+        self, notify, capture
+    ):
+        booking = self.booking(payment_auth_id="auth_direct")
+        opportunity = open_for_booking(
+            booking.booking_id, reason=BookingOpportunity.REASON_GENERIC
+        )
+        original_date = booking.desired_date
+
+        confirmed, offer = accept_unchanged(
+            opportunity_id=opportunity.id,
+            provider=self.candidate,
+            service_id=self.candidate_service.id,
+        )
+
+        capture.assert_called_once_with("auth_direct")
+        self.assertEqual(confirmed.status, Booking.STATUS_CONFIRMED)
+        self.assertEqual(confirmed.desired_date, original_date)
+        self.assertEqual(confirmed.provider_price_estimate_cents, 10000)
+        self.assertEqual(confirmed.estimated_price_cents, 11500)
+        self.assertEqual(confirmed.chateau_rose_fee_cents, 1500)
+        self.assertEqual(confirmed.payment_status, Booking.PAYMENT_STATUS_CAPTURED)
+        self.assertEqual(offer.status, BookingOffer.STATUS_DIRECTLY_ACCEPTED)
+        self.assertEqual(notify.call_count, 3)  # invitation, then both confirmations
+        self.assertIn("Ta demande est confirmée", notify.call_args_list[-2].args[1])
+
+        with self.assertRaises(InvalidState):
+            accept_unchanged(
+                opportunity_id=opportunity.id,
+                provider=self.candidate,
+                service_id=self.candidate_service.id,
+            )
+        self.assertEqual(
+            BookingOffer.objects.filter(opportunity=opportunity).count(), 1
+        )
+
+    @patch(
+        "chateaurose.infrastructure.bounty_service.payments.capture_auth",
+        side_effect=RuntimeError("gateway unavailable"),
+    )
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_gateway_failure_rolls_back_direct_acceptance(self, notify, capture):
+        booking = self.booking(booking_id="BK-GATEWAY", payment_auth_id="auth_fail")
+        opportunity = open_for_booking(
+            booking.booking_id, reason=BookingOpportunity.REASON_GENERIC
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "gateway unavailable"):
+            accept_unchanged(
+                opportunity_id=opportunity.id,
+                provider=self.candidate,
+                service_id=self.candidate_service.id,
+            )
+
+        booking.refresh_from_db()
+        opportunity.refresh_from_db()
+        self.assertEqual(booking.status, Booking.STATUS_BOUNTY_OPEN)
+        self.assertEqual(booking.payment_status, Booking.PAYMENT_STATUS_AUTHORIZED)
+        self.assertEqual(opportunity.status, BookingOpportunity.STATUS_OPEN)
+        self.assertFalse(BookingOffer.objects.filter(opportunity=opportunity).exists())
+        self.assertEqual(notify.call_count, 1)  # only the original invitation
+
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_changed_offer_still_requires_client_validation(self, notify):
+        opportunity = open_for_booking(
+            self.booking(booking_id="BK-CHANGED").booking_id,
+            reason=BookingOpportunity.REASON_GENERIC,
+        )
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("providers:bounty_offer", args=[opportunity.id]),
+            {
+                "action": "submit_offer",
+                "service": self.candidate_service.id,
+                "proposed_date": (timezone.now() + timedelta(days=5)).isoformat(),
+                "proposed_price_euros": "120.00",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        opportunity.booking.refresh_from_db()
+        self.assertEqual(
+            opportunity.booking.status, Booking.STATUS_BOUNTY_CLIENT_VALIDATION
+        )
+        self.assertEqual(opportunity.offer.status, BookingOffer.STATUS_PENDING_CLIENT)
