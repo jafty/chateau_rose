@@ -11,7 +11,7 @@
                 <span class="opportunity-state-icon" aria-hidden="true">✓</span>
                 <p class="opportunity-eyebrow">{% if directly_accepted %}Demande confirmée{% else %}Proposition transmise{% endif %}</p>
                 <h1 id="opportunity-title">{% if directly_accepted %}Le rendez-vous est confirmé !{% else %}C'est envoyé !{% endif %}</h1>
-                <p>{% if directly_accepted %}La cliente a reçu sa confirmation immédiatement.{% else %}La cliente peut maintenant consulter puis accepter ou refuser ta proposition. Tu seras informée de sa décision.{% endif %}</p>
+                <p>{% if directly_accepted %}Le client a reçu sa confirmation immédiatement.{% else %}Le client peut maintenant consulter puis accepter ou refuser ta proposition. Tu seras informée de sa décision.{% endif %}</p>
                 <a class="btn secondary" href="{% url 'providers:providers_index' %}">← Retour à mes demandes</a>
             </section>
         {% elif opportunity.status != "OPEN" %}
@@ -29,7 +29,7 @@
                 <p class="lead">Accepte immédiatement si tu peux respecter exactement la prestation, la date, le lieu et le tarif demandés.</p>
             </header>
 
-            {% if error %}<div class="alert danger" role="alert">{{ error }}</div>{% endif %}
+            {% if error %}<div class="alert error" role="alert">{{ error }}</div>{% endif %}
 
             <div class="opportunity-layout">
                 <section class="paper-card opportunity-summary" aria-labelledby="request-summary-title">
@@ -52,7 +52,7 @@
                         {% if opportunity.booking.location_preference %}
                         <div>
                             <dt>Lieu du rendez-vous</dt>
-                            <dd>{{ opportunity.booking.location_preference }}</dd>
+                            <dd>{% if opportunity.booking.location_preference == "domicile" %}Chez le client{% else %}{{ opportunity.booking.location_preference }}{% endif %}</dd>
                         </div>
                         {% endif %}
                         {% if opportunity.booking.hair_length %}
@@ -64,7 +64,7 @@
                     </dl>
                     {% if opportunity.booking.free_text %}
                         <div class="opportunity-client-note">
-                            <strong>Précisions de la cliente</strong>
+                            <strong>Précisions du client</strong>
                             <p>{{ opportunity.booking.free_text }}</p>
                         </div>
                     {% endif %}
@@ -93,7 +93,7 @@
                             <div><dt>Ton tarif</dt><dd>{{ accepted_price_euros }} €</dd></div>
                         </dl>
                         <div class="opportunity-submit-zone">
-                            <p>Ces informations sont verrouillées et seront confirmées à la cliente.</p>
+                            <p>Ces informations sont verrouillées et seront confirmées au client.</p>
                             <button class="btn full-width" type="submit" name="action" value="accept_unchanged">Accepter la demande telle quelle →</button>
                         </div>
                     </form>
@@ -123,11 +123,11 @@
                             </div>
                         </div>
                         <div class="form-field">
-                            <label for="opportunity-message">Un mot pour la cliente <span class="optional-label">facultatif</span></label>
-                            <textarea id="opportunity-message" name="message" rows="4" placeholder="Précise par exemple ce qu'elle doit prévoir avant le rendez-vous."></textarea>
+                            <label for="opportunity-message">Un mot pour le client <span class="optional-label">facultatif</span></label>
+                            <textarea id="opportunity-message" name="message" rows="4" placeholder="Précise par exemple ce qu'il doit prévoir avant le rendez-vous."></textarea>
                         </div>
                         <div class="opportunity-submit-zone">
-                            <p>La cliente recevra ces informations avant de prendre sa décision.</p>
+                            <p>Le client recevra ces informations avant de prendre sa décision.</p>
                             <button class="btn secondary full-width" type="submit" name="action" value="submit_offer">Envoyer ma proposition →</button>
                         </div>
                     </form>

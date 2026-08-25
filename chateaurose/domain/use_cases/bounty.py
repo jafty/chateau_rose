@@ -90,7 +90,12 @@ def accept_unchanged_request(
         raise PermissionError(
             "Cette prestation n'est pas éligible à cette opportunité."
         )
-    require_minimum_notice(desired_at=desired_at, now=now)
+    # The requested slot already passed the minimum-notice check when the
+    # customer created the booking. Reapplying that rolling 24-hour window
+    # here can make an otherwise valid request impossible to accept while its
+    # provider opportunity is still open.
+    if desired_at <= now:
+        raise ValidationError("La date demandée est déjà passée.")
 
     opportunity.status, opportunity.closed_at = "OFFERED", now
     booking.provider_id, booking.service_id = provider_id, service_id

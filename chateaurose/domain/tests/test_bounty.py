@@ -182,7 +182,7 @@ def test_provider_directly_accepts_unchanged_request():
             opportunity(),
             True,
             True,
-            NOW + timedelta(hours=23),
+            NOW - timedelta(minutes=1),
             ValidationError,
         ),
         (

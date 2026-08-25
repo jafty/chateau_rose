@@ -151,6 +151,29 @@ class BountyServiceTests(TestCase):
             "Estimation calculée lors de la demande : 100.00 €",
         )
 
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_provider_offer_uses_masculine_client_wording(self, notify):
+        opportunity = open_for_booking(
+            self.booking(
+                booking_id="BK-MASCULINE-COPY",
+                location_preference="domicile",
+                free_text="Merci de prévoir du temps.",
+            ).booking_id,
+            reason=BookingOpportunity.REASON_GENERIC,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("providers:bounty_offer", args=[opportunity.id])
+        )
+
+        self.assertContains(response, "Chez le client")
+        self.assertContains(response, "Précisions du client")
+        self.assertContains(response, "Un mot pour le client")
+        self.assertNotContains(response, "cliente", html=False)
+
     @patch("chateaurose.infrastructure.bounty_service.payments.release_auth")
     @patch(
         "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
@@ -222,6 +245,38 @@ class BountyServiceTests(TestCase):
         self.assertEqual(
             BookingOffer.objects.filter(opportunity=opportunity).count(), 1
         )
+
+    @patch("chateaurose.infrastructure.bounty_service.payments.capture_auth")
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_provider_can_directly_accept_from_opportunity_page(
+        self, notify, capture
+    ):
+        booking = self.booking(
+            booking_id="BK-DIRECT-VIEW",
+            payment_auth_id="auth_direct_view",
+            # The request was valid when submitted and remains directly
+            # acceptable even after entering the rolling 24-hour window.
+            desired_date=(timezone.now() + timedelta(hours=23)).isoformat(),
+        )
+        opportunity = open_for_booking(
+            booking.booking_id, reason=BookingOpportunity.REASON_GENERIC
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("providers:bounty_offer", args=[opportunity.id]),
+            {
+                "action": "accept_unchanged",
+                "service": self.candidate_service.id,
+            },
+        )
+
+        self.assertContains(response, "Le rendez-vous est confirmé !")
+        booking.refresh_from_db()
+        self.assertEqual(booking.status, Booking.STATUS_CONFIRMED)
+        capture.assert_called_once_with("auth_direct_view")
 
     @patch(
         "chateaurose.infrastructure.bounty_service.payments.capture_auth",
