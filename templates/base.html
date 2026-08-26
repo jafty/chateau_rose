@@ -27,6 +27,15 @@
         <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Permanent+Marker&display=swap" rel="stylesheet">
     </noscript>
     <link rel="icon" type="image/svg+xml" href="{% static 'assets/cr_logo.svg' %}">
+    <script>
+      window.crImageFallbackUrl = "{% static 'demo_pictures/provider-placeholder.svg' %}";
+      window.addEventListener('error', function(event) {
+        var target = event.target;
+        if (!target || target.tagName !== 'IMG' || target.dataset.fallbackApplied === 'true') return;
+        target.dataset.fallbackApplied = 'true';
+        target.src = window.crImageFallbackUrl;
+      }, true);
+    </script>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% if not request.user.is_authenticated %}
         <!-- Privacy-friendly analytics by Plausible. Custom events are added with CSS classes. -->
