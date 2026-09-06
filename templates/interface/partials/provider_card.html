@@ -14,10 +14,7 @@
             <h3 class="provider-name">{{ provider.name }}</h3>
         </div>
         <span class="provider-mode-badge">{{ provider.location_mode_label }}</span>
-        {% if provider.review_badge %}<span class="provider-card-review-badge">{{ provider.review_badge.label }} · {{ provider.review_badge.count }} avis vérifiés</span>{% endif %}
-        <div class="provider-tags-preview" aria-label="Prestations proposées">
-            {% for service in provider.services.all|slice:":2" %}<span class="tag-pill">{{ service.name }}</span>{% empty %}<span class="tag-pill">Coiffure afro</span>{% endfor %}
-        </div>
+        {% if provider.review_badge %}<span class="provider-card-review-link">Voir les {{ provider.review_badge.count }} avis vérifiés <span aria-hidden="true">→</span></span>{% endif %}
         <span class="provider-action-link">Consulter les tarifs →</span>
     </div>
 </a>
