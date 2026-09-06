@@ -1339,12 +1339,13 @@ def generic_booking_recap(request, token):
     }
     return render(
         request,
-        "interface/provider_booking_recap.html",
+        "interface/generic_booking_recap.html",
         {
             "provider": None,
             "provider_name_display": "À confirmer",
             "draft": None,
             "payload": recap_payload,
+            "service_label": recap_payload["service_name"],
             "payload_options_json": json.dumps(recap_payload["general_adjustments"]),
             "is_completed": False,
             "is_generic_booking": True,
