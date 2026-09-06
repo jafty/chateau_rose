@@ -1,10 +1,6 @@
 <div class="provider-services-card" id="provider-services-section">
+{% if provider.categorized_services_enabled and service_categories %}
 <div class="provider-services-heading">
-    <div>
-        <h3 class="section-title provider-section-title">Réserver avec {{ provider.name }} : choisis ta prestation</h3>
-        <p class="meta-line provider-pricing-note">Sélectionne une coiffure pour estimer ton tarif, frais Château Rose inclus, puis envoie ta demande.</p>
-    </div>
-    {% if provider.categorized_services_enabled and service_categories %}
     <p class="provider-category-tabs-heading">Filtrer par catégorie</p>
     <div class="provider-category-tabs" role="tablist" aria-label="Catégories de prestations">
         {% for category in service_categories %}
@@ -24,8 +20,8 @@
             </a>
         {% endfor %}
     </div>
-    {% endif %}
 </div>
+{% endif %}
 {% if provider.categorized_services_enabled and service_categories %}
     <div class="service-category-accordion">
         {% for category in visible_service_categories %}

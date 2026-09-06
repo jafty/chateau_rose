@@ -12,6 +12,7 @@ from booking.models import (
     ProviderPhoto,
     ProviderZone,
     Service,
+    VerifiedReview,
     Zone,
 )
 from interface.models import ProviderBookingDraft
@@ -133,6 +134,31 @@ class ProviderRequestUploadTests(TestCase):
         self.assertContains(response, self.service.image_url)
         self.assertContains(response, f'alt="{self.service.name} réalisée par {self.provider.name}"')
 
+    def test_provider_detail_prioritizes_service_cards_without_redundant_heading(self):
+        response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Réserver avec Divine : choisis ta prestation")
+        self.assertNotContains(response, "Sélectionne une coiffure pour estimer ton tarif")
+        self.assertContains(response, 'class="provider-service-grid"')
+
+    def test_provider_detail_links_to_reviews_even_without_rating_badge(self):
+        VerifiedReview.objects.create(
+            provider=self.provider,
+            client_name="Awa",
+            comment="Très belle prestation.",
+            consent_to_publish=True,
+            is_verified=False,
+            moderation_status=VerifiedReview.STATUS_APPROVED,
+        )
+
+        response = self.client.get(reverse("interface:provider_detail", args=[self.provider.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'href="#provider-reviews"')
+        self.assertContains(response, "Voir les avis")
+        self.assertContains(response, 'class="provider-reviews-link__count">1</span>')
+
 
     def test_provider_detail_renders_without_checkout_amounts_name_error(self):
         with self.settings(STRIPE_PUBLIC_KEY="pk_test_enabled"):
@@ -204,9 +230,9 @@ class ProviderRequestUploadTests(TestCase):
         self.assertContains(response, "Avant le RDV")
         self.assertContains(response, "Mèches non fournies")
         self.assertNotContains(response, "Un doute ? Écris-nous")
-        self.assertContains(response, "Réserver avec Divine")
-        self.assertContains(response, "Clientes satisfaites")
-        self.assertContains(response, "À propos de Divine")
+        self.assertNotContains(response, "Réserver avec Divine : choisis ta prestation")
+        self.assertNotContains(response, "Clientes satisfaites")
+        self.assertNotContains(response, "À propos de Divine")
         self.assertContains(response, "Estimer et réserver")
 
     def test_provider_detail_uses_reduced_universal_request_form(self):
