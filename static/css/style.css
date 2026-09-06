@@ -166,12 +166,14 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .provider-name-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .provider-name { overflow: hidden; font-size: 1.05rem; white-space: nowrap; text-overflow: ellipsis; }
 .provider-mode-badge, .tag-pill, .chip, .city-chip, .zone, .pill { padding: 2px 6px; border: 1px solid var(--color-line); border-radius: 3px; background: #f8f4ef; color: var(--color-ink-soft); font-size: .66rem; }
-.provider-card-review-link, .provider-reviews-link { color: var(--color-success); font-size: .69rem; font-weight: 700; text-decoration: underline; text-decoration-color: rgba(40,98,62,.35); text-underline-offset: 3px; }
+.provider-card-review-link, .provider-reviews-link { color: var(--color-ink-soft); font-size: .69rem; font-weight: 700; text-decoration: underline; text-decoration-color: var(--color-line-strong); text-underline-offset: 3px; }
 .provider-card-review-link { margin-top: 4px; }
-.provider-reviews-link { display: inline-flex; align-items: center; gap: 6px; padding: 4px 5px 4px 9px; border: 1px solid rgba(40,98,62,.22); border-radius: 999px; background: var(--color-success-soft); font-size: .72rem; text-decoration: none; }
-.provider-reviews-link__label { border-bottom: 1px solid rgba(40,98,62,.32); line-height: 1.25; }
-.provider-reviews-link__count { display: grid; min-width: 20px; height: 20px; padding-inline: 5px; place-items: center; border-radius: 999px; background: var(--color-success); color: #fff; font-size: .64rem; }
-.provider-reviews-link__arrow { padding-right: 3px; font-size: .85rem; line-height: 1; }
+.provider-reviews-link { display: inline-flex; align-items: baseline; gap: 4px; padding: 0; border: 0; border-radius: 0; background: transparent; font-size: .72rem; }
+.provider-reviews-link__label { line-height: 1.25; }
+.provider-reviews-link__count { font-size: inherit; }
+.provider-reviews-link__count::before { content: "("; }
+.provider-reviews-link__count::after { content: ")"; }
+.provider-reviews-link__arrow { font-size: .8rem; line-height: 1; }
 .provider-tags-preview, .tags, .chips, .city-chip-list, .zones-chips-wrap { display: flex; flex-wrap: wrap; gap: 5px; margin-block: 5px; }
 
 /* Service hub and sub-service pages */
@@ -291,7 +293,8 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 
 /* Directory, city and generic content pages */
 .page-hero, .providers-hero, .city-hero, .account-page-hero { padding-block: clamp(34px, 6vw, 64px); }
-.city-hero-paper, .hero-intro-card { max-width: 820px; }
+.city-hero-paper, .hero-intro-card { width: 100%; max-width: 820px; padding-bottom: clamp(18px, 3vw, 28px); border-bottom: 1px solid var(--color-line); }
+.city-hero .hero-grid { grid-template-columns: minmax(0, 1fr); }
 .provider-page-title { margin-bottom: 7px; }
 .providers-section, .city-providers-section { padding-bottom: var(--space-section); }
 .seo-content, .at-home-seo-content { max-width: 850px; margin: 0 auto; padding-block: var(--space-section); }
@@ -492,8 +495,8 @@ th { background: var(--color-surface-muted); color: var(--color-ink-strong); }
     .provider-marketplace .provider-hero-collage { margin-bottom: 0; }
     .provider-identity-card--streamlined h1 { font-size: clamp(1.9rem, 9vw, 2.65rem); }
     .provider-layout { margin-top: 20px; }
-    .city-hero-paper, .service-header-paper { width: 100%; min-width: 0; padding: 16px; border: 1px solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-surface); box-shadow: var(--shadow-sm); }
-    .service-header-with-collage .service-header-paper { padding: 16px; }
+    .city-hero-paper, .service-header-paper { width: 100%; min-width: 0; padding: 0 0 16px; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; box-shadow: none; }
+    .service-header-with-collage .service-header-paper { padding: 16px 0; }
     .provider-detail-section { padding-bottom: 16px; }
     .provider-service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .provider-service-card { padding: 4px 4px 7px; }
