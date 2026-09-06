@@ -43,128 +43,63 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('resize', refreshRailState);
         refreshRailState();
     });
+
+    const filters = [...document.querySelectorAll('[data-category-filter]')];
+    const serviceGroups = [...document.querySelectorAll('[data-service-group]')];
+    filters.forEach((filter, index) => {
+        filter.classList.toggle('is-active', index === 0);
+        filter.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
+        filter.addEventListener('click', () => {
+            const selectedCategory = filter.dataset.categoryFilter;
+            filters.forEach((item) => {
+                const active = item === filter;
+                item.classList.toggle('is-active', active);
+                item.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+            serviceGroups.forEach((group) => {
+                group.hidden = group.dataset.serviceGroup !== selectedCategory;
+            });
+        });
+    });
+    serviceGroups.forEach((group, index) => { group.hidden = index !== 0; });
 });
 </script>
 {% endblock %}
 
 {% block content %}
-<section class="hero home-hero" id="catalogue">
-    <div class="container">
-        {% if request_form.errors %}
-            <div class="alert" role="alert" style="margin-bottom:16px;">
-                <strong>On n'a pas pu envoyer ta demande.</strong><br>
-                Vérifie les champs en rouge puis réessaie.
-                {% for field in request_form %}
-                    {% for error in field.errors %}<div>{{ error }}</div>{% endfor %}
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <div class="hero-compact-header">
-            <div class="trust-pill-micro"><span class="trust-icon">✓</span> Profils vérifiés</div>
-            <h1 class="hero-title-compact">Réserve une coiffure Afro pour <span>tous types de cheveux</span> à Toulouse.</h1>
-            <p class="hero-text-compact">Sécurise ton RDV coupe afro en quelques secondes, n'importe où à Toulouse, y compris chez toi.</p>
-        </div>
-
-        <div class="services-carousel-wrapper">
-            <span class="swipe-hint" aria-hidden="true">Fais défiler les coiffures →</span>
-            
-            <div class="all-services-grid horizontal-scroll-mobile">
-                {% for service in services %}
-                <a href="{% url 'interface:service_page' service.slug %}" class="service-polaroid">
-                    {% if forloop.counter0|divisibleby:3 %}
-                        <span class="tape top-center" aria-hidden="true"></span>
-                    {% elif forloop.counter0|add:'1'|divisibleby:3 %}
-                        <span class="tape top-left" aria-hidden="true"></span>
-                    {% else %}
-                        <span class="tape top-left" aria-hidden="true"></span>
-                        <span class="tape top-right" aria-hidden="true"></span>
-                    {% endif %}
-                    {% if service.resolved_main_image %}
-                        {% if forloop.first %}
-                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" width="320" height="320" fetchpriority="high" decoding="async">
-                        {% else %}
-                            <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" width="320" height="320" loading="lazy" decoding="async">
-                        {% endif %}
-                    {% else %}
-                        {% if forloop.first %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" width="320" height="320" fetchpriority="high" decoding="async">
-                        {% else %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" width="320" height="320" loading="lazy" decoding="async">
-                        {% endif %}
-                    {% endif %}
-                    <span class="service-label">{{ service.name }}</span>
-                    <span class="service-card-cta" aria-hidden="true">Choisir</span>
-                </a>
-                {% endfor %}
-            </div>
-        </div>
+<section class="hero-booking-zone marketplace-home" id="catalogue">
+  <div class="container">
+    {% if request_form.errors %}<div class="alert" role="alert"><strong>On n'a pas pu envoyer ta demande.</strong> Vérifie les champs en rouge puis réessaie.{% for field in request_form %}{% for error in field.errors %}<div>{{ error }}</div>{% endfor %}{% endfor %}</div>{% endif %}
+    <div class="hero-header-row"><div class="hero-headline"><h1>Réserve ta coiffure afro à Toulouse.</h1><p>Choisis une prestation et réserve avec une coiffeuse vérifiée, en salon ou à domicile.</p></div></div>
+    <div class="category-filter-bar" role="tablist" aria-label="Filtrer les prestations par catégorie">
+      {% for service in services %}<button type="button" class="category-pill" data-category-filter="{{ service.slug }}" role="tab" aria-selected="false">{{ service.name }}</button>{% endfor %}
     </div>
-</section>
-
-<section class="providers-section" id="providers">
-    <div class="container">
-        <div class="section-paper-head">
-            <h2 class="section-title">Nos as de la coiffure, tous types de cheveux</h2>
-            <p class="section-subtitle">Compare les tarifs, portfolios et disponibilités, puis envoie ta demande au profil qui te correspond.</p>
+    <p class="swipe-hint-micro" aria-hidden="true">Glisse pour découvrir les prestations</p>
+    <div class="homepage-service-groups">
+      {% for service in services %}
+      <section class="homepage-service-group" data-service-group="{{ service.slug }}" aria-labelledby="service-group-{{ service.slug }}">
+        <div class="homepage-service-group__header"><h2 id="service-group-{{ service.slug }}">{{ service.name }}</h2><a href="{% url 'interface:service_page' service.slug %}">Voir la catégorie →</a></div>
+        <div class="services-booking-grid mode-slider-single">
+          {% for sub_service in service.sub_services.all %}
+          {% if sub_service.is_visible %}<article class="service-polaroid-card">
+            <a class="service-polaroid-media" href="{% url 'interface:sub_service_page' service.slug sub_service.slug %}">
+              {% if sub_service.resolved_image %}<img src="{{ sub_service.resolved_image }}" alt="{{ sub_service.name }} à Toulouse" {% if forloop.parentloop.first and forloop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async">{% else %}<img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ sub_service.name }} à Toulouse" loading="lazy">{% endif %}
+            </a>
+            <div class="service-polaroid-content"><h3>{{ sub_service.name }}</h3><div class="service-polaroid-footer">{% if sub_service.price_display %}<span class="service-price-pill">Dès <strong>{{ sub_service.price_display }}</strong></span>{% endif %}<a href="{% url 'interface:sub_service_page' service.slug sub_service.slug %}" class="btn-polaroid-action">Choisir</a></div></div>
+          </article>{% endif %}
+          {% empty %}<article class="service-polaroid-card"><a class="service-polaroid-media" href="{% url 'interface:service_page' service.slug %}">{% if service.resolved_main_image %}<img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" loading="lazy">{% else %}<img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" loading="lazy">{% endif %}</a><div class="service-polaroid-content"><h3>{{ service.name }}</h3><div class="service-polaroid-footer"><a href="{% url 'interface:service_page' service.slug %}" class="btn-polaroid-action">Choisir</a></div></div></article>{% endfor %}
         </div>
-        <div class="homepage-providers-grid" aria-label="Top 3 des prestataires">
-            {% for provider in providers|slice:":3" %}
-                {% include "interface/partials/provider_card.html" with provider=provider %}
-            {% empty %}
-                <p class="lead">Les prestataires seront publiés très bientôt.</p>
-            {% endfor %}
-        </div>
-        {% if providers|length > 3 %}
-        <div class="homepage-providers-cta">
-            <a href="{% url 'interface:provider_list' %}" class="btn">Voir tous les profils &amp; tarifs</a>
-            <a href="{% url 'interface:at_home_provider_list' %}" class="btn secondary">Voir les profils avec déplacement</a>
-        </div>
-        {% endif %}
+      </section>
+      {% empty %}<p class="lead">Les prestations arrivent bientôt.</p>{% endfor %}
     </div>
+  </div>
 </section>
-
-<section class="steps-section" id="about">
-    <div class="container">
-        <h2 class="section-title">Prendre RDV n'a jamais été aussi simple</h2>
-
-        <div class="bold-steps-list">
-            <article class="bold-step-item"><div class="step-number-handwritten">1</div><h3>Choisis ta coiffure</h3><p>Tresses, locks, soins... Clique sur la prestation de ton choix en haut de page.</p></article>
-            <article class="bold-step-item"><div class="step-number-handwritten">2</div><h3>Choisis ton parcours</h3><p>Demande une recherche Château Rose ou sélectionne directement une coiffeuse.</p></article>
-            <article class="bold-step-item"><div class="step-number-handwritten">3</div><h3>Sécurise ta demande</h3><p>Une empreinte bancaire est prise, sans débit tant que le RDV n'est pas confirmé.</p></article>
-            <article class="bold-step-item"><div class="step-number-handwritten">4</div><h3>Kiffe le résultat</h3><p>Le jour J, fais-toi chouchouter chez la prestataire ou directement chez toi.</p></article>
-        </div>
-
-        <div class="value-prop-grid">
-            <div>
-                <h2 class="section-title title-left">Trouve la bonne coiffeuse, sans prise de tête</h2>
-                <p class="muted-copy">Compare les profils vérifiés ou laisse-nous chercher une solution compatible, avec un suivi clair jusqu'au rendez-vous.</p>
-                <div class="benefit-list">
-                    <div class="benefit-card">
-                        <span class="benefit-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M20.5 13.5 13.5 20.5a2 2 0 0 1-2.8 0L3.5 13.3A2 2 0 0 1 3 11.9V5a2 2 0 0 1 2-2h6.9a2 2 0 0 1 1.4.6l7.2 7.1a2 2 0 0 1 0 2.8Z"></path><circle cx="8.5" cy="8.5" r="1.2"></circle></svg>
-                        </span>
-                        <div><strong>Choix &amp; transparence</strong><span>Consulte les prix, découvre les portfolios ou demande à Château Rose de trouver une coiffeuse disponible.</span></div>
-                    </div>
-                    <div class="benefit-card">
-                        <span class="benefit-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"></rect><path d="M8 2.5v4"></path><path d="M16 2.5v4"></path><path d="M3 9.5h18"></path><path d="M12 12.25v4"></path><path d="M12 16.25h3"></path></svg>
-                        </span>
-                        <div><strong>Gain de temps</strong><span>Envoie tes disponibilités une seule fois ; si un profil n'est pas disponible, on cherche une alternative.</span></div>
-                    </div>
-                    <div class="benefit-card">
-                        <span class="benefit-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 3 19 6v5c0 4.3-2.5 8.3-7 10-4.5-1.7-7-5.7-7-10V6l7-3Z"></path><path d="m9.5 12 1.7 1.7 3.3-3.5"></path></svg>
-                        </span>
-                        <div><strong>Sécurisé &amp; vérifié</strong><span>Ton empreinte bancaire protège la demande ; les frais ne sont débités qu'après confirmation du RDV.</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="image-frame-tilted-wrap"><div class="image-frame-tilted"><img src="{% static 'demo_pictures/pf_afro_robe_jaune.jpg' %}" alt="Coiffeuse à Toulouse pour tous types de cheveux" loading="lazy" decoding="async"></div></div>
-        </div>
-    </div>
-</section>
-
+<section class="trust-strip" aria-label="Garanties Château Rose"><div class="container trust-strip-inner">
+ <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Profils vérifiés manuellement</span></div>
+ <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>Empreinte bancaire, sans débit immédiat</span></div>
+ <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg><span>Contact direct avec l'équipe</span></div>
+</div></section>
+<section class="section-compact" id="providers"><div class="container"><div class="section-header-compact"><div><h2>Nos coiffeuses vérifiées à Toulouse</h2><p>Compare leurs spécialités et leur mode d'exercice.</p></div><a class="provider-action-link" href="{% url 'interface:provider_list' %}">Voir tous les profils →</a></div><div class="providers-compact-list">{% for provider in providers|slice:":3" %}{% include "interface/partials/provider_card.html" with provider=provider compact=True %}{% empty %}<p class="lead">Les prestataires seront publiés très bientôt.</p>{% endfor %}</div></div></section>
 {% if homepage_reviews %}
 <section class="story-section" id="happy-clients" aria-label="Stories et avis clients">
     <div class="container">
@@ -226,51 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </section>
 {% endif %}
 
-<section class="reassurance-strip" aria-label="Éléments de réassurance">
-    <div class="container reassurance-grid">
-        <div class="reassurance-item"><span class="reassurance-icon" aria-hidden="true">✓</span><span>Profils vérifiés manuellement</span></div>
-        <div class="reassurance-item"><span class="reassurance-icon" aria-hidden="true">🔒</span><span>Empreinte bancaire, débit seulement après confirmation</span></div>
-        <div class="reassurance-item"><span class="reassurance-icon" aria-hidden="true">💬</span><span>Échange direct avec l'équipe Château Rose</span></div>
-    </div>
-</section>
-
-<section class="portfolio-section">
-    <div class="container"><h2 class="section-title">Portfolios du moment</h2><p class="section-subtitle">Quelques réalisations récentes de nos talents</p></div>
-    <div class="portfolio-strip">
-        {% for provider in providers|slice:":6" %}
-            <div class="polaroid-mini">
-                {% if provider.resolved_cover_image %}
-                    <img src="{{ provider.resolved_cover_image }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async" draggable="false">
-                {% else %}
-                    <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Galerie coiffure tous types de cheveux" loading="lazy" decoding="async" draggable="false">
-                {% endif %}
-                <p>{{ provider.name }}</p>
-            </div>
-        {% empty %}<p class="lead">Les portfolios arrivent bientôt.</p>{% endfor %}
-    </div>
-</section>
-
-<section class="cta-pro" id="pro"><div class="container"><h3 class="cta-pro-title">Tu es coiffeuse ou coiffeur à Toulouse ?</h3><p class="cta-pro-copy">Reçois des demandes claires, sécurise les rendez-vous et garde la main sur tes prix et tes créneaux.</p><a href="{% url 'providers:signup' %}" class="btn secondary">Créer mon espace pro</a></div></section>
-
-<section class="city-discovery" aria-label="Pages ville coiffure afro">
-    <div class="container city-discovery-inner">
-        <h2 class="section-title">Coiffure tous types de cheveux à Toulouse et alentours</h2>
-        <div class="toulouse-spotlight">
-            <img class="toulouse-spotlight-image" src="https://images.ladepeche.fr/api/v1/images/view/63b461fb9de9df0e596e20b5/large/image.jpg?v=1" alt="Saint-Cyprien et rue de la République à Toulouse" loading="lazy" decoding="async">
-            <div class="toulouse-spotlight-copy">
-                <h3>Flemme de courir d'une adresse à l'autre ou d'attendre ton tour ?</h3>
-                <p>
-                    De Saint-Cyprien à Compans en passant par les Arènes : les adresses coiffure pour tous types de cheveux ne manquent pas à Toulouse.<br/>
-                    Mais tu n'as peut-être pas envie de traverser la ville ni d'attendre des heures dans une salle bondée. <br/>
-                    Ça tombe très bien : Château Rose réunit des coiffeuses indépendantes qui te reçoivent ou se déplacent chez toi, et t'aide à trouver une alternative si besoin.
-                </p>
-            </div>
-        </div>
-        <div class="city-chip-list">
-            {% for city in marketing_city_links %}
-                <a class="city-chip" href="{{ city.url }}">Coiffure à {{ city.name }}</a>
-            {% endfor %}
-        </div>
-    </div>
-</section>
+<section class="seo-editorial-section"><div class="container"><article class="seo-editorial-card"><h2>Réserver une coiffeuse afro à Toulouse : salon ou domicile</h2><div class="seo-editorial-grid"><div class="seo-editorial-col"><h3>Coiffures afro et soins texturés</h3><p>Knotless braids, nattes collées, vanilles, locks, tissages et soins : trouve une spécialiste des cheveux crépus, frisés et bouclés.</p></div><div class="seo-editorial-col"><h3>Dans toute la métropole</h3><p>Choisis une professionnelle qui te reçoit ou se déplace, du centre de Toulouse à sa proche périphérie.</p></div><div class="seo-editorial-col"><h3>Tarifs clairs et réservation sécurisée</h3><p>Consulte les prix avant ta demande. L'empreinte bancaire garantit le créneau sans débit avant confirmation.</p></div></div></article></div></section>
+<section class="city-discovery" aria-label="Pages ville coiffure afro"><div class="container city-discovery-inner"><h2 class="section-title">Coiffure tous types de cheveux à Toulouse et alentours</h2><p class="city-discovery-copy">Découvre les prestataires qui reçoivent ou se déplacent dans la Ville Rose et sa métropole.</p><div class="city-chip-list">{% for city in marketing_city_links %}<a class="city-chip" href="{{ city.url }}">Coiffure à {{ city.name }}</a>{% endfor %}</div></div></section>
 {% endblock %}

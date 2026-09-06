@@ -106,7 +106,7 @@
     {% else %}
         <div class="form-field full-width" style="margin-top: 10px;" data-meche-warning hidden>
             <div style="background: #fff7e6; border: 1px solid #ffd8a8; border-radius: 8px; padding: 12px; color: #7a4b00;">
-                ⚠️ Cette prestation ne comprend pas les mèches. Pense à apporter les tiennes pour éviter toute surprise.
+                Cette prestation ne comprend pas les mèches. Pense à apporter les tiennes pour éviter toute surprise.
             </div>
         </div>
     {% endif %}
@@ -115,14 +115,14 @@
         <label for="desired_date">Date & heure souhaitées <span class="required-mark">*</span></label>
         <p class="meta-line" style="margin: 0 0 8px;">Tu as plus de chances d'avoir le créneau idéal en réservant 3–4 jours à l'avance.</p>
         <input type="datetime-local" name="desired_date" id="desired_date" required data-booking-datetime>
-        <div class="nocturnal-warning" data-nocturnal-warning hidden role="status">⚠️ Un supplément nocturne de 23 € s'applique aux rendez-vous après 20 h.</div>
+        <div class="nocturnal-warning" data-nocturnal-warning hidden role="status">Un supplément nocturne de 23 € s'applique aux rendez-vous après 20 h.</div>
         <div class="alert error" id="desired-date-error" data-booking-datetime-error hidden style="margin-top: 10px;"></div>
     </div>
 
     <div class="form-field full-width">
         <label>Lieu de rendez-vous <span class="required-mark">*</span></label>
         {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
-            <div class="meta-line">📍 Chez la prestataire : {{ provider.salon_zone|default:"Adresse communiquée après résa" }}</div>
+            <div class="meta-line">Chez la prestataire : {{ provider.salon_zone|default:"Adresse communiquée après résa" }}</div>
             <input type="hidden" name="location" value="{{ provider.salon_zone }}" data-analytics-ignore>
             <input type="hidden" name="location_preference" value="salon" data-analytics-ignore>
         {% else %}
