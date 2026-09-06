@@ -11,28 +11,24 @@
 {% block content %}
 <div class="service-marketplace {% if is_sub_service_page %}service-marketplace--detail{% else %}service-marketplace--hub{% endif %}">
 <section class="container service-header service-header-wrap{% if is_sub_service_page and gallery_images %} service-header-with-collage{% endif %}">
+    {% if is_sub_service_page and gallery_images %}
+        <div class="service-hero-collage service-gallery-grid" aria-label="Aperçu des inspirations {{ page_service_name|default:service.name }}">
+            <span class="sr-only">Inspirations & résultats</span>
+            {% for image in gallery_images|slice:":4" %}
+                <figure class="service-hero-polaroid"><button type="button" class="service-gallery-trigger" data-gallery-index="{{ forloop.counter0 }}" data-gallery-src="{{ image.url }}" data-gallery-caption="{{ image.caption|default:page_service_name }}" aria-label="Ouvrir l’image {{ forloop.counter }} sur {{ gallery_images|length }}"><span class="service-hero-polaroid-media"><img src="{{ image.url }}" alt="{{ image.caption|default:page_service_name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async"></span><span class="gallery-counter">{{ forloop.counter }}/{{ gallery_images|length }}</span></button></figure>
+            {% endfor %}
+        </div>
+    {% endif %}
     <div class="service-header-paper">
         <div class="breadcrumbs"><a href="{% url 'interface:home' %}">Accueil</a> &nbsp;/&nbsp; <a href="{% url 'interface:home' %}#catalogue">Services</a> &nbsp;/&nbsp; {{ page_service_name|default:service.name }}</div>
         <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
         <div class="service-header-actions">
             <a class="btn primary plausible-event-name=Service+Booking+CTA" href="#{% if sub_services and not is_sub_service_page %}service-subservices{% else %}service-request{% endif %}">{% if sub_services and not is_sub_service_page %}Voir les prestations{% else %}Réserver maintenant{% endif %}</a>
-            <a class="btn secondary plausible-event-name=Choose+Provider+CTA" href="#provider-comparison">Choisir une coiffeuse</a>
+            <a class="service-provider-link plausible-event-name=Choose+Provider+CTA" href="#provider-comparison">Ou choisir une coiffeuse →</a>
         </div>
     </div>
-    {% if is_sub_service_page and gallery_images %}
-        <div class="service-hero-collage service-gallery-grid" aria-label="Aperçu des inspirations {{ page_service_name|default:service.name }}">
-            {% for image in gallery_images|slice:":4" %}
-                <figure class="service-hero-polaroid">
-                    <div class="service-hero-polaroid-media">
-                        <img src="{{ image.url }}" alt="{{ image.caption|default:page_service_name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async">
-                    </div>
-                </figure>
-            {% endfor %}
-        </div>
-    {% endif %}
 </section>
-
 <section class="container service-hub-layout">
     <div class="main-content">
         {% if sub_services and not is_sub_service_page %}
@@ -64,44 +60,14 @@
 
 
         {% if is_sub_service_page and gallery_images %}
-        <section class="content-section" id="service-gallery">
-            <h2 class="section-title service-section-heading">Inspirations & résultats</h2>
-            <div class="provider-gallery-card">
-                <div class="photo-grid provider-gallery-grid" data-gallery-grid>
-                    {% for image in gallery_images|slice:":7" %}
-                        <button
-                            type="button"
-                            class="gallery-thumb"
-                            data-gallery-index="{{ forloop.counter0 }}"
-                            data-gallery-src="{{ image.url }}"
-                            data-gallery-caption="{{ image.caption|default:page_service_name }}"
-                        >
-                            <img src="{{ image.url }}" alt="{{ image.caption|default:page_service_name }}" loading="lazy" decoding="async">
-                            <span class="gallery-thumb__overlay">Zoomer</span>
-                        </button>
-                    {% endfor %}
-                    {% if gallery_images|length > 7 %}
-                        <button type="button" class="gallery-more-card" data-gallery-index="7" data-gallery-src="{{ gallery_images.7.url|default:gallery_images.0.url }}" data-gallery-caption="Voir plus d'inspirations {{ page_service_name }}">
-                            +{{ gallery_images|length|add:"-7" }} voir tout
-                        </button>
-                    {% endif %}
-                </div>
+        <div class="gallery-modal" data-gallery-modal hidden>
+            <div class="gallery-modal__backdrop" data-gallery-close></div>
+            <div class="gallery-modal__dialog" role="dialog" aria-modal="true" aria-label="Galerie des inspirations">
+                <button type="button" class="gallery-modal__close" data-gallery-close aria-label="Fermer la galerie">✕</button>
+                <div class="gallery-modal__main"><button type="button" class="gallery-modal__nav" data-gallery-prev aria-label="Photo précédente">‹</button><figure class="gallery-modal__figure" data-gallery-figure><figcaption class="gallery-modal__caption" data-gallery-caption></figcaption></figure><button type="button" class="gallery-modal__nav" data-gallery-next aria-label="Photo suivante">›</button></div>
+                <div class="gallery-modal__thumbs" data-gallery-thumbs></div>
             </div>
-            <div class="gallery-modal" data-gallery-modal hidden>
-                <div class="gallery-modal__backdrop" data-gallery-close></div>
-                <div class="gallery-modal__dialog" role="dialog" aria-modal="true" aria-label="Galerie des inspirations">
-                    <button type="button" class="gallery-modal__close" data-gallery-close aria-label="Fermer la galerie">✕</button>
-                    <div class="gallery-modal__main">
-                        <button type="button" class="gallery-modal__nav" data-gallery-prev aria-label="Photo précédente">‹</button>
-                        <figure class="gallery-modal__figure" data-gallery-figure>
-                            <figcaption class="gallery-modal__caption" data-gallery-caption></figcaption>
-                        </figure>
-                        <button type="button" class="gallery-modal__nav" data-gallery-next aria-label="Photo suivante">›</button>
-                    </div>
-                    <div class="gallery-modal__thumbs" data-gallery-thumbs></div>
-                </div>
-            </div>
-        </section>
+        </div>
         {% endif %}
         {% if providers %}
         <section id="provider-comparison" class="providers-comparison-section">
@@ -183,7 +149,7 @@
             <div class="service-aside-note-copy">{{ city_intro|sanitize_marketing_html }}</div>
             {% if highlights %}
                 <ul class="highlight-list service-aside-note-list">
-                    {% for h in highlights %}<li>• {{ h|sanitize_marketing_html }}</li>{% endfor %}
+                    {% for h in highlights %}<li>{{ h|sanitize_marketing_html }}</li>{% endfor %}
                 </ul>
             {% endif %}
         </div>

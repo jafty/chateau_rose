@@ -4,16 +4,18 @@
 {% block title %}Récapitulatif de ta demande | Château Rose{% endblock %}
 
 {% block content %}
-<section class="container booking-recap-page" style="padding: clamp(2rem, 4vw, 4rem) 0;">
-    <div class="provider-form-card inline-form-card" style="max-width: 920px; margin: 0 auto;">
+<section class="container booking-recap-page">
+    <div class="recap-shell">
         <div class="recap-header">
             <h1 class="wizard-heading">Ta demande est prête{% if payload.client_name %}, {{ payload.client_name }}{% endif %} ✨</h1>
             <p>Vérifie les informations ci-dessous puis valide ta demande. <strong>Aucun débit aujourd'hui.</strong> Les frais Château Rose seront prélevés uniquement si une coiffeuse compatible confirme ton rendez-vous.</p>
         </div>
         {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
-        <div class="provider-form-layout">
+        <div class="provider-form-layout recap-main-layout">
             <div>
-                <h3>{{ service_label }}</h3>
+                <section class="recap-request-details" aria-labelledby="recap-service-title">
+                <p class="recap-eyebrow">Ta sélection</p>
+                <h2 id="recap-service-title">{{ service_label }}</h2>
                 <p><strong>Date souhaitée :</strong> {{ desired_date_display }}</p>
                 <p><strong>Lieu :</strong> {% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la prestataire{% endif %}</p>
                 <p class="meta-line">Une prestataire éligible pourra confirmer immédiatement en conservant tous ces éléments. Si elle change la date ou le tarif, tu devras accepter sa proposition.</p>
@@ -22,8 +24,9 @@
                 {% if payload.requested_options %}<p><strong>Options :</strong> {{ payload.requested_options|join:", " }}</p>{% endif %}
                 {% if payload.free_text %}<p><strong>Informations complémentaires :</strong> {{ payload.free_text }}</p>{% endif %}
                 <p><strong>Contact :</strong> {{ payload.client_name }} · {{ payload.client_email }}</p>
+                </section>
 
-                <h3>Comment ça se passe ?</h3>
+                <section class="recap-next-steps" aria-labelledby="recap-next-title"><h2 id="recap-next-title">La suite, simplement</h2>
                 <div class="timeline">
                     <div class="timeline-step">
                         <div class="timeline-icon active" aria-hidden="true">1</div>
@@ -46,9 +49,9 @@
                             <p>Les frais Château Rose sont prélevés après confirmation. Tu règles la prestation coiffure directement à la coiffeuse le jour J.</p>
                         </div>
                     </div>
-                </div>
+                </div></section>
             </div>
-            <aside class="provider-form-aside">
+            <aside class="provider-form-aside recap-payment-aside">
                 <div class="sticky-price-bar">
                     <div class="price-highlight">
                         <span>Aujourd'hui</span>

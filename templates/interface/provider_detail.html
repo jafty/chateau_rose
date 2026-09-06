@@ -9,13 +9,12 @@
 {% block content %}
 <section class="page-shell provider-marketplace">
   <nav class="breadcrumb-trail" aria-label="Fil d’ariane"><a href="{% url 'interface:home' %}">Accueil</a><span>/</span><a href="{% url 'interface:provider_list' %}">Prestataires</a><span>/</span><span>{{ provider.name }}</span></nav>
-  <header class="provider-identity-card">
-    <div class="provider-identity-avatar">{% if provider.resolved_profile_image %}<img src="{{ provider.resolved_profile_image }}" alt="Photo de {{ provider.name }}" decoding="async">{% else %}<img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portrait prestataire coiffure afro">{% endif %}</div>
-    <div class="provider-identity-content"><h1>{{ provider.display_h1 }}</h1><p>{{ provider.description|default:"Coiffeuse afro, tresses et soins personnalisés à Toulouse."|sanitize_marketing_html }}</p><div class="provider-meta-row"><span class="trust-badge-inline">Prestataire vérifiée</span><span>{{ provider.location_mode_label }}</span>{% if review_badge %}<span class="review-summary-badge">{{ review_badge.label }} · {{ review_badge.count }} avis vérifiés</span>{% endif %}</div><div class="provider-specialty-tags">{% for service in provider.marketing_services.all|slice:":4" %}<span>{{ service.name }}</span>{% empty %}<span>Coiffure afro</span>{% endfor %}</div><a class="btn" href="#services-list">Réserver avec {{ provider.name }}</a></div>
-  </header>
   <div class="provider-hero-collage" aria-label="Portfolio de {{ provider.name }}">
-    {% if hero_photos %}{% for photo in hero_photos %}<figure class="provider-hero-polaroid" data-gallery-index="{{ forloop.counter0 }}" data-gallery-src="{{ photo.resolved_url }}" data-gallery-caption="{{ photo.caption|default:provider.name }}"><img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async"></figure>{% endfor %}{% else %}<figure class="provider-hero-polaroid"><img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portfolio de {{ provider.name }}"></figure>{% endif %}
+    {% if hero_photos %}{% for photo in hero_photos %}<button type="button" class="provider-hero-polaroid" data-gallery-index="{{ forloop.counter0 }}" data-gallery-src="{{ photo.resolved_url }}" data-gallery-caption="{{ photo.caption|default:provider.name }}" aria-label="Ouvrir la réalisation {{ forloop.counter }} sur {{ hero_photos|length }}"><img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async"><span class="gallery-counter">{{ forloop.counter }}/{{ hero_photos|length }}</span></button>{% endfor %}{% else %}<figure class="provider-hero-polaroid"><img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portfolio de {{ provider.name }}"></figure>{% endif %}
   </div>
+  <header class="provider-identity-card provider-identity-card--streamlined">
+    <div class="provider-identity-content"><div class="provider-meta-row"><span class="trust-badge-inline">Prestataire vérifiée</span><span>{{ provider.location_mode_label }}</span>{% if review_badge %}<span class="review-summary-badge">{{ review_badge.label }} · {{ review_badge.count }} avis vérifiés</span>{% endif %}</div><h1>{{ provider.display_h1 }}</h1><p>{{ provider.description|default:"Coiffeuse afro, tresses et soins personnalisés à Toulouse."|sanitize_marketing_html }}</p></div>
+  </header>
   <div class="provider-layout stack-card-grid">
     <div class="provider-detail-main">
       <section id="services-list" class="provider-detail-section">{% include "interface/partials/provider_services_section.html" %}</section>
@@ -25,7 +24,6 @@
         {% if zones %}<article class="provider-info-card provider-info-card--wide"><h2>Zones desservies</h2><p>{{ provider.location_mode_label }}</p><div class="zones-chips-wrap">{% for zone in zones %}<span>{{ zone.name }}</span>{% endfor %}</div></article>{% endif %}
       </section>
       {% if published_reviews %}<section class="provider-detail-section" id="provider-reviews"><div class="content-subheading"><h2>Avis clientes vérifiés</h2>{% if review_badge %}<span class="review-summary-badge">{{ review_badge.label }} · {{ review_badge.count }} avis</span>{% endif %}</div><div class="reviews-grid">{% for review in published_reviews %}<article class="review-card"><div class="review-card-header"><div class="review-author"><span class="review-avatar">{{ review.client_name|first|upper }}</span><strong>{{ review.client_name }}</strong></div>{% if review.is_verified and review.qualitative_label %}<span class="review-qualitative">{{ review.qualitative_label }}</span>{% endif %}</div><p class="review-text">“{{ review.comment }}”</p><div class="review-footer">{{ review.public_trust_label }} · {{ review.service_performed|default:"prestation Château Rose" }}</div></article>{% endfor %}</div></section>{% endif %}
-      <section class="provider-info-card"><h2>Clientes satisfaites</h2><p>Découvre le portfolio et les avis vérifiés ci-dessus.</p></section><section class="provider-info-card"><h2>À propos de {{ provider.name }}</h2><p>{{ provider.description|default:"Coiffure afro, tresses et soins personnalisés."|sanitize_marketing_html }}</p></section>
       <div class="gallery-modal" data-gallery-modal hidden><div class="gallery-modal__backdrop" data-gallery-close></div><div class="gallery-modal__dialog" role="dialog" aria-modal="true" aria-label="Galerie des réalisations"><button type="button" class="gallery-modal__close" data-gallery-close aria-label="Fermer">×</button><div class="gallery-modal__main"><button type="button" class="gallery-modal__nav" data-gallery-prev aria-label="Photo précédente">‹</button><figure class="gallery-modal__figure" data-gallery-figure><figcaption data-gallery-caption></figcaption></figure><button type="button" class="gallery-modal__nav" data-gallery-next aria-label="Photo suivante">›</button></div><div class="gallery-modal__thumbs" data-gallery-thumbs></div></div></div>
     </div>
     <aside class="provider-booking-sidebar" id="booking-wizard">
@@ -34,7 +32,6 @@
     </aside>
   </div>
 </section>
-<div class="mobile-sticky-bottom-bar" id="sticky-price-bar"><div><span class="mobile-bar-price">Estimation <strong data-sticky-price-value>après sélection</strong></span><small class="mobile-bar-trust">Avec {{ provider.name }} · Sans débit immédiat</small></div><a class="mobile-bar-cta" href="#booking-wizard">Prendre RDV</a></div>
 <script src="https://js.stripe.com/v3"></script>
 <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 <script>
