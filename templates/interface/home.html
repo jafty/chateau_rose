@@ -46,28 +46,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const filters = [...document.querySelectorAll('[data-category-filter]')];
     const serviceGroups = [...document.querySelectorAll('[data-service-group]')];
-    filters.forEach((filter) => filter.addEventListener('click', () => {
-        const selectedCategory = filter.dataset.categoryFilter;
-        filters.forEach((item) => {
-            const active = item === filter;
-            item.classList.toggle('is-active', active);
-            item.setAttribute('aria-selected', active ? 'true' : 'false');
+    filters.forEach((filter, index) => {
+        filter.classList.toggle('is-active', index === 0);
+        filter.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
+        filter.addEventListener('click', () => {
+            const selectedCategory = filter.dataset.categoryFilter;
+            filters.forEach((item) => {
+                const active = item === filter;
+                item.classList.toggle('is-active', active);
+                item.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+            serviceGroups.forEach((group) => {
+                group.hidden = group.dataset.serviceGroup !== selectedCategory;
+            });
         });
-        serviceGroups.forEach((group) => {
-            group.hidden = selectedCategory !== 'all' && group.dataset.serviceGroup !== selectedCategory;
-        });
-    }));
+    });
+    serviceGroups.forEach((group, index) => { group.hidden = index !== 0; });
 });
 </script>
 {% endblock %}
 
 {% block content %}
-<section class="hero-booking-zone" id="catalogue">
+<section class="hero-booking-zone marketplace-home" id="catalogue">
   <div class="container">
     {% if request_form.errors %}<div class="alert" role="alert"><strong>On n'a pas pu envoyer ta demande.</strong> Vérifie les champs en rouge puis réessaie.{% for field in request_form %}{% for error in field.errors %}<div>{{ error }}</div>{% endfor %}{% endfor %}</div>{% endif %}
     <div class="hero-header-row"><div class="hero-headline"><h1>Réserve ta coiffure afro à Toulouse.</h1><p>Choisis une prestation et réserve avec une coiffeuse vérifiée, en salon ou à domicile.</p></div></div>
     <div class="category-filter-bar" role="tablist" aria-label="Filtrer les prestations par catégorie">
-      <button type="button" class="category-pill is-active" data-category-filter="all" role="tab" aria-selected="true">Toutes</button>
       {% for service in services %}<button type="button" class="category-pill" data-category-filter="{{ service.slug }}" role="tab" aria-selected="false">{{ service.name }}</button>{% endfor %}
     </div>
     <p class="swipe-hint-micro" aria-hidden="true">Glisse pour découvrir les prestations</p>

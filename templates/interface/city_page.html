@@ -33,16 +33,6 @@
     <div class="all-services-grid polaroid-grid">
         {% for service in services %}
             <a href="{% url 'interface:service_city_page' service.slug zone.slug %}" class="service-polaroid">
-                {% if forloop.counter <= 8 %}
-                    {% if forloop.counter0|divisibleby:3 %}
-                        <span class="tape top-center" aria-hidden="true"></span>
-                    {% elif forloop.counter0|add:'1'|divisibleby:3 %}
-                        <span class="tape top-left" aria-hidden="true"></span>
-                    {% else %}
-                        <span class="tape top-left" aria-hidden="true"></span>
-                        <span class="tape top-right" aria-hidden="true"></span>
-                    {% endif %}
-                {% endif %}
                 {% if service.resolved_main_image %}
                     <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à {{ zone.name }}" width="320" height="320" loading="lazy" decoding="async">
                 {% else %}

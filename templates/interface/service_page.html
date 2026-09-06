@@ -9,6 +9,7 @@
 {% endblock %}
 
 {% block content %}
+<div class="service-marketplace">
 <section class="container service-header service-header-wrap{% if is_sub_service_page and gallery_images %} service-header-with-collage{% endif %}">
     <div class="service-header-paper">
         <div class="breadcrumbs"><a href="{% url 'interface:home' %}">Accueil</a> &nbsp;/&nbsp; <a href="{% url 'interface:home' %}#catalogue">Services</a> &nbsp;/&nbsp; {{ page_service_name|default:service.name }}</div>
@@ -222,6 +223,7 @@
     </aside>
 </section>
 {% if request_form %}<div class="mobile-sticky-bottom-bar" aria-label="Réservation rapide"><div><span class="mobile-bar-price">Tarif estimé dans le formulaire</span><small class="mobile-bar-trust">Sans débit avant confirmation</small></div><a class="mobile-bar-cta" href="#service-request">Réserver</a></div>{% endif %}
+</div>
 {% endblock %}
 
 {% block extra_js %}

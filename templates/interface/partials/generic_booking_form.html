@@ -40,7 +40,7 @@
             <div class="form-field full-width">
                 <label for="desired_date">Date & heure souhaitées <span class="required-mark">*</span></label>
                 <input type="datetime-local" name="desired_date" id="desired_date" required data-booking-datetime value="{{ request_form.desired_date.value|default:'' }}">
-                <div class="nocturnal-warning" data-nocturnal-warning hidden role="status">⚠️ Un supplément nocturne de 23 € s'applique aux rendez-vous après 20 h.</div>
+                <div class="nocturnal-warning" data-nocturnal-warning hidden role="status">Un supplément nocturne de 23 € s'applique aux rendez-vous après 20 h.</div>
                 <div class="alert error" data-booking-datetime-error{% if not request_form.desired_date.errors %} hidden{% endif %} style="margin-top: 10px;">{{ request_form.desired_date.errors.0 }}</div>
             </div>
             <div class="wizard-actions full-width">
