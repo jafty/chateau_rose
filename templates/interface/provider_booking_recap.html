@@ -6,12 +6,9 @@
 <section class="booking-recap-page">
     <div class="container">
         <div class="recap-header">
-            <h1>Ta demande est prête{% if payload.client_name %}, {{ payload.client_name }}{% endif %} ✨</h1>
-            <p>
-                Vérifie les informations ci-dessous puis valide ta demande.
-                <strong>Aucun débit aujourd'hui.</strong>
-                Les frais Château Rose seront prélevés uniquement si ton rendez-vous est confirmé.
-            </p>
+            <p class="recap-kicker">Dernière étape</p>
+            <h1>Ta demande est prête{% if payload.client_name %}, {{ payload.client_name }}{% endif %}</h1>
+            <p class="recap-intro">Relis ta demande avant de l'envoyer. Ta carte permet de la valider, <strong>sans débit aujourd'hui.</strong></p>
         </div>
 
         {% if error %}
@@ -25,6 +22,7 @@
         <div class="recap-layout">
             <div class="recap-details">
                 <article class="recap-card">
+                    <p class="recap-eyebrow">Après validation</p>
                     <h2 class="recap-card-title">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 8v4l3 3"></path></svg>
                         Comment ça se passe ?
@@ -61,6 +59,7 @@
                 </article>
 
                 <article class="recap-card">
+                    <p class="recap-eyebrow">Ta sélection</p>
                     <h2 class="recap-card-title">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
                         Ta demande de rendez-vous
@@ -148,6 +147,7 @@
 
             <aside class="payment-sidebar">
                 <article class="receipt-card">
+                    <p class="recap-eyebrow">Paiement</p>
                     <h2 class="recap-card-title recap-card-title--compact">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         Détail du règlement

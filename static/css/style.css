@@ -128,7 +128,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .category-filter-bar { width: 100%; margin: 0; padding-inline: 0; scroll-padding-inline: 0; }
 .category-filter-bar::-webkit-scrollbar { display: none; }
 .category-pill, .provider-category-tab { flex: 0 0 auto; padding: 7px 12px; border: 1px solid var(--color-line-strong); border-radius: var(--radius-xs); background: #fff; color: var(--color-ink-soft); font-size: .78rem; font-weight: 700; white-space: nowrap; }
-.category-pill.is-active, .provider-category-tab.active { border-color: var(--color-ink); background: var(--color-ink); color: #fff; }
+.category-pill.is-active, .provider-category-tab.active { border-color: rgba(185,101,118,.42); background: #e9dfd4; color: var(--color-ink-strong); }
 .homepage-service-groups { margin-top: 8px; }
 .homepage-service-group__header, .section-header-compact, .content-subheading, .provider-services-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 13px; }
 .homepage-service-group__header a, .provider-action-link { color: var(--color-rose-strong); font-size: .76rem; font-weight: 700; }
@@ -139,6 +139,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .service-polaroid-content h3, .provider-service-card h3 { font-size: 1.08rem; }
 .service-polaroid-footer, .provider-service-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .service-price-pill, .service-price { color: var(--color-ink-soft); font-size: .73rem; }
+.service-polaroid-card .price-value, .provider-service-card .price-value { font: 700 .78rem/1.25 var(--font-body); }
 .btn-polaroid-action, .provider-service-card__button { padding: 3px 8px; border: 1px solid rgba(185,101,118,.35); border-radius: var(--radius-xs); background: var(--color-rose-soft); color: var(--color-rose-strong); font-size: .7rem; font-weight: 700; }
 .swipe-hint-micro { display: none; color: var(--color-ink-soft); font-size: .69rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .trust-strip { padding: 13px 0; border-block: 1px solid var(--color-line); background: var(--color-surface-muted); }
@@ -495,4 +496,70 @@ th { background: var(--color-surface-muted); color: var(--color-ink-strong); }
     .seo-editorial-card > h2 { margin-bottom: 28px; }
     .provider-card--strip { align-items: flex-start; }
     .provider-card--strip .provider-card__media { margin-top: 14px; }
+}
+
+/* Booking recap — calm, structured final-review experience. */
+.booking-recap-page {
+    background:
+        radial-gradient(circle at 88% 4%, rgba(217, 165, 175, .22), transparent 26rem),
+        linear-gradient(180deg, #faf7f2 0, var(--color-canvas) 28rem);
+}
+.booking-recap-page .container { min-width: 0; }
+.booking-recap-page .recap-header { max-width: 640px; }
+.recap-kicker { margin-bottom: 8px; color: var(--color-rose-strong); font-size: .7rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.booking-recap-page .recap-header h1 { max-width: none; margin-bottom: 10px; font-size: clamp(2rem, 4vw, 2.85rem); font-weight: 600; line-height: 1.02; }
+.recap-intro { max-width: 58ch; color: var(--color-ink-soft); font-size: clamp(.92rem, 1.5vw, 1.02rem); }
+.recap-main-layout, .booking-recap-page .recap-layout { gap: clamp(18px, 3.5vw, 38px); }
+.recap-content-column, .booking-recap-page .recap-details { display: grid; min-width: 0; gap: 16px; }
+.booking-recap-page .recap-card,
+.recap-panel { min-width: 0; padding: clamp(18px, 3vw, 26px); border: 1px solid var(--color-line); border-radius: var(--radius-md); background: rgba(255, 253, 250, .92); box-shadow: var(--shadow-sm); }
+.booking-recap-page .recap-details .recap-card:nth-child(2) { order: -1; }
+.booking-recap-page .recap-card-title,
+.booking-recap-page .recap-request-details h2,
+.booking-recap-page .recap-next-steps > h2,
+.recap-payment-title { margin-bottom: 16px; font-size: clamp(1.3rem, 2.2vw, 1.65rem); font-weight: 600; }
+.booking-recap-page .recap-card-title svg { width: 19px; height: 19px; color: var(--color-rose-strong); vertical-align: -.16em; }
+.recap-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-line); }
+.recap-facts p { display: grid; align-content: start; gap: 3px; min-width: 0; padding: 12px 14px; background: var(--color-surface); }
+.recap-facts strong, .summary-item-content strong { color: var(--color-rose-strong); font-size: .68rem; letter-spacing: .05em; text-transform: uppercase; }
+.recap-facts span, .summary-item-content span { min-width: 0; overflow-wrap: anywhere; color: var(--color-ink-strong); }
+.recap-fact--wide { grid-column: 1 / -1; }
+.recap-info-note { margin-top: 14px; padding: 12px 14px !important; border: 0 !important; border-left: 3px solid var(--color-rose) !important; border-radius: var(--radius-xs); background: var(--color-rose-soft) !important; }
+.booking-recap-page .summary-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.booking-recap-page .summary-item { justify-content: flex-start; align-items: flex-start; min-width: 0; padding: 12px; border: 1px solid var(--color-line); border-radius: var(--radius-xs); background: #faf7f2; }
+.summary-item-icon { width: 18px; height: 18px; flex: 0 0 18px; margin-top: 2px; color: var(--color-rose-strong); }
+.summary-item-content { display: grid; min-width: 0; gap: 2px; }
+.summary-item-content .detail { color: var(--color-ink-soft); font-size: .76rem; }
+.booking-recap-page .timeline { gap: 0; }
+.booking-recap-page .timeline-step { position: relative; gap: 13px; padding-bottom: 16px; }
+.booking-recap-page .timeline-step:last-child { padding-bottom: 0; }
+.booking-recap-page .timeline-step:not(:last-child)::before { content: ""; position: absolute; top: 32px; bottom: 0; left: 16px; width: 1px; background: var(--color-rose); }
+.booking-recap-page .timeline-icon { width: 33px; height: 33px; flex-basis: 33px; background: var(--color-rose-soft); color: var(--color-rose-strong); font-size: .76rem; font-weight: 800; }
+.booking-recap-page .timeline-content { min-width: 0; padding-top: 2px; }
+.booking-recap-page .timeline-content h3 { margin-bottom: 2px; font: 700 .86rem/1.35 var(--font-body); }
+.booking-recap-page .timeline-content p { color: var(--color-ink-soft); font-size: .78rem; line-height: 1.5; }
+.recap-payment-aside .sticky-price-bar,
+.booking-recap-page .receipt-card { overflow: hidden; padding: clamp(18px, 3vw, 25px); border: 1px solid rgba(185, 101, 118, .24); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-md); }
+.recap-zero-today, .booking-recap-page .price-highlight { margin-bottom: 16px; padding: 14px; border-radius: var(--radius-sm); background: var(--color-success-soft); font: inherit; }
+.booking-recap-page .price-highlight > span { color: var(--color-success); font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.booking-recap-page .price-highlight .amount { margin-block: 2px; color: var(--color-success); font: 600 2rem/1.05 var(--font-display); }
+.booking-recap-page .price-highlight p { color: var(--color-ink-soft); font-size: .75rem; line-height: 1.45; }
+.booking-recap-page .receipt-line { min-width: 0; align-items: flex-start; }
+.booking-recap-page .receipt-line > span:first-child { min-width: 0; overflow-wrap: anywhere; font-size: .8rem; line-height: 1.4; }
+.booking-recap-page .receipt-amount { flex: 0 0 auto; font-size: 1.2rem; font-weight: 600; white-space: nowrap; }
+.booking-recap-page .recap-submit-btn { width: 100%; min-height: 50px; margin-top: 16px; padding-inline: 12px; white-space: normal; text-align: center; }
+.booking-recap-page .stripe-label { display: block; margin-top: 14px; color: var(--color-ink-soft); font-size: .72rem; font-weight: 700; }
+
+@media (max-width: 600px) {
+    .booking-recap-page { padding-block: 22px 36px; }
+    .booking-recap-page .recap-header { margin-bottom: 20px; }
+    .booking-recap-page .recap-header h1 { font-size: clamp(1.85rem, 9vw, 2.3rem); overflow-wrap: anywhere; }
+    .recap-facts, .booking-recap-page .summary-list { grid-template-columns: 1fr; }
+    .recap-fact--wide { grid-column: auto; }
+    .booking-recap-page .recap-card, .recap-panel,
+    .recap-payment-aside .sticky-price-bar, .booking-recap-page .receipt-card { padding: 16px; }
+    .booking-recap-page .receipt-line { gap: 8px; }
+    .booking-recap-page .receipt-line > span:first-child { font-size: .74rem; }
+    .booking-recap-page .receipt-amount { font-size: 1.05rem; }
+    .booking-recap-page .recap-submit-btn { font-size: .82rem; }
 }
