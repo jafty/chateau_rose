@@ -20,10 +20,9 @@
         </div>
     </div>
     {% if is_sub_service_page and gallery_images %}
-        <div class="service-hero-collage" aria-label="Aperçu des inspirations {{ page_service_name|default:service.name }}">
+        <div class="service-hero-collage service-gallery-grid" aria-label="Aperçu des inspirations {{ page_service_name|default:service.name }}">
             {% for image in gallery_images|slice:":4" %}
                 <figure class="service-hero-polaroid">
-                    <span class="tape" aria-hidden="true"></span>
                     <div class="service-hero-polaroid-media">
                         <img src="{{ image.url }}" alt="{{ image.caption|default:page_service_name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async">
                     </div>
@@ -62,6 +61,7 @@
         </div>
         {% endif %}
 
+
         {% if is_sub_service_page and gallery_images %}
         <section class="content-section" id="service-gallery">
             <h2 class="section-title service-section-heading">Inspirations & résultats</h2>
@@ -75,14 +75,12 @@
                             data-gallery-src="{{ image.url }}"
                             data-gallery-caption="{{ image.caption|default:page_service_name }}"
                         >
-                            <span class="tape" aria-hidden="true"></span>
                             <img src="{{ image.url }}" alt="{{ image.caption|default:page_service_name }}" loading="lazy" decoding="async">
                             <span class="gallery-thumb__overlay">Zoomer</span>
                         </button>
                     {% endfor %}
                     {% if gallery_images|length > 7 %}
                         <button type="button" class="gallery-more-card" data-gallery-index="7" data-gallery-src="{{ gallery_images.7.url|default:gallery_images.0.url }}" data-gallery-caption="Voir plus d'inspirations {{ page_service_name }}">
-                            <span class="tape" aria-hidden="true"></span>
                             +{{ gallery_images|length|add:"-7" }} voir tout
                         </button>
                     {% endif %}
@@ -163,7 +161,7 @@
             <h4>Affiner par zone</h4>
             {% with featured_zones=zones|slice:":5" remainder_zones=zones|slice:"5:" %}
             <div class="nav-list">
-                <a href="{% url 'interface:service_page' service.slug %}" class="nav-link {% if not zone %}active{% endif %}">📍 Tout Toulouse <span>&rarr;</span></a>
+                <a href="{% url 'interface:service_page' service.slug %}" class="nav-link {% if not zone %}active{% endif %}">Tout Toulouse <span>&rarr;</span></a>
                 {% for zone_option in featured_zones %}
                     <a href="{% url 'interface:service_city_page' service.slug zone_option.slug %}" class="nav-link {% if zone and zone_option.slug == zone.slug %}active{% endif %}">{{ zone_option.name }} <span>&rarr;</span></a>
                 {% endfor %}
@@ -223,6 +221,7 @@
         </div>
     </aside>
 </section>
+{% if request_form %}<div class="mobile-sticky-bottom-bar" aria-label="Réservation rapide"><div><span class="mobile-bar-price">Tarif estimé dans le formulaire</span><small class="mobile-bar-trust">Sans débit avant confirmation</small></div><a class="mobile-bar-cta" href="#service-request">Réserver</a></div>{% endif %}
 {% endblock %}
 
 {% block extra_js %}
