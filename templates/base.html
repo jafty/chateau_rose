@@ -22,9 +22,9 @@
     <script type="application/ld+json">{{ business_schema_json|safe }}</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Permanent+Marker&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
-        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     </noscript>
     <link rel="icon" type="image/svg+xml" href="{% static 'assets/cr_logo.svg' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -102,7 +102,6 @@
 </head>
     
 <body data-analytics-enabled="{% if analytics_enabled %}true{% else %}false{% endif %}">
-    <div class="texture-overlay" aria-hidden="true"></div>
     <header class="site-header">
         <div class="container nav-wrapper">
             <a href="{% url 'interface:home' %}" class="logo" aria-label="Revenir à l'accueil Château Rose">
@@ -116,9 +115,9 @@
             <nav class="main-nav" aria-label="Navigation principale" id="primary-navigation">
                 <a href="{% url 'interface:home' %}">Accueil</a>
                 <a href="{% url 'interface:about' %}">À propos</a>
-                <a href="{% url 'interface:provider_list' %}">Prestataires</a>
+                <a href="{% url 'interface:provider_list' %}">Coiffeuses</a>
                 <a href="{% url 'interface:home' %}#catalogue">Services</a>
-                <a href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:signup' %}{% endif %}">{% if request.user.is_authenticated %}Espace prestataire{% else %}Devenir partenaire{% endif %}</a>
+                <a class="nav-client-cta" href="{% url 'interface:provider_list' %}">Trouver une coiffeuse</a>
             </nav>
         </div>
     </header>
