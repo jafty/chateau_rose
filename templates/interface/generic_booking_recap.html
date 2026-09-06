@@ -7,26 +7,29 @@
 <section class="container booking-recap-page">
     <div class="recap-shell">
         <div class="recap-header">
-            <h1 class="wizard-heading">Ta demande est prête{% if payload.client_name %}, {{ payload.client_name }}{% endif %} ✨</h1>
-            <p>Vérifie les informations ci-dessous puis valide ta demande. <strong>Aucun débit aujourd'hui.</strong> Les frais Château Rose seront prélevés uniquement si une coiffeuse compatible confirme ton rendez-vous.</p>
+            <p class="recap-kicker">Dernière étape</p>
+            <h1 class="wizard-heading">Ta demande est prête{% if payload.client_name %}, {{ payload.client_name }}{% endif %}</h1>
+            <p class="recap-intro">Relis ta demande avant de l'envoyer. Ta carte permet de la valider, <strong>sans débit aujourd'hui.</strong></p>
         </div>
         {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
         <div class="provider-form-layout recap-main-layout">
-            <div>
-                <section class="recap-request-details" aria-labelledby="recap-service-title">
+            <div class="recap-content-column">
+                <section class="recap-request-details recap-panel recap-panel--request" aria-labelledby="recap-service-title">
                 <p class="recap-eyebrow">Ta sélection</p>
                 <h2 id="recap-service-title">{{ service_label }}</h2>
-                <p><strong>Date souhaitée :</strong> {{ desired_date_display }}</p>
-                <p><strong>Lieu :</strong> {% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la prestataire{% endif %}</p>
-                <p class="meta-line">Une prestataire éligible pourra confirmer immédiatement en conservant tous ces éléments. Si elle change la date ou le tarif, tu devras accepter sa proposition.</p>
-                {% if payload.hair_length %}<p><strong>Longueur :</strong> {{ payload.hair_length }}</p>{% endif %}
-                <p><strong>Format :</strong> {{ payload.type_adjustment|default:"standard" }}</p>
-                {% if payload.requested_options %}<p><strong>Options :</strong> {{ payload.requested_options|join:", " }}</p>{% endif %}
-                {% if payload.free_text %}<p><strong>Informations complémentaires :</strong> {{ payload.free_text }}</p>{% endif %}
-                <p><strong>Contact :</strong> {{ payload.client_name }} · {{ payload.client_email }}</p>
+                <div class="recap-facts">
+                    <p><strong>Date souhaitée</strong><span>{{ desired_date_display }}</span></p>
+                    <p><strong>Lieu</strong><span>{% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la prestataire{% endif %}</span></p>
+                    {% if payload.hair_length %}<p><strong>Longueur</strong><span>{{ payload.hair_length }}</span></p>{% endif %}
+                    <p><strong>Format</strong><span>{{ payload.type_adjustment|default:"standard" }}</span></p>
+                    {% if payload.requested_options %}<p><strong>Options</strong><span>{{ payload.requested_options|join:", " }}</span></p>{% endif %}
+                    {% if payload.free_text %}<p class="recap-fact--wide"><strong>Informations complémentaires</strong><span>{{ payload.free_text }}</span></p>{% endif %}
+                    <p class="recap-fact--wide"><strong>Contact</strong><span>{{ payload.client_name }}<br>{{ payload.client_email }}</span></p>
+                </div>
+                <p class="meta-line recap-info-note">Une prestataire compatible pourra confirmer ces éléments. Toute modification de date ou de tarif restera soumise à ton accord.</p>
                 </section>
 
-                <section class="recap-next-steps" aria-labelledby="recap-next-title"><h2 id="recap-next-title">La suite, simplement</h2>
+                <section class="recap-next-steps recap-panel" aria-labelledby="recap-next-title"><p class="recap-eyebrow">Après validation</p><h2 id="recap-next-title">La suite, simplement</h2>
                 <div class="timeline">
                     <div class="timeline-step">
                         <div class="timeline-icon active" aria-hidden="true">1</div>
@@ -53,7 +56,9 @@
             </div>
             <aside class="provider-form-aside recap-payment-aside">
                 <div class="sticky-price-bar">
-                    <div class="price-highlight">
+                    <p class="recap-eyebrow">Paiement</p>
+                    <h2 class="recap-payment-title">Ton budget en un coup d'œil</h2>
+                    <div class="price-highlight recap-zero-today">
                         <span>Aujourd'hui</span>
                         <div class="amount">0 €</div>
                         <p><strong>Aucun débit aujourd'hui.</strong> Ta carte sert uniquement à valider la demande.</p>
