@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="service-marketplace">
+<div class="service-marketplace {% if is_sub_service_page %}service-marketplace--detail{% else %}service-marketplace--hub{% endif %}">
 <section class="container service-header service-header-wrap{% if is_sub_service_page and gallery_images %} service-header-with-collage{% endif %}">
     <div class="service-header-paper">
         <div class="breadcrumbs"><a href="{% url 'interface:home' %}">Accueil</a> &nbsp;/&nbsp; <a href="{% url 'interface:home' %}#catalogue">Services</a> &nbsp;/&nbsp; {{ page_service_name|default:service.name }}</div>
@@ -106,42 +106,9 @@
         {% if providers %}
         <section id="provider-comparison" class="providers-comparison-section">
             <h2 class="section-title service-section-heading">Choisir une coiffeuse disponible</h2>
-            <div class="providers-grid">
+            <div class="providers-compact-list">
             {% for provider in providers %}
-            <a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
-                <div class="provider-header">
-                    {% if provider.resolved_cover_image %}
-                        <img src="{{ provider.resolved_cover_image }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async">
-                    {% else %}
-                        <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffure afro" loading="lazy" decoding="async">
-                    {% endif %}
-                    <span class="provider-avatar-badge" aria-hidden="true">
-                        {% if provider.resolved_profile_image %}
-                            <img src="{{ provider.resolved_profile_image }}" alt="" loading="lazy" decoding="async">
-                        {% else %}
-                            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="" loading="lazy" decoding="async">
-                        {% endif %}
-                    </span>
-                </div>
-                <div class="provider-body">
-                    <h3 class="provider-name">{{ provider.name }}</h3>
-                    <p class="provider-loc">
-                        {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
-                            Reçoit uniquement
-                        {% elif provider.location_mode == provider.LOCATION_MODE_CLIENT_HOME_ONLY %}
-                            Se déplace uniquement
-                        {% else %}
-                            Reçoit ou se déplace
-                        {% endif %}
-                    </p>
-                    <div class="tags">
-                        {% for provider_service in provider.services.all|slice:":2" %}
-                            <span class="tag">{{ provider_service.name }}</span>
-                        {% endfor %}
-                    </div>
-                    <div class="card-actions"><span class="link service-card-link">Demander un RDV</span></div>
-                </div>
-            </a>
+                {% include "interface/partials/provider_card.html" with provider=provider compact=True %}
             {% endfor %}
             </div>
         </section>
