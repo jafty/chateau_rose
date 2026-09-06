@@ -4,7 +4,6 @@
 {% else %}
     <article class="provider-service-card" data-service-card="{{ card.id }}">
 {% endif %}
-        <span class="tape" aria-hidden="true"></span>
         <div class="provider-service-card__media">
             {% if card.resolved_image %}
                 <img src="{{ card.resolved_image }}" alt="{% if provider %}{{ card.name }} réalisée par {{ provider.name }}{% else %}{{ card.name }}{% endif %}" loading="lazy" decoding="async">

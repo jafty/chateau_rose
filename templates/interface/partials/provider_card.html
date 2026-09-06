@@ -1,41 +1,5 @@
 {% load static %}
-
-<a class="provider-card" href="{% url 'interface:provider_detail' provider.id %}">
-    <div class="provider-img">
-        {% if provider.resolved_cover_image %}
-            <img src="{{ provider.resolved_cover_image }}" alt="Réalisations de {{ provider.name }}" width="300" height="320" loading="lazy" decoding="async">
-        {% else %}
-            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro" width="300" height="320" loading="lazy" decoding="async">
-        {% endif %}
-        <span class="provider-avatar-badge" aria-hidden="true">
-            {% if provider.resolved_profile_image %}
-                <img src="{{ provider.resolved_profile_image }}" alt="" loading="lazy" decoding="async">
-            {% else %}
-                <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="" loading="lazy" decoding="async">
-            {% endif %}
-        </span>
-    </div>
-    <div class="provider-body">
-        <h3 class="provider-name">{{ provider.name }}</h3>
-        {% if provider.review_badge %}<span class="provider-card-review-badge">{{ provider.review_badge.label }} · {{ provider.review_badge.count }} avis vérifiés</span>{% endif %}
-        <p class="provider-loc">
-            {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
-                Reçoit
-            {% elif provider.location_mode == provider.LOCATION_MODE_CLIENT_HOME_ONLY %}
-                Se déplace
-            {% else %}
-                Reçoit &amp; se déplace
-            {% endif %}
-        </p>
-        <div class="tags">
-            {% for service in provider.services.all|slice:":3" %}
-                <span class="tag">{{ service.name }}</span>
-            {% empty %}
-                <span class="tag">Coiffure afro</span>
-            {% endfor %}
-        </div>
-        <div class="card-actions" aria-hidden="true">
-            <span class="service-card-link">Demander un RDV</span>
-        </div>
-    </div>
+<a class="provider-card{% if compact %} provider-strip-card{% endif %}" href="{% url 'interface:provider_detail' provider.id %}">
+    <div class="provider-img{% if compact %} provider-avatar-frame{% endif %}">{% if provider.resolved_profile_image %}<img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}, prestataire coiffure afro" loading="lazy" decoding="async">{% elif provider.resolved_cover_image %}<img src="{{ provider.resolved_cover_image }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async">{% else %}<img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro" loading="lazy">{% endif %}</div>
+    <div class="provider-body provider-details"><div class="provider-name-row"><h3 class="provider-name">{{ provider.name }}</h3><span class="provider-mode-badge">{{ provider.location_mode_label }}</span></div>{% if provider.review_badge %}<span class="provider-card-review-badge">{{ provider.review_badge.label }} · {{ provider.review_badge.count }} avis vérifiés</span>{% endif %}<div class="provider-tags-preview">{% for service in provider.services.all|slice:":2" %}<span class="tag-pill">{{ service.name }}</span>{% empty %}<span class="tag-pill">Coiffure afro</span>{% endfor %}</div><span class="provider-action-link">Voir tarifs →</span></div>
 </a>
