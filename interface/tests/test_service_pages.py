@@ -635,6 +635,14 @@ class ServicePagesTests(TestCase):
         self.assertContains(response, "Choisir")
         self.assertContains(response, f'href="{reverse("interface:service_page", args=["tresses"])}"')
 
+    def test_home_presents_fast_booking_without_leading_with_payment_copy(self):
+        response = self.client.get(reverse("interface:home"))
+
+        self.assertContains(response, "on trouve rapidement une coiffeuse de confiance")
+        self.assertContains(response, "Une seule demande, sans relances")
+        self.assertContains(response, "Une disponibilité recherchée rapidement")
+        self.assertNotContains(response, "Empreinte bancaire, sans débit immédiat")
+
     def test_service_page_primary_cta_invites_user_to_view_sub_services(self):
         response = self.client.get(reverse("interface:service_page", args=["tresses"]))
 
