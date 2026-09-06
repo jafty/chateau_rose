@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <section class="hero-booking-zone marketplace-home" id="catalogue">
   <div class="container">
     {% if request_form.errors %}<div class="alert" role="alert"><strong>On n'a pas pu envoyer ta demande.</strong> Vérifie les champs en rouge puis réessaie.{% for field in request_form %}{% for error in field.errors %}<div>{{ error }}</div>{% endfor %}{% endfor %}</div>{% endif %}
-    <div class="hero-header-row"><div class="hero-headline"><h1>Réserve ta coiffure afro à Toulouse.</h1><p>Choisis une prestation et réserve avec une coiffeuse vérifiée, en salon ou à domicile.</p></div></div>
+    <div class="hero-header-row"><div class="hero-headline"><h1>Réserve ta coiffure afro à Toulouse.</h1><p>Choisis ta prestation et ton créneau : on trouve rapidement une coiffeuse de confiance, en salon ou à domicile.</p></div></div>
     <div class="category-filter-bar" role="tablist" aria-label="Filtrer les prestations par catégorie">
       {% for service in services %}<button type="button" class="category-pill" data-category-filter="{{ service.slug }}" role="tab" aria-selected="false">{{ service.name }}</button>{% endfor %}
     </div>
@@ -95,11 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </section>
 <section class="trust-strip" aria-label="Garanties Château Rose"><div class="container trust-strip-inner">
- <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Profils vérifiés manuellement</span></div>
- <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>Empreinte bancaire, sans débit immédiat</span></div>
- <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg><span>Contact direct avec l'équipe</span></div>
+ <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Coiffeuses sélectionnées avec soin</span></div>
+ <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>Une seule demande, sans relances</span></div>
+ <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg><span>Une disponibilité recherchée rapidement</span></div>
 </div></section>
-<section class="section-compact" id="providers"><div class="container"><div class="section-header-compact"><div><h2>Nos coiffeuses vérifiées à Toulouse</h2><p>Compare leurs spécialités et leur mode d'exercice.</p></div><a class="provider-action-link" href="{% url 'interface:provider_list' %}">Voir tous les profils →</a></div><div class="providers-compact-list">{% for provider in providers|slice:":3" %}{% include "interface/partials/provider_card.html" with provider=provider compact=True %}{% empty %}<p class="lead">Les prestataires seront publiés très bientôt.</p>{% endfor %}</div></div></section>
+<section class="section-compact" id="providers"><div class="container"><div class="section-header-compact"><div><h2>Nos coiffeuses à Toulouse</h2><p>Une équipe de professionnelles sélectionnées pour leur savoir-faire afro.</p></div><a class="provider-action-link" href="{% url 'interface:provider_list' %}">Rencontrer les coiffeuses →</a></div><div class="providers-compact-list">{% for provider in providers|slice:":3" %}{% include "interface/partials/provider_card.html" with provider=provider compact=True %}{% empty %}<p class="lead">Nos prochaines coiffeuses arrivent très bientôt.</p>{% endfor %}</div></div></section>
 {% if homepage_reviews %}
 <section class="story-section" id="happy-clients" aria-label="Stories et avis clients">
     <div class="container">
@@ -161,6 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </section>
 {% endif %}
 
-<section class="seo-editorial-section"><div class="container"><article class="seo-editorial-card"><h2>Réserver une coiffeuse afro à Toulouse : salon ou domicile</h2><div class="seo-editorial-grid"><div class="seo-editorial-col"><h3>Coiffures afro et soins texturés</h3><p>Knotless braids, nattes collées, vanilles, locks, tissages et soins : trouve une spécialiste des cheveux crépus, frisés et bouclés.</p></div><div class="seo-editorial-col"><h3>Dans toute la métropole</h3><p>Choisis une professionnelle qui te reçoit ou se déplace, du centre de Toulouse à sa proche périphérie.</p></div><div class="seo-editorial-col"><h3>Tarifs clairs et réservation sécurisée</h3><p>Consulte les prix avant ta demande. L'empreinte bancaire garantit le créneau sans débit avant confirmation.</p></div></div></article></div></section>
+<section class="seo-editorial-section"><div class="container"><article class="seo-editorial-card"><h2>Réserver une coiffeuse afro à Toulouse : salon ou domicile</h2><div class="seo-editorial-grid"><div class="seo-editorial-col"><h3>Coiffures afro et soins texturés</h3><p>Knotless braids, nattes collées, vanilles, locks, tissages et soins : trouve une spécialiste des cheveux crépus, frisés et bouclés.</p></div><div class="seo-editorial-col"><h3>Dans toute la métropole</h3><p>Réserve auprès d'une professionnelle qui te reçoit ou se déplace, du centre de Toulouse à sa proche périphérie.</p></div><div class="seo-editorial-col"><h3>Une réservation simple et suivie</h3><p>Indique ton créneau une seule fois. Si ta première coiffeuse n'est pas disponible, Château Rose recherche rapidement une alternative adaptée.</p></div></div></article></div></section>
 <section class="city-discovery" aria-label="Pages ville coiffure afro"><div class="container city-discovery-inner"><h2 class="section-title">Coiffure tous types de cheveux à Toulouse et alentours</h2><p class="city-discovery-copy">Découvre les prestataires qui reçoivent ou se déplacent dans la Ville Rose et sa métropole.</p><div class="city-chip-list">{% for city in marketing_city_links %}<a class="city-chip" href="{{ city.url }}">Coiffure à {{ city.name }}</a>{% endfor %}</div></div></section>
 {% endblock %}
