@@ -67,7 +67,11 @@
                         <span>Si le rendez-vous est confirmé<br><small>Frais Château Rose</small></span>
                         <span class="receipt-amount">{{ service_fee_price }}</span>
                     </div>
-                    <p class="receipt-help">Ces frais servent à traiter ta demande, rechercher une coiffeuse compatible et confirmer ton rendez-vous.</p>
+                    {% if service_fee_waived %}
+                        <p class="receipt-help">Frais de service offerts grâce au code partenaire.</p>
+                    {% else %}
+                        <p class="receipt-help">Ces frais servent à traiter ta demande, rechercher une coiffeuse compatible et confirmer ton rendez-vous.</p>
+                    {% endif %}
                     <div class="receipt-line receipt-line--strong">
                         <span>Le jour du rendez-vous<br><small>Prix estimé de la prestation, à régler directement à la coiffeuse</small></span>
                         <span class="receipt-amount">{{ subtotal_price }}</span>
@@ -91,7 +95,11 @@
                         {% endif %}
                         <button type="submit" class="btn recap-submit-btn plausible-event-name=Generic+Recap+Confirm">Valider ma demande — 0 € aujourd'hui</button>
                     </form>
-                    <p class="meta-line" style="margin-top: 0.75rem;">Paiement sécurisé par Stripe</p>
+                    {% if require_payment_auth %}
+                        <p class="meta-line" style="margin-top: 0.75rem;">Paiement sécurisé par Stripe</p>
+                    {% else %}
+                        <p class="meta-line status-note" style="margin-top: 0.75rem;">✅ Aucun paiement en ligne requis pour cette demande.</p>
+                    {% endif %}
                 </div>
             </aside>
         </div>
