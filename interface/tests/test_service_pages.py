@@ -600,6 +600,13 @@ class ServicePagesTests(TestCase):
             content.index('class="services-booking-grid mode-slider-single"'),
         )
 
+    def test_home_category_link_names_the_selected_category(self):
+        response = self.client.get(reverse("interface:home"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn("Voir toutes les prestations&nbsp;: Tresses", content)
+
     def test_city_page_only_lists_homepage_categories_and_keeps_seo_copy_below_catalog(self):
         hidden_service = MarketingService.objects.create(
             name="Ancienne catégorie",

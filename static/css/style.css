@@ -135,6 +135,8 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .homepage-service-group__header, .section-header-compact, .content-subheading, .provider-services-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 13px; }
 .homepage-service-group__header a, .provider-action-link { color: var(--color-rose-strong); font-size: .76rem; font-weight: 700; }
 .services-booking-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: clamp(13px, 2vw, 20px); align-items: start; }
+.marketplace-home .services-booking-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.marketplace-home .service-polaroid-media { aspect-ratio: 4 / 5; }
 .service-polaroid-card, .provider-service-card { min-width: 0; padding: 6px 6px 9px; border: 1px solid var(--color-line); background: #fff; box-shadow: var(--shadow-sm); }
 .service-polaroid-media, .provider-service-card__media { display: block; aspect-ratio: 1; overflow: hidden; background: var(--color-surface-muted); }
 .service-polaroid-content, .provider-service-card__content { display: flex; min-width: 0; flex-direction: column; justify-content: space-between; gap: 6px; padding-top: 7px; }
@@ -446,7 +448,8 @@ th { background: var(--color-surface-muted); color: var(--color-ink-strong); }
     .provider-info-card--wide { grid-column: auto; }
     .services-booking-grid.mode-slider-single { display: flex; gap: 10px; margin-inline: calc(var(--gutter) * -1); padding: 0 var(--gutter) 10px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
     .services-booking-grid.mode-slider-single::-webkit-scrollbar { display: none; }
-    .services-booking-grid.mode-slider-single .service-polaroid-card { width: 43vw; min-width: 145px; max-width: 172px; flex: 0 0 43vw; scroll-snap-align: start; }
+    .services-booking-grid.mode-slider-single .service-polaroid-card { width: 68vw; min-width: 220px; max-width: 270px; flex: 0 0 68vw; scroll-snap-align: start; }
+    .marketplace-home .service-polaroid-media { aspect-ratio: 1; }
     .swipe-hint-micro { display: block; margin-bottom: 8px; }
     .service-hero-collage, .provider-hero-collage { display: flex; height: clamp(220px, 60vw, 280px); margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); overflow-x: auto; scroll-snap-type: x mandatory; }
     .service-hero-polaroid, .provider-hero-polaroid { width: 82vw; max-width: 370px; flex: 0 0 82vw; scroll-snap-align: start; }
