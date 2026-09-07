@@ -192,12 +192,13 @@
                             <input type="hidden" name="action" value="confirm">
                             <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
                             {% if require_payment_auth %}
-                                <label class="stripe-label">Ajoute ta carte pour valider la demande</label>
-                                <div class="stripe-zone">
-                                    <p class="meta-line" id="payment-hint"><strong>0 € débité aujourd'hui.</strong> Les frais Château Rose seront prélevés uniquement si ton rendez-vous est confirmé.</p>
-                                    <div id="payment-element" class="payment-element payment-element--tall"></div>
-                                    <div class="alert error" id="payment-error" hidden></div>
+                                <div class="stripe-payment-header">
+                                    <label class="stripe-label" for="payment-element">Carte bancaire</label>
+                                    <span id="payment-hint">0 € débité aujourd'hui</span>
                                 </div>
+                                <p class="stripe-payment-note">Les frais Château Rose seront prélevés uniquement si ton rendez-vous est confirmé.</p>
+                                <div id="payment-element" class="payment-element payment-element--tall"></div>
+                                <div class="alert error" id="payment-error" hidden></div>
                             {% endif %}
 
                             <button type="submit" class="btn recap-submit-btn plausible-event-name=Provider+Recap+Confirm">Valider ma demande — 0 € aujourd'hui</button>
