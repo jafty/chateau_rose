@@ -27,6 +27,9 @@
                     <p class="recap-fact--wide"><strong>Contact</strong><span>{{ payload.client_name }}<br>{{ payload.client_email }}</span></p>
                 </div>
                 <p class="meta-line recap-info-note">Une coiffeuse de notre équipe pourra confirmer ces éléments. Toute modification de date ou de tarif restera soumise à ton accord.</p>
+                <div class="recap-actions">
+                    <a href="{{ edit_url }}" class="btn secondary recap-edit-btn plausible-event-name=Generic+Recap+Edit">Modifier mon récapitulatif</a>
+                </div>
                 </section>
 
                 <section class="recap-next-steps recap-panel" aria-labelledby="recap-next-title"><p class="recap-eyebrow">Après validation</p><h2 id="recap-next-title">La suite, simplement</h2>
@@ -63,16 +66,20 @@
                         <div class="amount">0 €</div>
                         <p><strong>Aucun débit aujourd'hui.</strong> Ta carte sert uniquement à valider la demande.</p>
                     </div>
-                    <div class="receipt-line receipt-line--strong">
-                        <span>Si le rendez-vous est confirmé<br><small>Frais Château Rose</small></span>
-                        <span class="receipt-amount">{{ service_fee_price }}</span>
+                    <div class="receipt-payment-block">
+                        <div class="receipt-line receipt-line--strong">
+                            <span><strong class="receipt-condition">Si le rendez-vous est confirmé</strong><small>Frais Château Rose</small></span>
+                            <span class="receipt-amount">{{ service_fee_price }}</span>
+                        </div>
+                        <p class="receipt-help">Ces frais servent à traiter ta demande, rechercher une coiffeuse compatible et confirmer ton rendez-vous.</p>
                     </div>
-                    <p class="receipt-help">Ces frais servent à traiter ta demande, rechercher une coiffeuse compatible et confirmer ton rendez-vous.</p>
-                    <div class="receipt-line receipt-line--strong">
-                        <span>Le jour du rendez-vous<br><small>Prix estimé de la prestation, à régler directement à la coiffeuse</small></span>
-                        <span class="receipt-amount">{{ subtotal_price }}</span>
+                    <div class="receipt-payment-block">
+                        <div class="receipt-line receipt-line--strong">
+                            <span><strong class="receipt-condition">Le jour du rendez-vous</strong><small>Prix estimé de la prestation, à régler directement à la coiffeuse</small></span>
+                            <span class="receipt-amount">{{ subtotal_price }}</span>
+                        </div>
+                        <p class="receipt-help">La coiffeuse peut proposer un autre tarif selon ta demande. Aucun changement n'est appliqué sans ton accord : tu peux l'accepter ou le refuser avant la confirmation.</p>
                     </div>
-                    <p class="receipt-help">La coiffeuse peut proposer un autre tarif selon ta demande. Aucun changement n'est appliqué sans ton accord : tu peux l'accepter ou le refuser avant la confirmation.</p>
                     <div class="receipt-divider receipt-divider--spaced"></div>
                     <div class="receipt-line receipt-line--estimated">
                         <span>Budget total estimé</span>

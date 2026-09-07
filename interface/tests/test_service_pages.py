@@ -791,6 +791,21 @@ class ServicePagesTests(TestCase):
         recap_page = self.client.get(response["Location"])
         self.assertContains(recap_page, "À confirmer")
         self.assertNotContains(recap_page, "la prestataire assignée")
+        self.assertContains(recap_page, "Modifier mon récapitulatif")
+        edit_response = self.client.post(response["Location"], {"action": "edit"})
+        self.assertRedirects(
+            edit_response,
+            reverse(
+                "interface:sub_service_page",
+                args=["tresses", "knotless-braids"],
+            )
+            + f"?recap={draft.token}#service-request",
+            fetch_redirect_response=False,
+        )
+        edit_page = self.client.get(edit_response.url)
+        self.assertContains(edit_page, 'value="Awa Diallo"')
+        self.assertContains(edit_page, 'value="awa-recap@example.com"')
+        self.assertContains(edit_page, 'value="0600000000"')
         recap_response = self.client.post(response["Location"])
         self.assertRedirects(recap_response, reverse("interface:thank_you_quick_request"))
         self.assertEqual(len(mail.outbox), 4)
