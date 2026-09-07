@@ -32,6 +32,8 @@
         textInput.placeholder = placeholder;
         textInput.autocomplete = 'off';
         textInput.className = 'zone-search__input';
+        textInput.required = select.required;
+        textInput.setAttribute('aria-label', 'Zone du rendez-vous');
 
         const dropdown = document.createElement('div');
         dropdown.className = 'zone-search__dropdown';
@@ -60,6 +62,15 @@
             dropdown.innerHTML = '';
         };
 
+        const syncValidity = () => {
+            const hasSearchText = textInput.value.trim() !== '';
+            textInput.setCustomValidity(
+                hasSearchText && !hiddenInput.value
+                    ? 'Sélectionne une zone dans la liste proposée.'
+                    : ''
+            );
+        };
+
         const openDropdown = () => {
             dropdown.hidden = dropdown.children.length === 0;
         };
@@ -67,6 +78,7 @@
         const selectOption = (option) => {
             textInput.value = option.label;
             hiddenInput.value = option.value;
+            syncValidity();
             closeDropdown();
         };
 
@@ -104,6 +116,7 @@
 
         textInput.addEventListener('input', (event) => {
             hiddenInput.value = '';
+            syncValidity();
             filterOptions(event.target.value);
             dropdown.hidden = false;
         });
@@ -118,6 +131,7 @@
                 hiddenInput.value = matchingOption.value;
                 textInput.value = matchingOption.label;
             }
+            syncValidity();
             window.setTimeout(closeDropdown, 100);
         });
 

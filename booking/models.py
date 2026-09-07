@@ -191,7 +191,12 @@ class Provider(models.Model):
 
     @property
     def location_mode_label(self):
-        return dict(self.LOCATION_MODE_CHOICES).get(self.location_mode, "")
+        public_labels = {
+            self.LOCATION_MODE_SALON_ONLY: "Chez la coiffeuse uniquement",
+            self.LOCATION_MODE_CLIENT_HOME_ONLY: "À domicile uniquement",
+            self.LOCATION_MODE_HYBRID: "Chez la coiffeuse ou à domicile",
+        }
+        return public_labels.get(self.location_mode, "")
 
     @property
     def review_badge(self):
