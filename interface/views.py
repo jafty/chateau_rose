@@ -1286,6 +1286,12 @@ def generic_booking_recap(request, token):
     error = None
 
     if request.method == "POST":
+        if request.POST.get("action") == "edit":
+            edit_url = reverse(
+                "interface:sub_service_page",
+                args=[sub_service.service.slug, sub_service.slug],
+            )
+            return redirect(f"{edit_url}?recap={token}#service-request")
         payment_auth_id = (request.POST.get("payment_auth_id") or "").strip()
         if require_payment_auth and not payment_auth_id:
             error = "Ajoute ton paiement Château Rose pour confirmer la demande."
@@ -1356,7 +1362,10 @@ def generic_booking_recap(request, token):
             "payload_options_json": json.dumps(recap_payload["general_adjustments"]),
             "is_completed": False,
             "is_generic_booking": True,
-            "edit_url": "",
+            "edit_url": reverse(
+                "interface:sub_service_page",
+                args=[sub_service.service.slug, sub_service.slug],
+            ),
             "total_price": booking_requests.format_price(amounts["subtotal_cents"] + amounts["service_fee_cents"]),
             "subtotal_price": booking_requests.format_price(amounts["subtotal_cents"]),
             "service_fee_price": booking_requests.format_price(amounts["service_fee_cents"]),
@@ -2382,8 +2391,17 @@ def sub_service_page(request, service_slug: str, sub_service_slug: str):
     if service_request_redirect:
         return service_request_redirect
 
+    recap_initial = None
+    recap_token = request.GET.get("recap", "").strip()
+    if recap_token:
+        candidate = _get_generic_booking_recap_payload(request, recap_token)
+        if str(candidate.get("requested_marketing_sub_service_id") or "") == str(
+            sub_service.id
+        ):
+            recap_initial = candidate
+
     request_form, request_success = _build_service_request_form(
-        request, service_meta, zone=None, sub_service=sub_service
+        request, service_meta, zone=None, sub_service=sub_service, initial=recap_initial
     )
     if request_form == "redirect":
         redirect_url = request.session.pop("generic_booking_recap_redirect_url", None)

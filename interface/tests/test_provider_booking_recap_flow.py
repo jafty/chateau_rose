@@ -74,6 +74,9 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertIn('class="receipt-amount">100 €', content)
         self.assertIn("Aucun changement n'est appliqué sans ton accord", content)
         self.assertIn("Valider ma demande — 0 € aujourd'hui", content)
+        self.assertIn("Modifier mon récapitulatif", content)
+        self.assertEqual(content.count('class="receipt-payment-block"'), 2)
+        self.assertIn('class="receipt-condition">Si le rendez-vous est confirmé', content)
         self.assertNotIn("empreinte bancaire", content)
 
     def _base_payload(self):
@@ -186,6 +189,7 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertNotContains(recap_page, "12 h maximum")
         self.assertContains(recap_page, "libre d'accepter ou de refuser tout ajustement")
         self.assertNotContains(recap_page, "empreinte bancaire")
+        self.assertContains(recap_page, 'class="receipt-payment-block"', count=2)
 
         prefill_page = self.client.get(
             reverse("interface:provider_detail", args=[self.provider.id])

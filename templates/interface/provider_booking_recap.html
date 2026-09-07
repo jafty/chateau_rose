@@ -138,7 +138,7 @@
                         <form method="post" action="">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="edit">
-                            <button type="submit" class="btn secondary recap-edit-btn plausible-event-name=Provider+Recap+Edit">Modifier ma demande</button>
+                            <button type="submit" class="btn secondary recap-edit-btn plausible-event-name={% if is_generic_booking %}Generic{% else %}Provider{% endif %}+Recap+Edit">{% if is_generic_booking %}Modifier mon récapitulatif{% else %}Modifier ma demande{% endif %}</button>
                         </form>
                         {% endif %}
                     </div>
@@ -159,21 +159,25 @@
                         <p><strong>Aucun débit aujourd'hui.</strong> Ta carte sert uniquement à valider la demande.</p>
                     </div>
 
-                    <div class="receipt-line receipt-line--strong">
-                        <span>Si le rendez-vous est confirmé<br><small>Frais Château Rose</small></span>
-                        <span class="receipt-amount">{{ deposit_price }}</span>
+                    <div class="receipt-payment-block">
+                        <div class="receipt-line receipt-line--strong">
+                            <span><strong class="receipt-condition">Si le rendez-vous est confirmé</strong><small>Frais Château Rose</small></span>
+                            <span class="receipt-amount">{{ deposit_price }}</span>
+                        </div>
+                        {% if service_fee_waived %}
+                            <p class="receipt-help">Frais de service offerts grâce au code partenaire.</p>
+                        {% else %}
+                            <p class="receipt-help">Les frais Château Rose servent à traiter ta demande, confirmer ton rendez-vous et rechercher une autre coiffeuse si nécessaire.</p>
+                        {% endif %}
                     </div>
-                    {% if service_fee_waived %}
-                        <p class="receipt-help">Frais de service offerts grâce au code partenaire.</p>
-                    {% else %}
-                        <p class="receipt-help">Les frais Château Rose servent à traiter ta demande, confirmer ton rendez-vous et rechercher une autre coiffeuse si nécessaire.</p>
-                    {% endif %}
 
-                    <div class="receipt-line receipt-line--strong">
-                        <span>Le jour du rendez-vous<br><small>Prix estimé de la prestation, à régler directement à la coiffeuse</small></span>
-                        <span class="receipt-amount">{{ remaining_price }}</span>
+                    <div class="receipt-payment-block">
+                        <div class="receipt-line receipt-line--strong">
+                            <span><strong class="receipt-condition">Le jour du rendez-vous</strong><small>Prix estimé de la prestation, à régler directement à la coiffeuse</small></span>
+                            <span class="receipt-amount">{{ remaining_price }}</span>
+                        </div>
+                        <p class="receipt-help">La coiffeuse peut proposer un autre tarif si nécessaire. Aucun changement n'est appliqué sans ton accord : tu peux l'accepter ou le refuser avant la confirmation.</p>
                     </div>
-                    <p class="receipt-help">La coiffeuse peut proposer un autre tarif si nécessaire. Aucun changement n'est appliqué sans ton accord : tu peux l'accepter ou le refuser avant la confirmation.</p>
 
                     <div class="receipt-divider receipt-divider--spaced"></div>
 
