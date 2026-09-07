@@ -39,7 +39,7 @@
         {% for service in services %}
             {% include "interface/partials/service_booking_card.html" with card=service card_cta="Estimer et réserver" %}
         {% empty %}
-            <p class="meta-line lead--no-margin">Tarifs à confirmer avec la prestataire.</p>
+            <p class="meta-line lead--no-margin">Tarifs à confirmer avec la coiffeuse.</p>
         {% endfor %}
     </div>
 {% endif %}

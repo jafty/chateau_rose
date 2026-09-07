@@ -19,14 +19,14 @@
                 <h2 id="recap-service-title">{{ service_label }}</h2>
                 <div class="recap-facts">
                     <p><strong>Date souhaitée</strong><span>{{ desired_date_display }}</span></p>
-                    <p><strong>Lieu</strong><span>{% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la prestataire{% endif %}</span></p>
+                    <p><strong>Lieu</strong><span>{% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la coiffeuse{% endif %}</span></p>
                     {% if payload.hair_length %}<p><strong>Longueur</strong><span>{{ payload.hair_length }}</span></p>{% endif %}
                     <p><strong>Format</strong><span>{{ payload.type_adjustment|default:"standard" }}</span></p>
                     {% if payload.requested_options %}<p><strong>Options</strong><span>{{ payload.requested_options|join:", " }}</span></p>{% endif %}
                     {% if payload.free_text %}<p class="recap-fact--wide"><strong>Informations complémentaires</strong><span>{{ payload.free_text }}</span></p>{% endif %}
                     <p class="recap-fact--wide"><strong>Contact</strong><span>{{ payload.client_name }}<br>{{ payload.client_email }}</span></p>
                 </div>
-                <p class="meta-line recap-info-note">Une prestataire compatible pourra confirmer ces éléments. Toute modification de date ou de tarif restera soumise à ton accord.</p>
+                <p class="meta-line recap-info-note">Une coiffeuse de notre équipe pourra confirmer ces éléments. Toute modification de date ou de tarif restera soumise à ton accord.</p>
                 </section>
 
                 <section class="recap-next-steps recap-panel" aria-labelledby="recap-next-title"><p class="recap-eyebrow">Après validation</p><h2 id="recap-next-title">La suite, simplement</h2>

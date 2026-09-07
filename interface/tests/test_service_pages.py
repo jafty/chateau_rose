@@ -638,9 +638,11 @@ class ServicePagesTests(TestCase):
     def test_home_presents_fast_booking_without_leading_with_payment_copy(self):
         response = self.client.get(reverse("interface:home"))
 
-        self.assertContains(response, "on trouve rapidement une coiffeuse de confiance")
-        self.assertContains(response, "Une seule demande, sans relances")
-        self.assertContains(response, "Une disponibilité recherchée rapidement")
+        self.assertContains(response, "Ta coiffure afro à Toulouse, réservée en 2 minutes")
+        self.assertContains(response, "Coiffeuses sélectionnées avec soin")
+        self.assertContains(response, "Réservation rapide et sécurisée")
+        self.assertContains(response, "De nombreux créneaux disponibles")
+        self.assertNotContains(response, "Choisis ta prestation et ton créneau")
         self.assertNotContains(response, "Empreinte bancaire, sans débit immédiat")
 
     def test_service_page_primary_cta_invites_user_to_view_sub_services(self):

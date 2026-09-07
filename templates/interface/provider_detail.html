@@ -8,19 +8,19 @@
 
 {% block content %}
 <section class="page-shell provider-marketplace">
-  <nav class="breadcrumb-trail" aria-label="Fil d’ariane"><a href="{% url 'interface:home' %}">Accueil</a><span>/</span><a href="{% url 'interface:provider_list' %}">Prestataires</a><span>/</span><span>{{ provider.name }}</span></nav>
+  <nav class="breadcrumb-trail" aria-label="Fil d’ariane"><a href="{% url 'interface:home' %}">Accueil</a><span>/</span><a href="{% url 'interface:provider_list' %}">Nos coiffeuses</a><span>/</span><span>{{ provider.name }}</span></nav>
   <div class="provider-hero-collage" aria-label="Portfolio de {{ provider.name }}">
     {% if hero_photos %}{% for photo in hero_photos %}<button type="button" class="provider-hero-polaroid" data-gallery-index="{{ forloop.counter0 }}" data-gallery-src="{{ photo.resolved_url }}" data-gallery-caption="{{ photo.caption|default:provider.name }}" aria-label="Ouvrir la réalisation {{ forloop.counter }} sur {{ hero_photos|length }}"><img src="{{ photo.resolved_url }}" alt="{{ photo.caption|default:provider.name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async"><span class="gallery-counter">{{ forloop.counter }}/{{ hero_photos|length }}</span></button>{% endfor %}{% else %}<figure class="provider-hero-polaroid"><img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Portfolio de {{ provider.name }}"></figure>{% endif %}
   </div>
   <header class="provider-identity-card provider-identity-card--streamlined">
-    <div class="provider-identity-content"><div class="provider-meta-row"><span class="trust-badge-inline">Prestataire vérifiée</span><span>{{ provider.location_mode_label }}</span>{% if published_reviews %}<a class="provider-reviews-link" href="#provider-reviews"><span class="provider-reviews-link__label">{% if review_badge %}{{ review_badge.label }} · {% endif %}Voir les avis</span><span class="provider-reviews-link__count">{{ published_reviews|length }}</span><span class="provider-reviews-link__arrow" aria-hidden="true">↓</span></a>{% endif %}</div><h1>{{ provider.display_h1 }}</h1><p>{{ provider.description|default:"Coiffeuse afro, tresses et soins personnalisés à Toulouse."|sanitize_marketing_html }}</p></div>
+    <div class="provider-identity-content"><div class="provider-meta-row"><span class="trust-badge-inline">Coiffeuse sélectionnée</span><span>{{ provider.location_mode_label }}</span>{% if published_reviews %}<a class="provider-reviews-link" href="#provider-reviews"><span class="provider-reviews-link__label">{% if review_badge %}{{ review_badge.label }} · {% endif %}Voir les avis</span><span class="provider-reviews-link__count">{{ published_reviews|length }}</span><span class="provider-reviews-link__arrow" aria-hidden="true">↓</span></a>{% endif %}</div><h1>{{ provider.display_h1 }}</h1><p>{{ provider.description|default:"Coiffeuse afro, tresses et soins personnalisés à Toulouse."|sanitize_marketing_html }}</p></div>
   </header>
   <div class="provider-layout stack-card-grid">
     <div class="provider-detail-main">
       <section id="services-list" class="provider-detail-section">{% include "interface/partials/provider_services_section.html" %}</section>
       <section class="provider-info-grid" aria-label="Informations pratiques">
         <article class="provider-info-card"><h2>Avant le RDV</h2><ul class="guideline-list">{% for item in before_appointment_items %}<li>{{ item.label }}</li>{% empty %}<li>Merci de venir avec les cheveux propres et démêlés.</li>{% endfor %}</ul></article>
-        <article class="provider-info-card"><h2>Disponibilités habituelles</h2><div>{{ provider.availabilities|default:"Les disponibilités sont confirmées avec la prestataire."|sanitize_marketing_html }}</div></article>
+        <article class="provider-info-card"><h2>Disponibilités habituelles</h2><div>{{ provider.availabilities|default:"Les disponibilités sont confirmées avec ta coiffeuse."|sanitize_marketing_html }}</div></article>
         {% if zones %}<article class="provider-info-card provider-info-card--wide"><h2>Zones desservies</h2><p>{{ provider.location_mode_label }}</p><div class="zones-chips-wrap">{% for zone in zones %}<span>{{ zone.name }}</span>{% endfor %}</div></article>{% endif %}
       </section>
       {% if published_reviews %}<section class="provider-detail-section" id="provider-reviews"><div class="content-subheading"><h2>Avis clientes vérifiés</h2>{% if review_badge %}<span class="review-summary-badge">{{ review_badge.label }} · {{ review_badge.count }} avis</span>{% endif %}</div><div class="reviews-grid">{% for review in published_reviews %}<article class="review-card"><div class="review-card-header"><div class="review-author"><span class="review-avatar">{{ review.client_name|first|upper }}</span><strong>{{ review.client_name }}</strong></div>{% if review.is_verified and review.qualitative_label %}<span class="review-qualitative">{{ review.qualitative_label }}</span>{% endif %}</div><p class="review-text">“{{ review.comment }}”</p><div class="review-footer">{{ review.public_trust_label }} · {{ review.service_performed|default:"prestation Château Rose" }}</div></article>{% endfor %}</div></section>{% endif %}
@@ -741,7 +741,7 @@
                 : 'mèches non fournies';
             const locationText = atHomeAdj > 0
                 ? `à domicile (+${formatAdjustmentWithFees(atHomeAdj, serviceFeePercentage)})`
-                : "chez la prestataire";
+                : "chez la coiffeuse";
             finalDetailsDisplay.replaceChildren();
             const serviceLine = Object.assign(document.createElement('span'), {
                 textContent: Number.isFinite(fixedPriceCents)
