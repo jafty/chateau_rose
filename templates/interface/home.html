@@ -95,9 +95,9 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </section>
 <section class="trust-strip" aria-label="Garanties Château Rose"><div class="container trust-strip-inner">
- <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg><span>Coiffeuses sélectionnées avec soin</span></div>
- <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>Réservation rapide et sécurisée</span></div>
- <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg><span>De nombreux créneaux disponibles</span></div>
+ <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14.6 6l3.6-.2-.2 3.6 2.5 2.6-2.5 2.6.2 3.6-3.6-.2-2.6 2.5L9.4 18l-3.6.2.2-3.6L3.5 12 6 9.4l-.2-3.6 3.6.2Z"/><path d="m8.7 12 2.1 2.1 4.5-4.5"/></svg><span>Coiffeuses sélectionnées avec soin</span></div>
+ <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.9 8.1 7 10 4.1-1.9 7-5.4 7-10V6Z"/><path d="M12 7v5h3"/></svg><span>Réservation rapide et sécurisée</span></div>
+ <div class="trust-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg><span>De nombreux créneaux disponibles</span></div>
 </div></section>
 <section class="section-compact" id="providers"><div class="container"><div class="section-header-compact"><div><h2>Notre équipe de coiffeuses à Toulouse</h2><p>Des professionnelles choisies avec soin pour leur savoir-faire afro et leur sens de l'écoute.</p></div><a class="provider-action-link" href="{% url 'interface:provider_list' %}">Découvrir l'équipe →</a></div><div class="providers-compact-list">{% for provider in providers|slice:":3" %}{% include "interface/partials/provider_card.html" with provider=provider compact=True %}{% empty %}<p class="lead">Notre équipe s'agrandit bientôt.</p>{% endfor %}</div></div></section>
 {% if homepage_reviews %}
