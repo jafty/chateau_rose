@@ -1,7 +1,7 @@
 {% if generic_request_mode %}
 <fieldset class="wizard-step active" data-step="1">
     <h4>1. Tes disponibilités</h4>
-    <p class="meta-line" style="margin-bottom: 12px;">Indique l'essentiel : Château Rose cherchera ensuite une prestataire compatible, sans débit avant confirmation.</p>
+    <p class="meta-line" style="margin-bottom: 12px;">Indique l'essentiel : Château Rose cherchera ensuite une coiffeuse de notre équipe, sans débit avant confirmation.</p>
 
     <div class="form-field full-width">
         <label for="id_desired_date">Date ou disponibilités <span class="required-mark">*</span></label>
@@ -122,7 +122,7 @@
     <div class="form-field full-width">
         <label>Lieu de rendez-vous <span class="required-mark">*</span></label>
         {% if provider.location_mode == provider.LOCATION_MODE_SALON_ONLY %}
-            <div class="meta-line">Chez la prestataire : {{ provider.salon_zone|default:"Adresse communiquée après résa" }}</div>
+            <div class="meta-line">Chez la coiffeuse : {{ provider.salon_zone|default:"Adresse communiquée après résa" }}</div>
             <input type="hidden" name="location" value="{{ provider.salon_zone }}" data-analytics-ignore>
             <input type="hidden" name="location_preference" value="salon" data-analytics-ignore>
         {% else %}
@@ -130,7 +130,7 @@
                 <div class="location-choice" data-location-preference>
                     <label class="choice-pill" data-location-choice="salon">
                         <input type="radio" name="location_preference" value="salon" checked>
-                        <span>Chez la prestataire</span>
+                        <span>Chez la coiffeuse</span>
                     </label>
                     <label class="choice-pill" data-location-choice="domicile">
                         <input type="radio" name="location_preference" value="domicile">
@@ -153,7 +153,7 @@
                 >
                     <option value="" selected disabled>Dans quelle zone ?</option>
                     {% if provider.salon_zone %}
-                        <option value="{{ provider.salon_zone }}" data-salon-option hidden disabled>Chez la prestataire ({{ provider.salon_zone }})</option>
+                        <option value="{{ provider.salon_zone }}" data-salon-option hidden disabled>Chez la coiffeuse ({{ provider.salon_zone }})</option>
                     {% endif %}
                     {% for zone in zones %}
                         <option value="{{ zone.name }}">{{ zone.name }}</option>
@@ -164,7 +164,7 @@
             </div>
             {% if provider.salon_zone %}
                 <div class="meta-line" data-salon-zone hidden>
-                    Zone de la prestataire : {{ provider.salon_zone }}
+                    Zone de la coiffeuse : {{ provider.salon_zone }}
                 </div>
             {% endif %}
         {% endif %}

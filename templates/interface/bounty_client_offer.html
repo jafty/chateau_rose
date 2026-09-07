@@ -18,7 +18,7 @@
             </section>
         {% elif offer %}
             <header class="opportunity-heading">
-                <p class="opportunity-eyebrow">Une prestataire est disponible</p>
+                <p class="opportunity-eyebrow">Une coiffeuse est disponible</p>
                 <h1>{{ offer.provider.name }} te propose un rendez-vous</h1>
                 <p class="lead">Bonne nouvelle ! Consulte les détails de cette proposition avant de donner ta réponse.</p>
             </header>
@@ -27,7 +27,7 @@
                 <div class="client-offer-provider">
                     <div class="booking-avatar" aria-hidden="true">{{ offer.provider.name|slice:":1" }}</div>
                     <div>
-                        <p class="opportunity-kicker">Ta prestataire</p>
+                        <p class="opportunity-kicker">Ta coiffeuse</p>
                         <h2>{{ offer.provider.name }}</h2>
                         <a class="client-offer-profile-link" href="{% url 'interface:provider_detail' offer.provider.id %}">Découvrir son profil →</a>
                     </div>

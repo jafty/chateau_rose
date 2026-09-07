@@ -2,11 +2,11 @@
 <a class="provider-card {% if compact %}provider-card--strip{% else %}provider-card--directory{% endif %}" href="{% url 'interface:provider_detail' provider.id %}">
     <div class="provider-card__media">
         {% if provider.resolved_profile_image %}
-            <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}, prestataire coiffure afro" loading="lazy" decoding="async">
+            <img src="{{ provider.resolved_profile_image }}" alt="{{ provider.name }}, coiffeuse afro" loading="lazy" decoding="async">
         {% elif provider.resolved_cover_image %}
             <img src="{{ provider.resolved_cover_image }}" alt="Réalisations de {{ provider.name }}" loading="lazy" decoding="async">
         {% else %}
-            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Prestataire coiffure afro" loading="lazy" decoding="async">
+            <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="Coiffeuse afro" loading="lazy" decoding="async">
         {% endif %}
     </div>
     <div class="provider-card__content">

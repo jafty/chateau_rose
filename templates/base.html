@@ -132,7 +132,7 @@
                 <div class="logo">
                     <span class="chateau">Château</span><span class="rose"> Rose.</span>
                 </div>
-                <p class="footer-copy">Ton partenaire de confiance pour magnifier tes cheveux afro à Toulouse, rapidement et sans prise de tête (sans mauvais jeu mot).</p>
+                <p class="footer-copy">Une équipe de coiffeuses de confiance pour prendre soin de tes cheveux afro à Toulouse, simplement.</p>
                 <div class="footer-contact">
                     <a class="footer-contact-link" href="mailto:japhet.situmonana@gmail.com">Email : japhet.situmonana@gmail.com</a>
                     <span class="footer-address">{{ business_name }} · {{ business_street_address }}, {{ business_postal_code }} {{ business_city }}</span>
@@ -143,7 +143,7 @@
                 <ul class="footer-links">
                     <li><a href="{% url 'interface:home' %}">Accueil</a></li>
                     <li><a href="{% url 'interface:about' %}">À propos</a></li>
-                    <li><a href="{% url 'interface:provider_list' %}">Prestataires</a></li>
+                    <li><a href="{% url 'interface:provider_list' %}">Nos coiffeuses</a></li>
                     <li><a href="{% url 'interface:at_home_provider_list' %}">Coiffure afro à domicile</a></li>
                     <li><a href="{% url 'interface:home' %}#catalogue">Services</a></li>
                     <li><a href="{% url 'interface:home' %}#catalogue">Trouver un service</a></li>
@@ -160,10 +160,10 @@
                 </ul>
             </div>
             <div class="footer-section">
-                <h4>Prestataires</h4>
+                <h4>Coiffeuses</h4>
                 <ul class="footer-links">
-                    <li><a href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:login' %}{% endif %}">Espace prestataires</a></li>
-                    <li><a href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:signup' %}{% endif %}">{% if request.user.is_authenticated %}Espace prestataire{% else %}Devenir partenaire{% endif %}</a></li>
+                    <li><a href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:login' %}{% endif %}">Espace coiffeuses</a></li>
+                    <li><a href="{% if request.user.is_authenticated %}{% url 'providers:providers_index' %}{% else %}{% url 'providers:signup' %}{% endif %}">{% if request.user.is_authenticated %}Mon espace{% else %}Rejoindre l'équipe{% endif %}</a></li>
                     <li><a href="{% url 'interface:home' %}#catalogue">Voir le catalogue</a></li>
                 </ul>
             </div>

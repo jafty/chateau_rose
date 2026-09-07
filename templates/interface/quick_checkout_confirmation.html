@@ -21,7 +21,7 @@
         </ul>
         {% if is_confirmed and is_salon %}
             <p class="meta-line" style="margin: 12px 0 0;">
-                Adresse de la prestataire : {{ provider_salon_address }}
+                Adresse de la coiffeuse : {{ provider_salon_address }}
             </p>
             <p class="meta-line" style="margin: 6px 0 0;">
                 Cette information est partagée uniquement pour organiser le rendez-vous.
@@ -32,7 +32,7 @@
     <div class="paper-card" style="margin-top: 24px;">
         <h2 class="section-title">Paiement</h2>
         <p class="meta-line" style="margin: 0;"><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
-        <p class="meta-line" style="margin: 6px 0 0;"><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }}<br>Frais Château Rose : {{ payment_summary.service_fee }}<br>Montant prestataire en ligne : {{ payment_summary.deposit }}</p>
+        <p class="meta-line" style="margin: 6px 0 0;"><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }}<br>Frais Château Rose : {{ payment_summary.service_fee }}<br>Acompte coiffure en ligne : {{ payment_summary.deposit }}</p>
         <p class="meta-line" style="margin: 6px 0 0;"><strong>Montant à régler le jour J :</strong> {{ payment_summary.remaining }}</p>
     </div>
 

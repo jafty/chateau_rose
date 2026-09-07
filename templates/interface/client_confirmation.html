@@ -22,8 +22,8 @@
                 <p class="lead">Château Rose cherche une autre coiffeuse compatible.</p>
             {% elif is_waiting_provider_assignment %}
                 <div class="confirmation-icon" aria-hidden="true">⌕</div>
-                <h1>Nous cherchons ta prestataire</h1>
-                <p class="lead">Une prestataire compatible peut confirmer immédiatement si elle respecte exactement la prestation, la date, le lieu et le tarif demandés. Toute modification te sera soumise.</p>
+                <h1>Nous cherchons ta coiffeuse</h1>
+                <p class="lead">Une coiffeuse de notre équipe peut confirmer immédiatement si elle respecte exactement la prestation, la date, le lieu et le tarif demandés. Toute modification te sera soumise.</p>
             {% else %}
                 <div class="confirmation-icon" aria-hidden="true">…</div>
                 <h1>Ta demande est en cours</h1>
@@ -31,7 +31,7 @@
             {% endif %}
 
             {% if show_expired_notice and is_awaiting_alternative %}
-                <div class="confirmation-notice" role="status">La priorité de la prestataire initiale a expiré. Château Rose recherche maintenant une autre prestataire compatible ; ton autorisation de paiement reste réservée.</div>
+                <div class="confirmation-notice" role="status">La priorité de la coiffeuse initiale a expiré. L'équipe Château Rose recherche maintenant une autre coiffeuse compatible ; ton autorisation de paiement reste réservée.</div>
             {% elif show_expired_notice %}
                 <div class="confirmation-notice" role="status">Cette demande a expiré. Le paiement Château Rose a été libéré ou remboursé si nécessaire.</div>
             {% endif %}
@@ -51,7 +51,7 @@
                 </dl>
                 {% if is_confirmed and client_moves and booking.provider %}
                     <div class="confirmation-callout">
-                        <strong>Adresse de la prestataire</strong>
+                        <strong>Adresse de la coiffeuse</strong>
                         <span>{{ provider_salon_address }}</span>
                         <small>Cette information est partagée uniquement pour organiser le rendez-vous.</small>
                     </div>
@@ -87,7 +87,7 @@
             {% elif booking.provider %}
                 <p class="meta-line">Les coordonnées seront communiquées ici après confirmation du rendez-vous.</p>
             {% else %}
-                <p class="meta-line">Une prestataire et ses coordonnées seront communiquées ici après attribution.</p>
+                <p class="meta-line">Ta coiffeuse et ses coordonnées seront communiquées ici après attribution.</p>
             {% endif %}
         </article>
 
