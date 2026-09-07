@@ -23,27 +23,26 @@
         <div class="breadcrumbs"><a href="{% url 'interface:home' %}">Accueil</a> &nbsp;/&nbsp; <a href="{% url 'interface:home' %}#catalogue">Services</a> &nbsp;/&nbsp; {{ page_service_name|default:service.name }}</div>
         <h1 class="service-main-title">{{ long_title|default:page_service_name|default:service.name }} <span>{% if zone %}à {{ zone.name }}{% else %}à Toulouse{% endif %}</span></h1>
         <p class="service-intro">{{ short_intro|default:intro|sanitize_marketing_html }}</p>
+        {% if sub_services and not is_sub_service_page %}
+        <div class="service-above-fold" id="service-subservices">
+            <p class="swipe-hint-micro" aria-hidden="true">Glisse pour découvrir les prestations</p>
+            <div class="provider-service-grid service-subservices-grid mode-slider-single">
+                {% for sub_service_item in sub_services %}
+                    {% url 'interface:sub_service_page' service.slug sub_service_item.slug as sub_service_url %}
+                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url card_cta="Choisir" %}
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
         <div class="service-header-actions">
-            <a class="btn primary plausible-event-name=Service+Booking+CTA" href="#{% if sub_services and not is_sub_service_page %}service-subservices{% else %}service-request{% endif %}">{% if sub_services and not is_sub_service_page %}Voir les prestations{% else %}Réserver maintenant{% endif %}</a>
+            <a class="btn primary plausible-event-name=Service+Booking+CTA" href="#service-request">Réserver maintenant</a>
             <a class="service-provider-link plausible-event-name=Choose+Provider+CTA" href="#provider-comparison">Ou choisir une coiffeuse →</a>
         </div>
+        {% endif %}
     </div>
 </section>
 <section class="container service-hub-layout">
     <div class="main-content">
-        {% if sub_services and not is_sub_service_page %}
-        <div id="service-subservices" class="services-carousel-wrapper" style="margin-bottom:1.25rem;">
-            <h2 class="section-title service-section-heading">Affiner ta recherche par type de prestation</h2>
-            <div class="provider-service-grid service-subservices-grid">
-                {% for sub_service_item in sub_services %}
-                    {% url 'interface:sub_service_page' service.slug sub_service_item.slug as sub_service_url %}
-                    {% include "interface/partials/service_booking_card.html" with card=sub_service_item card_url=sub_service_url card_cta="Réserver" %}
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-
         {% if request_form %}
         <div id="service-request" class="provider-form-card inline-form-card" style="margin-bottom:1.25rem;">
             <h2 class="wizard-heading">Réserver rapidement</h2>

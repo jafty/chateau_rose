@@ -97,6 +97,17 @@ class ProviderDashboardTests(TestCase):
         self.assertContains(response, detail_url)
         self.assertContains(response, booking.booking_id)
 
+    def test_booking_detail_uses_shared_information_table_pattern(self):
+        booking = self._create_booking(status="CONFIRMED")
+
+        response = self.client.get(
+            reverse("providers:booking_detail", args=[booking.booking_id])
+        )
+
+        self.assertContains(response, '<dl class="info-table">')
+        self.assertContains(response, 'class="status-panel status-panel--success"')
+        self.assertNotContains(response, "booking-detail-header-card")
+
     def test_dashboard_auto_expires_stale_open_booking(self):
         from providers import views
 
