@@ -599,7 +599,15 @@ def home(request):
 def city_page(request, city_slug: str):
     zone = _get_zone_or_404(city_slug)
     providers = list(Provider.objects.visible_on_website().filter(zones__slug=zone.slug).distinct())
-    services = list(MarketingService.objects.all())
+    # Keep city landing pages aligned with the curated six-category homepage
+    # rather than exposing legacy categories that are no longer promoted.
+    services = list(
+        MarketingService.objects.filter(is_visible_on_homepage=True).order_by(
+            "homepage_order",
+            "name",
+            "id",
+        )
+    )
 
     city_copy = CITY_PAGE_COPY.get(zone.slug, {})
     intro = city_copy.get(

@@ -121,7 +121,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .price-highlight, .price-value, .total-amount, .receipt-amount { color: var(--color-ink-strong); font: 700 1.8rem/1 var(--font-display); }
 
 /* Homepage catalog */
-.marketplace-home { min-height: calc(100svh - 64px); padding: clamp(24px, 5vw, 48px) 0 28px; background: var(--color-surface); }
+.marketplace-home { padding: clamp(24px, 4vw, 42px) 0 clamp(30px, 5vw, 52px); background: var(--color-surface); }
 .hero-header-row { margin-bottom: 18px; }
 .hero-headline { max-width: 760px; }
 .hero-headline p { margin-top: 6px; color: var(--color-ink-soft); }
@@ -130,10 +130,10 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .category-filter-bar::-webkit-scrollbar { display: none; }
 .category-pill, .provider-category-tab { flex: 0 0 auto; padding: 7px 12px; border: 1px solid var(--color-line-strong); border-radius: var(--radius-xs); background: #fff; color: var(--color-ink-soft); font-size: .78rem; font-weight: 700; white-space: nowrap; }
 .category-pill.is-active, .provider-category-tab.is-active { border-color: rgba(185,101,118,.42); background: #e9dfd4; color: var(--color-ink-strong); }
-.homepage-service-groups { margin-top: 8px; }
+.homepage-service-groups { margin-top: 4px; }
 .homepage-service-group__header, .section-header-compact, .content-subheading, .provider-services-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 13px; }
 .homepage-service-group__header a, .provider-action-link { color: var(--color-rose-strong); font-size: .76rem; font-weight: 700; }
-.services-booking-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 13px; align-items: start; }
+.services-booking-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: clamp(13px, 2vw, 20px); align-items: start; }
 .service-polaroid-card, .provider-service-card { min-width: 0; padding: 6px 6px 9px; border: 1px solid var(--color-line); background: #fff; box-shadow: var(--shadow-sm); }
 .service-polaroid-media, .provider-service-card__media { display: block; aspect-ratio: 1; overflow: hidden; background: var(--color-surface-muted); }
 .service-polaroid-content, .provider-service-card__content { display: flex; min-width: 0; flex-direction: column; justify-content: space-between; gap: 6px; padding-top: 7px; }
@@ -144,6 +144,8 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .service-polaroid-card .price-value, .provider-service-card .price-value { font: 700 .78rem/1.25 var(--font-body); }
 .btn-polaroid-action, .provider-service-card__button { padding: 3px 8px; border: 1px solid rgba(185,101,118,.35); border-radius: var(--radius-xs); background: var(--color-rose-soft); color: var(--color-rose-strong); font-size: .7rem; font-weight: 700; }
 .swipe-hint-micro { display: none; color: var(--color-ink-soft); font-size: .69rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.homepage-category-link { display: flex; width: fit-content; align-items: center; gap: 7px; margin-top: 16px; color: var(--color-rose-strong); font-size: .78rem; font-weight: 700; }
+.homepage-category-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .trust-strip { padding: 13px 0; border-block: 1px solid var(--color-line); background: var(--color-surface-muted); }
 .trust-strip-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px; }
 .trust-item { display: flex; align-items: center; gap: 8px; color: var(--color-ink-soft); font-size: .8rem; font-weight: 600; }
@@ -298,6 +300,41 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .provider-page-title { margin-bottom: 7px; }
 .providers-section, .city-providers-section { padding-bottom: var(--space-section); }
 .seo-content, .at-home-seo-content { max-width: 850px; margin: 0 auto; padding-block: var(--space-section); }
+
+/* City landing pages: conversion first, local editorial copy below the fold. */
+.city-landing-hero { padding-block: clamp(38px, 6vw, 72px); background: var(--color-surface); }
+.city-landing-hero__grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .75fr); gap: clamp(34px, 7vw, 88px); align-items: center; }
+.city-landing-hero__copy { max-width: 720px; }
+.city-eyebrow { margin-bottom: 9px; color: var(--color-rose-strong); font-size: .7rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.city-landing-hero__copy h1 { max-width: 16ch; }
+.city-landing-hero__copy h1 span { color: var(--color-rose-strong); }
+.city-landing-hero__copy > p:not(.city-eyebrow) { max-width: 60ch; margin-top: 15px; color: var(--color-ink-soft); font-size: 1.02rem; }
+.city-landing-hero__copy .btn { margin-top: 24px; }
+.city-landing-hero__promise { display: grid; border-block: 1px solid var(--color-line-strong); }
+.city-landing-hero__promise p { display: grid; gap: 2px; padding-block: 15px; }
+.city-landing-hero__promise p + p { margin: 0; border-top: 1px solid var(--color-line); }
+.city-landing-hero__promise strong { color: var(--color-ink-strong); font-family: var(--font-display); font-size: 1.12rem; }
+.city-landing-hero__promise span { color: var(--color-ink-soft); font-size: .78rem; }
+.city-service-catalog, .city-providers-section { padding-block: clamp(38px, 6vw, 68px); }
+.city-service-catalog { border-top: 1px solid var(--color-line); }
+.city-section-heading { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .7fr); gap: 24px; align-items: end; margin-bottom: clamp(22px, 4vw, 34px); }
+.city-section-heading .city-eyebrow { margin-bottom: 5px; }
+.city-section-heading > p { max-width: 55ch; color: var(--color-ink-soft); font-size: .86rem; }
+.city-services-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 2vw, 20px); }
+.city-service-card { display: grid; min-width: 0; overflow: hidden; border: 1px solid var(--color-line); background: var(--color-surface); box-shadow: var(--shadow-sm); transition: transform .18s, box-shadow .18s; }
+.city-service-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+.city-service-card img { aspect-ratio: 4 / 3; }
+.city-service-card > span { display: grid; gap: 5px; padding: 13px 14px 15px; }
+.city-service-card strong { color: var(--color-ink-strong); font: 700 1.25rem/1.1 var(--font-display); }
+.city-service-card small { display: flex; justify-content: space-between; gap: 8px; color: var(--color-ink-soft); font-size: .72rem; font-weight: 700; }
+.city-service-card b { color: var(--color-rose-strong); }
+.city-providers-section { background: var(--color-surface); }
+.city-empty-state { grid-column: 1 / -1; max-width: 650px; padding: clamp(20px, 4vw, 32px); border-left: 3px solid var(--color-rose); background: var(--color-rose-soft); }
+.city-empty-state p { margin: 7px 0 17px; color: var(--color-ink-soft); }
+.city-seo-section { padding-block: clamp(38px, 6vw, 68px); border-top: 1px solid var(--color-line); }
+.city-seo-section__grid { display: grid; grid-template-columns: minmax(220px, .7fr) minmax(0, 1.3fr); gap: clamp(28px, 7vw, 80px); }
+.city-seo-section__grid h2 { max-width: 14ch; }
+.city-seo-section__grid div { max-width: 72ch; color: var(--color-ink-soft); }
 .cta-banner, .confirmation-callout, .booking-proposal-callout { padding: clamp(20px, 4vw, 34px); border-radius: var(--radius-sm); background: var(--color-ink); color: #fff; }
 .cta-banner h2, .confirmation-callout h2 { color: #fff; }
 .providers-hero-section { padding-bottom: 0; }
@@ -422,6 +459,10 @@ th { background: var(--color-surface-muted); color: var(--color-ink-strong); }
     .service-marketplace--hub .service-sidebar { grid-template-columns: 1fr; }
     .city-discovery .city-chip-list { align-items: stretch; }
     .city-discovery .city-chip { flex: 1 1 calc(50% - 5px); justify-content: center; text-align: center; }
+    .city-landing-hero__grid, .city-section-heading, .city-seo-section__grid { grid-template-columns: 1fr; }
+    .city-landing-hero__grid { gap: 30px; }
+    .city-services-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .city-section-heading { gap: 10px; }
 }
 
 @media (max-width: 540px) {
@@ -435,6 +476,10 @@ th { background: var(--color-surface-muted); color: var(--color-ink-strong); }
     .story-section .scroll-rail-topbar { align-items: center; }
     .story-section .scroll-rail-actions { display: none; }
     .city-discovery .city-chip { flex-basis: 100%; }
+    .city-services-grid { grid-template-columns: 1fr; }
+    .city-service-card { grid-template-columns: 116px minmax(0, 1fr); }
+    .city-service-card img { aspect-ratio: 1; }
+    .city-service-card > span { align-content: center; }
     .cookie-banner__actions .btn { flex: 1; }
 }
 
