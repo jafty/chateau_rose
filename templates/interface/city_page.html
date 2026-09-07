@@ -5,44 +5,57 @@
 {% block meta_description %}Réserve rapidement une coiffeuse afro à {{ zone.name }} pour tes tresses, locks ou soins, en salon ou à domicile avec Château Rose.{% endblock %}
 
 {% block content %}
-<section class="hero city-hero">
-    <div class="container hero-grid">
-        <div class="hero-content city-hero-paper">
-            <h1 class="hero-title">Coiffure <span>afro</span> à {{ zone.name }}</h1>
-            <p class="hero-text"><strong>Choisis ta coiffure et ton créneau : on recherche rapidement une professionnelle disponible près de chez toi.</strong></p>
-            <p class="hero-text">{{ intro }}</p>
-            <p class="hero-text">{{ long_description }}</p>
+<section class="city-landing-hero">
+    <div class="container city-landing-hero__grid">
+        <div class="city-landing-hero__copy">
+            <p class="city-eyebrow">Château Rose · {{ zone.name }}</p>
+            <h1>Ta coiffure <span>afro</span> à {{ zone.name }}, sans charge mentale</h1>
+            <p>Choisis ta prestation et ton créneau. Nous t'aidons à trouver rapidement une professionnelle disponible près de chez toi.</p>
+            <a class="btn btn-accent" href="#catalogue-ville">Choisir ma coiffure</a>
         </div>
+        <aside class="city-landing-hero__promise" aria-label="Les avantages Château Rose">
+            <p><strong>Une réservation simple</strong><span>Ta demande se fait en quelques minutes.</span></p>
+            <p><strong>Des spécialistes sélectionnées</strong><span>Pour cheveux crépus, frisés et bouclés.</span></p>
+            <p><strong>À {{ zone.name }}</strong><span>En salon ou à domicile selon les profils.</span></p>
+        </aside>
     </div>
 </section>
 
-<section class="providers-section city-providers-section" aria-label="Coiffeuses dans la ville">
+<section class="city-service-catalog" id="catalogue-ville">
     <div class="layout-shell">
-        <div class="homepage-providers-grid">
-            {% for provider in providers %}
-                {% include "interface/partials/provider_card.html" with provider=provider %}
-            {% empty %}
-                <p class="lead">Aucun profil disponible pour le moment à {{ zone.name }}.</p>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-<section class="layout-section section-catalog" id="catalogue-ville">
-    <div class="layout-shell">
-    <h2 class="section-title">Services disponibles à {{ zone.name }}</h2>
-    <div class="all-services-grid polaroid-grid">
+    <div class="city-section-heading"><div><p class="city-eyebrow">Le catalogue</p><h2>Quelle coiffure souhaites-tu&nbsp;?</h2></div><p>Les catégories disponibles à {{ zone.name }}. Sélectionne-en une pour voir les prestations et les professionnelles associées.</p></div>
+    <div class="city-services-grid">
         {% for service in services %}
-            <a href="{% url 'interface:service_city_page' service.slug zone.slug %}" class="service-polaroid">
+            <a href="{% url 'interface:service_city_page' service.slug zone.slug %}" class="city-service-card">
                 {% if service.resolved_main_image %}
                     <img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à {{ zone.name }}" width="320" height="320" loading="lazy" decoding="async">
                 {% else %}
                     <img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à {{ zone.name }}" width="320" height="320" loading="lazy" decoding="async">
                 {% endif %}
-                <span class="service-label">{{ service.name }}</span>
+                <span><strong>{{ service.name }}</strong><small>Découvrir à {{ zone.name }} <b aria-hidden="true">→</b></small></span>
             </a>
         {% endfor %}
     </div>
+    </div>
+</section>
+
+<section class="city-providers-section" aria-label="Coiffeuses dans la ville">
+    <div class="layout-shell">
+        <div class="city-section-heading"><div><p class="city-eyebrow">Près de chez toi</p><h2>Les professionnelles disponibles à {{ zone.name }}</h2></div><p>Compare les profils, leurs spécialités et leurs modes de déplacement avant de faire ton choix.</p></div>
+        <div class="homepage-providers-grid">
+            {% for provider in providers %}
+                {% include "interface/partials/provider_card.html" with provider=provider %}
+            {% empty %}
+                <div class="city-empty-state"><h3>Nous cherchons encore la bonne professionnelle</h3><p>Les disponibilités évoluent régulièrement. Parcours les catégories pour nous transmettre ta demande.</p><a class="btn secondary" href="#catalogue-ville">Voir les prestations</a></div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="city-seo-section" aria-labelledby="city-seo-title">
+    <div class="layout-shell city-seo-section__grid">
+        <h2 id="city-seo-title">Trouver une coiffeuse afro à {{ zone.name }}</h2>
+        <div><p>{{ intro }}</p><p>{{ long_description }}</p></div>
     </div>
 </section>
 {% endblock %}

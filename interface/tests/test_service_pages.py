@@ -588,6 +588,36 @@ class ServicePagesTests(TestCase):
         content = response.content.decode()
         self.assertLess(content.index(fast_service.name), content.index(slow_service.name))
 
+    def test_home_uses_filter_as_only_visible_category_heading(self):
+        response = self.client.get(reverse("interface:home"))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn('class="sr-only" id="service-group-tresses"', content)
+        self.assertNotIn('class="homepage-service-group__header"', content)
+        self.assertLess(
+            content.index("Glisse pour découvrir les prestations"),
+            content.index('class="services-booking-grid mode-slider-single"'),
+        )
+
+    def test_city_page_only_lists_homepage_categories_and_keeps_seo_copy_below_catalog(self):
+        hidden_service = MarketingService.objects.create(
+            name="Ancienne catégorie",
+            slug="ancienne-categorie",
+            is_visible_on_homepage=False,
+        )
+
+        response = self.client.get(reverse("interface:city_page", args=["toulouse"]))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        self.assertIn(self.marketing_service.name, content)
+        self.assertNotIn(hidden_service.name, content)
+        self.assertLess(
+            content.index('id="catalogue-ville"'),
+            content.index('class="city-seo-section"'),
+        )
+
     def test_footer_does_not_render_marketing_city_links(self):
         response = self.client.get(reverse("interface:provider_list"))
 
