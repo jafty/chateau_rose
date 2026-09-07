@@ -3,10 +3,12 @@
 {% block content %}
 <section class="thank-you-section">
     <div class="container thank-you-shell">
-        <div class="paper-card thank-you-card">
-            <h1>Merci pour ta question ✨</h1>
+        <div class="thank-you-card">
+            <span class="success-mark" aria-hidden="true">✓</span>
+            <p class="eyebrow">Message reçu</p>
+            <h1>Merci pour ta question</h1>
             <p>On l'a bien reçue et on revient vers toi rapidement.</p>
-            <p><a class="btn" href="{% url 'interface:provider_list' %}">Voir nos autres coiffeuses</a></p>
+            <a class="btn" href="{% url 'interface:provider_list' %}">Voir nos autres coiffeuses</a>
         </div>
     </div>
 </section>

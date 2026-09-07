@@ -3,10 +3,12 @@
 {% block content %}
 <section class="thank-you-section">
     <div class="container thank-you-shell">
-        <div class="paper-card thank-you-card">
-            <h1>Merci, demande bien envoyée ✅</h1>
+        <div class="thank-you-card">
+            <span class="success-mark" aria-hidden="true">✓</span>
+            <p class="eyebrow">Demande reçue</p>
+            <h1>Merci, c’est bien envoyé</h1>
             <p>On te contacte vite avec une proposition adaptée, souvent en moins d'1h pendant les heures d'ouverture.</p>
-            <p><a class="btn" href="{% url 'interface:home' %}">Retour à l'accueil</a></p>
+            <a class="btn" href="{% url 'interface:home' %}">Retour à l'accueil</a>
         </div>
     </div>
 </section>

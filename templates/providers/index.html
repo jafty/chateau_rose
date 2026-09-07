@@ -4,10 +4,11 @@
 {% block title %}Espace prestataire{% endblock %}
 
 {% block content %}
-<section class="container page-hero">
-    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
+<section class="layout-section provider-dashboard">
+    <div class="layout-shell provider-workspace-shell">
+    <header class="workspace-hero">
         <span class="pill">{% if admin_mode %}Console admin{% else %}Espace prestataire{% endif %}</span>
-        <h1 style="margin: 12px 0 10px;">{% if admin_mode %}Gestion centralisée des demandes{% else %}Bienvenue {{ provider.name }}{% endif %}</h1>
+        <h1>{% if admin_mode %}Gestion centralisée des demandes{% else %}Bienvenue {{ provider.name }}{% endif %}</h1>
         <p class="lead">
             {% if admin_mode %}
                 Tu gères toutes les demandes depuis ton compte admin, sans rattacher chaque prestataire à ton utilisateur.
@@ -16,7 +17,7 @@
             {% endif %}
         </p>
         <p class="meta-line">{% if admin_mode %}Tu peux ouvrir chaque demande, proposer un créneau, confirmer ou refuser au nom du prestataire concerné.{% else %}Partage ce lien d'accès uniquement si tu veux inviter quelqu'un à se connecter en ton nom : <code>{{ request.build_absolute_uri }}</code>{% endif %}</p>
-        <div class="btn-group" style="margin-top:10px;">
+        <div class="workspace-actions">
             {% if not admin_mode %}
                 <a class="btn" href="{% url 'providers:account' %}">Gérer mon compte</a>
             {% endif %}
@@ -25,11 +26,9 @@
                 <button class="btn secondary" type="submit">Se déconnecter</button>
             </form>
         </div>
-    </div>
-</section>
+    </header>
 
-<section class="container" style="padding-bottom:60px;">
-    <div class="paper-card" style="max-width:760px; margin: 0 auto;">
+    <section class="workspace-panel workspace-panel--wide">
         <h3 class="section-title provider-section-title">Dernières demandes reçues</h3>
         {% if bookings %}
             <div class="table-wrapper bookings-desktop-table">
@@ -100,6 +99,7 @@
         {% else %}
             <p class="meta-line">Aucune demande pour le moment.</p>
         {% endif %}
+    </section>
     </div>
 </section>
 
