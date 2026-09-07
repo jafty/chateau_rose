@@ -40,8 +40,8 @@
         <div class="booking-ticket">
             <div class="booking-ticket-header">
                 <div>
+                    <p class="ticket-section-label">Détails de la demande</p>
                     <div class="ticket-id">ID : #{{ booking.booking_id }}</div>
-                    <h2>{{ booking.client_name }}</h2>
                 </div>
                 <div class="booking-status-stamp" data-status="{{ booking.status|lower }}">
                     {{ booking.status|booking_status_label }}

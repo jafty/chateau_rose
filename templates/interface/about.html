@@ -2,74 +2,47 @@
 {% load static %}
 
 {% block title %}À propos de Château Rose | Réservation coiffure afro{% endblock %}
-
-{% block extra_head %}
-{{ block.super }}
-<script type="application/ld+json">{{ faq_schema_json|safe }}</script>
-{% endblock %}
+{% block extra_head %}{{ block.super }}<script type="application/ld+json">{{ faq_schema_json|safe }}</script>{% endblock %}
 
 {% block content %}
-<section class="container page-hero">
-    <div class="paper-card">
-        <span class="pill">À propos</span>
-        <h1 style="margin: 14px 0 12px;">On gère ta coiffure afro à Toulouse, sans charge mentale</h1>
-        <p class="lead">Choisis ta coiffure et ton créneau : Château Rose trouve rapidement une professionnelle disponible à Toulouse, chez elle ou à ton domicile.</p>
-    </div>
-</section>
-
-<section class="container about-grid">
-    <div class="info-card paper-card about-promise">
-        <h2>Notre promesse</h2>
-        <p>Plus besoin de contacter plusieurs coiffeuses : choisis celle que tu préfères ou laisse Château Rose chercher une disponibilité adaptée à ton style, ton timing et ta zone.</p>
-        <ul class="highlight-list">
-            <li>Une demande simple : choisis une coiffeuse ou laisse-nous trouver la première disponibilité adaptée.</li>
-            <li>Coiffeuses indépendantes vérifiées : expérience, fiabilité et maîtrise des techniques afro.</li>
-            <li>Suivi humain : si une coiffeuse n'est pas disponible, on cherche une alternative compatible.</li>
-        </ul>
-    </div>
-    <div class="about-visual">
-        <img src="https://images.unsplash.com/photo-1573497491208-6b1acb260507?q=80&w=900&auto=format&fit=crop" alt="Coiffeuse afro avec une cliente" loading="lazy" decoding="async">
-    </div>
-</section>
-
-<section class="container about-process" aria-labelledby="booking-process-title">
-    <div class="section-header-compact"><div><h2 id="booking-process-title">Réserver en quatre étapes</h2><p>Un parcours court, transparent et accompagné jusqu'au rendez-vous.</p></div></div>
-    <ol class="booking-steps-grid">
-        <li><span>1</span><div><h3>Choisis ta coiffure</h3><p>Parcours les catégories puis sélectionne la prestation qui correspond à ton résultat.</p></div></li>
-        <li><span>2</span><div><h3>Indique ton créneau</h3><p>Réserve avec ta coiffeuse préférée ou confie-nous la recherche d'une disponibilité.</p></div></li>
-        <li><span>3</span><div><h3>Sécurise ta demande</h3><p>L'empreinte bancaire garantit la demande, sans débit avant confirmation du rendez-vous.</p></div></li>
-        <li><span>4</span><div><h3>Profite du rendez-vous</h3><p>Retrouve ta coiffeuse chez elle ou reçois-la à domicile selon le mode proposé.</p></div></li>
-    </ol>
-</section>
-
-<section class="container about-service-guide" aria-labelledby="service-guide-title">
-    <article class="seo-editorial-card"><h2 id="service-guide-title">Comment choisir une prestation et une coiffeuse ?</h2><div class="seo-editorial-grid"><div class="seo-editorial-col"><h3>Une catégorie, puis une technique</h3><p>Commence par une famille comme les tresses, les vanilles ou les locks. Chaque page catégorie rassemble ensuite ses variantes, leurs tarifs de départ et les profils associés.</p></div><div class="seo-editorial-col"><h3>Chez la coiffeuse ou à domicile</h3><p>Les profils précisent si les coiffeuses reçoivent chez elles, se déplacent ou proposent les deux possibilités. Les zones disponibles sont affichées avant l'envoi de la demande.</p></div><div class="seo-editorial-col"><h3>Un accompagnement humain</h3><p>Si le profil choisi n'est pas disponible, Château Rose peut rechercher une alternative compatible sans modifier ta demande sans ton accord.</p></div></div></article>
-</section>
-
-<section class="container faq-section">
-    <div class="faq-header">
-        <div>
-            <h2>Questions fréquentes</h2>
-            <p class="lead">Une organisation transparente pour réserver votre coiffure afro à Toulouse et ses alentours.</p>
+<main class="about-page">
+    <section class="about-hero">
+        <div class="container about-hero__grid">
+            <div class="about-hero__copy">
+                <p class="eyebrow">À propos de Château Rose</p>
+                <h1>La coiffure afro, organisée simplement.</h1>
+                <p>Tu choisis le résultat, le lieu et le créneau. Nous t'aidons à trouver une professionnelle de confiance à Toulouse et à suivre ta demande jusqu'au rendez-vous.</p>
+                <a class="btn" href="/#catalogue">Trouver ma coiffure</a>
+            </div>
+            <figure class="about-hero__media"><img src="https://images.unsplash.com/photo-1573497491208-6b1acb260507?q=80&w=1200&auto=format&fit=crop" alt="Coiffeuse afro échangeant avec une cliente" loading="eager" decoding="async"></figure>
         </div>
-        <a class="btn secondary" href="/#catalogue">Commencer une réservation</a>
-    </div>
-    <div class="faq-grid">
-        {% for item in faq_items %}
-            <article class="faq-card">
-                <h3>{{ item.question }}</h3>
-                <p>{{ item.answer }}</p>
-            </article>
-        {% endfor %}
-    </div>
-</section>
+    </section>
 
-<section class="container service-links">
-    <h2 class="section-title">Services pris en charge</h2>
-    <div class="chips">
-        {% for service in services|slice:":6" %}
-            <a class="chip" href="{% url 'interface:service_page' service.slug %}">{{ service.name }}</a>
-        {% endfor %}
-    </div>
-</section>
+    <section class="container about-mission" aria-labelledby="about-mission-title">
+        <div><p class="eyebrow">Notre rôle</p><h2 id="about-mission-title">Moins de recherches.<br>Plus de sérénité.</h2></div>
+        <div class="about-mission__copy"><p>Château Rose met en relation les clientes et des coiffeuses indépendantes sélectionnées pour leurs techniques afro, leur fiabilité et la qualité de leur accompagnement.</p><p>Tu peux réserver la professionnelle de ton choix ou nous confier la recherche. Si le premier créneau n'est pas disponible, nous cherchons une alternative compatible sans rien modifier sans ton accord.</p></div>
+    </section>
+
+    <section class="about-process" aria-labelledby="booking-process-title"><div class="container">
+        <div class="about-section-heading"><p class="eyebrow">Le parcours</p><h2 id="booking-process-title">Du choix au rendez-vous, en quatre étapes</h2></div>
+        <ol class="booking-steps-grid">
+            <li><span>01</span><div><h3>Choisis ta coiffure</h3><p>Explore les techniques, les tarifs de départ et les profils.</p></div></li>
+            <li><span>02</span><div><h3>Propose ton créneau</h3><p>Indique le lieu et les informations utiles à ta demande.</p></div></li>
+            <li><span>03</span><div><h3>Valide sans débit</h3><p>Ta carte sécurise la demande avant sa confirmation.</p></div></li>
+            <li><span>04</span><div><h3>Reçois la confirmation</h3><p>Tu acceptes toujours les éventuels ajustements avant le rendez-vous.</p></div></li>
+        </ol>
+    </div></section>
+
+    <section class="container about-values" aria-labelledby="about-values-title">
+        <div class="about-section-heading"><p class="eyebrow">Ce qui compte</p><h2 id="about-values-title">Une expérience claire des deux côtés</h2></div>
+        <div class="about-values__grid"><article><strong>01</strong><h3>Le bon choix</h3><p>Catégories, prestations, zones et modes de rendez-vous sont visibles avant ta demande.</p></article><article><strong>02</strong><h3>Des règles transparentes</h3><p>Le budget et le fonctionnement du paiement sont récapitulés avant validation.</p></article><article><strong>03</strong><h3>Un suivi humain</h3><p>Nous restons présents lorsqu'un créneau ou un tarif doit être ajusté.</p></article></div>
+    </section>
+
+    <section class="about-faq"><div class="container">
+        <div class="faq-header"><div><p class="eyebrow">Questions fréquentes</p><h2>Tout savoir avant de réserver</h2></div><a class="btn secondary" href="/#catalogue">Commencer</a></div>
+        <div class="faq-grid">{% for item in faq_items %}<article class="faq-card"><h3>{{ item.question }}</h3><p>{{ item.answer }}</p></article>{% endfor %}</div>
+    </div></section>
+
+    <section class="container about-services"><div><p class="eyebrow">Les techniques</p><h2>Découvre les services pris en charge</h2></div><div class="chips">{% for service in services|slice:":6" %}<a class="chip" href="{% url 'interface:service_page' service.slug %}">{{ service.name }}</a>{% endfor %}</div></section>
+</main>
 {% endblock %}

@@ -49,7 +49,7 @@
                     <tbody>
                         {% for booking in bookings %}
                             <tr>
-                                <td><a href="{% url 'providers:booking_detail' booking.booking_id %}">{{ booking.booking_id }}</a></td>
+                                <td><a class="booking-open-link" href="{% url 'providers:booking_detail' booking.booking_id %}">Voir {{ booking.booking_id }} <span aria-hidden="true">→</span></a></td>
                                 <td>{{ booking.client_name }}</td>
                                 {% if admin_mode %}<td>{{ booking.client_email }}</td>{% endif %}
                                 {% if admin_mode %}<td>{{ booking.provider.name|default:"À attribuer" }}</td>{% endif %}
@@ -75,7 +75,7 @@
             <div class="bookings-mobile-cards">
                 {% for booking in bookings %}
                     <article class="booking-card-mobile">
-                        <p><strong>Demande :</strong> <a href="{% url 'providers:booking_detail' booking.booking_id %}">{{ booking.booking_id }}</a></p>
+                        <p><a class="booking-open-link" href="{% url 'providers:booking_detail' booking.booking_id %}">Voir la demande {{ booking.booking_id }} <span aria-hidden="true">→</span></a></p>
                         <p><strong>Client :</strong> {{ booking.client_name }}</p>
                         {% if admin_mode %}<p><strong>Email :</strong> {{ booking.client_email }}</p>{% endif %}
                         {% if admin_mode %}<p><strong>Prestataire :</strong> {{ booking.provider.name|default:"À attribuer" }}</p>{% endif %}
