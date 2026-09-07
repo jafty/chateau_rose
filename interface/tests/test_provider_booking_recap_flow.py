@@ -68,15 +68,14 @@ class ProviderBookingRecapFlowTests(TestCase):
         )
 
         self.assertIn("Aucun débit aujourd'hui", content)
-        self.assertIn("Nous recherchons une coiffeuse compatible", content)
-        self.assertNotIn("12 h maximum", content)
-        self.assertIn("libre d'accepter ou de refuser tout ajustement", content)
-        self.assertIn('class="receipt-amount">100 €', content)
-        self.assertIn("Aucun changement n'est appliqué sans ton accord", content)
+        self.assertIn("Vérifie et confirme", content)
+        self.assertIn("Détail du prix", content)
+        self.assertIn("Prix estimé de la prestation", content)
+        self.assertIn("100 €", content)
         self.assertIn("Valider ma demande — 0 € aujourd'hui", content)
-        self.assertIn("Modifier mon récapitulatif", content)
-        self.assertEqual(content.count('class="receipt-payment-block"'), 2)
-        self.assertIn('class="receipt-condition">Si le rendez-vous est confirmé', content)
+        self.assertIn("Modifier", content)
+        self.assertEqual(content.count('class="recap-price-line"'), 2)
+        self.assertNotIn("Comment ça se passe", content)
         self.assertNotIn("empreinte bancaire", content)
 
     def _base_payload(self):
@@ -184,12 +183,12 @@ class ProviderBookingRecapFlowTests(TestCase):
         recap_page = self.client.get(
             reverse("interface:provider_booking_recap", args=[draft.token])
         )
-        self.assertContains(recap_page, "Ta demande est prête")
+        self.assertContains(recap_page, "Vérifie et confirme")
         self.assertContains(recap_page, "Valider ma demande — 0 € aujourd'hui")
         self.assertNotContains(recap_page, "12 h maximum")
-        self.assertContains(recap_page, "libre d'accepter ou de refuser tout ajustement")
+        self.assertNotContains(recap_page, "Comment ça se passe")
         self.assertNotContains(recap_page, "empreinte bancaire")
-        self.assertContains(recap_page, 'class="receipt-payment-block"', count=2)
+        self.assertContains(recap_page, 'class="recap-price-line"', count=2)
 
         prefill_page = self.client.get(
             reverse("interface:provider_detail", args=[self.provider.id])
@@ -255,7 +254,6 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertContains(recap_page, "18.75 €")
         self.assertContains(recap_page, "Aucun débit aujourd'hui")
         self.assertContains(recap_page, "Prix estimé de la prestation")
-        self.assertContains(recap_page, "Aucun changement n'est appliqué sans ton accord")
         self.assertContains(recap_page, "125 €")
 
     def test_recap_waives_service_fee_with_valid_coupon(self):

@@ -4,106 +4,51 @@
 {% block title %}Récapitulatif de ta demande | Château Rose{% endblock %}
 
 {% block content %}
-<section class="container booking-recap-page">
-    <div class="recap-shell">
-        <div class="recap-header">
-            <p class="recap-kicker">Dernière étape</p>
-            <h1 class="wizard-heading">Ta demande est prête{% if payload.client_name %}, {{ payload.client_name }}{% endif %}</h1>
-            <p class="recap-intro">Relis ta demande avant de l'envoyer. Ta carte permet de la valider, <strong>sans débit aujourd'hui.</strong></p>
-        </div>
-        {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
-        <div class="provider-form-layout recap-main-layout">
-            <div class="recap-content-column">
-                <section class="recap-request-details recap-panel recap-panel--request" aria-labelledby="recap-service-title">
-                <p class="recap-eyebrow">Ta sélection</p>
-                <h2 id="recap-service-title">{{ service_label }}</h2>
-                <dl class="recap-detail-list">
-                    <div><dt>Date souhaitée</dt><dd>{{ desired_date_display }}</dd></div>
-                    <div><dt>Lieu</dt><dd>{% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la coiffeuse{% endif %}</dd></div>
-                    {% if payload.hair_length %}<div><dt>Longueur</dt><dd>{{ payload.hair_length }}</dd></div>{% endif %}
-                    <div><dt>Format</dt><dd>{{ payload.type_adjustment|default:"standard" }}</dd></div>
-                    {% if payload.requested_options %}<div><dt>Options</dt><dd>{{ payload.requested_options|join:", " }}</dd></div>{% endif %}
-                    {% if payload.free_text %}<div><dt>Informations complémentaires</dt><dd>{{ payload.free_text }}</dd></div>{% endif %}
-                    <div><dt>Contact</dt><dd>{{ payload.client_name }}<br>{{ payload.client_email }}</dd></div>
-                </dl>
-                <p class="meta-line recap-info-note">Une coiffeuse de notre équipe pourra confirmer ces éléments. Toute modification de date ou de tarif restera soumise à ton accord.</p>
-                <div class="recap-actions">
-                    <a href="{{ edit_url }}" class="btn secondary recap-edit-btn plausible-event-name=Generic+Recap+Edit">Modifier mon récapitulatif</a>
-                </div>
-                </section>
+<section class="booking-recap-page">
+  <div class="container recap-checkout">
+    <header class="recap-checkout__header">
+      <p class="recap-kicker">Dernière étape</p>
+      <h1>Vérifie et confirme</h1>
+      <p>Ta carte valide la demande. Aucun débit aujourd'hui.</p>
+    </header>
+    {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
 
-                <section class="recap-next-steps recap-panel" aria-labelledby="recap-next-title"><p class="recap-eyebrow">Après validation</p><h2 id="recap-next-title">La suite, simplement</h2>
-                <div class="timeline">
-                    <div class="timeline-step">
-                        <div class="timeline-icon active" aria-hidden="true">1</div>
-                        <div class="timeline-content">
-                            <h3>1. Tu valides ta demande</h3>
-                            <p>Tu ajoutes ta carte, mais aucun montant n'est débité aujourd'hui.</p>
-                        </div>
-                    </div>
-                    <div class="timeline-step">
-                        <div class="timeline-icon" aria-hidden="true">2</div>
-                        <div class="timeline-content">
-                            <h3>2. Nous recherchons une coiffeuse compatible</h3>
-                            <p>Château Rose transmet ta demande à une coiffeuse adaptée. Tu restes libre d'accepter ou de refuser tout ajustement proposé.</p>
-                        </div>
-                    </div>
-                    <div class="timeline-step">
-                        <div class="timeline-icon" aria-hidden="true">3</div>
-                        <div class="timeline-content">
-                            <h3>3. Tu vas à ton rendez-vous</h3>
-                            <p>Les frais Château Rose sont prélevés après confirmation. Tu règles la prestation coiffure directement à la coiffeuse le jour J.</p>
-                        </div>
-                    </div>
-                </div></section>
-            </div>
-            <aside class="provider-form-aside recap-payment-aside">
-                <div class="sticky-price-bar">
-                    <p class="recap-eyebrow">Paiement</p>
-                    <h2 class="recap-payment-title">Ton budget en un coup d'œil</h2>
-                    <div class="price-highlight recap-zero-today">
-                        <span>Aujourd'hui</span>
-                        <div class="amount">0 €</div>
-                        <p><strong>Aucun débit aujourd'hui.</strong> Ta carte sert uniquement à valider la demande.</p>
-                    </div>
-                    <div class="receipt-payment-block">
-                        <div class="receipt-line receipt-line--strong">
-                            <span><strong class="receipt-condition">Si le rendez-vous est confirmé</strong><small>Frais Château Rose</small></span>
-                            <span class="receipt-amount">{{ service_fee_price }}</span>
-                        </div>
-                        <p class="receipt-help">Ces frais servent à traiter ta demande, rechercher une coiffeuse compatible et confirmer ton rendez-vous.</p>
-                    </div>
-                    <div class="receipt-payment-block">
-                        <div class="receipt-line receipt-line--strong">
-                            <span><strong class="receipt-condition">Le jour du rendez-vous</strong><small>Prix estimé de la prestation, à régler directement à la coiffeuse</small></span>
-                            <span class="receipt-amount">{{ subtotal_price }}</span>
-                        </div>
-                        <p class="receipt-help">La coiffeuse peut proposer un autre tarif selon ta demande. Aucun changement n'est appliqué sans ton accord : tu peux l'accepter ou le refuser avant la confirmation.</p>
-                    </div>
-                    <div class="receipt-divider receipt-divider--spaced"></div>
-                    <div class="receipt-line receipt-line--estimated">
-                        <span>Budget total estimé</span>
-                        <span class="receipt-amount">{{ total_price }}</span>
-                    </div>
-                    <form method="post" id="generic-recap-confirm-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
-                        {% if require_payment_auth %}
-                            <div class="stripe-payment-header">
-                                <label class="stripe-label" for="payment-element">Carte bancaire</label>
-                                <span>0 € débité aujourd'hui</span>
-                            </div>
-                            <p class="stripe-payment-note">Les frais Château Rose seront prélevés uniquement si ton rendez-vous est confirmé.</p>
-                            <div id="payment-element" class="payment-element payment-element--tall"></div>
-                            <div class="alert error" id="payment-error" hidden></div>
-                        {% endif %}
-                        <button type="submit" class="btn recap-submit-btn plausible-event-name=Generic+Recap+Confirm">Valider ma demande — 0 € aujourd'hui</button>
-                    </form>
-                    <p class="meta-line" style="margin-top: 0.75rem;">Paiement sécurisé par Stripe</p>
-                </div>
-            </aside>
+    <section class="recap-checkout__review" aria-labelledby="recap-service-title">
+      <div class="recap-checkout__summary">
+        <div class="recap-section-heading">
+          <div><p class="recap-eyebrow">Ta demande</p><h2 id="recap-service-title">{{ service_label }}</h2></div>
+          <a href="{{ edit_url }}" class="recap-text-action plausible-event-name=Generic+Recap+Edit">Modifier</a>
         </div>
-    </div>
+        <dl class="recap-facts">
+          <div><dt>Coiffeuse</dt><dd>À confirmer</dd></div>
+          <div><dt>Date</dt><dd>{{ desired_date_display }}</dd></div>
+          <div><dt>Lieu</dt><dd>{% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la coiffeuse{% endif %}</dd></div>
+          {% if payload.hair_length %}<div><dt>Longueur</dt><dd>{{ payload.hair_length }}</dd></div>{% endif %}
+          <div><dt>Format</dt><dd>{{ payload.type_adjustment|default:"standard" }}</dd></div>
+          {% if payload.requested_options %}<div><dt>Options</dt><dd>{{ payload.requested_options|join:", " }}</dd></div>{% endif %}
+          {% if payload.free_text %}<div><dt>Note</dt><dd>{{ payload.free_text }}</dd></div>{% endif %}
+          <div><dt>Contact</dt><dd>{{ payload.client_name }} · {{ payload.client_email }}</dd></div>
+        </dl>
+      </div>
+      <aside class="recap-checkout__price" aria-label="Détail du prix">
+        <h2>Détail du prix</h2>
+        <div class="recap-price-line"><span>Frais Château Rose<br><small>Si le rendez-vous est confirmé</small></span><strong>{{ service_fee_price }}</strong></div>
+        <div class="recap-price-line"><span>Prix estimé de la prestation<br><small>À régler le jour du rendez-vous</small></span><strong>{{ subtotal_price }}</strong></div>
+        <div class="recap-price-line recap-price-line--total"><span>Total estimé</span><strong>{{ total_price }}</strong></div>
+      </aside>
+    </section>
+
+    <section class="recap-checkout__payment" aria-labelledby="generic-payment-title">
+      <div class="recap-section-heading"><div><p class="recap-eyebrow">Paiement</p><h2 id="generic-payment-title">{% if require_payment_auth %}Carte bancaire{% else %}Aucun paiement en ligne requis{% endif %}</h2></div><strong class="recap-due-now">0 € Aujourd'hui</strong></div>
+      <form method="post" id="generic-recap-confirm-form">
+        {% csrf_token %}
+        <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
+        {% if require_payment_auth %}<div id="payment-element" class="payment-element payment-element--tall"></div><div class="alert error" id="payment-error" hidden></div>{% endif %}
+        <button type="submit" class="btn recap-submit-btn plausible-event-name=Generic+Recap+Confirm">Valider ma demande — 0 € aujourd'hui</button>
+      </form>
+      <p class="recap-payment-footnote">Les frais Château Rose seront prélevés uniquement si le rendez-vous est confirmé.</p>
+    </section>
+  </div>
 </section>
 {% endblock %}
 
