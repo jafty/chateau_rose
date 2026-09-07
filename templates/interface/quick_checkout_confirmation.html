@@ -4,46 +4,40 @@
 {% block title %}Rendez-vous confirmé | Château Rose{% endblock %}
 
 {% block content %}
-<section class="page-shell">
-    <div class="paper-card">
-        <h1 class="section-title">Rendez-vous confirmé</h1>
-        <p class="lead">Merci {{ booking.client_name }}, ton rendez-vous est bien confirmé.</p>
-        <div class="meta-line">Réservation #{{ booking.booking_id }}</div>
+<main class="layout-section confirmation-page">
+    <div class="layout-shell layout-shell--compact confirmation-shell">
+        <header class="confirmation-hero confirmation-hero--confirmed">
+            <div class="confirmation-icon" aria-hidden="true">✓</div>
+            <p class="confirmation-eyebrow">Réservation #{{ booking.booking_id }}</p>
+            <h1>Ton rendez-vous est confirmé</h1>
+            <p class="lead">Merci {{ booking.client_name }}, tout est prêt. Retrouve ici les informations utiles pour le jour J.</p>
+        </header>
+        <div class="confirmation-grid">
+            <article class="workspace-panel confirmation-card">
+                <h2>Le rendez-vous</h2>
+                <dl class="detail-list">
+                    <div><dt>Date</dt><dd>{{ effective_date|format_french_datetime }}</dd></div>
+                    <div><dt>Prestation</dt><dd>{{ booking.service.name }}</dd></div>
+                    <div><dt>Lieu</dt><dd>{{ booking.location }}</dd></div>
+                    <div><dt>Tarif</dt><dd>{{ effective_price }}</dd></div>
+                </dl>
+                {% if is_confirmed and is_salon %}<div class="confirmation-callout"><strong>Adresse de la coiffeuse</strong><span>{{ provider_salon_address }}</span><small>Partagée uniquement pour organiser le rendez-vous.</small></div>{% endif %}
+            </article>
+            <article class="workspace-panel confirmation-card">
+                <h2>Paiement</h2>
+                <dl class="detail-list detail-list--compact">
+                    <div><dt>Total estimé</dt><dd>{{ payment_summary.total }}</dd></div>
+                    <div><dt>Frais Château Rose</dt><dd>{{ payment_summary.service_fee }}</dd></div>
+                    <div><dt>Acompte coiffure</dt><dd>{{ payment_summary.deposit }}</dd></div>
+                    <div class="detail-list__total"><dt>À régler le jour J</dt><dd>{{ payment_summary.remaining }}</dd></div>
+                </dl>
+            </article>
+        </div>
+        <article class="workspace-panel confirmation-contact">
+            <p class="eyebrow">Contact</p><h2>Contacter le profil partenaire</h2>
+            {% if is_confirmed %}<p class="confirmation-contact__primary"><strong>{{ provider_contact_label }}</strong><span>{{ provider_contact_value|linebreaksbr }}</span></p>{% if provider_contact_instructions %}<p class="privacy-note">{{ provider_contact_instructions|linebreaksbr }}</p>{% endif %}{% else %}<p class="privacy-note">Les coordonnées seront communiquées après confirmation du rendez-vous.</p>{% endif %}
+        </article>
+        <a class="confirmation-home-link" href="{% url 'interface:home' %}">← Retour à l’accueil</a>
     </div>
-
-    <div class="paper-card" style="margin-top: 24px;">
-        <h2 class="section-title">Récapitulatif</h2>
-        <ul class="meta-line" style="margin: 0; padding-left: 18px;">
-            <li>Date : {{ effective_date|format_french_datetime }}</li>
-            <li>Tarif : {{ effective_price }}</li>
-            <li>Prestation : {{ booking.service.name }}</li>
-            <li>Lieu : {{ booking.location }}</li>
-        </ul>
-        {% if is_confirmed and is_salon %}
-            <p class="meta-line" style="margin: 12px 0 0;">
-                Adresse de la coiffeuse : {{ provider_salon_address }}
-            </p>
-            <p class="meta-line" style="margin: 6px 0 0;">
-                Cette information est partagée uniquement pour organiser le rendez-vous.
-            </p>
-        {% endif %}
-    </div>
-
-    <div class="paper-card" style="margin-top: 24px;">
-        <h2 class="section-title">Paiement</h2>
-        <p class="meta-line" style="margin: 0;"><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
-        <p class="meta-line" style="margin: 6px 0 0;"><strong>Empreinte bancaire validée :</strong> {{ payment_summary.reservation_fee }}<br>Frais Château Rose : {{ payment_summary.service_fee }}<br>Acompte coiffure en ligne : {{ payment_summary.deposit }}</p>
-        <p class="meta-line" style="margin: 6px 0 0;"><strong>Montant à régler le jour J :</strong> {{ payment_summary.remaining }}</p>
-    </div>
-
-    <div class="paper-card" style="margin-top: 24px;">
-        <h2 class="section-title">Contacter le profil partenaire</h2>
-        {% if is_confirmed %}
-            <p class="meta-line" style="margin: 0;">{{ provider_contact_label }} : {{ provider_contact_value|linebreaksbr }}</p>
-            {% if provider_contact_instructions %}<p class="meta-line" style="margin: 6px 0 0;">{{ provider_contact_instructions|linebreaksbr }}</p>{% endif %}
-        {% else %}
-            <p class="meta-line" style="margin: 0;">Les coordonnées seront communiquées après confirmation du rendez-vous.</p>
-        {% endif %}
-    </div>
-</section>
+</main>
 {% endblock %}

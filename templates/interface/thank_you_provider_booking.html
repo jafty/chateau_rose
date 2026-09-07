@@ -4,8 +4,10 @@
 {% block content %}
 <section class="thank-you-section">
     <div class="container thank-you-shell">
-        <div class="paper-card thank-you-card">
-            <h1>Demande de RDV envoyée 💌</h1>
+        <div class="thank-you-card">
+            <span class="success-mark" aria-hidden="true">✓</span>
+            <p class="eyebrow">Demande transmise</p>
+            <h1>Ta demande est bien partie</h1>
             {% if provider_name %}
                 <p>Ta demande a bien été transmise à {{ provider_name }}.</p>
             {% else %}
@@ -13,12 +15,12 @@
             {% endif %}
             <p>Tu recevras une confirmation dès que le créneau est validé ; aucun frais n’est débité avant cette confirmation.</p>
             {% if provider_additional_info %}
-                <div class="paper-card" style="margin-top: 16px; text-align: left;">
-                    <h3 style="margin-bottom: 8px;">Bon à savoir avant le RDV</h3>
-                    <p style="margin: 0;">{{ provider_additional_info|sanitize_marketing_html }}</p>
+                <div class="thank-you-note">
+                    <h3>Bon à savoir avant le RDV</h3>
+                    <p>{{ provider_additional_info|sanitize_marketing_html }}</p>
                 </div>
             {% endif %}
-            <p><a class="btn" href="{% url 'interface:home' %}">Retour à l'accueil</a></p>
+            <a class="btn" href="{% url 'interface:home' %}">Retour à l'accueil</a>
         </div>
     </div>
 </section>

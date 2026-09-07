@@ -4,24 +4,23 @@
 {% block title %}Mon compte prestataire{% endblock %}
 
 {% block content %}
-<section class="container page-hero account-page-hero">
-    <div class="paper-card" style="max-width:960px; margin: 0 auto;">
+<section class="layout-section provider-account-page">
+    <div class="layout-shell provider-workspace-shell">
+    <header class="workspace-hero account-page-hero">
         <span class="pill">Mon compte</span>
-        <h1 style="margin: 12px 0 10px;">Gérer mes prestations et disponibilités</h1>
+        <h1>Gérer mes prestations et disponibilités</h1>
         <p class="lead">Tous les prix sont saisis en euros (hors frais de service). Le site s'occupe automatiquement de la conversion en centimes.</p>
-        <div class="btn-group" style="margin-top:10px;">
+        <div class="workspace-actions">
             <a class="btn secondary" href="{% url 'providers:providers_index' %}">Retour aux demandes</a>
         </div>
 
-        {% if message %}<p class="meta-line" style="color:#0a7a38;margin-top:12px;">{{ message }}</p>{% endif %}
-        {% if error %}<p class="meta-line" style="color:#b42318;margin-top:12px;">{{ error }}</p>{% endif %}
-    </div>
-</section>
+        {% if message %}<p class="alert success workspace-feedback">{{ message }}</p>{% endif %}
+        {% if error %}<p class="alert error workspace-feedback">{{ error }}</p>{% endif %}
+    </header>
 
-<section class="container provider-account-page">
-    <nav class="paper-card form-card provider-account-card">
+    <nav class="workspace-nav" aria-label="Navigation du compte">
         <h3 class="section-title provider-section-title">Navigation rapide</h3>
-        <div class="btn-group" style="display:flex;flex-wrap:wrap;gap:8px;">
+        <div class="workspace-nav__links">
             <a class="btn secondary" href="#account-info">Infos</a>
             <a class="btn secondary" href="#account-media">Médias</a>
             <a class="btn secondary" href="#account-slots">Indisponibilités</a>
@@ -30,7 +29,7 @@
         </div>
     </nav>
 
-    <div class="paper-card form-card provider-account-card" id="account-info">
+    <div class="workspace-panel provider-account-card" id="account-info">
         <h3 class="section-title provider-section-title">Textes d'informations</h3>
         <form method="post" class="stack-form-grid">
             {% csrf_token %}
@@ -58,7 +57,7 @@
         </form>
     </div>
 
-    <div class="paper-card form-card provider-account-card" id="account-media">
+    <div class="workspace-panel provider-account-card" id="account-media">
         <h3 class="section-title provider-section-title">Médias de prestations (photos & vidéos)</h3>
         <form method="post" enctype="multipart/form-data" class="stack-form-grid">
             {% csrf_token %}
@@ -73,7 +72,7 @@
             <button class="btn" type="submit">Ajouter le média</button>
         </form>
         {% if photos %}
-            <div class="provider-photo-grid" style="margin-top:16px;">
+            <div class="provider-photo-grid workspace-media-grid">
                 {% for photo in photos %}
                     <article class="provider-photo-card">
                         {% if photo.resolved_url %}
@@ -104,11 +103,11 @@
             <input type="hidden" name="action" value="add_blocked_slot">
             <label>Début {{ blocked_slot_form.starts_at }}</label>
             <label>Fin {{ blocked_slot_form.ends_at }}</label>
-            <label style="grid-column:1 / -1;">Message affiché {{ blocked_slot_form.reason }}</label>
+            <label class="full-width">Message affiché {{ blocked_slot_form.reason }}</label>
             <button class="btn" type="submit">Ajouter le blocage</button>
         </form>
         {% if blocked_slots %}
-            <ul class="compact-list" style="margin-top:16px;">
+            <ul class="compact-list workspace-list">
                 {% for slot in blocked_slots %}
                     <li>
                         <strong>{{ slot.starts_at|date:"d/m/Y H:i" }} → {{ slot.ends_at|date:"d/m/Y H:i" }}</strong>
@@ -158,7 +157,7 @@
                                 <img class="service-current-image-preview" src="{{ service.resolved_image }}" alt="Image actuelle pour {{ service.name }}">
                             {% endif %}
                         </label>
-                        <label style="grid-column:1 / -1;">Lien de la photo (optionnel) {{ form.image_url }}</label>
+                        <label class="full-width">Lien de la photo (optionnel) {{ form.image_url }}</label>
                     </div>
                     <div class="adjustments-grid">
                         <div>
@@ -212,7 +211,7 @@
                 <label>Supplément mèches (€) {{ new_service_form.meche_bonus_euros }}</label>
                 <label>Supplément domicile (€) {{ new_service_form.at_home_bonus_euros }}</label>
                 <label>Photo du service {{ new_service_form.image }}</label>
-                <label style="grid-column:1 / -1;">Lien de la photo (optionnel) {{ new_service_form.image_url }}</label>
+                <label class="full-width">Lien de la photo (optionnel) {{ new_service_form.image_url }}</label>
             </div>
             <div class="adjustments-grid">
                 <div>
@@ -238,6 +237,7 @@
             </div>
             <button class="btn" type="submit">Créer le service</button>
         </form>
+    </div>
     </div>
 </section>
 <script>

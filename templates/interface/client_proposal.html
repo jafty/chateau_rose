@@ -4,45 +4,49 @@
 {% block title %}Ta proposition | Château Rose{% endblock %}
 
 {% block content %}
-<section class="page-shell">
-    <div class="paper-card">
-        <h1 class="section-title">Ta proposition mise à jour</h1>
-        <p class="lead">Bonjour {{ booking.client_name }}, voici la proposition de {{ booking.provider.name }}.</p>
-        <div class="meta-line">Demande #{{ booking.booking_id }}</div>
-    </div>
+<main class="layout-section decision-page">
+    <div class="layout-shell layout-shell--compact decision-shell">
+        <header class="decision-hero">
+            <p class="eyebrow">Demande #{{ booking.booking_id }}</p>
+            <h1>Une nouvelle proposition t’attend</h1>
+            <p class="lead">Bonjour {{ booking.client_name }}, {{ booking.provider.name }} te propose un ajustement. Vérifie les détails avant de répondre.</p>
+        </header>
 
-    <div class="paper-card" style="margin-top: 24px;">
-        <h2 class="section-title">Nouveaux détails</h2>
-        <ul class="meta-line" style="margin: 0; padding-left: 18px;">
-            <li>Date proposée : {{ proposed_date|format_french_datetime }}</li>
-            <li>Tarif proposé : {{ proposed_price }}</li>
-            <li>Prestation : {{ booking.service.name }}</li>
-            <li>Lieu : {{ booking.location }}</li>
-        </ul>
-        <div class="btn-group" style="margin-top: 16px;">
-            <form method="post" action="{% url 'interface:client_action' booking.booking_id %}">
-                {% csrf_token %}
-                <input type="hidden" name="decision" value="accept">
-                <button type="submit" class="btn">Accepter la proposition</button>
-            </form>
-            <form method="post" action="{% url 'interface:client_action' booking.booking_id %}">
-                {% csrf_token %}
-                <input type="hidden" name="decision" value="refuse">
-                <button type="submit" class="btn secondary">Refuser</button>
-            </form>
+        <div class="decision-layout">
+            <article class="workspace-panel decision-card">
+                <p class="eyebrow">Proposition mise à jour</p>
+                <h2>Nouveaux détails</h2>
+                <dl class="detail-list">
+                    <div><dt>Date proposée</dt><dd>{{ proposed_date|format_french_datetime }}</dd></div>
+                    <div><dt>Tarif proposé</dt><dd>{{ proposed_price }}</dd></div>
+                    <div><dt>Prestation</dt><dd>{{ booking.service.name }}</dd></div>
+                    <div><dt>Lieu</dt><dd>{{ booking.location }}</dd></div>
+                </dl>
+                <div class="decision-actions">
+                    <form method="post" action="{% url 'interface:client_action' booking.booking_id %}">
+                        {% csrf_token %}<input type="hidden" name="decision" value="accept">
+                        <button type="submit" class="btn">Accepter la proposition</button>
+                    </form>
+                    <form method="post" action="{% url 'interface:client_action' booking.booking_id %}">
+                        {% csrf_token %}<input type="hidden" name="decision" value="refuse">
+                        <button type="submit" class="btn secondary">Refuser</button>
+                    </form>
+                </div>
+            </article>
+
+            <aside class="decision-aside">
+                <section class="workspace-panel">
+                    <p class="eyebrow">Paiement</p><h2>Ton budget</h2>
+                    <dl class="detail-list detail-list--compact">
+                        <div><dt>Total estimé</dt><dd>{{ payment_summary.total }}</dd></div>
+                        <div><dt>Frais Château Rose</dt><dd>{{ payment_summary.service_fee }}</dd></div>
+                        <div><dt>Montant en ligne</dt><dd>{{ payment_summary.reservation_fee }}</dd></div>
+                        <div class="detail-list__total"><dt>À régler le jour J</dt><dd>{{ payment_summary.remaining }}</dd></div>
+                    </dl>
+                </section>
+                <p class="privacy-note">Les coordonnées du profil partenaire seront communiquées une fois la proposition acceptée.</p>
+            </aside>
         </div>
     </div>
-
-    <div class="paper-card" style="margin-top: 24px;">
-        <h2 class="section-title">Paiement</h2>
-        <p class="meta-line" style="margin: 0;"><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
-        <p class="meta-line" style="margin: 6px 0 0;"><strong>Frais Château Rose :</strong> {{ payment_summary.service_fee }}<br>Montant en ligne : {{ payment_summary.reservation_fee }}</p>
-        <p class="meta-line" style="margin: 6px 0 0;"><strong>Montant à régler le jour J :</strong> {{ payment_summary.remaining }}</p>
-    </div>
-
-    <div class="paper-card" style="margin-top: 24px;">
-        <h2 class="section-title">Échanges avec le profil partenaire</h2>
-        <p class="meta-line" style="margin: 0;">Les coordonnées seront communiquées une fois la proposition acceptée.</p>
-    </div>
-</section>
+</main>
 {% endblock %}
