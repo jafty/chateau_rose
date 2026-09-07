@@ -4,224 +4,53 @@
 
 {% block content %}
 <section class="booking-recap-page">
-    <div class="container">
-        <div class="recap-header">
-            <p class="recap-kicker">Dernière étape</p>
-            <h1>Ta demande est prête{% if payload.client_name %}, {{ payload.client_name }}{% endif %}</h1>
-            <p class="recap-intro">Relis ta demande avant de l'envoyer. Ta carte permet de la valider, <strong>sans débit aujourd'hui.</strong></p>
+  <div class="container recap-checkout">
+    <header class="recap-checkout__header">
+      <p class="recap-kicker">Dernière étape</p>
+      <h1>Vérifie et confirme</h1>
+      <p>Ta carte valide la demande. Aucun débit aujourd'hui.</p>
+    </header>
+    {% if error %}<div class="alert error booking-recap-alert">{{ error }}</div>{% endif %}
+    {% if is_completed %}<div class="alert success booking-recap-alert">Cette demande a déjà été envoyée ✅</div>{% endif %}
+
+    <section class="recap-checkout__review" aria-labelledby="provider-recap-title">
+      <div class="recap-checkout__summary">
+        <div class="recap-section-heading">
+          <div><p class="recap-eyebrow">Ta demande</p><h2 id="provider-recap-title">{{ payload.service_name|default:"Rendez-vous coiffure" }}</h2></div>
+          {% if edit_url %}<form method="post" action="">{% csrf_token %}<input type="hidden" name="action" value="edit"><button type="submit" class="recap-text-action plausible-event-name=Provider+Recap+Edit">{% if is_generic_booking %}Modifier mon récapitulatif{% else %}Modifier{% endif %}</button></form>{% endif %}
         </div>
+        <dl class="recap-facts">
+          <div><dt>Coiffeuse</dt><dd>{{ provider_name_display }}</dd></div>
+          <div><dt>Date</dt><dd>{{ desired_date_display }}</dd></div>
+          <div><dt>Lieu</dt><dd>{% if payload.location_preference == "salon" %}Chez la coiffeuse{% else %}À domicile{% endif %}</dd></div>
+          {% if payload.hair_length %}<div><dt>Longueur</dt><dd>{{ payload.hair_length }}</dd></div>{% endif %}
+          <div><dt>Format</dt><dd>{{ payload.type_adjustment|default:"standard" }}</dd></div>
+          {% if payload.general_adjustments %}<div><dt>Ajustements</dt><dd>{{ payload.general_adjustments|join:", " }}</dd></div>{% endif %}
+          {% if payload.free_text %}<div><dt>Note</dt><dd>{{ payload.free_text }}</dd></div>{% endif %}
+          <div><dt>Contact</dt><dd>{{ payload.client_name|default:"Non renseigné" }} · {{ payload.client_email|default:"Email non renseigné" }}</dd></div>
+        </dl>
+        {% if is_nocturnal_appointment %}<p class="nocturnal-warning" role="status">Le supplément nocturne de 23 € est inclus dans l’estimation.</p>{% endif %}
+      </div>
+      <aside class="recap-checkout__price" aria-label="Détail du prix">
+        <h2>Détail du prix</h2>
+        <div class="recap-price-line"><span>Frais Château Rose<br><small>Si le rendez-vous est confirmé</small></span><strong>{{ deposit_price }}</strong></div>
+        <div class="recap-price-line"><span>Prix estimé de la prestation<br><small>À régler le jour du rendez-vous</small></span><strong>{{ remaining_price }}</strong></div>
+        <div class="recap-price-line recap-price-line--total"><span>Total estimé</span><strong>{{ total_price }}</strong></div>
+      </aside>
+    </section>
 
-        {% if error %}
-            <div class="alert error booking-recap-alert">{{ error }}</div>
-        {% endif %}
-
-        {% if is_completed %}
-            <div class="alert success booking-recap-alert">Cette demande a déjà été envoyée ✅</div>
-        {% endif %}
-
-        <div class="recap-layout">
-            <div class="recap-details">
-                <article class="recap-card">
-                    <p class="recap-eyebrow">Après validation</p>
-                    <h2 class="recap-card-title">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 8v4l3 3"></path></svg>
-                        Comment ça se passe ?
-                    </h2>
-                    <div class="timeline">
-                        <div class="timeline-step">
-                            <div class="timeline-icon active" aria-hidden="true">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                            </div>
-                            <div class="timeline-content">
-                                <h3>1. Tu valides ta demande</h3>
-                                <p>Tu ajoutes ta carte, mais aucun montant n'est débité aujourd'hui.</p>
-                            </div>
-                        </div>
-                        <div class="timeline-step">
-                            <div class="timeline-icon" aria-hidden="true">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                            </div>
-                            <div class="timeline-content">
-                                <h3>2. Une coiffeuse confirme ton rendez-vous</h3>
-                                <p>Nous cherchons à confirmer ta demande au plus vite. Tu restes libre d'accepter ou de refuser tout ajustement proposé.</p>
-                            </div>
-                        </div>
-                        <div class="timeline-step">
-                            <div class="timeline-icon" aria-hidden="true">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                            </div>
-                            <div class="timeline-content">
-                                <h3>3. Tu vas à ton rendez-vous</h3>
-                                <p>Les frais Château Rose sont prélevés après confirmation. Tu règles la prestation coiffure directement à la coiffeuse le jour J.</p>
-                            </div>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="recap-card">
-                    <p class="recap-eyebrow">Ta sélection</p>
-                    <h2 class="recap-card-title">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
-                        Ta demande de rendez-vous
-                    </h2>
-                    <div class="summary-list">
-                        <div class="summary-item">
-                            <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                            <div class="summary-item-content">
-                                <strong>Coiffeuse</strong>
-                                <span>{{ provider_name_display }}</span>
-                            </div>
-                        </div>
-                        {% if is_nocturnal_appointment %}
-                            <div class="nocturnal-warning" role="status">⚠️ Le supplément nocturne de 23 € est inclus dans l'estimation.</div>
-                        {% endif %}
-                        <div class="summary-item">
-                            <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4l3 3"></path></svg>
-                            <div class="summary-item-content">
-                                <strong>Prestation</strong>
-                                <span>{{ payload.service_name|default:"Non renseignée" }}</span>
-                                {% if payload.general_adjustments %}
-                                    <span class="detail">Ajustements : {{ payload.general_adjustments|join:", " }}</span>
-                                {% endif %}
-                                {% if payload.hair_length %}
-                                    <span class="detail">Longueur de cheveux : {{ payload.hair_length }}</span>
-                                {% endif %}
-                                <span class="detail">Format : {{ payload.type_adjustment|default:"standard" }}</span>
-                            </div>
-                        </div>
-                        {% if payload.free_text %}
-                        <div class="summary-item">
-                            <div class="summary-item-content"><strong>Informations complémentaires</strong><span>{{ payload.free_text }}</span></div>
-                        </div>
-                        {% endif %}
-                        <div class="summary-item">
-                            <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                            <div class="summary-item-content">
-                                <strong>Date souhaitée</strong>
-                                <span>{{ desired_date_display }}</span>
-                            </div>
-                        </div>
-                        <div class="summary-item">
-                            <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                            <div class="summary-item-content">
-                                <strong>Lieu</strong>
-                                <span>
-                                    {% if payload.location_preference == "salon" %}
-                                        Chez la coiffeuse
-                                    {% else %}
-                                        À domicile
-                                    {% endif %}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="summary-item">
-                            <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16v16H4z"></path><path d="M8 9h8"></path><path d="M8 13h8"></path></svg>
-                            <div class="summary-item-content">
-                                <strong>Coordonnées</strong>
-                                <span>{{ payload.client_name|default:"Non renseigné" }}</span>
-                                <span class="detail">{{ payload.client_email|default:"Email non renseigné" }}</span>
-                            </div>
-                        </div>
-                        {% if service_fee_coupon_code %}
-                            <div class="summary-item">
-                                <svg class="summary-item-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.59 13.41 11 3.83a2 2 0 0 0-1.41-.58H4a2 2 0 0 0-2 2v5.59a2 2 0 0 0 .58 1.41l9.58 9.59a2 2 0 0 0 2.83 0l5.6-5.6a2 2 0 0 0 0-2.83Z"></path><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"></circle></svg>
-                                <div class="summary-item-content">
-                                    <strong>Code partenaire</strong>
-                                    <span>{{ service_fee_coupon_code }}</span>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="recap-actions">
-                        {% if edit_url %}
-                        <form method="post" action="">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="edit">
-                            <button type="submit" class="btn secondary recap-edit-btn plausible-event-name={% if is_generic_booking %}Generic{% else %}Provider{% endif %}+Recap+Edit">{% if is_generic_booking %}Modifier mon récapitulatif{% else %}Modifier ma demande{% endif %}</button>
-                        </form>
-                        {% endif %}
-                    </div>
-                </article>
-            </div>
-
-            <aside class="payment-sidebar">
-                <article class="receipt-card">
-                    <p class="recap-eyebrow">Paiement</p>
-                    <h2 class="recap-card-title recap-card-title--compact">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        Détail du règlement
-                    </h2>
-
-                    <div class="price-highlight">
-                        <span>Aujourd'hui</span>
-                        <div class="amount">0 €</div>
-                        <p><strong>Aucun débit aujourd'hui.</strong> Ta carte sert uniquement à valider la demande.</p>
-                    </div>
-
-                    <div class="receipt-payment-block">
-                        <div class="receipt-line receipt-line--strong">
-                            <span><strong class="receipt-condition">Si le rendez-vous est confirmé</strong><small>Frais Château Rose</small></span>
-                            <span class="receipt-amount">{{ deposit_price }}</span>
-                        </div>
-                        {% if service_fee_waived %}
-                            <p class="receipt-help">Frais de service offerts grâce au code partenaire.</p>
-                        {% else %}
-                            <p class="receipt-help">Les frais Château Rose servent à traiter ta demande, confirmer ton rendez-vous et rechercher une autre coiffeuse si nécessaire.</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="receipt-payment-block">
-                        <div class="receipt-line receipt-line--strong">
-                            <span><strong class="receipt-condition">Le jour du rendez-vous</strong><small>Prix estimé de la prestation, à régler directement à la coiffeuse</small></span>
-                            <span class="receipt-amount">{{ remaining_price }}</span>
-                        </div>
-                        <p class="receipt-help">La coiffeuse peut proposer un autre tarif si nécessaire. Aucun changement n'est appliqué sans ton accord : tu peux l'accepter ou le refuser avant la confirmation.</p>
-                    </div>
-
-                    <div class="receipt-divider receipt-divider--spaced"></div>
-
-                    <div class="receipt-line receipt-line--estimated">
-                        <span>Budget total estimé</span>
-                        <span class="receipt-amount">{{ total_price }}</span>
-                    </div>
-
-                    {% if not is_completed %}
-                        <form method="post" id="recap-confirm-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="confirm">
-                            <input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
-                            {% if require_payment_auth %}
-                                <div class="stripe-payment-header">
-                                    <label class="stripe-label" for="payment-element">Carte bancaire</label>
-                                    <span id="payment-hint">0 € débité aujourd'hui</span>
-                                </div>
-                                <p class="stripe-payment-note">Les frais Château Rose seront prélevés uniquement si ton rendez-vous est confirmé.</p>
-                                <div id="payment-element" class="payment-element payment-element--tall"></div>
-                                <div class="alert error" id="payment-error" hidden></div>
-                            {% endif %}
-
-                            <button type="submit" class="btn recap-submit-btn plausible-event-name=Provider+Recap+Confirm">Valider ma demande — 0 € aujourd'hui</button>
-                        </form>
-                    {% endif %}
-
-                    <div class="trust-badges">
-                        <div class="trust-badge">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                            <span>Paiement sécurisé par Stripe</span>
-                        </div>
-                        <div class="trust-badge">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-10.05l5.67-5.67"></path></svg>
-                            <span>Annulation sans frais possible selon les conditions de la coiffeuse.</span>
-                        </div>
-                    </div>
-                </article>
-
-                {% if not is_generic_booking %}<p class="meta-line recap-link-note">Tu as aussi reçu ce lien par email, tu peux y revenir quand tu veux.</p>{% endif %}
-            </aside>
-        </div>
-    </div>
+    {% if not is_completed %}<section class="recap-checkout__payment" aria-labelledby="provider-payment-title">
+      <div class="recap-section-heading"><div><p class="recap-eyebrow">Paiement</p><h2 id="provider-payment-title">{% if require_payment_auth %}Carte bancaire{% else %}Aucun paiement en ligne requis{% endif %}</h2></div><strong class="recap-due-now">0 € Aujourd'hui</strong></div>
+      <form method="post" id="recap-confirm-form">
+        {% csrf_token %}<input type="hidden" name="action" value="confirm"><input type="hidden" name="payment_auth_id" id="payment_auth_id" value="">
+        {% if require_payment_auth %}<div id="payment-element" class="payment-element payment-element--tall"></div><div class="alert error" id="payment-error" hidden></div>{% endif %}
+        <button type="submit" class="btn recap-submit-btn plausible-event-name=Provider+Recap+Confirm">Valider ma demande — 0 € aujourd'hui</button>
+      </form>
+      <p class="recap-payment-footnote">Les frais Château Rose seront prélevés uniquement si le rendez-vous est confirmé.</p>
+    </section>{% endif %}
+  </div>
 </section>
+
 {% if require_payment_auth and not is_completed %}
 <script src="https://js.stripe.com/v3"></script>
 <script>
