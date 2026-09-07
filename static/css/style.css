@@ -121,7 +121,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .price-highlight, .price-value, .total-amount, .receipt-amount { color: var(--color-ink-strong); font: 700 1.8rem/1 var(--font-display); }
 
 /* Homepage catalog */
-.marketplace-home { padding: clamp(24px, 5vw, 48px) 0 28px; background: var(--color-surface); }
+.marketplace-home { min-height: calc(100svh - 64px); padding: clamp(24px, 5vw, 48px) 0 28px; background: var(--color-surface); }
 .hero-header-row { margin-bottom: 18px; }
 .hero-headline { max-width: 760px; }
 .hero-headline p { margin-top: 6px; color: var(--color-ink-soft); }
@@ -300,6 +300,12 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .seo-content, .at-home-seo-content { max-width: 850px; margin: 0 auto; padding-block: var(--space-section); }
 .cta-banner, .confirmation-callout, .booking-proposal-callout { padding: clamp(20px, 4vw, 34px); border-radius: var(--radius-sm); background: var(--color-ink); color: #fff; }
 .cta-banner h2, .confirmation-callout h2 { color: #fff; }
+.providers-hero-section { padding-bottom: 0; }
+.providers-hero { padding-bottom: clamp(18px, 3vw, 28px); }
+.providers-section--offset { padding-top: clamp(16px, 2.5vw, 24px); }
+.provider-directory-callout { border: 1px solid var(--color-line); border-left: 3px solid var(--color-rose); background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-sm); }
+.provider-directory-callout h3 { margin-bottom: 5px; }
+.provider-directory-callout .btn { flex: 0 0 auto; }
 
 /* Supporting public-page components */
 .hero, .hero-booking-zone, .faq-section, .review-request-section, .city-discovery { padding-block: var(--space-section); }
