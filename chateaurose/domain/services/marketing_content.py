@@ -5,14 +5,14 @@ from typing import List, Optional
 DEFAULT_INTRO_TEMPLATE = (
     "{service_name} réalisées par des coiffeuses afro sélectionnées, avec prise de rendez-vous simplifiée."
 )
-DEFAULT_LOCATION_INTRO = "Prestataires mobiles ou en salon sur Toulouse métropole."
+DEFAULT_LOCATION_INTRO = "Prestataires mobiles ou qui reçoivent chez elles sur Toulouse métropole."
 
 
 def _default_highlights(service_name: str, location: Optional[str]) -> List[str]:
     base = [
         "Temps de réponse rapide : on vous propose un créneau en quelques minutes.",
         "Brief clair : longueur, mèches fournies ou non, inspirations via photos ou liens.",
-        f"Artistes spécialisés pour {service_name.lower()} à domicile ou en salon partenaire.",
+        f"Artistes spécialisés pour {service_name.lower()} à domicile ou chez la prestataire.",
     ]
     if location:
         return [f"{highlight} ({location})" for highlight in base]

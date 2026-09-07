@@ -2600,8 +2600,8 @@ def about(request):
             "answer": "La prestataire ou le prestataire qui correspond à ta demande te répond généralement en quelques heures avec un créneau clair.",
         },
         {
-            "question": "Travaillez-vous à domicile ou en salon ?",
-            "answer": "Les deux : déplacement à domicile possible, ou accueil chez la prestataire ou le prestataire / en salon partenaire selon la prestation.",
+            "question": "Les coiffeuses se déplacent-elles à domicile ?",
+            "answer": "Oui : selon la prestation, la coiffeuse peut se déplacer à ton domicile, te recevoir chez elle ou proposer les deux possibilités.",
         },
         {
             "question": "Comment préparer ma demande ?",
