@@ -682,15 +682,16 @@ class ServicePagesTests(TestCase):
         self.assertNotContains(response, "Choisis ta prestation et ton créneau")
         self.assertNotContains(response, "Empreinte bancaire, sans débit immédiat")
 
-    def test_service_page_primary_cta_invites_user_to_view_sub_services(self):
+    def test_service_page_leads_with_bookable_sub_service_cards(self):
         response = self.client.get(reverse("interface:service_page", args=["tresses"]))
 
         self.assertContains(response, "Dès")
         self.assertContains(response, "65€")
-        self.assertContains(response, "Voir les prestations")
-        self.assertContains(response, 'href="#service-subservices"')
+        self.assertNotContains(response, 'href="#service-subservices"')
         self.assertContains(response, 'id="service-subservices"')
-        self.assertContains(response, "Choisir une coiffeuse")
+        self.assertContains(response, 'class="service-above-fold"')
+        self.assertContains(response, "Glisse pour découvrir les prestations")
+        self.assertContains(response, "Choisir")
 
     def test_sub_service_page_quick_booking_cta_targets_request_form(self):
         response = self.client.get(reverse("interface:sub_service_page", args=["tresses", "knotless-braids"]))

@@ -12,11 +12,10 @@
         <div class="alert danger">{{ error }}</div>
     {% endif %}
 
-    <div class="booking-detail-grid">
-        <div class="paper-card booking-detail-header booking-detail-header-card">
+    <header class="booking-detail-header">
             <div class="booking-detail-header-top">
                 <div class="booking-detail-header-copy">
-                    <span class="pill">Demande de RDV</span>
+                    <p class="eyebrow">Demande de rendez-vous</p>
                     <h1>{% if booking.requested_service_label_snapshot %}{{ booking.requested_service_label_snapshot }}{% elif booking.service %}{{ booking.service.name }}{% else %}Prestation à préciser{% endif %} pour {{ booking.client_name }}</h1>
                     <p class="lead">
                         Reçue le {{ booking.created_at|date:"d F Y à H\\hi" }}
@@ -36,7 +35,8 @@
                     </form>
                 </div>
             </div>
-        </div>
+    </header>
+    <div class="booking-detail-grid">
         <div class="booking-ticket">
             <div class="booking-ticket-header">
                 <div>
@@ -68,64 +68,58 @@
                     {% endif %}
                 </div>
 
-                <div class="booking-spec-grid">
-                    <div class="booking-spec-item">
-                        <span class="booking-spec-label">Date souhaitée</span>
-                        <span class="booking-spec-value">{{ booking.desired_date|format_french_datetime }}</span>
+                <dl class="info-table">
+                    <div class="info-table__row">
+                        <dt>Date souhaitée</dt>
+                        <dd>{{ booking.desired_date|format_french_datetime }}</dd>
                     </div>
-                    <div class="booking-spec-item">
-                        <span class="booking-spec-label">Lieu</span>
-                        <span class="booking-spec-value">{{ booking.location }}</span>
+                    <div class="info-table__row">
+                        <dt>Lieu</dt>
+                        <dd>{{ booking.location }}
                         {% if booking.location_preference %}
-                            <span class="booking-spec-sub">{{ booking.location_preference }}</span>
+                            <small>{{ booking.location_preference }}</small>
                         {% endif %}
+                        </dd>
                     </div>
-                    <div class="booking-spec-item">
-                        <span class="booking-spec-label">Cheveux</span>
-                        <span class="booking-spec-value">{{ booking.hair_length }}</span>
-                        <span class="booking-spec-sub">Format : {{ booking.type_adjustment|default:"standard" }}</span>
-                        <span class="booking-spec-sub">{% if booking.meche %}Mèches fournies{% else %}Mèches non fournies{% endif %}</span>
+                    <div class="info-table__row">
+                        <dt>Cheveux</dt>
+                        <dd>{{ booking.hair_length }}<small>Format : {{ booking.type_adjustment|default:"standard" }} · {% if booking.meche %}Mèches fournies{% else %}Mèches non fournies{% endif %}</small></dd>
                     </div>
-                    <div class="booking-spec-item">
-                        <span class="booking-spec-label">Service demandé</span>
-                        <span class="booking-spec-value">{% if booking.requested_service_label_snapshot %}{{ booking.requested_service_label_snapshot }}{% elif booking.service %}{{ booking.service.name }}{% else %}À préciser{% endif %}</span>
-                        {% if booking.requested_options %}<span class="booking-spec-sub">Options : {{ booking.requested_options|join:", " }}</span>{% endif %}
+                    <div class="info-table__row">
+                        <dt>Service demandé</dt>
+                        <dd>{% if booking.requested_service_label_snapshot %}{{ booking.requested_service_label_snapshot }}{% elif booking.service %}{{ booking.service.name }}{% else %}À préciser{% endif %}
+                        {% if booking.requested_options %}<small>Options : {{ booking.requested_options|join:", " }}</small>{% endif %}</dd>
                     </div>
                     {% if can_view_client_contact and booking.client_address %}
-                    <div class="booking-spec-item">
-                        <span class="booking-spec-label">Adresse client</span>
-                        <span class="booking-spec-value">{{ booking.client_address }}</span>
+                    <div class="info-table__row">
+                        <dt>Adresse client</dt><dd>{{ booking.client_address }}</dd>
                     </div>
                     {% endif %}
                     {% if booking.general_adjustments %}
-                    <div class="booking-spec-item">
-                        <span class="booking-spec-label">Ajustements</span>
-                        <span class="booking-spec-value">{{ booking.general_adjustments|join:", " }}</span>
+                    <div class="info-table__row">
+                        <dt>Ajustements</dt><dd>{{ booking.general_adjustments|join:", " }}</dd>
                     </div>
                     {% endif %}
-                    <div class="booking-spec-item">
+                    <div class="info-table__row info-table__row--total">
                         {% if booking.status == "CONFIRMED" %}
-                            <span class="booking-spec-label">Tarif</span>
-                            <span class="booking-spec-value booking-price">
+                            <dt>Tarif</dt>
+                            <dd class="booking-price">
                                 {% if booking.proposed_price_cents != None %}
                                     {{ booking.proposed_price_cents|cents_to_euros }}
                                 {% else %}
                                     {{ booking.estimated_price_cents|cents_to_euros }}
                                 {% endif %}
-                            </span>
+                            </dd>
                         {% else %}
-                            <span class="booking-spec-label">Estimation</span>
-                            <span class="booking-spec-value booking-price">{{ booking.estimated_price_cents|cents_to_euros }}</span>
+                            <dt>Estimation</dt><dd class="booking-price">{{ booking.estimated_price_cents|cents_to_euros }}</dd>
                         {% endif %}
                     </div>
-                </div>
+                </dl>
 
-                <div class="booking-notes">
-                    <h3>Paiement</h3>
-                    <p><strong>Total estimé :</strong> {{ payment_summary.total }}</p>
-                    <p><strong>Frais Château Rose :</strong> {{ payment_summary.service_fee }}<br>Montant en ligne : {{ payment_summary.reservation_fee }}</p>
-                    <p><strong>Montant à régler le jour J :</strong> {{ payment_summary.remaining }}</p>
-                </div>
+                <section class="booking-content-section" aria-labelledby="payment-title">
+                    <h3 id="payment-title">Paiement</h3>
+                    <dl class="info-table info-table--compact"><div class="info-table__row"><dt>Total estimé</dt><dd>{{ payment_summary.total }}</dd></div><div class="info-table__row"><dt>Frais Château Rose</dt><dd>{{ payment_summary.service_fee }}<small>{{ payment_summary.reservation_fee }} réglés en ligne</small></dd></div><div class="info-table__row info-table__row--total"><dt>À régler le jour J</dt><dd>{{ payment_summary.remaining }}</dd></div></dl>
+                </section>
 
                 {% if booking.proposed_price_cents or booking.proposed_date %}
                     <div class="booking-proposal-callout">
@@ -141,13 +135,13 @@
                 {% endif %}
 
                 {% if booking.free_text %}
-                    <div class="booking-notes">
+                    <section class="booking-content-section">
                         <h3>Notes du client</h3>
                         <p>{{ booking.free_text }}</p>
-                    </div>
+                    </section>
                 {% endif %}
 
-                <div class="booking-visuals">
+                <section class="booking-content-section booking-visuals">
                     <h3>Analyse visuelle</h3>
                     <div class="booking-polaroid-container">
                         {% if booking.resolved_current_hair_picture %}
@@ -165,7 +159,7 @@
                             <p class="meta-line">Pas d'inspiration fournie.</p>
                         {% endfor %}
                     </div>
-                </div>
+                </section>
             </div>
         </div>
 
@@ -241,14 +235,14 @@
                     </form>
                 </div>
             {% elif booking.status == "PENDING_CLIENT_VALIDATION" %}
-                <div class="booking-action-card booking-status-info">
+                <div class="status-panel">
                     <h3>En attente de validation</h3>
                     <p class="booking-action-lead">
                         La personne cliente doit valider ta proposition avant confirmation.
                     </p>
                 </div>
             {% elif booking.status == "AWAITING_ALTERNATIVE_PROVIDER" %}
-                <div class="booking-action-card booking-status-info">
+                <div class="status-panel">
                     <h3>Alternative en recherche</h3>
                     <p class="booking-action-lead">
                         La demande reste ouverte côté client. Château Rose prend le relais pour trouver une autre coiffeuse compatible avant de confirmer ou d'annuler.
@@ -258,14 +252,14 @@
                     {% endif %}
                 </div>
             {% elif booking.status == "CONFIRMED" %}
-                <div class="booking-action-card booking-status-info">
+                <div class="status-panel status-panel--success">
                     <h3>Rendez-vous confirmé</h3>
                     <p class="booking-action-lead">
                         Le rendez-vous est confirmé. Aucune action supplémentaire n'est requise ici.
                     </p>
                 </div>
             {% else %}
-                <div class="booking-action-card booking-status-info">
+                <div class="status-panel">
                     <h3>Demande annulée</h3>
                     <p class="booking-action-lead">
                         Cette demande est annulée.
@@ -283,10 +277,7 @@
                 </div>
             {% endif %}
 
-            <div class="booking-help-box">
-                <strong>Besoin d'aide ?</strong><br />
-                Les frais Château Rose ont été traités côté client. En confirmant, la demande devient un rendez-vous validé.
-            </div>
+            <div class="support-note"><h3>Besoin d'aide ?</h3><p>Les frais Château Rose ont été traités côté client. En confirmant, la demande devient un rendez-vous validé.</p></div>
         </aside>
     </div>
 </section>
