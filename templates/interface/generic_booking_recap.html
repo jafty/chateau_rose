@@ -17,15 +17,15 @@
                 <section class="recap-request-details recap-panel recap-panel--request" aria-labelledby="recap-service-title">
                 <p class="recap-eyebrow">Ta sélection</p>
                 <h2 id="recap-service-title">{{ service_label }}</h2>
-                <div class="recap-facts">
-                    <p><strong>Date souhaitée</strong><span>{{ desired_date_display }}</span></p>
-                    <p><strong>Lieu</strong><span>{% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la coiffeuse{% endif %}</span></p>
-                    {% if payload.hair_length %}<p><strong>Longueur</strong><span>{{ payload.hair_length }}</span></p>{% endif %}
-                    <p><strong>Format</strong><span>{{ payload.type_adjustment|default:"standard" }}</span></p>
-                    {% if payload.requested_options %}<p><strong>Options</strong><span>{{ payload.requested_options|join:", " }}</span></p>{% endif %}
-                    {% if payload.free_text %}<p class="recap-fact--wide"><strong>Informations complémentaires</strong><span>{{ payload.free_text }}</span></p>{% endif %}
-                    <p class="recap-fact--wide"><strong>Contact</strong><span>{{ payload.client_name }}<br>{{ payload.client_email }}</span></p>
-                </div>
+                <dl class="recap-detail-list">
+                    <div><dt>Date souhaitée</dt><dd>{{ desired_date_display }}</dd></div>
+                    <div><dt>Lieu</dt><dd>{% if payload.location_preference == "domicile" %}À domicile{% else %}Chez la coiffeuse{% endif %}</dd></div>
+                    {% if payload.hair_length %}<div><dt>Longueur</dt><dd>{{ payload.hair_length }}</dd></div>{% endif %}
+                    <div><dt>Format</dt><dd>{{ payload.type_adjustment|default:"standard" }}</dd></div>
+                    {% if payload.requested_options %}<div><dt>Options</dt><dd>{{ payload.requested_options|join:", " }}</dd></div>{% endif %}
+                    {% if payload.free_text %}<div><dt>Informations complémentaires</dt><dd>{{ payload.free_text }}</dd></div>{% endif %}
+                    <div><dt>Contact</dt><dd>{{ payload.client_name }}<br>{{ payload.client_email }}</dd></div>
+                </dl>
                 <p class="meta-line recap-info-note">Une coiffeuse de notre équipe pourra confirmer ces éléments. Toute modification de date ou de tarif restera soumise à ton accord.</p>
                 <div class="recap-actions">
                     <a href="{{ edit_url }}" class="btn secondary recap-edit-btn plausible-event-name=Generic+Recap+Edit">Modifier mon récapitulatif</a>

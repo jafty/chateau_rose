@@ -1,5 +1,5 @@
 <div class="provider-form-layout">
-    <form method="post" class="provider-form-grid plausible-event-name=Generic+Booking+Submit" id="generic-request-form" data-generic-booking-form data-analytics-booking-form data-analytics-enabled="{% if analytics_enabled %}true{% else %}false{% endif %}" data-analytics-service-slug="{{ sub_service.slug|default:service.slug }}" data-analytics-service-category="{{ service.slug }}" data-analytics-stylist-selected="false" data-analytics-booking-flow-version="generic_sub_service_v1">
+    <form method="post" class="provider-form-grid generic-booking-form plausible-event-name=Generic+Booking+Submit" id="generic-request-form" data-generic-booking-form data-analytics-booking-form data-analytics-enabled="{% if analytics_enabled %}true{% else %}false{% endif %}" data-analytics-service-slug="{{ sub_service.slug|default:service.slug }}" data-analytics-service-category="{{ service.slug }}" data-analytics-stylist-selected="false" data-analytics-booking-flow-version="generic_sub_service_v1">
         {% csrf_token %}
         <input type="hidden" name="request_service" value="1" data-analytics-ignore>
         <input type="hidden" name="requested_options" id="general_adjustments_input" value="" data-analytics-ignore>

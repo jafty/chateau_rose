@@ -12,7 +12,7 @@
 <div class="service-marketplace {% if is_sub_service_page %}service-marketplace--detail{% else %}service-marketplace--hub{% endif %}">
 <section class="container service-header service-header-wrap{% if is_sub_service_page and gallery_images %} service-header-with-collage{% endif %}">
     {% if is_sub_service_page and gallery_images %}
-        <div class="service-hero-collage service-gallery-grid" aria-label="Aperçu des inspirations {{ page_service_name|default:service.name }}">
+        <div class="service-hero-collage service-gallery-grid hero-collage--count-{{ gallery_images|slice:':4'|length }}" aria-label="Aperçu des inspirations {{ page_service_name|default:service.name }}">
             <span class="sr-only">Inspirations & résultats</span>
             {% for image in gallery_images|slice:":4" %}
                 <figure class="service-hero-polaroid"><button type="button" class="service-gallery-trigger" data-gallery-index="{{ forloop.counter0 }}" data-gallery-src="{{ image.url }}" data-gallery-caption="{{ image.caption|default:page_service_name }}" aria-label="Ouvrir l’image {{ forloop.counter }} sur {{ gallery_images|length }}"><span class="service-hero-polaroid-media"><img src="{{ image.url }}" alt="{{ image.caption|default:page_service_name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async"></span><span class="gallery-counter">{{ forloop.counter }}/{{ gallery_images|length }}</span></button></figure>

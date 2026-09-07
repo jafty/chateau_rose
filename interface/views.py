@@ -848,11 +848,6 @@ def provider_detail(request, provider_id, quick_checkout=None):
     before_appointment_items = list(
         ProviderBeforeAppointmentItem.objects.filter(provider=provider)
     )
-    hero_photos = [
-        photo
-        for photo in provider_photos
-        if photo.media_kind == photo.MEDIA_IMAGE and photo.resolved_url
-    ][:4]
     gallery_photos = [photo for photo in provider_photos if photo.resolved_url]
     published_reviews = list(
         VerifiedReview.objects.filter(
@@ -876,7 +871,6 @@ def provider_detail(request, provider_id, quick_checkout=None):
         "visible_service_categories": visible_service_categories,
         "selected_category_slug": selected_category_slug,
         "zones": zones,
-        "hero_photos": hero_photos,
         "gallery_photos": gallery_photos,
         "before_appointment_items": before_appointment_items,
         "message": message,
