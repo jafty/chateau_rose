@@ -462,8 +462,9 @@ th { background: var(--color-surface-muted); color: var(--color-ink-strong); }
 .booking-decision-flow > form, .booking-decision-flow .btn, .booking-negotiation-form, .booking-negotiation-form .form-field, .booking-negotiation-form :is(input, textarea) { width: 100%; min-width: 0; }
 .booking-toggle-negotiation { display: flex; width: 100%; min-height: 44px; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--color-line-strong); border-radius: var(--radius-xs); background: var(--color-surface); color: var(--color-ink-strong); font-weight: 700; text-align: left; }
 .booking-toggle-negotiation__icon { flex: 0 0 auto; color: var(--color-rose-strong); font-size: 1.15rem; line-height: 1; }
-.booking-negotiation-panel { display: none; width: 100%; min-width: 0; padding: clamp(14px, 3vw, 18px); border: 1px solid var(--color-line); border-radius: var(--radius-xs); background: var(--color-surface-muted); }
-.booking-negotiation-panel.is-open { display: block; }
+.booking-negotiation-panel { display: block; width: 100%; min-width: 0; padding: clamp(14px, 3vw, 18px); border: 1px solid var(--color-line); border-radius: var(--radius-xs); background: var(--color-surface-muted); }
+.booking-negotiation-panel.is-js-collapsible { display: none; }
+.booking-negotiation-panel.is-js-collapsible.is-open { display: block; }
 .status-panel, .support-note { padding: 15px; border-left: 3px solid var(--color-rose); background: var(--color-surface-muted); }
 .status-panel { display: grid; gap: 4px; }
 .status-panel--success { border-left-color: var(--color-success); background: var(--color-success-soft); }

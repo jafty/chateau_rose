@@ -185,7 +185,7 @@
                             type="button"
                             class="booking-toggle-negotiation"
                             data-target="booking-negotiation-panel"
-                            aria-expanded="false"
+                            aria-expanded="true"
                         >
                             <span data-negotiation-toggle-label>Faire une contre-proposition</span>
                             <span class="booking-toggle-negotiation__icon" data-negotiation-toggle-icon aria-hidden="true">⌄</span>
@@ -287,8 +287,8 @@
 <script>
     const toggleBtn = document.querySelector('.booking-toggle-negotiation');
     if (toggleBtn) {
+        const panel = document.getElementById(toggleBtn.dataset.target);
         toggleBtn.addEventListener('click', () => {
-            const panel = document.getElementById(toggleBtn.dataset.target);
             if (!panel) return;
             panel.classList.toggle('is-open');
             const expanded = panel.classList.contains('is-open');
@@ -298,6 +298,10 @@
             if (label) label.textContent = expanded ? 'Masquer la contre-proposition' : 'Faire une contre-proposition';
             if (icon) icon.textContent = expanded ? '⌃' : '⌄';
         });
+        if (panel) {
+            panel.classList.add('is-js-collapsible');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+        }
     }
 </script>
 {{ block.super }}
