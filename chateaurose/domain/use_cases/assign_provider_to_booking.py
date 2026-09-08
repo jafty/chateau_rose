@@ -39,7 +39,7 @@ def execute(
         ):
             raise ValidationError("Provider service is not compatible with requested intent")
 
-    coverage_location = "Salon" if booking.location_preference == "salon" else booking.location
+    coverage_location = "Chez la coiffeuse" if booking.location_preference == "salon" else booking.location
     if coverage_location and coverage_location != "À préciser" and not provider_catalog.provider_covers_zone(provider_id, coverage_location):
         raise ValidationError("Provider does not cover this zone")
 

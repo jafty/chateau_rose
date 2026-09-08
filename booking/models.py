@@ -57,9 +57,9 @@ class Provider(models.Model):
     LOCATION_MODE_CLIENT_HOME_ONLY = "client_home_only"
     LOCATION_MODE_HYBRID = "hybrid"
     LOCATION_MODE_CHOICES = (
-        (LOCATION_MODE_SALON_ONLY, "Salon uniquement"),
+        (LOCATION_MODE_SALON_ONLY, "Chez la coiffeuse uniquement"),
         (LOCATION_MODE_CLIENT_HOME_ONLY, "À domicile uniquement"),
-        (LOCATION_MODE_HYBRID, "Salon ou domicile"),
+        (LOCATION_MODE_HYBRID, "Chez la coiffeuse ou à domicile"),
     )
 
     name = models.CharField(max_length=255)
@@ -105,11 +105,11 @@ class Provider(models.Model):
     salon_zone = models.CharField(
         max_length=255,
         blank=True,
-        help_text="Indique la zone ou le quartier où tu reçois au salon.",
+        help_text="Indique la zone ou le quartier où tu reçois ta clientèle.",
     )
     salon_address = models.TextField(
         blank=True,
-        help_text="Adresse complète du salon (communiquée après confirmation).",
+        help_text="Adresse complète du lieu de rendez-vous (communiquée après confirmation).",
     )
     provides_meche = models.BooleanField(
         default=True,

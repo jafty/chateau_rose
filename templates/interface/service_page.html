@@ -14,9 +14,10 @@
     {% if is_sub_service_page and gallery_images %}
         <div class="service-hero-collage service-gallery-grid hero-collage--count-{{ gallery_images|slice:':4'|length }}" aria-label="Aperçu des inspirations {{ page_service_name|default:service.name }}">
             <span class="sr-only">Inspirations & résultats</span>
-            {% for image in gallery_images|slice:":4" %}
-                <figure class="service-hero-polaroid"><button type="button" class="service-gallery-trigger" data-gallery-index="{{ forloop.counter0 }}" data-gallery-src="{{ image.url }}" data-gallery-caption="{{ image.caption|default:page_service_name }}" aria-label="Ouvrir l’image {{ forloop.counter }} sur {{ gallery_images|length }}"><span class="service-hero-polaroid-media"><img src="{{ image.url }}" alt="{{ image.caption|default:page_service_name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async"></span><span class="gallery-counter">{{ forloop.counter }}/{{ gallery_images|length }}</span></button></figure>
+            {% for image in gallery_images %}
+                <button type="button" class="service-hero-polaroid{% if forloop.counter > 4 %} gallery-source-only{% endif %}" data-gallery-index="{{ forloop.counter0 }}" data-gallery-src="{{ image.url }}" data-gallery-caption="{{ image.caption|default:page_service_name }}" aria-label="Ouvrir l’image {{ forloop.counter }} sur {{ gallery_images|length }}"><img src="{{ image.url }}" alt="{{ image.caption|default:page_service_name }}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async"><span class="gallery-counter">{{ forloop.counter }}/{{ gallery_images|length }}</span>{% if forloop.counter == 4 or forloop.last %}<span class="gallery-open-label">Voir toutes les photos</span>{% endif %}</button>
             {% endfor %}
+            {% if gallery_images|length > 1 %}<div class="hero-gallery-controls" aria-hidden="true"><span>‹</span><span>›</span></div>{% endif %}
         </div>
     {% endif %}
     <div class="service-header-paper">
@@ -114,10 +115,9 @@
         <div class="paper-card">
             <h4>Pourquoi Château Rose ?</h4>
             <ul class="highlight-list pink-checks">
-                <li>Profils vérifiés par nos soins</li>
-                <li>Photos 100% réelles</li>
-                <li>Estimation claire avec frais Château Rose inclus</li>
-                <li>Recherche d'alternative si besoin</li>
+                <li>Coiffeuses toulousaines sélectionnées avec soin</li>
+                <li>Tarifs clairs, sans frais cachés</li>
+                <li>Une alternative recherchée si ton premier choix n’est pas disponible</li>
             </ul>
             <a class="btn contact-outline service-contact-cta" href="mailto:japhet.situmonana@gmail.com">
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" focusable="false">
