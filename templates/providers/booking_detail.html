@@ -165,10 +165,10 @@
         <aside class="booking-action-column">
             {% if booking.status == "SUBMITTED" %}
                 <div class="booking-action-card">
-                    <h3>Réponse à la demande</h3>
-                    <p class="booking-action-lead">
-                        Confirme le créneau, ou propose un ajustement sur le reste à payer.
-                    </p>
+                    <div class="booking-action-card__intro">
+                        <p class="eyebrow">Répondre à la demande</p>
+                        <p class="booking-action-lead">Confirme le créneau ou propose un nouvel arrangement.</p>
+                    </div>
 
                     <div class="booking-decision-flow">
                         <form method="post">
@@ -187,7 +187,8 @@
                             data-target="booking-negotiation-panel"
                             aria-expanded="false"
                         >
-                            Faire une contre-proposition (Tarif coiffure/Date)
+                            <span data-negotiation-toggle-label>Faire une contre-proposition</span>
+                            <span class="booking-toggle-negotiation__icon" data-negotiation-toggle-icon aria-hidden="true">⌄</span>
                         </button>
 
                         <div class="booking-negotiation-panel" id="booking-negotiation-panel">
@@ -292,9 +293,10 @@
             panel.classList.toggle('is-open');
             const expanded = panel.classList.contains('is-open');
             toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-            toggleBtn.textContent = expanded
-                ? 'Masquer la contre-proposition'
-                : 'Faire une contre-proposition (Tarif coiffure/Date)';
+            const label = toggleBtn.querySelector('[data-negotiation-toggle-label]');
+            const icon = toggleBtn.querySelector('[data-negotiation-toggle-icon]');
+            if (label) label.textContent = expanded ? 'Masquer la contre-proposition' : 'Faire une contre-proposition';
+            if (icon) icon.textContent = expanded ? '⌃' : '⌄';
         });
     }
 </script>
