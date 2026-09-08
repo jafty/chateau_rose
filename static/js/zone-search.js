@@ -9,6 +9,11 @@
 
     const initZoneSearch = (select) => {
         const placeholder = select.dataset.zoneSearchPlaceholder || 'Rechercher une zone';
+        const searchUrl = select.dataset.zoneSearchUrl;
+        const providerId = select.dataset.zoneProviderId;
+        const valueField = select.dataset.zoneValueField || 'id';
+        const labelField = select.dataset.zoneLabelField || 'name';
+        let searchController = null;
 
         const options = Array.from(select.options)
             .map((option) => ({
@@ -114,15 +119,46 @@
             populateOptions(filtered);
         };
 
+        const searchOptions = async (term = '') => {
+            if (!term.trim()) {
+                closeDropdown();
+                return;
+            }
+            if (!searchUrl) {
+                filterOptions(term);
+                return;
+            }
+
+            searchController?.abort();
+            searchController = new AbortController();
+            const url = new URL(searchUrl, window.location.origin);
+            url.searchParams.set('q', term);
+            if (providerId) url.searchParams.set('provider_id', providerId);
+
+            try {
+                const response = await window.fetch(url, {
+                    headers: { Accept: 'application/json' },
+                    signal: searchController.signal,
+                });
+                if (!response.ok) throw new Error('Zone search failed');
+                const payload = await response.json();
+                populateOptions((payload.results || []).map((item) => ({
+                    value: item[valueField],
+                    label: item[labelField],
+                })));
+            } catch (error) {
+                if (error.name !== 'AbortError') filterOptions(term);
+            }
+        };
+
         textInput.addEventListener('input', (event) => {
             hiddenInput.value = '';
             syncValidity();
-            filterOptions(event.target.value);
-            dropdown.hidden = false;
+            searchOptions(event.target.value);
         });
 
         textInput.addEventListener('focus', () => {
-            filterOptions(textInput.value);
+            searchOptions(textInput.value);
         });
 
         textInput.addEventListener('blur', () => {

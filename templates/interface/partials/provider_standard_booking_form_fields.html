@@ -147,6 +147,7 @@
                     id="location"
                     required
                     data-zone-search-url="{% url 'interface:zone_search' %}"
+                    data-zone-provider-id="{{ provider.id }}"
                     data-zone-value-field="name"
                     data-zone-label-field="name"
                     data-zone-search-placeholder="Ex : Saint-Cyprien, Arènes, Tournefeuille..."
@@ -191,8 +192,8 @@
         <p class="meta-line">Si {{ provider.name }} t'a donné un code, les frais de service Château Rose peuvent être offerts.</p>
     </div>
     <div class="form-field full-width">
-        <label for="free_text">Informations complémentaires (facultatif)</label>
-        <textarea name="free_text" id="free_text" rows="3" placeholder="Disponibilités, préférences, précisions sur la coupe souhaitée…"></textarea>
+        <label for="free_text">Disponibilités <span class="required-mark">*</span></label>
+        <textarea name="free_text" id="free_text" rows="3" required placeholder="Ex. : je suis disponible en semaine après 18 h et le samedi matin. Je peux aussi me libérer le mardi toute la journée."></textarea>
     </div>
 
     <div class="wizard-actions full-width">

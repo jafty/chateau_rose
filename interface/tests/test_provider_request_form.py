@@ -45,6 +45,7 @@ class ProviderBookingRequestFormTests(TestCase):
                 "client_address": "5 place du Capitole, 31000 Toulouse",
                 "desired_date": "invalid-date",
                 "payment_auth_id": "pi_123",
+                "free_text": "Disponible le samedi matin.",
             },
             provider=self.provider,
         )
@@ -61,8 +62,11 @@ class ProviderBookingRequestFormTests(TestCase):
                 "service_id": 1,
                 "client_name": "Alice",
                 "client_email": "test@example.com",
-                "desired_date": "2026-01-01T12:00",
+                "desired_date": (timezone.now() + timedelta(days=2)).strftime(
+                    "%Y-%m-%dT%H:%M"
+                ),
                 "payment_auth_id": "pi_123",
+                "free_text": "Disponible le samedi matin.",
             },
             provider=self.provider,
         )
@@ -84,14 +88,20 @@ class ProviderBookingRequestFormTests(TestCase):
                 "client_email": "test@example.com",
                 "location_preference": "domicile",
                 "client_address": "5 place du Capitole, 31000 Toulouse",
-                "desired_date": "2026-01-01T12:00",
+                "desired_date": (timezone.now() + timedelta(days=2)).strftime(
+                    "%Y-%m-%dT%H:%M"
+                ),
                 "payment_auth_id": "pi_123",
+                "free_text": "Disponible le samedi matin.",
             },
             provider=self.provider,
         )
 
         self.assertFalse(form.is_valid())
-        self.assertIn("Merci de choisir un lieu.", form.non_field_errors())
+        self.assertIn(
+            "Merci de choisir une zone pour le rendez-vous à domicile.",
+            form.errors.get("location", []),
+        )
 
     def test_salon_request_no_longer_requires_hair_picture(self):
         form = ProviderBookingRequestForm(
@@ -100,10 +110,41 @@ class ProviderBookingRequestFormTests(TestCase):
                 "client_name": "Alice",
                 "client_email": "test@example.com",
                 "location_preference": "salon",
-                "desired_date": "2026-01-01T12:00",
+                "desired_date": (timezone.now() + timedelta(days=2)).strftime(
+                    "%Y-%m-%dT%H:%M"
+                ),
                 "payment_auth_id": "pi_123",
+                "free_text": "Disponible le samedi matin.",
             },
             provider=self.provider,
         )
 
         self.assertTrue(form.is_valid())
+
+    def test_availabilities_are_required_for_a_booking_request(self):
+        form = ProviderBookingRequestForm(
+            data={
+                "service_id": 1,
+                "client_name": "Alice",
+                "client_email": "test@example.com",
+                "location_preference": "salon",
+                "desired_date": (timezone.now() + timedelta(days=2)).strftime(
+                    "%Y-%m-%dT%H:%M"
+                ),
+            },
+            provider=self.provider,
+            require_payment_auth=False,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("free_text", form.errors)
+
+    def test_availabilities_remain_optional_for_partial_admin_prefills(self):
+        form = ProviderBookingRequestForm(
+            data={"service_id": 1},
+            provider=self.provider,
+            require_payment_auth=False,
+            partial_prefill_mode=True,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)

@@ -151,6 +151,7 @@
             setValue('client_email', recapPrefill.client_email || '');
             setValue('desired_date', (recapPrefill.desired_date || '').slice(0, 16));
             setValue('service_fee_coupon_code', recapPrefill.service_fee_coupon_code || '');
+            setValue('free_text', recapPrefill.free_text || '');
             if (serviceSelect && recapPrefill.service_id) {
                 const recapServiceId = String(recapPrefill.service_id);
                 const hasServiceOption = Array.from(serviceSelect.options).some((opt) => opt.value === recapServiceId);

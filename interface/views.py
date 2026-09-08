@@ -648,11 +648,14 @@ def zone_search(request):
 
     term = request.GET.get("q", "").strip()
     zones = Zone.objects.all().order_by("name")
+    provider_id = request.GET.get("provider_id", "").strip()
+    if provider_id:
+        zones = zones.filter(providers__id=provider_id)
     if term:
         zones = zones.filter(name__icontains=term)
 
     limit = 20 if term else 76
-    zones = zones[:limit]
+    zones = zones.distinct()[:limit]
     payload = {"results": [{"id": zone.id, "name": zone.name, "slug": zone.slug} for zone in zones]}
     return JsonResponse(payload)
 
@@ -803,6 +806,7 @@ def provider_detail(request, provider_id, quick_checkout=None):
                 "general_adjustments": form.cleaned_data.get("general_adjustments") or [],
                 "meche": request.POST.get("meche") in {"1", "true", "on"},
                 "service_fee_coupon_code": (request.POST.get("service_fee_coupon_code") or "").strip(),
+                "free_text": (request.POST.get("free_text") or "").strip(),
             }
             can_save_partial_prefill = bool(existing_admin_draft)
 

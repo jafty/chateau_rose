@@ -139,6 +139,21 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertEqual(ProviderBookingDraft.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_zone_search_only_returns_the_selected_providers_zones(self):
+        other_zone = Zone.objects.create(name="Paris", slug="paris")
+
+        response = self.client.get(
+            reverse("interface:zone_search"),
+            {"q": "Tou", "provider_id": self.provider.id},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [result["name"] for result in response.json()["results"]],
+            [self.zone.name],
+        )
+        self.assertNotEqual(other_zone.name, self.zone.name)
+
     def test_booking_form_rejects_a_date_with_less_than_24_hours_notice(self):
         payload = self._base_payload()
         payload["desired_date"] = (timezone.now() + timedelta(hours=23)).strftime(
@@ -375,6 +390,7 @@ class ProviderBookingRecapFlowTests(TestCase):
                 "general_adjustments": "[]",
                 "meche": "",
                 "recap_token": str(seeded.token),
+                "free_text": "Disponible le mardi et le jeudi après-midi.",
             },
         )
 
@@ -388,7 +404,10 @@ class ProviderBookingRecapFlowTests(TestCase):
         self.assertEqual(seeded.source, ProviderBookingDraft.SOURCE_ADMIN)
         self.assertEqual(seeded.client_name, "Nouveau client")
         self.assertEqual(seeded.client_email, "nouveau@example.com")
-        self.assertEqual(seeded.payload["free_text"], "")
+        self.assertEqual(
+            seeded.payload["free_text"],
+            "Disponible le mardi et le jeudi après-midi.",
+        )
 
     def test_admin_can_save_partial_prefill_without_client_identity_or_pictures(self):
         admin_user = get_user_model().objects.create_user(
