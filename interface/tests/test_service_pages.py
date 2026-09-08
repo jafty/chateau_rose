@@ -129,7 +129,7 @@ class ServicePagesTests(TestCase):
             content,
         )
         self.assertIn(
-            '<span class="btn btn-accent provider-service-card__button" aria-hidden="true">Réserver</span>',
+            '<span class="btn btn-accent provider-service-card__button" aria-hidden="true">Choisir</span>',
             content,
         )
         self.assertNotIn("Une question ? Écris-nous", content)
@@ -181,7 +181,7 @@ class ServicePagesTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "https://static.example.com/knotless-card.jpg", count=3)
+        self.assertContains(response, 'data-gallery-src="https://static.example.com/knotless-card.jpg"', count=1)
         self.assertNotIn("Duplicate card image", response.content.decode())
 
     def test_sub_service_page_renders_dedicated_gallery_images(self):
@@ -219,7 +219,9 @@ class ServicePagesTests(TestCase):
         self.assertIn("service-header-with-collage", content)
         self.assertIn("service-hero-collage", content)
         self.assertIn("Aperçu des inspirations Knotless braids", content)
-        self.assertContains(response, '<figure class="service-hero-polaroid">', count=4)
+        self.assertContains(response, 'class="service-hero-polaroid"', count=4)
+        self.assertContains(response, "gallery-source-only", count=1)
+        self.assertContains(response, "Voir toutes les photos")
         self.assertIn("https://static.example.com/knotless-hero-0.jpg", content)
         self.assertIn("https://static.example.com/knotless-hero-3.jpg", content)
 
@@ -433,7 +435,7 @@ class ServicePagesTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn("Reçoit uniquement", content)
+        self.assertIn("Chez la coiffeuse uniquement", content)
         self.assertNotIn("Salon</span>", content)
 
     def test_empty_provider_list_is_hidden(self):

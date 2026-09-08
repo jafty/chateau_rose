@@ -37,15 +37,15 @@ class ProviderSignupForm(UserCreationForm):
         choices=Provider.LOCATION_MODE_CHOICES,
         initial=Provider.LOCATION_MODE_HYBRID,
         widget=forms.RadioSelect,
-        help_text="Choisis si tu te déplaces, accueilles en salon/chez toi, ou les deux.",
+        help_text="Choisis si tu te déplaces, accueilles ta clientèle chez toi, ou les deux.",
     )
     salon_zone = forms.CharField(
-        label="Zone du salon",
+        label="Zone d’accueil",
         required=False,
         help_text="Quartier ou zone où tu accueilles ta clientèle.",
     )
     salon_address = forms.CharField(
-        label="Adresse du salon",
+        label="Adresse d’accueil",
         required=False,
         widget=forms.Textarea(attrs={"rows": 3}),
         help_text="Adresse complète, communiquée seulement après confirmation.",
@@ -76,9 +76,9 @@ class ProviderSignupForm(UserCreationForm):
             Provider.LOCATION_MODE_HYBRID,
         ):
             if not salon_zone:
-                self.add_error("salon_zone", "Merci d'indiquer la zone du salon.")
+                self.add_error("salon_zone", "Merci d'indiquer ta zone d’accueil.")
             if not salon_address:
-                self.add_error("salon_address", "Merci d'indiquer l'adresse du salon.")
+                self.add_error("salon_address", "Merci d'indiquer ton adresse d’accueil.")
 
         cleaned_data["salon_zone"] = salon_zone
         cleaned_data["salon_address"] = salon_address

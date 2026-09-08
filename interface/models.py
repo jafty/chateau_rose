@@ -448,7 +448,7 @@ class ProviderBookingDraft(models.Model):
 class QuickCheckoutPage(models.Model):
     LOCATION_PREFERENCE_CHOICES = (
         ("domicile", "À domicile"),
-        ("salon", "En salon / chez la prestataire ou le prestataire"),
+        ("salon", "Chez la prestataire ou le prestataire"),
     )
 
     provider = models.ForeignKey("booking.Provider", on_delete=models.CASCADE, related_name="quick_checkout_pages")
@@ -486,7 +486,7 @@ class QuickCheckoutPage(models.Model):
             errors["client_address"] = "L'adresse cliente est obligatoire pour un rendez-vous à domicile."
 
         if self.location_preference == "salon" and not ((self.provider.salon_zone if self.provider_id else "") or "").strip():
-            errors["provider"] = "La zone du salon de la/du prestataire est obligatoire pour un rendez-vous en salon."
+            errors["provider"] = "La zone d’accueil de la/du prestataire est obligatoire pour un rendez-vous chez elle ou lui."
 
         if errors:
             raise ValidationError(errors)

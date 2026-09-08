@@ -409,8 +409,8 @@ class QuickCheckoutPageAdmin(admin.ModelAdmin):
     class Form(forms.ModelForm):
         provider_salon_zone = forms.CharField(
             required=False,
-            label="Zone salon prestataire",
-            help_text="Modifie aussi la zone salon de la fiche prestataire.",
+            label="Zone d’accueil prestataire",
+            help_text="Modifie aussi la zone d’accueil de la fiche prestataire.",
         )
 
         class Meta:
@@ -437,7 +437,7 @@ class QuickCheckoutPageAdmin(admin.ModelAdmin):
             if location_preference == "salon" and not salon_zone:
                 self.add_error(
                     "provider_salon_zone",
-                    "La zone du salon est obligatoire quand le lieu du rendez-vous est « en salon ».",
+                    "La zone d’accueil est obligatoire quand le rendez-vous a lieu chez la prestataire.",
                 )
             return cleaned_data
 

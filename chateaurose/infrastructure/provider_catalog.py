@@ -5,7 +5,7 @@ from booking.models import Provider, ProviderBlockedSlot, Service, Zone
 from django.utils import timezone
 from chateaurose.domain.exceptions import NotFound
 
-SALON_LOCATION_LABEL = "Salon"
+SALON_LOCATION_LABEL = "Chez la coiffeuse"
 
 
 class BlockedSlotDetails(TypedDict):
