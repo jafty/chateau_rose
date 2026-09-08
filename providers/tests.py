@@ -210,6 +210,24 @@ class ProviderDashboardTests(TestCase):
         self.assertContains(response, "Frais Château Rose déjà traités")
         self.assertNotContains(response, "dont acompte prestataire")
 
+    def test_counter_proposal_is_visible_until_javascript_enhances_it(self):
+        booking = self._create_booking()
+        detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
+
+        response = self.client.get(detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'aria-expanded="true"')
+        self.assertContains(response, "panel.classList.add('is-js-collapsible')")
+
+        stylesheet_path = finders.find("css/style.css")
+        self.assertIsNotNone(stylesheet_path)
+        with open(stylesheet_path, encoding="utf-8") as stylesheet:
+            css = stylesheet.read()
+
+        self.assertIn(".booking-negotiation-panel { display: block;", css)
+        self.assertIn(".booking-negotiation-panel.is-js-collapsible { display: none;", css)
+
     def test_provider_can_propose_only_date(self):
         booking = self._create_booking()
         detail_url = reverse("providers:booking_detail", args=[booking.booking_id])
