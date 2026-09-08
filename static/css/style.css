@@ -191,7 +191,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .service-above-fold .service-subservices-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 :is(.service-hero-collage, .provider-hero-collage) { position: relative; display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); grid-template-rows: repeat(3, 1fr); gap: 6px; height: 430px; margin: 0 0 24px; overflow: hidden; border-radius: var(--radius-sm); background: var(--color-surface-muted); }
 :is(.service-hero-collage, .provider-hero-collage) :is(.service-hero-polaroid, .provider-hero-polaroid) { position: relative; min-width: 0; overflow: hidden; border: 0; background: var(--color-surface-muted); }
-:is(.service-hero-collage, .provider-hero-collage) :is(.service-hero-polaroid, .provider-hero-polaroid):first-child { grid-row: 1 / -1; }
+:is(.service-hero-collage, .provider-hero-collage) :is(.service-hero-polaroid, .provider-hero-polaroid):first-of-type { grid-row: 1 / -1; }
 :is(.hero-collage--count-0, .hero-collage--count-1) { grid-template-columns: minmax(0, 1fr); }
 .hero-collage--count-2 { grid-template-rows: 1fr; }
 .hero-collage--count-2 :is(.provider-hero-polaroid, .service-hero-polaroid):first-child { grid-row: auto; }
