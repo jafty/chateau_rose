@@ -67,6 +67,11 @@
             dropdown.innerHTML = '';
         };
 
+        const cancelSearch = () => {
+            searchController?.abort();
+            searchController = null;
+        };
+
         const syncValidity = () => {
             const hasSearchText = textInput.value.trim() !== '';
             textInput.setCustomValidity(
@@ -114,14 +119,14 @@
                 .filter((option) => {
                     if (!normalizedTerm) return true;
                     return normalize(option.label).includes(normalizedTerm);
-                })
-                .slice(0, 20);
+                });
             populateOptions(filtered);
         };
 
         const searchOptions = async (term = '') => {
             if (!term.trim()) {
-                closeDropdown();
+                cancelSearch();
+                filterOptions();
                 return;
             }
             if (!searchUrl) {
@@ -129,8 +134,9 @@
                 return;
             }
 
-            searchController?.abort();
-            searchController = new AbortController();
+            cancelSearch();
+            const controller = new AbortController();
+            searchController = controller;
             const url = new URL(searchUrl, window.location.origin);
             url.searchParams.set('q', term);
             if (providerId) url.searchParams.set('provider_id', providerId);
@@ -138,16 +144,32 @@
             try {
                 const response = await window.fetch(url, {
                     headers: { Accept: 'application/json' },
-                    signal: searchController.signal,
+                    signal: controller.signal,
                 });
                 if (!response.ok) throw new Error('Zone search failed');
                 const payload = await response.json();
-                populateOptions((payload.results || []).map((item) => ({
+                if (
+                    controller !== searchController
+                    || document.activeElement !== textInput
+                    || textInput.value !== term
+                ) return;
+
+                const remoteOptions = (payload.results || []).map((item) => ({
                     value: item[valueField],
                     label: item[labelField],
-                })));
+                }));
+                const localMatches = options.filter((option) =>
+                    !option.disabled && normalize(option.label).includes(normalize(term))
+                );
+                const resultsByValue = new Map();
+                [...remoteOptions, ...localMatches].forEach((option) => {
+                    resultsByValue.set(String(option.value), option);
+                });
+                populateOptions(Array.from(resultsByValue.values()));
             } catch (error) {
                 if (error.name !== 'AbortError') filterOptions(term);
+            } finally {
+                if (controller === searchController) searchController = null;
             }
         };
 
@@ -162,6 +184,7 @@
         });
 
         textInput.addEventListener('blur', () => {
+            cancelSearch();
             const matchingOption = options.find((option) => normalize(option.label) === normalize(textInput.value));
             if (matchingOption && !matchingOption.disabled) {
                 hiddenInput.value = matchingOption.value;
@@ -173,6 +196,7 @@
 
         textInput.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
+                cancelSearch();
                 closeDropdown();
             }
         });

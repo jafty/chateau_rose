@@ -654,8 +654,10 @@ def zone_search(request):
     if term:
         zones = zones.filter(name__icontains=term)
 
-    limit = 20 if term else 76
-    zones = zones.distinct()[:limit]
+    zones = zones.distinct()
+    if not provider_id:
+        limit = 20 if term else 76
+        zones = zones[:limit]
     payload = {"results": [{"id": zone.id, "name": zone.name, "slug": zone.slug} for zone in zones]}
     return JsonResponse(payload)
 

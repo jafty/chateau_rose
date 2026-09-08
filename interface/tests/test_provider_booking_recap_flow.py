@@ -154,6 +154,28 @@ class ProviderBookingRecapFlowTests(TestCase):
         )
         self.assertNotEqual(other_zone.name, self.zone.name)
 
+    def test_zone_search_returns_every_zone_for_selected_provider_without_a_term(self):
+        extra_zones = [
+            Zone(name=f"Zone {index:02d}", slug=f"zone-{index:02d}")
+            for index in range(80)
+        ]
+        Zone.objects.bulk_create(extra_zones)
+        ProviderZone.objects.bulk_create(
+            [
+                ProviderZone(provider=self.provider, zone=zone)
+                for zone in Zone.objects.filter(slug__startswith="zone-")
+            ]
+        )
+
+        response = self.client.get(
+            reverse("interface:zone_search"),
+            {"provider_id": self.provider.id},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["results"]), 81)
+        self.assertEqual(response.json()["results"][0]["name"], "Toulouse")
+
     def test_booking_form_rejects_a_date_with_less_than_24_hours_notice(self):
         payload = self._base_payload()
         payload["desired_date"] = (timezone.now() + timedelta(hours=23)).strftime(
