@@ -151,7 +151,7 @@ class ProviderBookingRequestForm(forms.Form):
     meche = forms.BooleanField(label="Besoin de mèches fournies", required=False)
     service_fee_coupon_code = forms.CharField(label="Code partenaire", required=False)
     payment_auth_id = forms.CharField(required=False)
-    free_text = forms.CharField(label="Informations complémentaires", required=False)
+    free_text = forms.CharField(label="Disponibilités")
 
     def __init__(self, *args, **kwargs):
         self.provider = kwargs.pop("provider", None)
@@ -162,6 +162,7 @@ class ProviderBookingRequestForm(forms.Form):
             self.fields["client_name"].required = False
             self.fields["client_email"].required = False
             self.fields["desired_date"].required = False
+            self.fields["free_text"].required = False
 
     def clean_desired_date(self):
         raw_value = self.cleaned_data.get("desired_date")

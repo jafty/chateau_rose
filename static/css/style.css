@@ -120,6 +120,11 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .supplements-list, .adjustment-list { display: grid; gap: 7px; }
 .supplement-option, .adjustment-row { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--color-line); border-radius: var(--radius-xs); background: var(--color-surface); font-size: .8rem; }
 .nocturnal-warning { padding: 7px 9px; border-left: 3px solid var(--color-warning); background: var(--color-surface-muted); color: var(--color-ink); font-size: .73rem; }
+.zone-search { position: relative; }
+.zone-search__dropdown { position: absolute; z-index: 20; top: calc(100% + 4px); right: 0; left: 0; max-height: 240px; overflow-y: auto; border: 1px solid var(--color-line-strong); border-radius: var(--radius-xs); background: var(--color-surface); box-shadow: var(--shadow-sm); }
+.zone-search__option { display: block; width: 100%; padding: 9px 11px; border: 0; border-bottom: 1px solid var(--color-line); background: transparent; color: var(--color-ink-strong); text-align: left; cursor: pointer; }
+.zone-search__option:last-child { border-bottom: 0; }
+.zone-search__option:hover, .zone-search__option:focus-visible { background: var(--color-rose-soft); outline: 0; }
 .price-highlight, .price-value, .total-amount, .receipt-amount { color: var(--color-ink-strong); font: 700 1.8rem/1 var(--font-display); }
 
 /* Homepage catalog */

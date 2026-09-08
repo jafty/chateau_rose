@@ -26,7 +26,7 @@
           {% if payload.hair_length %}<div><dt>Longueur</dt><dd>{{ payload.hair_length }}</dd></div>{% endif %}
           <div><dt>Format</dt><dd>{{ payload.type_adjustment|default:"standard" }}</dd></div>
           {% if payload.general_adjustments %}<div><dt>Ajustements</dt><dd>{{ payload.general_adjustments|join:", " }}</dd></div>{% endif %}
-          {% if payload.free_text %}<div><dt>Note</dt><dd>{{ payload.free_text }}</dd></div>{% endif %}
+          {% if payload.free_text %}<div><dt>Disponibilités</dt><dd>{{ payload.free_text }}</dd></div>{% endif %}
           <div><dt>Contact</dt><dd>{{ payload.client_name|default:"Non renseigné" }} · {{ payload.client_email|default:"Email non renseigné" }}</dd></div>
         </dl>
         {% if is_nocturnal_appointment %}<p class="nocturnal-warning" role="status">Le supplément nocturne de 23 € est inclus dans l’estimation.</p>{% endif %}
