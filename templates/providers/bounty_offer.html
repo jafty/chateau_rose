@@ -25,8 +25,12 @@
         {% else %}
             <header class="opportunity-heading">
                 <p class="opportunity-eyebrow">Nouvelle demande · Réponse avant le {{ opportunity.response_deadline_at|date:"d/m/Y à H\\hi" }}</p>
-                <h1 id="opportunity-title">Confirme la demande</h1>
-                <p class="lead">Accepte immédiatement si tu peux respecter exactement la prestation, la date, le lieu et le tarif demandés.</p>
+                <h1 id="opportunity-title">{% if admin_mode %}Détail de l'opportunité{% else %}Confirme la demande{% endif %}</h1>
+                {% if admin_mode %}
+                    <p class="lead">Consultation administrateur en lecture seule.</p>
+                {% else %}
+                    <p class="lead">Accepte immédiatement si tu peux respecter exactement la prestation, la date, le lieu et le tarif demandés.</p>
+                {% endif %}
             </header>
 
             {% if error %}<div class="alert error" role="alert">{{ error }}</div>{% endif %}
@@ -70,6 +74,7 @@
                     {% endif %}
                 </section>
 
+                {% if not admin_mode %}
                 <section class="paper-card opportunity-form-card" aria-labelledby="offer-form-title">
                     <div class="opportunity-card-heading">
                         <span class="opportunity-step">2</span>
@@ -133,6 +138,7 @@
                     </form>
                     </details>
                 </section>
+                {% endif %}
             </div>
         {% endif %}
     </div>
