@@ -19,6 +19,7 @@ from django.urls import reverse_lazy
 from booking.models import Booking, Provider, ProviderPhoto, Service
 from chateaurose.domain.exceptions import DomainError
 from chateaurose.domain.use_cases import (
+    bounty as bounty_uc,
     expire_booking as expire_booking_uc,
     finalize_booking as finalize_booking_uc,
     update_proposal,
@@ -320,13 +321,20 @@ def bounty_offer(request, opportunity_id):
     provider = Provider.objects.filter(
         user=request.user, is_visible_on_website=True
     ).first()
-    if not provider:
+    admin_mode = provider is None and request.user.is_staff
+    if not bounty_uc.can_view_opportunity(
+        is_admin=admin_mode, has_visible_provider=provider is not None
+    ):
         return HttpResponseForbidden("Accès réservé aux prestataires visibles.")
+    if admin_mode and request.method == "POST":
+        return HttpResponseForbidden(
+            "Les administrateurs disposent d'un accès en lecture seule."
+        )
     opportunity = get_object_or_404(
         BookingOpportunity.objects.select_related("booking", "requested_sub_service"),
         pk=opportunity_id,
     )
-    services = eligible_services(opportunity, provider)
+    services = eligible_services(opportunity, provider) if provider else ()
     estimated_price_cents = opportunity.booking.provider_price_estimate_cents
     if estimated_price_cents is None:
         estimated_price_cents = max(
@@ -373,6 +381,7 @@ def bounty_offer(request, opportunity_id):
         {
             "opportunity": opportunity,
             "services": services,
+            "admin_mode": admin_mode,
             "error": error,
             "suggested_price_euros": suggested_price_euros,
             "accepted_price_euros": suggested_price_euros,

@@ -16,6 +16,11 @@ class OfferTerms:
     message: str = ""
 
 
+def can_view_opportunity(*, is_admin: bool, has_visible_provider: bool) -> bool:
+    """Return whether an authenticated back-office user may view a bounty."""
+    return is_admin or has_visible_provider
+
+
 def open_bounty(*, booking, reason: str, now, sub_service_id: str | None):
     if booking.status not in (
         "WAITING_PROVIDER_ASSIGNMENT",

@@ -37,6 +37,24 @@ def opportunity(status="OPEN"):
     )
 
 
+@pytest.mark.parametrize(
+    "is_admin,has_visible_provider,expected",
+    [
+        (True, False, True),
+        (True, True, True),
+        (False, True, True),
+        (False, False, False),
+    ],
+)
+def test_opportunity_page_access(is_admin, has_visible_provider, expected):
+    assert (
+        bounty.can_view_opportunity(
+            is_admin=is_admin, has_visible_provider=has_visible_provider
+        )
+        is expected
+    )
+
+
 def offer(deadline=None):
     return SimpleNamespace(
         status="PENDING_CLIENT",
