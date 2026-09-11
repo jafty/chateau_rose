@@ -2748,8 +2748,14 @@ def bounty_client_offer(request, token):
     message = error = None
     if request.method == "POST":
         try:
-            booking, offer = decide(token=token, decision=request.POST.get("decision", ""))
-            message = "Le rendez-vous est confirmé." if booking.status == Booking.STATUS_CONFIRMED else "La proposition a été refusée et la demande annulée."
+            decision = request.POST.get("decision", "")
+            booking, offer = decide(token=token, decision=decision)
+            if booking.status == Booking.STATUS_CONFIRMED:
+                message = "Le rendez-vous est confirmé."
+            elif booking.status == Booking.STATUS_BOUNTY_OPEN:
+                message = "La proposition a été refusée. Nous recherchons une autre coiffeuse."
+            else:
+                message = "La proposition a été refusée et la demande annulée."
         except DomainError as exc:
             error = str(exc)
     return render(request, "interface/bounty_client_offer.html", {"offer": offer, "booking": offer.opportunity.booking, "message": message, "error": error})

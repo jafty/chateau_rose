@@ -114,11 +114,14 @@ def decide_offer(*, booking, offer, decision: str, now):
         raise InvalidState("Cette proposition n'est plus disponible.")
     if now >= offer.client_deadline_at:
         raise InvalidState("Cette proposition a expiré.")
-    if decision not in ("accept", "reject"):
+    if decision not in ("accept", "retry", "cancel"):
         raise ValidationError("Décision inconnue.")
     offer.decided_at = booking.updated_at = booking.state_entered_at = now
-    if decision == "reject":
+    if decision == "cancel":
         offer.status, booking.status = "REJECTED", "CANCELLED"
+        return booking
+    if decision == "retry":
+        offer.status, booking.status = "REJECTED", "BOUNTY_OPEN"
         return booking
     offer.status = "ACCEPTED"
     booking.provider_id, booking.service_id = offer.provider_id, offer.service_id

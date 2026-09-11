@@ -686,10 +686,12 @@ class BookingOpportunity(models.Model):
     REASON_GENERIC = "GENERIC"
     REASON_PROVIDER_TIMEOUT = "PROVIDER_TIMEOUT"
     REASON_PROVIDER_REJECTED = "PROVIDER_REJECTED"
+    REASON_CLIENT_REJECTED_OFFER = "CLIENT_REJECTED_OFFER"
     REASON_CHOICES = (
         (REASON_GENERIC, "Demande générique"),
         (REASON_PROVIDER_TIMEOUT, "Délai prestataire expiré"),
         (REASON_PROVIDER_REJECTED, "Refus prestataire"),
+        (REASON_CLIENT_REJECTED_OFFER, "Contre-proposition refusée par la cliente"),
     )
     STATUS_OPEN = "OPEN"
     STATUS_OFFERED = "OFFERED"
