@@ -185,7 +185,6 @@ input[type=checkbox], input[type=radio] { accent-color: var(--color-rose-strong)
 .provider-name-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .provider-name { overflow: hidden; font-size: 1.05rem; white-space: nowrap; text-overflow: ellipsis; }
 .provider-mode-badge, .tag-pill, .chip, .city-chip, .zone, .pill { padding: 2px 6px; border: 1px solid var(--color-line); border-radius: 3px; background: var(--color-surface-muted); color: var(--color-ink-soft); font-size: .66rem; }
-.provider-card .provider-mode-badge { border-color: var(--color-rose); background: var(--color-rose-soft); color: var(--color-rose-strong); }
 .provider-card-review-link, .provider-reviews-link { color: var(--color-ink-soft); font-size: .69rem; font-weight: 700; text-decoration: underline; text-decoration-color: var(--color-line-strong); text-underline-offset: 3px; }
 .provider-reviews-link { color: var(--color-rose-strong); text-decoration-color: var(--color-rose); }
 .provider-card-review-link { margin-top: 4px; }
@@ -601,7 +600,7 @@ th { background: var(--color-surface-muted); color: var(--color-ink-strong); }
     .marketplace-home .hero-header-row { margin-bottom: 10px; }
     .marketplace-home .hero-headline h1 { font-size: clamp(1.8rem, 8.5vw, 2.35rem); }
     .marketplace-home .category-filter-bar { padding-bottom: 5px; }
-    .services-booking-grid.mode-slider-single { display: flex; gap: 10px; margin-inline: calc(var(--gutter) * -1); padding: 0 var(--gutter) 10px calc(var(--gutter) + 8px); overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scroll-padding-left: calc(var(--gutter) + 8px); scrollbar-width: none; }
+    .services-booking-grid.mode-slider-single { display: flex; gap: 10px; margin-inline: calc(var(--gutter) * -1); padding: 12px var(--gutter) 10px calc(var(--gutter) + 8px); overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scroll-padding-left: calc(var(--gutter) + 8px); scrollbar-width: none; }
     .services-booking-grid.mode-slider-single::-webkit-scrollbar { display: none; }
     .marketplace-home .services-booking-grid.mode-slider-single .service-polaroid-card { width: 58vw; min-width: 190px; max-width: 230px; flex: 0 0 58vw; padding: 7px 7px 10px; scroll-snap-align: start; }
     .marketplace-home .service-polaroid-card:nth-child(n + 5) { display: block; }
