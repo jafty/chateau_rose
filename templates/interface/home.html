@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </article>{% endif %}
           {% empty %}<article class="service-polaroid-card"><a class="service-polaroid-media" href="{% url 'interface:service_page' service.slug %}">{% if service.resolved_main_image %}<img src="{{ service.resolved_main_image }}" alt="{{ service.name }} à Toulouse" loading="lazy">{% else %}<img src="{% static 'demo_pictures/provider-placeholder.svg' %}" alt="{{ service.name }} à Toulouse" loading="lazy">{% endif %}</a><div class="service-polaroid-content"><h3>{{ service.name }}</h3><div class="service-polaroid-footer"><a href="{% url 'interface:service_page' service.slug %}" class="btn-polaroid-action">Choisir</a></div></div></article>{% endfor %}
         </div>
-        <a class="homepage-category-link" href="{% url 'interface:service_page' service.slug %}">Voir toutes les prestations&nbsp;: {{ service.name }} <span aria-hidden="true">→</span></a>
+        <a class="btn btn-accent homepage-category-link" href="{% url 'interface:service_page' service.slug %}">Voir toutes les prestations&nbsp;: {{ service.name }} <span aria-hidden="true">→</span></a>
       </section>
       {% empty %}<p class="lead">Les prestations arrivent bientôt.</p>{% endfor %}
     </div>
