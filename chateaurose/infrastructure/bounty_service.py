@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from booking.models import Booking, BookingOffer, BookingOpportunity, Provider, Service
 from chateaurose.domain.exceptions import InvalidState, ValidationError
+from chateaurose.domain.services.booking_deadlines import bounded_deadline
 from chateaurose.domain.use_cases import bounty as bounty_uc
 from chateaurose.infrastructure.email_notifier import EmailNotifier
 from chateaurose.infrastructure.stripe_gateway import StripePaymentGateway
@@ -46,9 +47,33 @@ def eligible_services(opportunity, provider=None):
     )
     if opportunity.excluded_provider_id:
         qs = qs.exclude(provider_id=opportunity.excluded_provider_id)
+    rejected_provider_ids = BookingOffer.objects.filter(
+        opportunity__booking_id=opportunity.booking_id,
+        status=BookingOffer.STATUS_REJECTED,
+    ).values_list("provider_id", flat=True)
+    qs = qs.exclude(provider_id__in=rejected_provider_ids)
     if provider:
         qs = qs.filter(provider=provider)
     return qs
+
+
+def _notify_opportunity_providers(*, opportunity, booking, services, base_url):
+    providers = {service.provider_id: service.provider for service in services}
+    for provider in providers.values():
+        url = f"{base_url}{reverse('providers:bounty_offer', args=[opportunity.id])}"
+        notifier.notify(
+            provider.contact_email,
+            f"Une demande de {opportunity.requested_sub_service.name} est disponible",
+            f"Bonjour {provider.name},\n\n"
+            "Une nouvelle opportunité de rendez-vous est disponible.\n\n"
+            f"Prestation : {opportunity.requested_sub_service.name}\n"
+            f"Date souhaitée : {booking.desired_date}\n"
+            f"Zone : {booking.location or 'Non précisée'}\n\n"
+            "Consulter la demande et faire une proposition :\n"
+            f"{url}\n\n"
+            "La première proposition éligible sera transmise à la cliente.\n\n"
+            "À bientôt,\nL'équipe Château Rose",
+        )
 
 
 def open_for_booking(booking_id: str, *, reason: str, now=None, base_url=""):
@@ -138,22 +163,12 @@ def open_for_booking(booking_id: str, *, reason: str, now=None, base_url=""):
                 "À bientôt,\nL'équipe Château Rose",
             )
             return opportunity
-    providers = {service.provider_id: service.provider for service in services}
-    for provider in providers.values():
-        url = f"{base_url}{reverse('providers:bounty_offer', args=[opportunity.id])}"
-        notifier.notify(
-            provider.contact_email,
-            f"Une demande de {sub_service.name} est disponible",
-            f"Bonjour {provider.name},\n\n"
-            "Une nouvelle opportunité de rendez-vous est disponible.\n\n"
-            f"Prestation : {sub_service.name}\n"
-            f"Date souhaitée : {booking.desired_date}\n"
-            f"Zone : {booking.location or 'Non précisée'}\n\n"
-            "Consulter la demande et faire une proposition :\n"
-            f"{url}\n\n"
-            "La première proposition éligible sera transmise à la cliente.\n\n"
-            "À bientôt,\nL'équipe Château Rose",
-        )
+    _notify_opportunity_providers(
+        opportunity=opportunity,
+        booking=booking,
+        services=services,
+        base_url=base_url,
+    )
     return opportunity
 
 
@@ -348,14 +363,44 @@ def decide(*, token, decision, now=None):
             pk=offer.opportunity.booking_id
         )
         bounty_uc.decide_offer(booking=booking, offer=offer, decision=decision, now=now)
+        retry_opportunity = None
         if decision == "accept":
             _capture_confirmation_payment(booking)
-        else:
+        elif decision == "cancel":
             if booking.payment_auth_id:
                 payments.release_auth(booking.payment_auth_id)
                 booking.payment_status = Booking.PAYMENT_STATUS_RELEASED
         offer.save(update_fields=("status", "decided_at"))
         booking.save()
+        if decision == "retry":
+            if booking.process_expires_at and now >= booking.process_expires_at:
+                booking.status = Booking.STATUS_CANCELLED
+                if booking.payment_auth_id:
+                    payments.release_auth(booking.payment_auth_id)
+                    booking.payment_status = Booking.PAYMENT_STATUS_RELEASED
+                booking.save()
+            else:
+                retry_opportunity = BookingOpportunity.objects.create(
+                    booking=booking,
+                    reason=BookingOpportunity.REASON_CLIENT_REJECTED_OFFER,
+                    requested_sub_service=offer.opportunity.requested_sub_service,
+                    excluded_provider=offer.provider,
+                    opened_at=now,
+                    response_deadline_at=bounded_deadline(
+                        start=now,
+                        response_hours=48,
+                        process_expires_at=booking.process_expires_at,
+                    ),
+                )
+                if not eligible_services(retry_opportunity).exists():
+                    retry_opportunity.status = BookingOpportunity.STATUS_CANCELLED
+                    retry_opportunity.closed_at = now
+                    retry_opportunity.save(update_fields=("status", "closed_at"))
+                    booking.status = Booking.STATUS_CANCELLED
+                    if booking.payment_auth_id:
+                        payments.release_auth(booking.payment_auth_id)
+                        booking.payment_status = Booking.PAYMENT_STATUS_RELEASED
+                    booking.save()
     if decision == "accept":
         base_url = (
             getattr(settings, "SITE_URL", "") or "https://www.chateau-rose.fr"
@@ -385,4 +430,35 @@ def decide(*, token, decision, now=None):
         )
         + "\n\nÀ bientôt,\nL'équipe Château Rose",
     )
+    if decision == "retry":
+        if booking.status == Booking.STATUS_BOUNTY_OPEN:
+            services = list(eligible_services(retry_opportunity))
+            base_url = (
+                getattr(settings, "SITE_URL", "") or "https://www.chateau-rose.fr"
+            ).rstrip("/")
+            _notify_opportunity_providers(
+                opportunity=retry_opportunity,
+                booking=booking,
+                services=services,
+                base_url=base_url,
+            )
+        else:
+            notifier.notify(
+                booking.client_email,
+                "Demande annulée",
+                f"Bonjour {booking.client_name},\n\n"
+                "Nous sommes désolés, nous ne pouvons pas poursuivre la recherche "
+                "d'une autre prestataire. Ta demande a donc été annulée.\n\n"
+                "Ton autorisation de paiement a bien été libérée.\n\n"
+                "À bientôt,\nL'équipe Château Rose",
+            )
+    elif decision == "cancel":
+        notifier.notify(
+            booking.client_email,
+            "Demande annulée",
+            f"Bonjour {booking.client_name},\n\n"
+            "Ta demande a bien été annulée à la suite du refus de la proposition.\n\n"
+            "Ton autorisation de paiement a bien été libérée.\n\n"
+            "À bientôt,\nL'équipe Château Rose",
+        )
     return booking, offer

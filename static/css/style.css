@@ -82,6 +82,8 @@ ul, ol { padding-left: 1.25rem; }
 .btn, .btn-primary, .request-cta, .recap-submit-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 42px; padding: 10px 17px; border: 1px solid var(--color-ink); border-radius: var(--radius-xs); background: var(--color-ink); color: var(--color-surface); font-weight: 700; line-height: 1.2; transition: background .15s, border-color .15s, transform .15s; }
 .btn:hover, .btn-primary:hover, .request-cta:hover { border-color: var(--color-ink-strong); background: var(--color-ink-strong); color: var(--color-surface); transform: translateY(-1px); }
 .btn.secondary, .btn-secondary, .btn.secondary { border-color: var(--color-line-strong); background: var(--color-surface); color: var(--color-ink); }
+.btn.danger { border-color: var(--color-danger); background: var(--color-surface); color: var(--color-danger); }
+.btn.danger:hover { border-color: var(--color-danger); background: var(--color-danger); color: var(--color-surface); }
 .btn-accent { border-color: var(--color-rose-strong); background: var(--color-rose-strong); color: var(--color-ink-strong); }
 .btn-group, .card-actions, .submit-row { display: flex; flex-wrap: wrap; gap: 9px; }
 .alert, .status-note { padding: 11px 13px; border: 1px solid var(--color-line); border-left: 3px solid var(--color-warning); border-radius: var(--radius-xs); background: var(--color-surface-muted); color: var(--color-ink); font-size: .84rem; }

@@ -60,7 +60,8 @@
                 <form method="post" class="client-offer-actions">
                     {% csrf_token %}
                     <button class="btn" name="decision" value="accept">Accepter ce rendez-vous</button>
-                    <button class="btn secondary" name="decision" value="reject">Refuser la proposition</button>
+                    <button class="btn secondary" name="decision" value="retry">Essayer avec une autre coiffeuse</button>
+                    <button class="btn danger" name="decision" value="cancel">Annuler ma demande</button>
                 </form>
                 <p class="client-offer-deadline">Merci de répondre avant le {{ offer.client_deadline_at|date:"d/m/Y à H\\hi" }}.</p>
             </article>

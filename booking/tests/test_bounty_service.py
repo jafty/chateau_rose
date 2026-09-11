@@ -253,9 +253,7 @@ class BountyServiceTests(TestCase):
     @patch(
         "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
     )
-    def test_provider_can_directly_accept_from_opportunity_page(
-        self, notify, capture
-    ):
+    def test_provider_can_directly_accept_from_opportunity_page(self, notify, capture):
         booking = self.booking(
             booking_id="BK-DIRECT-VIEW",
             payment_auth_id="auth_direct_view",
@@ -340,9 +338,7 @@ class BountyServiceTests(TestCase):
     def test_client_receives_provider_contact_after_accepting_offer(self, notify):
         self.candidate.preferred_contact_method = Provider.CONTACT_METHOD_WHATSAPP
         self.candidate.contact_phone = "06 12 34 56 78"
-        self.candidate.save(
-            update_fields=("preferred_contact_method", "contact_phone")
-        )
+        self.candidate.save(update_fields=("preferred_contact_method", "contact_phone"))
         opportunity = open_for_booking(
             self.booking(booking_id="BK-CLIENT-CONTACT").booking_id,
             reason=BookingOpportunity.REASON_GENERIC,
@@ -361,3 +357,164 @@ class BountyServiceTests(TestCase):
         client_confirmation = notify.call_args_list[-2]
         self.assertEqual(client_confirmation.args[0], "alice@example.com")
         self.assertIn("WhatsApp : 06 12 34 56 78", client_confirmation.args[2])
+
+    @patch("chateaurose.infrastructure.bounty_service.payments.release_auth")
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_client_can_reject_offer_and_retry_with_another_provider(
+        self, notify, release
+    ):
+        alternative = Provider.objects.create(
+            name="Alternative",
+            user=get_user_model().objects.create_user(
+                username="alternative", password="secret"
+            ),
+            contact_email="alternative@example.com",
+            is_visible_on_website=True,
+        )
+        alternative_service = Service.objects.create(
+            provider=alternative,
+            name="Knotless alternative",
+            slug="knotless-alternative",
+            base_price_cents=11000,
+        )
+        alternative_service.marketing_sub_services.add(self.sub_service)
+        booking = self.booking(booking_id="BK-RETRY", payment_auth_id="auth_retry")
+        opportunity = open_for_booking(
+            booking.booking_id, reason=BookingOpportunity.REASON_GENERIC
+        )
+        offer = submit_offer(
+            opportunity_id=opportunity.id,
+            provider=self.candidate,
+            service_id=self.candidate_service.id,
+            proposed_date=(timezone.now() + timedelta(days=5)).isoformat(),
+            proposed_price_euros="120.00",
+        )
+        token = signing.dumps({"offer": offer.id}, salt="bounty-client")
+
+        response = self.client.get(
+            reverse("interface:bounty_client_offer", args=[token])
+        )
+        self.assertContains(response, "Essayer avec une autre coiffeuse")
+        self.assertContains(response, "Annuler ma demande")
+
+        retried_booking, rejected_offer = decide(token=token, decision="retry")
+
+        self.assertEqual(retried_booking.status, Booking.STATUS_BOUNTY_OPEN)
+        self.assertEqual(rejected_offer.status, BookingOffer.STATUS_REJECTED)
+        retry_opportunity = retried_booking.opportunities.get(
+            reason=BookingOpportunity.REASON_CLIENT_REJECTED_OFFER
+        )
+        self.assertEqual(
+            list(eligible_services(retry_opportunity)), [alternative_service]
+        )
+        self.assertLessEqual(
+            retry_opportunity.response_deadline_at,
+            retried_booking.process_expires_at,
+        )
+        release.assert_not_called()
+        self.assertTrue(
+            any(
+                call.args[0] == "alternative@example.com"
+                for call in notify.call_args_list
+            )
+        )
+
+    @patch("chateaurose.infrastructure.bounty_service.payments.release_auth")
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_retry_cancels_when_no_other_provider_is_available(self, notify, release):
+        booking = self.booking(
+            booking_id="BK-NO-ALTERNATIVE", payment_auth_id="auth_no_alternative"
+        )
+        opportunity = open_for_booking(
+            booking.booking_id, reason=BookingOpportunity.REASON_GENERIC
+        )
+        offer = submit_offer(
+            opportunity_id=opportunity.id,
+            provider=self.candidate,
+            service_id=self.candidate_service.id,
+            proposed_date=(timezone.now() + timedelta(days=5)).isoformat(),
+            proposed_price_euros="120.00",
+        )
+
+        retried_booking, rejected_offer = decide(
+            token=signing.dumps({"offer": offer.id}, salt="bounty-client"),
+            decision="retry",
+        )
+
+        self.assertEqual(retried_booking.status, Booking.STATUS_CANCELLED)
+        self.assertEqual(
+            retried_booking.payment_status, Booking.PAYMENT_STATUS_RELEASED
+        )
+        self.assertEqual(rejected_offer.status, BookingOffer.STATUS_REJECTED)
+        release.assert_called_once_with("auth_no_alternative")
+
+    @patch("chateaurose.infrastructure.bounty_service.payments.release_auth")
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_client_can_explicitly_cancel_after_rejecting_offer(self, notify, release):
+        booking = self.booking(booking_id="BK-CANCEL", payment_auth_id="auth_cancel")
+        opportunity = open_for_booking(
+            booking.booking_id, reason=BookingOpportunity.REASON_GENERIC
+        )
+        offer = submit_offer(
+            opportunity_id=opportunity.id,
+            provider=self.candidate,
+            service_id=self.candidate_service.id,
+            proposed_date=(timezone.now() + timedelta(days=5)).isoformat(),
+            proposed_price_euros="120.00",
+        )
+
+        cancelled_booking, rejected_offer = decide(
+            token=signing.dumps({"offer": offer.id}, salt="bounty-client"),
+            decision="cancel",
+        )
+
+        self.assertEqual(cancelled_booking.status, Booking.STATUS_CANCELLED)
+        self.assertEqual(rejected_offer.status, BookingOffer.STATUS_REJECTED)
+        release.assert_called_once_with("auth_cancel")
+
+    @patch("chateaurose.infrastructure.bounty_service.payments.release_auth")
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_retry_cancels_when_the_search_window_has_expired(self, notify, release):
+        now = timezone.now()
+        booking = self.booking(
+            booking_id="BK-RETRY-EXPIRED",
+            payment_auth_id="auth_expired",
+            process_expires_at=now + timedelta(days=1),
+        )
+        opportunity = open_for_booking(
+            booking.booking_id,
+            reason=BookingOpportunity.REASON_GENERIC,
+            now=now - timedelta(hours=1),
+        )
+        offer = submit_offer(
+            opportunity_id=opportunity.id,
+            provider=self.candidate,
+            service_id=self.candidate_service.id,
+            proposed_date=(now + timedelta(days=5)).isoformat(),
+            proposed_price_euros="120.00",
+            now=now - timedelta(minutes=30),
+        )
+        Booking.objects.filter(pk=booking.pk).update(process_expires_at=now)
+
+        retried_booking, rejected_offer = decide(
+            token=signing.dumps({"offer": offer.id}, salt="bounty-client"),
+            decision="retry",
+            now=now,
+        )
+
+        self.assertEqual(retried_booking.status, Booking.STATUS_CANCELLED)
+        self.assertEqual(rejected_offer.status, BookingOffer.STATUS_REJECTED)
+        self.assertFalse(
+            retried_booking.opportunities.filter(
+                reason=BookingOpportunity.REASON_CLIENT_REJECTED_OFFER
+            ).exists()
+        )
+        release.assert_called_once_with("auth_expired")

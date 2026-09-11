@@ -154,10 +154,14 @@ def test_client_accepts_exact_terms_without_changing_fee():
     assert item.estimated_price_cents == 13500
 
 
-def test_client_rejection_cancels_without_second_bounty():
+@pytest.mark.parametrize(
+    "decision,expected_status",
+    [("retry", "BOUNTY_OPEN"), ("cancel", "CANCELLED")],
+)
+def test_client_chooses_what_happens_after_rejecting_offer(decision, expected_status):
     item, proposed = booking("BOUNTY_CLIENT_VALIDATION"), offer()
-    bounty.decide_offer(booking=item, offer=proposed, decision="reject", now=NOW)
-    assert item.status == "CANCELLED"
+    bounty.decide_offer(booking=item, offer=proposed, decision=decision, now=NOW)
+    assert item.status == expected_status
     assert proposed.status == "REJECTED"
 
 
