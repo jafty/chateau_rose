@@ -2,6 +2,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core import signing
 from django.core.management import call_command
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
@@ -13,8 +14,10 @@ from booking.models import Booking, BookingOffer, BookingOpportunity, Provider, 
 from chateaurose.domain.exceptions import InvalidState
 from chateaurose.infrastructure.bounty_service import (
     accept_unchanged,
+    decide,
     eligible_services,
     open_for_booking,
+    submit_offer,
 )
 from interface.models import MarketingService, MarketingSubService
 
@@ -330,3 +333,31 @@ class BountyServiceTests(TestCase):
             opportunity.booking.status, Booking.STATUS_BOUNTY_CLIENT_VALIDATION
         )
         self.assertEqual(opportunity.offer.status, BookingOffer.STATUS_PENDING_CLIENT)
+
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_client_receives_provider_contact_after_accepting_offer(self, notify):
+        self.candidate.preferred_contact_method = Provider.CONTACT_METHOD_WHATSAPP
+        self.candidate.contact_phone = "06 12 34 56 78"
+        self.candidate.save(
+            update_fields=("preferred_contact_method", "contact_phone")
+        )
+        opportunity = open_for_booking(
+            self.booking(booking_id="BK-CLIENT-CONTACT").booking_id,
+            reason=BookingOpportunity.REASON_GENERIC,
+        )
+        offer = submit_offer(
+            opportunity_id=opportunity.id,
+            provider=self.candidate,
+            service_id=self.candidate_service.id,
+            proposed_date=(timezone.now() + timedelta(days=5)).isoformat(),
+            proposed_price_euros="120.00",
+        )
+        token = signing.dumps({"offer": offer.id}, salt="bounty-client")
+
+        decide(token=token, decision="accept")
+
+        client_confirmation = notify.call_args_list[-2]
+        self.assertEqual(client_confirmation.args[0], "alice@example.com")
+        self.assertIn("WhatsApp : 06 12 34 56 78", client_confirmation.args[2])
