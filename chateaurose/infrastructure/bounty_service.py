@@ -236,6 +236,27 @@ def _capture_confirmation_payment(booking):
         booking.payment_status = Booking.PAYMENT_STATUS_CAPTURED
 
 
+def _provider_contact_details(provider: Provider) -> str:
+    """Format the contact information selected for confirmed appointments."""
+    method = provider.preferred_contact_method
+    instructions = (provider.post_confirmation_contact_instructions or "").strip()
+    lines = ["Contact de la prestataire :"]
+    if method == Provider.CONTACT_METHOD_EMAIL and provider.contact_email:
+        lines.append(f"- Email : {provider.contact_email}")
+    elif method == Provider.CONTACT_METHOD_PHONE and provider.contact_phone:
+        lines.append(f"- Téléphone : {provider.contact_phone}")
+    elif method == Provider.CONTACT_METHOD_WHATSAPP and provider.contact_phone:
+        lines.append(f"- WhatsApp : {provider.contact_phone}")
+    elif method == Provider.CONTACT_METHOD_CUSTOM and instructions:
+        lines.append(f"- {instructions}")
+        instructions = ""
+    else:
+        lines.append("- Les échanges restent coordonnés par Château Rose.")
+    if instructions:
+        lines.append(f"- Instructions : {instructions}")
+    return "\n".join(lines)
+
+
 def accept_unchanged(*, opportunity_id, provider: Provider, service_id, now=None):
     now = now or timezone.now()
     with transaction.atomic():
@@ -335,6 +356,22 @@ def decide(*, token, decision, now=None):
                 booking.payment_status = Booking.PAYMENT_STATUS_RELEASED
         offer.save(update_fields=("status", "decided_at"))
         booking.save()
+    if decision == "accept":
+        base_url = (
+            getattr(settings, "SITE_URL", "") or "https://www.chateau-rose.fr"
+        ).rstrip("/")
+        manage_url = base_url + reverse(
+            "interface:client_confirmation", args=[booking.booking_id]
+        )
+        notifier.notify(
+            booking.client_email,
+            "Ton rendez-vous est confirmé",
+            f"Bonjour {booking.client_name},\n\n"
+            f"Ton rendez-vous avec {offer.provider.name} est confirmé.\n\n"
+            f"{_provider_contact_details(offer.provider)}\n\n"
+            f"Gérer ma réservation :\n{manage_url}\n\n"
+            "À bientôt,\nL'équipe Château Rose",
+        )
     notifier.notify(
         offer.provider.contact_email,
         "Proposition acceptée" if decision == "accept" else "Proposition refusée",
