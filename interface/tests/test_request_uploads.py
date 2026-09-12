@@ -74,6 +74,17 @@ class ProviderRequestUploadTests(TestCase):
         self.assertEqual(draft.payload["location"], "Paris 10e")
         self.assertFalse(draft.payload["meche"])
 
+    def test_provider_page_warns_when_extensions_are_not_supplied(self):
+        self.provider.provides_meche = False
+        self.provider.save(update_fields=("provides_meche",))
+
+        response = self.client.get(
+            reverse("interface:provider_detail", args=[self.provider.id])
+        )
+
+        self.assertContains(response, "Cette coiffeuse ne fournit pas les mèches")
+        self.assertContains(response, '<div class="alert" role="status">', html=False)
+
     def test_invalid_form_keeps_existing_payment_auth_id_visible(self):
         url = reverse("interface:provider_detail", args=[self.provider.id])
 

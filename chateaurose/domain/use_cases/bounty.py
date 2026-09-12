@@ -21,6 +21,17 @@ def can_view_opportunity(*, is_admin: bool, has_visible_provider: bool) -> bool:
     return is_admin or has_visible_provider
 
 
+def providers_to_notify_after_closure(*, eligible_provider_ids, selected_provider_id):
+    """Return each concerned provider except the one who closed the opportunity."""
+    return tuple(
+        dict.fromkeys(
+            provider_id
+            for provider_id in eligible_provider_ids
+            if provider_id != selected_provider_id
+        )
+    )
+
+
 def open_bounty(*, booking, reason: str, now, sub_service_id: str | None):
     if booking.status not in (
         "WAITING_PROVIDER_ASSIGNMENT",

@@ -177,6 +177,54 @@ class BountyServiceTests(TestCase):
         self.assertContains(response, "Un mot pour le client")
         self.assertNotContains(response, "cliente", html=False)
 
+    @patch(
+        "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
+    )
+    def test_first_offer_tells_other_concerned_provider_request_is_closed(self, notify):
+        other_user = get_user_model().objects.create_user(
+            username="other-candidate", password="secret"
+        )
+        other = Provider.objects.create(
+            name="Autre",
+            user=other_user,
+            contact_email="other@example.com",
+            is_visible_on_website=True,
+        )
+        other_service = Service.objects.create(
+            provider=other,
+            name="Autre Knotless",
+            slug="autre-knotless",
+            base_price_cents=10000,
+        )
+        other_service.marketing_sub_services.add(self.sub_service)
+        opportunity = open_for_booking(
+            self.booking(booking_id="BK-CLOSURE-NOTICE").booking_id,
+            reason=BookingOpportunity.REASON_GENERIC,
+        )
+        notify.reset_mock()
+
+        submit_offer(
+            opportunity_id=opportunity.id,
+            provider=self.candidate,
+            service_id=self.candidate_service.id,
+            proposed_date=(timezone.now() + timedelta(days=5)).isoformat(),
+            proposed_price_euros="120",
+        )
+
+        closure = [
+            call
+            for call in notify.call_args_list
+            if call.args[0] == "other@example.com"
+        ]
+        self.assertEqual(len(closure), 1)
+        self.assertIn("a été prise en charge", closure[0].args[1])
+        self.assertFalse(
+            any(
+                call.args[0] == "candidate@example.com"
+                for call in notify.call_args_list
+            )
+        )
+
     @patch("chateaurose.infrastructure.bounty_service.payments.release_auth")
     @patch(
         "chateaurose.infrastructure.bounty_service.notifier.notify", return_value=True
