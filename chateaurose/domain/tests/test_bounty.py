@@ -55,6 +55,12 @@ def test_opportunity_page_access(is_admin, has_visible_provider, expected):
     )
 
 
+def test_closure_notification_targets_each_unsuccessful_provider_once():
+    assert bounty.providers_to_notify_after_closure(
+        eligible_provider_ids=(2, 3, 3), selected_provider_id=2
+    ) == (3,)
+
+
 def offer(deadline=None):
     return SimpleNamespace(
         status="PENDING_CLIENT",

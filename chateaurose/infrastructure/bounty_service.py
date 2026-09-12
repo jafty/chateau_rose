@@ -76,6 +76,25 @@ def _notify_opportunity_providers(*, opportunity, booking, services, base_url):
         )
 
 
+def _notify_opportunity_closed(*, opportunity, services, selected_provider):
+    providers = {service.provider_id: service.provider for service in services}
+    recipient_ids = bounty_uc.providers_to_notify_after_closure(
+        eligible_provider_ids=providers, selected_provider_id=selected_provider.id
+    )
+    for provider_id in recipient_ids:
+        provider = providers[provider_id]
+        notifier.notify(
+            provider.contact_email,
+            f"La demande de {opportunity.requested_sub_service.name} a été prise en charge",
+            f"Bonjour {provider.name},\n\n"
+            "Cette opportunité vient d'être prise en charge par une autre prestataire. "
+            "Tu n'as aucune action à effectuer.\n\n"
+            "Merci pour ta réactivité : nous continuerons à t'envoyer les prochaines "
+            "demandes compatibles avec tes prestations.\n\n"
+            "À bientôt,\nL'équipe Château Rose",
+        )
+
+
 def open_for_booking(booking_id: str, *, reason: str, now=None, base_url=""):
     now = now or timezone.now()
     base_url = (
@@ -199,6 +218,7 @@ def submit_offer(
         )
         booking = Booking.objects.select_for_update().get(pk=opportunity.booking_id)
         service = eligible_services(opportunity, provider).filter(pk=service_id).first()
+        concerned_services = list(eligible_services(opportunity))
         terms = bounty_uc.OfferTerms(
             str(provider.id), str(service_id), proposed_date, cents, message
         )
@@ -241,6 +261,11 @@ def submit_offer(
         "Les frais Château Rose déjà traités restent inchangés.\n\n"
         "À bientôt,\nL'équipe Château Rose",
     )
+    _notify_opportunity_closed(
+        opportunity=opportunity,
+        services=concerned_services,
+        selected_provider=provider,
+    )
     return offer
 
 
@@ -282,6 +307,7 @@ def accept_unchanged(*, opportunity_id, provider: Provider, service_id, now=None
         )
         booking = Booking.objects.select_for_update().get(pk=opportunity.booking_id)
         service = eligible_services(opportunity, provider).filter(pk=service_id).first()
+        concerned_services = list(eligible_services(opportunity))
         desired_at = _parse_date(booking.desired_date).astimezone(datetime_timezone.utc)
         payout_cents = booking.provider_price_estimate_cents
         if payout_cents is None:
@@ -343,6 +369,11 @@ def accept_unchanged(*, opportunity_id, provider: Provider, service_id, now=None
         "Rendez-vous confirmé",
         f"Bonjour {provider.name},\n\nTu as confirmé la demande {booking.booking_id}.\n\n"
         f"{details}\n\nRetrouve-la dans ton espace prestataire.\n\nÀ bientôt,\nL'équipe Château Rose",
+    )
+    _notify_opportunity_closed(
+        opportunity=opportunity,
+        services=concerned_services,
+        selected_provider=provider,
     )
     return booking, offer
 
