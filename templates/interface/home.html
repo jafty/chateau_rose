@@ -4,7 +4,6 @@
 {% block title %}Coiffure afro pour tous types de cheveux à Toulouse | Château Rose{% endblock %}
 
 {% block extra_head %}
-<link rel="preconnect" href="https://chateau-rose-bucket.s3.amazonaws.com" crossorigin>
 {% with lcp_service=services|first %}
     {% if lcp_service and lcp_service.resolved_main_image %}
 <link rel="preload" as="image" href="{{ lcp_service.resolved_main_image }}" fetchpriority="high">
