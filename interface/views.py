@@ -58,7 +58,7 @@ from chateaurose.infrastructure.provider_catalog import (
 )
 from interface.forms import GenericBookingRequestForm, ProviderBookingRequestForm, ProviderQuestionForm, ServiceRequestForm, VerifiedReviewForm
 from interface.marketing_cities import CITY_PAGE_COPY, MARKETING_CITY_ENTRIES
-from interface.seo import DISTRICTS_BY_CITY
+from interface.seo import DISTRICTS_BY_CITY, LEGACY_DISTRICT_ZONE_SLUGS_BY_CITY
 from interface.models import (
     ClientReview,
     MarketingService,
@@ -1771,6 +1771,9 @@ def _get_public_city_or_404(city_slug: str):
 
 
 def _legacy_district_city_slug(district_slug: str):
+    for city_slug, district_slugs in LEGACY_DISTRICT_ZONE_SLUGS_BY_CITY.items():
+        if district_slug in district_slugs:
+            return city_slug
     for city_slug, districts in DISTRICTS_BY_CITY.items():
         if any(district["slug"] == district_slug for district in districts):
             return city_slug

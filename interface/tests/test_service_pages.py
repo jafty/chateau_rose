@@ -331,6 +331,22 @@ class ServicePagesTests(TestCase):
         )
         self.assertTrue(Zone.objects.filter(pk=self.capitole.pk).exists())
 
+    def test_previously_published_individual_district_zones_redirect_to_toulouse(self):
+        for district_slug in ("cote-pavee", "borderouge", "rangueil"):
+            with self.subTest(district_slug=district_slug):
+                for path in (
+                    f"/services/tresses/{district_slug}/",
+                    f"/services/tresses/toulouse/{district_slug}/",
+                ):
+                    response = self.client.get(path)
+
+                    self.assertRedirects(
+                        response,
+                        "/services/tresses/toulouse/",
+                        status_code=301,
+                        fetch_redirect_response=False,
+                    )
+
     def test_invalid_district_url_still_returns_404(self):
         response = self.client.get("/services/tresses/colomiers/capitole/")
 

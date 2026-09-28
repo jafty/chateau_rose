@@ -596,13 +596,13 @@ th { background: var(--color-surface-muted); color: var(--color-ink-strong); }
     .nav-toggle { display: flex; }
     .provider-form-grid, .wizard-step.active, .seo-editorial-grid, .info-grid, .faq-grid, .provider-info-grid { grid-template-columns: 1fr; }
     .provider-info-card--wide { grid-column: auto; }
-    .marketplace-home { min-height: auto; padding-block: 18px 10px; }
+    .marketplace-home { display: grid; min-height: calc(100svh - 64px); align-items: center; padding-block: 18px 20px; }
     .marketplace-home .hero-header-row { margin-bottom: 10px; }
     .marketplace-home .hero-headline h1 { font-size: clamp(1.8rem, 8.5vw, 2.35rem); }
     .marketplace-home .category-filter-bar { padding-bottom: 5px; }
     .services-booking-grid.mode-slider-single { display: flex; gap: 10px; margin-inline: calc(var(--gutter) * -1); padding: 12px var(--gutter) 10px calc(var(--gutter) + 8px); overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scroll-padding-left: calc(var(--gutter) + 8px); scrollbar-width: none; }
     .services-booking-grid.mode-slider-single::-webkit-scrollbar { display: none; }
-    .marketplace-home .services-booking-grid.mode-slider-single .service-polaroid-card { width: 58vw; min-width: 190px; max-width: 230px; flex: 0 0 58vw; padding: 7px 7px 10px; scroll-snap-align: start; }
+    .marketplace-home .services-booking-grid.mode-slider-single .service-polaroid-card { width: clamp(210px, 64vw, 250px); min-width: 210px; max-width: 250px; flex: 0 0 clamp(210px, 64vw, 250px); padding: 7px 7px 10px; scroll-snap-align: start; }
     .marketplace-home .service-polaroid-card:nth-child(n + 5) { display: block; }
     .service-above-fold .service-subservices-grid.mode-slider-single { display: flex; gap: 10px; margin-inline: calc(var(--gutter) * -1); padding: 0 var(--gutter) 10px; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
     .service-above-fold .service-subservices-grid.mode-slider-single::-webkit-scrollbar { display: none; }
