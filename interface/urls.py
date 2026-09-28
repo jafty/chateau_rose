@@ -120,7 +120,7 @@ urlpatterns = [
     ),
     path(
         "services/<slug:service_slug>/<slug:city_slug>/<slug:district_slug>/",
-        views.service_city_district_page,
-        name="service_city_district_page",
+        views.legacy_service_city_district_redirect,
+        name="legacy_service_city_district_redirect",
     ),
 ]

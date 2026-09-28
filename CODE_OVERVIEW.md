@@ -59,7 +59,7 @@ Concrete implementations of the ports for the Django app:
 - **provider_action / client_action**: finalize or cancel bookings via the `finalize_booking` use case depending on who acts.
 - **service_page**: renders a marketing service using the domain marketing content builder for default copy/images.
 - **service_city_page**: renders the service localized to a city, applying any `MarketingServiceCity` overrides and selecting providers covering that city/district.
-- **service_city_district_page**: same as above but scoped to a district; falls back through district/city/service images.
+- District zones remain available to booking forms and provider coverage, but no longer have public landing pages or sitemap entries; legacy district URLs permanently redirect to their parent city page.
 - **about**: static about/FAQ page fed by marketing services for quick links.
 
 ### Admin

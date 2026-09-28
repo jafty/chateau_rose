@@ -4,6 +4,7 @@ from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
 
 from booking.models import Zone
+from interface.marketing_cities import MARKETING_CITY_ENTRIES
 from interface.models import MarketingService
 
 
@@ -44,7 +45,8 @@ class ServiceCitySitemap(Sitemap):
 
     def items(self):
         services = list(MarketingService.objects.all())
-        zones = list(Zone.objects.all())
+        public_city_slugs = {"toulouse", *(city["slug"] for city in MARKETING_CITY_ENTRIES)}
+        zones = list(Zone.objects.filter(slug__in=public_city_slugs))
         return [(service, zone) for service in services for zone in zones]
 
     def location(self, item):
