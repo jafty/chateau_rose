@@ -58,6 +58,7 @@ from chateaurose.infrastructure.provider_catalog import (
 )
 from interface.forms import GenericBookingRequestForm, ProviderBookingRequestForm, ProviderQuestionForm, ServiceRequestForm, VerifiedReviewForm
 from interface.marketing_cities import CITY_PAGE_COPY, MARKETING_CITY_ENTRIES
+from interface.seo import DISTRICTS_BY_CITY
 from interface.models import (
     ClientReview,
     MarketingService,
@@ -597,7 +598,10 @@ def home(request):
 
 
 def city_page(request, city_slug: str):
-    zone = _get_zone_or_404(city_slug)
+    legacy_city_slug = _legacy_district_city_slug(city_slug)
+    if legacy_city_slug:
+        return redirect("interface:city_page", city_slug=legacy_city_slug, permanent=True)
+    zone = _get_public_city_or_404(city_slug)
     providers = list(Provider.objects.visible_on_website().filter(zones__slug=zone.slug).distinct())
     # Keep city landing pages aligned with the curated six-category homepage
     # rather than exposing legacy categories that are no longer promoted.
@@ -1759,6 +1763,20 @@ def _get_zone_or_404(zone_slug: str):
     return get_object_or_404(Zone, slug=zone_slug)
 
 
+def _get_public_city_or_404(city_slug: str):
+    public_city_slugs = {"toulouse", *(city["slug"] for city in MARKETING_CITY_ENTRIES)}
+    if city_slug not in public_city_slugs:
+        raise Http404
+    return _get_zone_or_404(city_slug)
+
+
+def _legacy_district_city_slug(district_slug: str):
+    for city_slug, districts in DISTRICTS_BY_CITY.items():
+        if any(district["slug"] == district_slug for district in districts):
+            return city_slug
+    return None
+
+
 def _zone_options(active_zone=None):
     zones = list(Zone.objects.filter(marketing_profile__isnull=False).order_by("name"))
     if active_zone and not any(zone.slug == active_zone.slug for zone in zones):
@@ -2218,13 +2236,22 @@ def service_page(request, service_slug: str):
 
 def service_city_page(request, service_slug: str, city_slug: str):
     service_meta = _get_service_or_404(service_slug)
-    zone = _get_zone_or_404(city_slug)
+    legacy_city_slug = _legacy_district_city_slug(city_slug)
+    if legacy_city_slug:
+        return redirect(
+            "interface:service_city_page",
+            service_slug=service_meta.slug,
+            city_slug=legacy_city_slug,
+            permanent=True,
+        )
+    zone = _get_public_city_or_404(city_slug)
     marketing_zone = MarketingZone.objects.filter(zone=zone).first()
     service_zone = MarketingServiceZone.objects.filter(service=service_meta, zone=zone).first()
     marketing_content = build_marketing_content(
         service=_apply_zone_marketing(service_meta, marketing_zone, service_zone),
         location_name=zone.name,
     )
+
     intro = marketing_content.intro
     short_intro = marketing_content.short_intro
     long_description = marketing_content.long_description
@@ -2297,79 +2324,19 @@ def service_city_page(request, service_slug: str, city_slug: str):
     )
 
 
-def service_city_district_page(request, service_slug: str, city_slug: str, district_slug: str):
+def legacy_service_city_district_redirect(
+    request, service_slug: str, city_slug: str, district_slug: str
+):
     service_meta = _get_service_or_404(service_slug)
-    zone = _get_zone_or_404(district_slug)
-    marketing_zone = MarketingZone.objects.filter(zone=zone).first()
-    service_zone = MarketingServiceZone.objects.filter(service=service_meta, zone=zone).first()
-    marketing_content = build_marketing_content(
-        service=_apply_zone_marketing(service_meta, marketing_zone, service_zone),
-        location_name=zone.name,
-    )
-    intro = marketing_content.intro
-    short_intro = marketing_content.short_intro
-    long_description = marketing_content.long_description
-    long_title = marketing_content.long_title
-    city_intro = marketing_content.location_intro
-    highlights = marketing_content.highlights
-
-    providers = list(
-        Provider.objects.visible_on_website().filter(
-            marketing_services__slug=service_slug,
-            zones__slug=zone.slug,
-        ).distinct()
-    )
-    sub_services = list(
-        MarketingSubService.objects.filter(
-            service=service_meta,
-            is_visible=True,
-            providers__zones__slug=zone.slug,
-            providers__is_visible_on_website=True,
-        )
-        .distinct()
-        .prefetch_related("providers")
-    )
-    service_request_redirect = _build_service_request_redirect(request)
-    if service_request_redirect:
-        return service_request_redirect
-
-    request_form, request_success = None, False
-
-    gallery_images = marketing_content.gallery
-    hero_image = marketing_content.hero_image or service_meta.resolved_main_image
-    meta_description = marketing_content.meta_description
-
-    service_schema = _build_service_schema(request, service_meta.name, zone.name)
-    return render(
-        request,
-        "interface/service_page.html",
-        {
-            "service": service_meta,
-            "zone": zone,
-            "district": None,
-            "providers": providers,
-            "zones": _zone_options(zone),
-            "intro": intro,
-            "short_intro": short_intro,
-            "long_description": long_description,
-            "long_title": long_title,
-            "city_intro": city_intro,
-            "highlights": highlights,
-            "hero_image": hero_image,
-            "gallery_images": gallery_images,
-            "meta_description": meta_description,
-            "service_schema_json": json.dumps(service_schema, ensure_ascii=False),
-            "request_form": request_form,
-            "request_success": request_success,
-            "sub_services": sub_services,
-            "is_sub_service_page": False,
-            "is_at_home_page": False,
-            "page_service_name": service_meta.name,
-            "seo_section_heading": f"{service_meta.name} : ce qu'il faut savoir",
-            "seo_intro": intro,
-            "seo_long_description": long_description,
-            "generic_pricing_data": json.dumps({}, ensure_ascii=False),
-        },
+    expected_city_slug = _legacy_district_city_slug(district_slug)
+    if expected_city_slug != city_slug:
+        raise Http404
+    _get_public_city_or_404(city_slug)
+    return redirect(
+        "interface:service_city_page",
+        service_slug=service_meta.slug,
+        city_slug=city_slug,
+        permanent=True,
     )
 
 

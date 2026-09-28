@@ -19,6 +19,7 @@ from interface.models import (
     ProviderBookingDraft,
     ServiceRequest,
 )
+from interface.sitemaps import ServiceCitySitemap
 
 
 @override_settings(
@@ -305,13 +306,43 @@ class ServicePagesTests(TestCase):
         self.assertIn("/services/tresses/toulouse", content)
         self.assertNotIn("/services/tresses/capitole", content)
 
-    def test_service_city_district_page_filters_by_zone_slug(self):
-        district_url = reverse("interface:service_city_district_page", args=["tresses", "toulouse", "capitole"])
-        district_response = self.client.get(district_url)
-        self.assertEqual(district_response.status_code, 200)
-        district_content = district_response.content.decode()
-        self.assertIn(self.provider_a.name, district_content)
-        self.assertNotIn(self.provider_b.name, district_content)
+    def test_district_pages_redirect_to_their_parent_city_and_preserve_zone_data(self):
+        district_response = self.client.get("/services/tresses/toulouse/capitole/")
+        short_district_response = self.client.get("/services/tresses/capitole/")
+        district_landing_response = self.client.get("/villes/capitole/")
+
+        self.assertRedirects(
+            district_response,
+            "/services/tresses/toulouse/",
+            status_code=301,
+            fetch_redirect_response=False,
+        )
+        self.assertRedirects(
+            short_district_response,
+            "/services/tresses/toulouse/",
+            status_code=301,
+            fetch_redirect_response=False,
+        )
+        self.assertRedirects(
+            district_landing_response,
+            "/villes/toulouse/",
+            status_code=301,
+            fetch_redirect_response=False,
+        )
+        self.assertTrue(Zone.objects.filter(pk=self.capitole.pk).exists())
+
+    def test_invalid_district_url_still_returns_404(self):
+        response = self.client.get("/services/tresses/colomiers/capitole/")
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_service_sitemap_excludes_district_zones(self):
+        sitemap_locations = [
+            ServiceCitySitemap().location(item) for item in ServiceCitySitemap().items()
+        ]
+
+        self.assertIn("/services/tresses/toulouse/", sitemap_locations)
+        self.assertNotIn("/services/tresses/capitole/", sitemap_locations)
 
     def test_service_page_records_request_even_without_providers(self):
         ProviderMarketingService.objects.all().delete()
@@ -449,56 +480,50 @@ class ServicePagesTests(TestCase):
         self.assertNotIn("Aucun prestataire", content)
 
     def test_zone_marketing_overrides_are_used(self):
-        marketing_zone = MarketingZone.objects.create(
-            zone=self.capitole,
-            intro="Focus Capitole",
-            highlights=["Capitole highlight"],
-            hero_image_url="https://cdn.example.com/capitole.jpg",
-            meta_description="Meta Capitole",
-        )
+        marketing_zone = MarketingZone.objects.get(zone=self.toulouse)
+        marketing_zone.intro = "Focus Toulouse"
+        marketing_zone.highlights = ["Toulouse highlight"]
+        marketing_zone.hero_image_url = "https://cdn.example.com/toulouse.jpg"
+        marketing_zone.meta_description = "Meta Toulouse"
+        marketing_zone.save()
 
-        url = reverse(
-            "interface:service_city_district_page", args=["tresses", "toulouse", "capitole"]
-        )
+        url = reverse("interface:service_city_page", args=["tresses", "toulouse"])
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("Rapide", content)
-        self.assertIn("Capitole highlight", content)
+        self.assertIn("Toulouse highlight", content)
 
     def test_service_zone_marketing_overrides_are_used(self):
-        MarketingZone.objects.create(
-            zone=self.capitole,
-            intro="Focus Capitole",
-            highlights=["Capitole highlight"],
-            hero_image_url="https://cdn.example.com/capitole.jpg",
-            meta_description="Meta Capitole",
+        MarketingZone.objects.filter(zone=self.toulouse).update(
+            intro="Focus Toulouse",
+            highlights=["Toulouse highlight"],
+            hero_image_url="https://cdn.example.com/toulouse.jpg",
+            meta_description="Meta Toulouse",
         )
         service_zone = MarketingServiceZone.objects.create(
             service=self.marketing_service,
-            zone=self.capitole,
-            intro="Intro personnalisée Capitole",
-            short_intro="Short intro Capitole",
-            long_description="Description longue Capitole",
-            long_title="Titre long Capitole",
+            zone=self.toulouse,
+            intro="Intro personnalisée Toulouse",
+            short_intro="Short intro Toulouse",
+            long_description="Description longue Toulouse",
+            long_title="Titre long Toulouse",
             highlights=["Highlight personnalisé"],
-            hero_image_url="https://cdn.example.com/tresses-capitole.jpg",
+            hero_image_url="https://cdn.example.com/tresses-toulouse.jpg",
             meta_description="Meta personnalisée",
         )
 
-        url = reverse(
-            "interface:service_city_district_page", args=["tresses", "toulouse", "capitole"]
-        )
+        url = reverse("interface:service_city_page", args=["tresses", "toulouse"])
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn("Highlight personnalisé", content)
-        self.assertIn("Short intro Capitole", content)
-        self.assertIn("Description longue Capitole", content)
-        self.assertIn("Titre long Capitole", content)
-        self.assertNotIn("Capitole highlight", content)
+        self.assertIn("Short intro Toulouse", content)
+        self.assertIn("Description longue Toulouse", content)
+        self.assertIn("Titre long Toulouse", content)
+        self.assertNotIn("Toulouse highlight", content)
 
 
 
