@@ -2242,9 +2242,8 @@ def service_city_page(request, service_slug: str, city_slug: str):
     legacy_city_slug = _legacy_district_city_slug(city_slug)
     if legacy_city_slug:
         return redirect(
-            "interface:service_city_page",
+            "interface:service_page",
             service_slug=service_meta.slug,
-            city_slug=legacy_city_slug,
             permanent=True,
         )
     zone = _get_public_city_or_404(city_slug)
@@ -2334,11 +2333,9 @@ def legacy_service_city_district_redirect(
     expected_city_slug = _legacy_district_city_slug(district_slug)
     if expected_city_slug != city_slug:
         raise Http404
-    _get_public_city_or_404(city_slug)
     return redirect(
-        "interface:service_city_page",
+        "interface:service_page",
         service_slug=service_meta.slug,
-        city_slug=city_slug,
         permanent=True,
     )
 
