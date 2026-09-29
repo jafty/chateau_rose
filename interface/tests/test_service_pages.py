@@ -306,20 +306,20 @@ class ServicePagesTests(TestCase):
         self.assertIn("/services/tresses/toulouse", content)
         self.assertNotIn("/services/tresses/capitole", content)
 
-    def test_district_pages_redirect_to_their_parent_city_and_preserve_zone_data(self):
+    def test_district_service_pages_redirect_to_the_service_page_and_preserve_zone_data(self):
         district_response = self.client.get("/services/tresses/toulouse/capitole/")
         short_district_response = self.client.get("/services/tresses/capitole/")
         district_landing_response = self.client.get("/villes/capitole/")
 
         self.assertRedirects(
             district_response,
-            "/services/tresses/toulouse/",
+            "/services/tresses/",
             status_code=301,
             fetch_redirect_response=False,
         )
         self.assertRedirects(
             short_district_response,
-            "/services/tresses/toulouse/",
+            "/services/tresses/",
             status_code=301,
             fetch_redirect_response=False,
         )
@@ -331,7 +331,7 @@ class ServicePagesTests(TestCase):
         )
         self.assertTrue(Zone.objects.filter(pk=self.capitole.pk).exists())
 
-    def test_previously_published_individual_district_zones_redirect_to_toulouse(self):
+    def test_previously_published_district_service_pages_redirect_to_service_page(self):
         for district_slug in ("cote-pavee", "borderouge", "rangueil"):
             with self.subTest(district_slug=district_slug):
                 for path in (
@@ -342,10 +342,22 @@ class ServicePagesTests(TestCase):
 
                     self.assertRedirects(
                         response,
-                        "/services/tresses/toulouse/",
+                        "/services/tresses/",
                         status_code=301,
                         fetch_redirect_response=False,
                     )
+
+    def test_district_service_redirect_does_not_require_parent_city_zone(self):
+        self.toulouse.delete()
+
+        response = self.client.get("/services/tresses/toulouse/capitole/")
+
+        self.assertRedirects(
+            response,
+            "/services/tresses/",
+            status_code=301,
+            fetch_redirect_response=False,
+        )
 
     def test_invalid_district_url_still_returns_404(self):
         response = self.client.get("/services/tresses/colomiers/capitole/")
